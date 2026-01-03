@@ -44,7 +44,13 @@ struct Generate: AsyncParsableCommand {
     @Option(name: .shortAndLong, help: "Specific targets to document (can be repeated).")
     var target: [String] = []
 
-    @Option(name: [.customShort("x"), .long], help: "Dependencies to exclude from documentation (can be repeated).")
+    @Flag(name: [.customShort("I"), .customLong("include-all-dependencies")], help: "Include documentation for all dependencies.")
+    var includeAllDependencies: Bool = false
+
+    @Option(name: [.customShort("i"), .customLong("include-dependency")], help: "Include a specific dependency (can be repeated).")
+    var includeDependency: [String] = []
+
+    @Option(name: [.customShort("x"), .customLong("exclude-dependency")], help: "Exclude a specific dependency (can be repeated). Only used with -I.")
     var excludeDependency: [String] = []
 
     @Option(name: .shortAndLong, help: "External documentation URL for a dependency (format: PackageName=URL).")
@@ -74,11 +80,21 @@ struct Generate: AsyncParsableCommand {
         }
 
         // Determine dependency policy
+        // Default: exclude all dependencies (only document current package targets)
+        // -I: include all dependencies
+        // -i: include specific dependencies
+        // -x: exclude specific dependencies (only with -I)
         let dependencyPolicy: DependencyInclusionPolicy
-        if !excludeDependency.isEmpty {
-            dependencyPolicy = .exclude(excludeDependency)
+        if includeAllDependencies {
+            if !excludeDependency.isEmpty {
+                dependencyPolicy = .exclude(excludeDependency)
+            } else {
+                dependencyPolicy = .all
+            }
+        } else if !includeDependency.isEmpty {
+            dependencyPolicy = .includeOnly(includeDependency)
         } else {
-            dependencyPolicy = .all
+            dependencyPolicy = .none
         }
 
         let configuration = Configuration(

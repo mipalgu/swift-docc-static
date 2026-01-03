@@ -118,6 +118,9 @@ public struct StaticDocumentationGenerator: Sendable {
         let symbolGraphsDir = tempDir.appendingPathComponent("symbol-graphs")
         let archiveDir = tempDir.appendingPathComponent("archive.doccarchive")
 
+        // Discover package targets for dependency filtering
+        let packageTargets = try await getPackageTargets()
+
         try await generateSymbolGraphs(to: symbolGraphsDir)
         try await runDoccConvert(
             symbolGraphsDir: symbolGraphsDir,
@@ -136,7 +139,12 @@ public struct StaticDocumentationGenerator: Sendable {
             searchIndexBuilder = SearchIndexBuilder(configuration: configuration)
         }
 
-        try await renderFromArchive(archiveDir, consumer: consumer, searchIndexBuilder: &searchIndexBuilder)
+        try await renderFromArchive(
+            archiveDir,
+            consumer: consumer,
+            searchIndexBuilder: &searchIndexBuilder,
+            packageTargets: packageTargets
+        )
 
         // Write assets
         try writeAssets()
@@ -150,6 +158,84 @@ public struct StaticDocumentationGenerator: Sendable {
         }
 
         return consumer.result()
+    }
+
+    // MARK: - Package Target Discovery
+
+    /// Returns the set of target names defined in the current package.
+    ///
+    /// This distinguishes between the package's own targets and external dependencies.
+    private func getPackageTargets() async throws -> Set<String> {
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
+        process.arguments = [
+            "swift", "package", "describe",
+            "--package-path", configuration.packageDirectory.path,
+            "--type", "json"
+        ]
+
+        let outputPipe = Pipe()
+        let errorPipe = Pipe()
+        process.standardOutput = outputPipe
+        process.standardError = errorPipe
+
+        try process.run()
+        process.waitUntilExit()
+
+        guard process.terminationStatus == 0 else {
+            // If we can't get package info, fall back to empty set
+            // which means we'll include everything
+            if configuration.isVerbose {
+                log("Warning: Could not determine package targets, including all modules")
+            }
+            return []
+        }
+
+        let data = outputPipe.fileHandleForReading.readDataToEndOfFile()
+
+        // Parse the JSON to extract target names
+        guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let targets = json["targets"] as? [[String: Any]] else {
+            return []
+        }
+
+        var targetNames = Set<String>()
+        for target in targets {
+            if let name = target["name"] as? String {
+                targetNames.insert(name)
+            }
+        }
+
+        if configuration.isVerbose {
+            log("Package targets: \(targetNames.sorted().joined(separator: ", "))")
+        }
+
+        return targetNames
+    }
+
+    /// Determines if a module should be included based on the dependency policy.
+    ///
+    /// - Parameters:
+    ///   - moduleName: The name of the module to check.
+    ///   - packageTargets: The set of target names from the current package.
+    /// - Returns: `true` if the module should be included, `false` otherwise.
+    private func shouldIncludeModule(_ moduleName: String, packageTargets: Set<String>) -> Bool {
+        // Package's own targets are always included
+        if packageTargets.contains(moduleName) {
+            return true
+        }
+
+        // Apply dependency policy for external modules
+        switch configuration.dependencyPolicy {
+        case .all:
+            return true
+        case .none:
+            return false
+        case .exclude(let excluded):
+            return !excluded.contains(moduleName)
+        case .includeOnly(let included):
+            return included.contains(moduleName)
+        }
     }
 
     // MARK: - Symbol Graph Generation
@@ -290,7 +376,8 @@ public struct StaticDocumentationGenerator: Sendable {
     private func renderFromArchive(
         _ archiveDir: URL,
         consumer: StaticHTMLConsumer,
-        searchIndexBuilder: inout SearchIndexBuilder?
+        searchIndexBuilder: inout SearchIndexBuilder?,
+        packageTargets: Set<String>
     ) async throws {
         if configuration.isVerbose {
             log("Rendering pages from archive...")
@@ -323,6 +410,9 @@ public struct StaticDocumentationGenerator: Sendable {
         // Set the navigation index on the consumer
         consumer.navigationIndex = navigationIndex
 
+        // Track which modules have been skipped
+        var skippedModules = Set<String>()
+
         // Find all JSON files in the data/documentation directory
         let enumerator = fileManager.enumerator(
             at: documentationDir,
@@ -338,6 +428,22 @@ public struct StaticDocumentationGenerator: Sendable {
             do {
                 let data = try Data(contentsOf: fileURL)
                 let renderNode = try decoder.decode(RenderNode.self, from: data)
+
+                // Extract module name from the identifier path
+                // Path format: /documentation/ModuleName/... or doc://PackageName/documentation/ModuleName/...
+                let moduleName = extractModuleName(from: renderNode.identifier.path)
+
+                // Check if this module should be included
+                guard shouldIncludeModule(moduleName, packageTargets: packageTargets) else {
+                    if !skippedModules.contains(moduleName) {
+                        skippedModules.insert(moduleName)
+                        if configuration.isVerbose {
+                            log("Skipping dependency: \(moduleName)")
+                        }
+                    }
+                    continue
+                }
+
                 try consumer.consume(renderNode: renderNode)
 
                 // Add to search index if enabled
@@ -352,6 +458,24 @@ public struct StaticDocumentationGenerator: Sendable {
         if configuration.isVerbose {
             log("Finished rendering pages")
         }
+    }
+
+    /// Extracts the module name from a documentation path.
+    ///
+    /// - Parameter path: The identifier path (e.g., "/documentation/ModuleName/Symbol").
+    /// - Returns: The module name, or an empty string if not found.
+    private func extractModuleName(from path: String) -> String {
+        // Path format: /documentation/ModuleName/...
+        let components = path.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+            .components(separatedBy: "/")
+            .filter { !$0.isEmpty }
+
+        // Module name is the second component after "documentation"
+        if components.count >= 2, components[0].lowercased() == "documentation" {
+            return components[1]
+        }
+
+        return ""
     }
 
     /// Writes the search index JSON file.

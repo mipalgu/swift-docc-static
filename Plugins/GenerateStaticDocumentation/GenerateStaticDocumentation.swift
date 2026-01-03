@@ -23,6 +23,8 @@ struct GenerateStaticDocumentation: CommandPlugin {
 
         // Extract other options
         let targets = argumentExtractor.extractOption(named: "target", allowMultiple: true)
+        let includeAllDeps = argumentExtractor.extractFlag(named: "include-all-dependencies")
+        let includeDeps = argumentExtractor.extractOption(named: "include-dependency", allowMultiple: true)
         let excludeDeps = argumentExtractor.extractOption(named: "exclude-dependency", allowMultiple: true)
         let externalDocs = argumentExtractor.extractOption(named: "external-docs", allowMultiple: true)
         let includeSearch = argumentExtractor.extractFlag(named: "include-search")
@@ -39,8 +41,18 @@ struct GenerateStaticDocumentation: CommandPlugin {
             processArgs.append(contentsOf: ["--target", target])
         }
 
-        for dep in excludeDeps {
-            processArgs.append(contentsOf: ["--exclude-dependency", dep])
+        // Handle dependency inclusion options
+        if includeAllDeps {
+            processArgs.append("--include-all-dependencies")
+            // Exclusions only apply when including all dependencies
+            for dep in excludeDeps {
+                processArgs.append(contentsOf: ["--exclude-dependency", dep])
+            }
+        } else {
+            // Include specific dependencies
+            for dep in includeDeps {
+                processArgs.append(contentsOf: ["--include-dependency", dep])
+            }
         }
 
         for ext in externalDocs {
