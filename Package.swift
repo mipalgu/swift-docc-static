@@ -72,10 +72,10 @@ let package = Package(
         .testTarget(
             name: "DocCStaticTests",
             dependencies: ["DocCStatic"],
-            path: "Tests/DocCStaticTests",
-            resources: [
-                .copy("Fixtures"),
-            ]
+            path: "Tests/DocCStaticTests"
+//            resources: [
+//                .copy("Fixtures"),
+//            ]
         ),
     ]
 )

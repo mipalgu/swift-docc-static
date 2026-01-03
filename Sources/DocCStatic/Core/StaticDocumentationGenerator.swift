@@ -236,11 +236,12 @@ public struct StaticDocumentationGenerator: Sendable {
         process.waitUntilExit()
 
         // docc may return non-zero for warnings, which is fine
-        if process.terminationStatus != 0 && configuration.isVerbose {
+        if process.terminationStatus != 0 {
             let errorData = errorPipe.fileHandleForReading.readDataToEndOfFile()
-            let errorMessage = String(data: errorData, encoding: .utf8) ?? ""
+            let errorMessage = (String(data: errorData, encoding: .utf8) ?? "")
+                                .trimmingCharacters(in: .whitespacesAndNewlines)
             if !errorMessage.isEmpty {
-                log("docc warnings/errors: \(errorMessage)")
+                logWarning("docc: \(errorMessage)")
             }
         }
 
@@ -544,6 +545,16 @@ public struct StaticDocumentationGenerator: Sendable {
     // FIXME: we probably want swift logging (https://github.com/apple/swift-log)
     private func log(_ message: String) {
         print("[DocCStatic] \(message)")
+    }
+
+    private func logWarning(_ message: String) {
+        let warningMsg = "[DocCStatic] WARNING: \(message)\n"
+        FileHandle.standardError.write(warningMsg.data(using: .utf8) ?? Data())
+    }
+
+    private func logError(_ message: String) {
+        let errorMsg = "[DocCStatic] ERROR: \(message)\n"
+        FileHandle.standardError.write(errorMsg.data(using: .utf8) ?? Data())
     }
 }
 
