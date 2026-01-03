@@ -196,9 +196,9 @@ private extension HTMLPageBuilder {
 
         html += """
 
-                        <div class="sidebar-filter" id="sidebar-filter">
-                            <input type="text" placeholder="Filter" class="filter-input" aria-label="Filter navigation">
-                        </div>
+                    </div>
+                    <div class="sidebar-filter" id="sidebar-filter">
+                        <input type="text" placeholder="Filter" class="filter-input" aria-label="Filter navigation">
                     </div>
                 </nav>
         """

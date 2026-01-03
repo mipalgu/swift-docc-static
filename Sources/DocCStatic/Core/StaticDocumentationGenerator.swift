@@ -836,7 +836,8 @@ enum DocCStylesheet {
             top: var(--header-height);
             left: 0;
             bottom: 0;
-            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
             transition: transform 0.3s ease, width 0.3s ease;
             will-change: transform;
         }
@@ -847,6 +848,8 @@ enum DocCStylesheet {
         }
 
         .sidebar-content {
+            flex: 1;
+            overflow-y: auto;
             padding: 1rem 0;
         }
 
@@ -1029,9 +1032,8 @@ enum DocCStylesheet {
             gap: 0.5rem;
             padding: 0.75rem 1rem;
             border-top: 1px solid var(--docc-border);
-            position: sticky;
-            bottom: 0;
             background: var(--docc-bg);
+            flex-shrink: 0;
         }
 
         .filter-icon {
@@ -1086,16 +1088,23 @@ enum DocCStylesheet {
             background: var(--docc-bg-secondary);
         }
 
-        /* Footer - only visible when scrolled to bottom */
+        /* Footer - accounts for fixed sidebar */
         .doc-footer {
             display: flex;
             justify-content: space-between;
             align-items: center;
             padding: 1rem 1.5rem;
+            margin-left: var(--sidebar-width);
             border-top: 1px solid var(--docc-border);
             background: var(--docc-bg);
             font-size: 0.8125rem;
             color: var(--docc-fg-secondary);
+            transition: margin-left 0.3s ease;
+        }
+
+        /* Footer expands when sidebar is collapsed */
+        .sidebar-toggle-checkbox:checked ~ .doc-footer {
+            margin-left: 0;
         }
 
         .footer-content {
