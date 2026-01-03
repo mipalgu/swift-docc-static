@@ -44,10 +44,10 @@ struct Generate: AsyncParsableCommand {
     @Option(name: .shortAndLong, help: "Specific targets to document (can be repeated).")
     var target: [String] = []
 
-    @Flag(name: [.customShort("I"), .customLong("include-all-dependencies")], help: "Include documentation for all dependencies.")
+    @Flag(name: [.customShort("I"), .long], help: "Include documentation for all dependencies.")
     var includeAllDependencies: Bool = false
 
-    @Option(name: [.customShort("i"), .customLong("include-dependency")], help: "Include a specific dependency (can be repeated).")
+    @Option(name: [.customShort("i"), .long], help: "Include a specific dependency (can be repeated).")
     var includeDependency: [String] = []
 
     @Option(name: [.customShort("x"), .customLong("exclude-dependency")], help: "Exclude a specific dependency (can be repeated). Only used with -I.")
