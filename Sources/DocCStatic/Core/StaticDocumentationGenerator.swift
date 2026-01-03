@@ -1022,9 +1022,9 @@ enum DocCStylesheet {
             height: 14px;
         }
 
-        /* Filter with shortcut indicator */
+        /* Filter with shortcut indicator - hidden by default, shown via JS */
         .sidebar-filter {
-            display: flex;
+            display: none;  /* JS sets to flex when available */
             align-items: center;
             gap: 0.5rem;
             padding: 0.75rem 1rem;
@@ -1084,6 +1084,63 @@ enum DocCStylesheet {
             border: 1px solid var(--docc-border);
             border-radius: 6px;
             background: var(--docc-bg-secondary);
+        }
+
+        /* Footer - only visible when scrolled to bottom */
+        .doc-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 1.5rem;
+            border-top: 1px solid var(--docc-border);
+            background: var(--docc-bg);
+            font-size: 0.8125rem;
+            color: var(--docc-fg-secondary);
+        }
+
+        .footer-content {
+            flex: 1;
+        }
+
+        .footer-content a {
+            color: var(--docc-accent);
+        }
+
+        /* Appearance selector */
+        .appearance-selector {
+            display: inline-flex;
+            border: 1px solid var(--docc-accent);
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .appearance-btn {
+            padding: 0.25rem 0.75rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+            border: none;
+            background: transparent;
+            color: var(--docc-accent);
+            cursor: pointer;
+            transition: background-color 0.15s ease, color 0.15s ease;
+        }
+
+        .appearance-btn:not(:last-child) {
+            border-right: 1px solid var(--docc-accent);
+        }
+
+        .appearance-btn:hover {
+            background: rgba(0, 102, 204, 0.1);
+        }
+
+        .appearance-btn.active {
+            background: var(--docc-accent);
+            color: white;
+        }
+
+        /* Hide appearance selector until JS runs (shows noscript fallback) */
+        .appearance-selector {
+            visibility: hidden;
         }
 
         /* Main content */
@@ -1435,15 +1492,6 @@ enum DocCStylesheet {
             font-size: 0.8rem;
         }
 
-        .index-footer {
-            margin-top: 3rem;
-            padding-top: 1rem;
-            border-top: 1px solid var(--docc-border);
-            text-align: center;
-            color: var(--docc-fg-secondary);
-            font-size: 0.875rem;
-        }
-
         \(theme.customCSS ?? "")
         """
     }
@@ -1483,6 +1531,43 @@ enum DocCStylesheet {
                 /* Decorative colours - dark mode */
                 --hero-decoration: #4a4a4a;
             }
+        }
+
+        /* Explicit theme selection via data-theme attribute */
+        html[data-theme="light"] {
+            --docc-bg: #ffffff;
+            --docc-bg-secondary: #f5f5f7;
+            --docc-fg: #1d1d1f;
+            --docc-fg-secondary: #6e6e73;
+            --docc-border: #d2d2d7;
+            --swift-keyword: #ad3da4;
+            --swift-type: #703daa;
+            --swift-literal: #d12f1b;
+            --swift-comment: #707f8c;
+            --swift-string: #d12f1b;
+            --swift-number: #272ad8;
+            --badge-bg: #f5f5f7;
+            --badge-fg: #6e6e73;
+            --badge-border: #d2d2d7;
+            --hero-decoration: #d2d2d7;
+        }
+
+        html[data-theme="dark"] {
+            --docc-bg: #1d1d1f;
+            --docc-bg-secondary: #2c2c2e;
+            --docc-fg: #f5f5f7;
+            --docc-fg-secondary: #a1a1a6;
+            --docc-border: #424245;
+            --swift-keyword: #ff7ab2;
+            --swift-type: #dabaff;
+            --swift-literal: #ff8170;
+            --swift-comment: #7f8c8d;
+            --swift-string: #ff8170;
+            --swift-number: #d9c97c;
+            --badge-bg: #2c2c2e;
+            --badge-fg: #a1a1a6;
+            --badge-border: #424245;
+            --hero-decoration: #4a4a4a;
         }
         """
     }

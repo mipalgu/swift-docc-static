@@ -56,6 +56,9 @@ struct Generate: AsyncParsableCommand {
     @Flag(name: [.customShort("v"), .customLong("verbose")], help: "Enable verbose output.")
     var isVerbose: Bool = false
 
+    @Option(name: .long, help: "Custom HTML for the page footer.")
+    var footer: String?
+
     mutating func run() async throws {
         let packageDirectory = URL(fileURLWithPath: packagePath).standardizedFileURL
         let outputDirectory = URL(fileURLWithPath: output).standardizedFileURL
@@ -85,7 +88,8 @@ struct Generate: AsyncParsableCommand {
             dependencyPolicy: dependencyPolicy,
             externalDocumentationURLs: externalURLs,
             includeSearch: includeSearch,
-            isVerbose: isVerbose
+            isVerbose: isVerbose,
+            footerHTML: footer
         )
 
         let generator = StaticDocumentationGenerator(configuration: configuration)

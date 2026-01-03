@@ -67,13 +67,13 @@ private extension NavigationSidebarBuilder {
 
         html += """
 
-                        <div class="sidebar-filter">
+                        <div class="sidebar-filter" id="sidebar-filter">
                             <span class="filter-icon">
                                 <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
                                     <path d="M0 1.5A1.5 1.5 0 011.5 0h11A1.5 1.5 0 0114 1.5v1.75a1.5 1.5 0 01-.44 1.06L9 8.871V13.5a.5.5 0 01-.757.429l-3-1.8A.5.5 0 015 11.7V8.871L.44 4.31A1.5 1.5 0 010 3.25V1.5z"/>
                                 </svg>
                             </span>
-                            <input type="text" placeholder="Filter" class="filter-input">
+                            <input type="text" placeholder="Filter" class="filter-input" aria-label="Filter navigation">
                             <span class="filter-shortcut">/</span>
                         </div>
                     </div>
@@ -349,8 +349,8 @@ private extension NavigationSidebarBuilder {
                 <nav class="doc-sidebar">
                     <div class="sidebar-content">
                         <h2 class="sidebar-module">Documentation</h2>
-                        <div class="sidebar-filter">
-                            <input type="text" placeholder="Filter" class="filter-input">
+                        <div class="sidebar-filter" id="sidebar-filter">
+                            <input type="text" placeholder="Filter" class="filter-input" aria-label="Filter navigation">
                         </div>
                     </div>
                 </nav>

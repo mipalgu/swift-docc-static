@@ -18,7 +18,7 @@ Add DocCStatic as a dependency in your `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/rhx/swift-docc-static.git", from: "1.0.0"),
+    .package(url: "https://github.com/mipalgu/swift-docc-static.git", from: "1.0.0"),
 ]
 ```
 

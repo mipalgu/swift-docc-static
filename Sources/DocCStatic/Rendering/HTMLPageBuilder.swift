@@ -106,6 +106,9 @@ public extension HTMLPageBuilder {
             </div>
         """
 
+        // Add footer
+        html += buildFooter()
+
         // Add search scripts if enabled
         if configuration.includeSearch {
             let lunrPath = String(repeating: "../", count: depth) + "js/lunr.min.js"
@@ -115,6 +118,9 @@ public extension HTMLPageBuilder {
             <script src="\(jsPath)" defer></script>
             """
         }
+
+        // Add appearance selector script
+        html += appearanceSelectorScript
 
         html += """
 
@@ -190,8 +196,8 @@ private extension HTMLPageBuilder {
 
         html += """
 
-                        <div class="sidebar-filter">
-                            <input type="text" placeholder="Filter" class="filter-input">
+                        <div class="sidebar-filter" id="sidebar-filter">
+                            <input type="text" placeholder="Filter" class="filter-input" aria-label="Filter navigation">
                         </div>
                     </div>
                 </nav>
@@ -777,6 +783,120 @@ private extension HTMLPageBuilder {
         """
 
         return html
+    }
+
+    /// Builds the page footer with configurable content and appearance selector.
+    func buildFooter() -> String {
+        let footerContent = configuration.footerHTML ?? Configuration.defaultFooter
+        return """
+
+            <footer class="doc-footer">
+                <div class="footer-content">\(footerContent)</div>
+                <div class="appearance-selector" id="appearance-selector">
+                    <button type="button" class="appearance-btn" data-theme="light" aria-label="Light mode">Light</button>
+                    <button type="button" class="appearance-btn" data-theme="dark" aria-label="Dark mode">Dark</button>
+                    <button type="button" class="appearance-btn active" data-theme="auto" aria-label="Auto mode">Auto</button>
+                </div>
+            </footer>
+        """
+    }
+
+    /// JavaScript for the appearance selector and sidebar filter.
+    var appearanceSelectorScript: String {
+        """
+
+            <script>
+            (function() {
+                // --- Appearance Selector ---
+                const selector = document.getElementById('appearance-selector');
+                if (selector) {
+                    // Show the selector (hidden by default for no-JS fallback)
+                    selector.style.visibility = 'visible';
+
+                    const buttons = selector.querySelectorAll('.appearance-btn');
+                    const html = document.documentElement;
+
+                    // Load saved preference
+                    const saved = localStorage.getItem('docc-theme') || 'auto';
+                    applyTheme(saved);
+                    updateButtons(saved);
+
+                    // Add click handlers
+                    buttons.forEach(btn => {
+                        btn.addEventListener('click', () => {
+                            const theme = btn.dataset.theme;
+                            localStorage.setItem('docc-theme', theme);
+                            applyTheme(theme);
+                            updateButtons(theme);
+                        });
+                    });
+
+                    function applyTheme(theme) {
+                        if (theme === 'auto') {
+                            html.removeAttribute('data-theme');
+                        } else {
+                            html.setAttribute('data-theme', theme);
+                        }
+                    }
+
+                    function updateButtons(theme) {
+                        buttons.forEach(btn => {
+                            btn.classList.toggle('active', btn.dataset.theme === theme);
+                        });
+                    }
+                }
+
+                // --- Sidebar Filter ---
+                const sidebarFilter = document.getElementById('sidebar-filter');
+                if (sidebarFilter) {
+                    // Show the filter (hidden by default for no-JS fallback)
+                    sidebarFilter.style.display = 'flex';
+
+                    const filterInput = sidebarFilter.querySelector('.filter-input');
+                    const sidebarItems = document.querySelectorAll('.sidebar-item, .nav-link');
+
+                    // Filter functionality
+                    if (filterInput) {
+                        filterInput.addEventListener('input', () => {
+                            const query = filterInput.value.toLowerCase();
+                            sidebarItems.forEach(item => {
+                                const text = item.textContent.toLowerCase();
+                                item.style.display = text.includes(query) ? '' : 'none';
+                            });
+                        });
+
+                        // Keyboard shortcut: / or Cmd+F (Mac) / Ctrl+F (Windows)
+                        document.addEventListener('keydown', (e) => {
+                            // Forward slash when not in an input
+                            if (e.key === '/' && !isInputFocused()) {
+                                e.preventDefault();
+                                filterInput.focus();
+                            }
+                            // Cmd+F or Ctrl+F
+                            if ((e.metaKey || e.ctrlKey) && e.key === 'f') {
+                                // Only if sidebar is visible
+                                if (sidebarFilter.offsetParent !== null) {
+                                    e.preventDefault();
+                                    filterInput.focus();
+                                }
+                            }
+                            // Escape to clear and blur
+                            if (e.key === 'Escape' && document.activeElement === filterInput) {
+                                filterInput.value = '';
+                                filterInput.dispatchEvent(new Event('input'));
+                                filterInput.blur();
+                            }
+                        });
+                    }
+                }
+
+                function isInputFocused() {
+                    const active = document.activeElement;
+                    return active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.isContentEditable);
+                }
+            })();
+            </script>
+        """
     }
 }
 

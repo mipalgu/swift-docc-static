@@ -106,15 +106,13 @@ public extension IndexPageBuilder {
 
         """
 
-        // Footer with generation info
         html += """
 
-                <footer class="index-footer">
-                    <p>Generated with <a href="https://github.com/swiftlang/swift-docc">Swift-DocC</a>
-                    and <a href="https://github.com/rhx/swift-docc-static">swift-docc-static</a></p>
-                </footer>
             </div>
         """
+
+        // Footer with configurable content and appearance selector
+        html += buildFooter()
 
         // Add search scripts if enabled
         if configuration.includeSearch {
@@ -124,6 +122,9 @@ public extension IndexPageBuilder {
             <script src="js/search.js" defer></script>
             """
         }
+
+        // Add appearance selector script
+        html += appearanceSelectorScript
 
         html += """
 
@@ -145,6 +146,70 @@ private extension IndexPageBuilder {
                             <p class="module-abstract">\(escapeHTML(module.abstract))</p>
                             <p class="module-stats">\(module.symbolCount) symbols</p>
                         </div>
+        """
+    }
+
+    /// Builds the page footer with configurable content and appearance selector.
+    func buildFooter() -> String {
+        let footerContent = configuration.footerHTML ?? Configuration.defaultFooter
+        return """
+
+            <footer class="doc-footer">
+                <div class="footer-content">\(footerContent)</div>
+                <div class="appearance-selector" id="appearance-selector">
+                    <button type="button" class="appearance-btn" data-theme="light" aria-label="Light mode">Light</button>
+                    <button type="button" class="appearance-btn" data-theme="dark" aria-label="Dark mode">Dark</button>
+                    <button type="button" class="appearance-btn active" data-theme="auto" aria-label="Auto mode">Auto</button>
+                </div>
+            </footer>
+        """
+    }
+
+    /// JavaScript for the appearance selector.
+    var appearanceSelectorScript: String {
+        """
+
+            <script>
+            (function() {
+                const selector = document.getElementById('appearance-selector');
+                if (!selector) return;
+
+                // Show the selector (hidden by default for no-JS fallback)
+                selector.style.visibility = 'visible';
+
+                const buttons = selector.querySelectorAll('.appearance-btn');
+                const html = document.documentElement;
+
+                // Load saved preference
+                const saved = localStorage.getItem('docc-theme') || 'auto';
+                applyTheme(saved);
+                updateButtons(saved);
+
+                // Add click handlers
+                buttons.forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const theme = btn.dataset.theme;
+                        localStorage.setItem('docc-theme', theme);
+                        applyTheme(theme);
+                        updateButtons(theme);
+                    });
+                });
+
+                function applyTheme(theme) {
+                    if (theme === 'auto') {
+                        html.removeAttribute('data-theme');
+                    } else {
+                        html.setAttribute('data-theme', theme);
+                    }
+                }
+
+                function updateButtons(theme) {
+                    buttons.forEach(btn => {
+                        btn.classList.toggle('active', btn.dataset.theme === theme);
+                    });
+                }
+            })();
+            </script>
         """
     }
 }

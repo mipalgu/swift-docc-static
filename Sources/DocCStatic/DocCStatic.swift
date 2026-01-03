@@ -108,6 +108,18 @@ public struct Configuration: Sendable {
     /// Whether to output verbose logging during generation.
     public var isVerbose: Bool
 
+    /// Custom HTML for the footer.
+    ///
+    /// This HTML is displayed at the bottom of each page when the user scrolls
+    /// all the way down. Set to `nil` to use the default footer.
+    public var footerHTML: String?
+
+    /// The default footer HTML.
+    public static let defaultFooter = """
+        Generated with <a href="https://github.com/mipalgu/swift-docc-static">swift-docc-static</a> \
+        by <a href="https://hexel.au">René Hexel</a>
+        """
+
     /// Creates a new configuration for documentation generation.
     ///
     /// - Parameters:
@@ -119,6 +131,7 @@ public struct Configuration: Sendable {
     ///   - includeSearch: Whether to generate a search index.
     ///   - theme: Theme configuration.
     ///   - isVerbose: Whether to enable verbose logging.
+    ///   - footerHTML: Custom footer HTML, or nil for the default.
     public init(
         packageDirectory: URL,
         outputDirectory: URL,
@@ -127,7 +140,8 @@ public struct Configuration: Sendable {
         externalDocumentationURLs: [String: URL] = [:],
         includeSearch: Bool = false,
         theme: ThemeConfiguration = .default,
-        isVerbose: Bool = false
+        isVerbose: Bool = false,
+        footerHTML: String? = nil
     ) {
         self.packageDirectory = packageDirectory
         self.outputDirectory = outputDirectory
@@ -137,6 +151,7 @@ public struct Configuration: Sendable {
         self.includeSearch = includeSearch
         self.theme = theme
         self.isVerbose = isVerbose
+        self.footerHTML = footerHTML
     }
 }
 
