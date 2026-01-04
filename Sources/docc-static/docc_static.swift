@@ -22,6 +22,7 @@ struct DocCStaticCommand: AsyncParsableCommand {
         version: "0.1.0",
         subcommands: [
             Generate.self,
+            Render.self,
             Preview.self,
         ],
         defaultSubcommand: Generate.self
@@ -138,6 +139,69 @@ struct Generate: AsyncParsableCommand {
 
             if let searchPath = result.searchIndexPath {
                 print("\nSearch index: \(searchPath.path)")
+            }
+        } catch {
+            throw CleanExit.message("Error: \(error.localizedDescription)")
+        }
+    }
+}
+
+// MARK: - Render Command
+
+struct Render: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
+        abstract: "Render static HTML from an existing DocC archive."
+    )
+
+    @Argument(help: "Path to the .doccarchive directory.")
+    var archivePath: String
+
+    @Option(name: .shortAndLong, help: "Output directory for generated documentation.")
+    var output: String = ".build/documentation"
+
+    @Flag(name: [.customShort("v"), .customLong("verbose")], help: "Enable verbose output.")
+    var isVerbose: Bool = false
+
+    @Option(name: .long, help: "Custom HTML for the page footer.")
+    var footer: String?
+
+    mutating func run() async throws {
+        let archiveURL = URL(fileURLWithPath: archivePath).standardizedFileURL
+        let outputDirectory = URL(fileURLWithPath: output).standardizedFileURL
+
+        guard FileManager.default.fileExists(atPath: archiveURL.path) else {
+            throw ValidationError("Archive does not exist: \(archiveURL.path)")
+        }
+
+        let configuration = Configuration(
+            packageDirectory: archiveURL,  // Not used for render
+            outputDirectory: outputDirectory,
+            targets: [],
+            dependencyPolicy: .none,
+            externalDocumentationURLs: [:],
+            includeSearch: false,
+            isVerbose: isVerbose,
+            scratchPath: nil,
+            symbolGraphDir: nil,
+            footerHTML: footer
+        )
+
+        let generator = StaticDocumentationGenerator(configuration: configuration)
+
+        do {
+            let result = try await generator.renderFromArchive(archiveURL)
+
+            print("""
+                Documentation rendered successfully!
+                  Output: \(result.outputDirectory.path)
+                  Pages: \(result.generatedPages)
+                """)
+
+            if !result.warnings.isEmpty {
+                print("\nWarnings:")
+                for warning in result.warnings {
+                    print("  \(warning)")
+                }
             }
         } catch {
             throw CleanExit.message("Error: \(error.localizedDescription)")

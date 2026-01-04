@@ -268,7 +268,10 @@ public extension RenderContentHTMLRenderer {
             }
             return html
 
-        case .endpointExample, .step, .tabNavigator, .video, .links, .row, .small:
+        case .step(let tutorialStep):
+            return renderTutorialStep(tutorialStep, references: references, depth: depth)
+
+        case .endpointExample, .tabNavigator, .video, .links, .row, .small:
             // These are more complex and will be handled in Phase 6
             return ""
 
@@ -422,6 +425,68 @@ private extension RenderContentHTMLRenderer {
         }
 
         html += "\n        </dl>"
+        return html
+    }
+
+    func renderTutorialStep(
+        _ step: RenderBlockContent.TutorialStep,
+        references: [String: any RenderReference],
+        depth: Int
+    ) -> String {
+        var html = ""
+
+        // Render the step content (description)
+        for block in step.content {
+            html += renderBlockContent(block, references: references, depth: depth)
+        }
+
+        // Render media (image/video) if present
+        if let mediaIdentifier = step.media,
+           let mediaRef = references[mediaIdentifier.identifier] as? ImageReference {
+            // Use the first available asset variant
+            if let firstVariant = mediaRef.asset.variants.first {
+                let src = firstVariant.value.absoluteString
+                let relativeSrc = src.hasPrefix("/") ? makeRelativeURL(src, depth: depth) : src
+                let altText = mediaRef.altText ?? ""
+                html += """
+
+                    <div class="step-media">
+                        <img src="\(escapeHTML(relativeSrc))" alt="\(escapeHTML(altText))">
+                    </div>
+            """
+            }
+        }
+
+        // Render code reference if present
+        if let codeIdentifier = step.code,
+           let codeRef = references[codeIdentifier.identifier] as? FileReference {
+            let language = codeRef.syntax
+            let code = codeRef.content.joined(separator: "\n")
+            // Apply syntax highlighting for Swift code
+            let highlightedCode: String
+            if language.lowercased() == "swift" {
+                highlightedCode = swiftHighlighter.highlight(code)
+            } else {
+                highlightedCode = escapeHTML(code)
+            }
+            html += """
+
+                    <div class="step-code">
+                        <p class="code-file-name">\(escapeHTML(codeRef.fileName))</p>
+                        <pre class="language-\(language)"><code>\(highlightedCode)</code></pre>
+                    </div>
+            """
+        }
+
+        // Render caption if present
+        if !step.caption.isEmpty {
+            html += "\n            <div class=\"step-caption\">"
+            for block in step.caption {
+                html += renderBlockContent(block, references: references, depth: depth)
+            }
+            html += "\n            </div>"
+        }
+
         return html
     }
 }

@@ -246,6 +246,12 @@ public struct StaticDocumentationGenerator: Sendable {
             return true
         }
 
+        // When packageTargets is empty (e.g., rendering from archive without build),
+        // include all modules since we can't determine what's a package target
+        if packageTargets.isEmpty {
+            return true
+        }
+
         // Package's own targets are always included
         if packageTargets.contains(moduleName) {
             return true
@@ -690,6 +696,47 @@ public struct StaticDocumentationGenerator: Sendable {
         if configuration.isVerbose {
             log("Finished rendering pages")
         }
+    }
+
+    /// Renders documentation from an existing DocC archive to static HTML.
+    ///
+    /// This method allows rendering from a pre-generated `.doccarchive` without
+    /// needing to build symbol graphs, which is useful for testing and quick iterations.
+    ///
+    /// - Parameter archiveURL: Path to the `.doccarchive` directory.
+    /// - Returns: The generation result with statistics.
+    public func renderFromArchive(_ archiveURL: URL) async throws -> GenerationResult {
+        // Create output directory structure (including css/ and js/ subdirectories)
+        try createOutputDirectory()
+
+        // Write static assets (CSS, JS)
+        try writeAssets()
+
+        // Create the consumer
+        let consumer = StaticHTMLConsumer(
+            outputDirectory: configuration.outputDirectory,
+            configuration: configuration
+        )
+
+        // Render from archive (include all modules since we don't know package targets)
+        var searchBuilder: SearchIndexBuilder? = configuration.includeSearch ?
+            SearchIndexBuilder(configuration: configuration) : nil
+        try await renderFromArchive(
+            archiveURL,
+            consumer: consumer,
+            searchIndexBuilder: &searchBuilder,
+            packageTargets: []  // Empty means include all
+        )
+
+        // Generate index page
+        try generateIndexPage(consumer: consumer)
+
+        // Write search index if enabled
+        if let builder = searchBuilder {
+            try writeSearchIndex(builder)
+        }
+
+        return consumer.result()
     }
 
     /// Extracts the module name from a documentation or tutorial path.

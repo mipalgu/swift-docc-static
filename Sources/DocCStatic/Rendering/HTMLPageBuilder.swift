@@ -417,8 +417,13 @@ private extension HTMLPageBuilder {
             html += buildDeclaration(from: renderNode, references: references, depth: depth)
         }
 
-        // Primary content sections
+        // Primary content sections (used by symbols, articles)
         for section in renderNode.primaryContentSections {
+            html += buildSection(section, references: references, depth: depth)
+        }
+
+        // Sections array (used by tutorials and tutorial articles)
+        for section in renderNode.sections {
             html += buildSection(section, references: references, depth: depth)
         }
 
@@ -664,6 +669,38 @@ private extension HTMLPageBuilder {
             if let parametersSection = section as? ParametersRenderSection {
                 return buildParametersSection(parametersSection, references: references, depth: depth)
             }
+        case .hero, .intro:
+            if let introSection = section as? IntroRenderSection {
+                return buildIntroSection(introSection, references: references, depth: depth)
+            }
+        case .tasks:
+            if let tasksSection = section as? TutorialSectionsRenderSection {
+                return buildTutorialTasksSection(tasksSection, references: references, depth: depth)
+            }
+        case .assessments:
+            if let assessmentsSection = section as? TutorialAssessmentsRenderSection {
+                return buildAssessmentsSection(assessmentsSection, references: references, depth: depth)
+            }
+        case .callToAction:
+            if let ctaSection = section as? CallToActionSection {
+                return buildCallToActionSection(ctaSection, references: references, depth: depth)
+            }
+        case .articleBody:
+            if let articleSection = section as? TutorialArticleSection {
+                return buildTutorialArticleSection(articleSection, references: references, depth: depth)
+            }
+        case .contentAndMedia:
+            if let camSection = section as? ContentAndMediaSection {
+                return buildContentAndMediaSection(camSection, references: references, depth: depth)
+            }
+        case .volume:
+            if let volumeSection = section as? VolumeRenderSection {
+                return buildVolumeSection(volumeSection, references: references, depth: depth)
+            }
+        case .resources:
+            if let resourcesSection = section as? ResourcesRenderSection {
+                return buildResourcesSection(resourcesSection, references: references, depth: depth)
+            }
         default:
             break
         }
@@ -790,6 +827,460 @@ private extension HTMLPageBuilder {
         html += """
 
                         </ul>
+        """
+
+        return html
+    }
+
+    // MARK: - Tutorial Section Rendering
+
+    /// Builds an intro/hero section for tutorials.
+    func buildIntroSection(
+        _ section: IntroRenderSection,
+        references: [String: any RenderReference],
+        depth: Int
+    ) -> String {
+        var html = """
+
+                    <section class="tutorial-intro">
+        """
+
+        // Chapter label if available
+        if let chapter = section.chapter {
+            html += """
+
+                        <p class="tutorial-chapter">\(escapeHTML(chapter))</p>
+            """
+        }
+
+        // Title
+        html += """
+
+                        <h2 class="tutorial-title">\(escapeHTML(section.title))</h2>
+        """
+
+        // Estimated time
+        if let time = section.estimatedTimeInMinutes {
+            html += """
+
+                        <p class="tutorial-time">\(time) mins</p>
+            """
+        }
+
+        // Content
+        for block in section.content {
+            html += contentRenderer.renderBlockContent(block, references: references, depth: depth)
+        }
+
+        html += """
+
+                    </section>
+        """
+
+        return html
+    }
+
+    /// Builds the tasks section for tutorials.
+    func buildTutorialTasksSection(
+        _ section: TutorialSectionsRenderSection,
+        references: [String: any RenderReference],
+        depth: Int
+    ) -> String {
+        var html = """
+
+                    <section class="tutorial-tasks">
+        """
+
+        for (index, task) in section.tasks.enumerated() {
+            html += """
+
+                        <section class="tutorial-task" id="\(escapeHTML(task.anchor))">
+                            <h3>Section \(index + 1)</h3>
+                            <h4>\(escapeHTML(task.title))</h4>
+            """
+
+            // Content section
+            for layout in task.contentSection {
+                html += buildContentLayout(layout, references: references, depth: depth)
+            }
+
+            // Steps section
+            if !task.stepsSection.isEmpty {
+                html += """
+
+                            <div class="tutorial-steps">
+                """
+
+                for (stepIndex, step) in task.stepsSection.enumerated() {
+                    html += """
+
+                                <div class="tutorial-step">
+                                    <span class="step-number">Step \(stepIndex + 1)</span>
+                    """
+                    html += contentRenderer.renderBlockContent(step, references: references, depth: depth)
+                    html += """
+
+                                </div>
+                    """
+                }
+
+                html += """
+
+                            </div>
+                """
+            }
+
+            html += """
+
+                        </section>
+            """
+        }
+
+        html += """
+
+                    </section>
+        """
+
+        return html
+    }
+
+    /// Builds a content layout (fullWidth, contentAndMedia, columns).
+    func buildContentLayout(
+        _ layout: ContentLayout,
+        references: [String: any RenderReference],
+        depth: Int
+    ) -> String {
+        switch layout {
+        case .fullWidth(let content):
+            var html = """
+
+                            <div class="content-full-width">
+            """
+            for block in content {
+                html += contentRenderer.renderBlockContent(block, references: references, depth: depth)
+            }
+            html += """
+
+                            </div>
+            """
+            return html
+
+        case .contentAndMedia(let section):
+            return buildContentAndMediaSection(section, references: references, depth: depth)
+
+        case .columns(let sections):
+            var html = """
+
+                            <div class="content-columns">
+            """
+            for section in sections {
+                html += buildContentAndMediaSection(section, references: references, depth: depth)
+            }
+            html += """
+
+                            </div>
+            """
+            return html
+        }
+    }
+
+    /// Builds a content and media section.
+    func buildContentAndMediaSection(
+        _ section: ContentAndMediaSection,
+        references: [String: any RenderReference],
+        depth: Int
+    ) -> String {
+        var html = """
+
+                            <div class="content-and-media">
+                                <div class="content-side">
+        """
+
+        for block in section.content {
+            html += contentRenderer.renderBlockContent(block, references: references, depth: depth)
+        }
+
+        html += """
+
+                                </div>
+        """
+
+        // Media side
+        if let mediaRef = section.media {
+            if let imageRef = references[mediaRef.identifier] as? ImageReference {
+                // Use the identifier as the image path - it's typically the relative path from the archive
+                let imagePath = "images/\(mediaRef.identifier)"
+                let relativeURL = makeRelativeURL(imagePath, depth: depth)
+                html += """
+
+                                <div class="media-side">
+                                    <img src="\(escapeHTML(relativeURL))" alt="\(escapeHTML(imageRef.altText ?? ""))">
+                                </div>
+                """
+            }
+        }
+
+        html += """
+
+                            </div>
+        """
+
+        return html
+    }
+
+    /// Builds the assessments (quiz) section for tutorials.
+    func buildAssessmentsSection(
+        _ section: TutorialAssessmentsRenderSection,
+        references: [String: any RenderReference],
+        depth: Int
+    ) -> String {
+        var html = """
+
+                    <section class="tutorial-assessments">
+                        <h3>Check Your Understanding</h3>
+        """
+
+        for (index, assessment) in section.assessments.enumerated() {
+            html += """
+
+                        <div class="assessment">
+                            <p class="question-number">Question \(index + 1) of \(section.assessments.count)</p>
+                            <div class="question">
+            """
+
+            // Question content
+            if let content = assessment.content {
+                for block in content {
+                    html += contentRenderer.renderBlockContent(block, references: references, depth: depth)
+                }
+            }
+
+            html += """
+
+                            </div>
+                            <ul class="choices">
+            """
+
+            // Choices
+            for choice in assessment.choices {
+                let isCorrect = choice.isCorrect ? " data-correct=\"true\"" : ""
+                html += """
+
+                                <li class="choice"\(isCorrect)>
+                """
+                for block in choice.content {
+                    html += contentRenderer.renderBlockContent(block, references: references, depth: depth)
+                }
+                html += """
+
+                                </li>
+                """
+            }
+
+            html += """
+
+                            </ul>
+                        </div>
+            """
+        }
+
+        html += """
+
+                    </section>
+        """
+
+        return html
+    }
+
+    /// Builds the call to action section for tutorials.
+    func buildCallToActionSection(
+        _ section: CallToActionSection,
+        references: [String: any RenderReference],
+        depth: Int
+    ) -> String {
+        var html = """
+
+                    <section class="tutorial-cta">
+        """
+
+        html += """
+
+                        <h3>\(escapeHTML(section.title))</h3>
+        """
+
+        if !section.abstract.isEmpty {
+            html += """
+
+                        <p class="cta-abstract">
+            """
+            html += contentRenderer.renderInlineContent(section.abstract, references: references, depth: depth).html
+            html += """
+
+                        </p>
+            """
+        }
+
+        // Action link
+        html += """
+
+                        <div class="cta-action">
+        """
+        html += contentRenderer.renderInlineContent([section.action], references: references, depth: depth).html
+        html += """
+
+                        </div>
+        """
+
+        html += """
+
+                    </section>
+        """
+
+        return html
+    }
+
+    /// Builds a tutorial article section.
+    func buildTutorialArticleSection(
+        _ section: TutorialArticleSection,
+        references: [String: any RenderReference],
+        depth: Int
+    ) -> String {
+        var html = """
+
+                    <section class="tutorial-article">
+        """
+
+        for layout in section.content {
+            html += buildContentLayout(layout, references: references, depth: depth)
+        }
+
+        html += """
+
+                    </section>
+        """
+
+        return html
+    }
+
+    /// Builds a volume section (used in tutorial table of contents).
+    func buildVolumeSection(
+        _ section: VolumeRenderSection,
+        references: [String: any RenderReference],
+        depth: Int
+    ) -> String {
+        var html = """
+
+                    <section class="tutorial-volume">
+        """
+
+        if let name = section.name {
+            html += """
+
+                        <h3>\(escapeHTML(name))</h3>
+            """
+        }
+
+        // Content
+        if let content = section.content {
+            for block in content {
+                html += contentRenderer.renderBlockContent(block, references: references, depth: depth)
+            }
+        }
+
+        // Chapters
+        for chapter in section.chapters {
+            html += """
+
+                        <div class="volume-chapter">
+            """
+
+            if let name = chapter.name {
+                html += """
+
+                            <h4>\(escapeHTML(name))</h4>
+                """
+            }
+
+            // Chapter content
+            for block in chapter.content {
+                html += contentRenderer.renderBlockContent(block, references: references, depth: depth)
+            }
+
+            // Tutorial references
+            if !chapter.tutorials.isEmpty {
+                html += """
+
+                            <ul class="chapter-tutorials">
+                """
+
+                for tutorialRef in chapter.tutorials {
+                    if let ref = references[tutorialRef.identifier] as? TopicRenderReference {
+                        let url = makeRelativeURL(ref.url, depth: depth)
+                        html += """
+
+                                <li><a href="\(escapeHTML(url))">\(escapeHTML(ref.title))</a></li>
+                        """
+                    }
+                }
+
+                html += """
+
+                            </ul>
+                """
+            }
+
+            html += """
+
+                        </div>
+            """
+        }
+
+        html += """
+
+                    </section>
+        """
+
+        return html
+    }
+
+    /// Builds a resources section.
+    func buildResourcesSection(
+        _ section: ResourcesRenderSection,
+        references: [String: any RenderReference],
+        depth: Int
+    ) -> String {
+        var html = """
+
+                    <section class="resources">
+                        <h3>Resources</h3>
+        """
+
+        for tile in section.tiles {
+            html += """
+
+                        <div class="resource-tile">
+            """
+
+            if !tile.title.isEmpty {
+                html += """
+
+                            <h4>\(escapeHTML(tile.title))</h4>
+                """
+            }
+
+            for block in tile.content {
+                html += contentRenderer.renderBlockContent(block, references: references, depth: depth)
+            }
+
+            html += """
+
+                        </div>
+            """
+        }
+
+        html += """
+
+                    </section>
         """
 
         return html
