@@ -2984,7 +2984,7 @@ enum DocCStylesheet {
             padding: 0;
             background: transparent;
             font-size: 0.8125rem;
-            line-height: 1.7;
+            line-height: 1.4;
         }
 
         .code-panel-content code {
@@ -2997,6 +2997,8 @@ enum DocCStylesheet {
         .code-panel-content .line {
             display: flex;
             padding: 0 1rem;
+            margin: 0;
+            line-height: 1.4;
         }
 
         .code-panel-content .line:hover {
@@ -3069,23 +3071,135 @@ enum DocCStylesheet {
         }
 
         .choices {
-            list-style: none;
+            border: none;
             padding: 0;
             margin: 0;
         }
 
         .choice {
-            padding: 1rem;
-            border: 1px solid var(--docc-border);
+            display: flex;
+            align-items: flex-start;
+            padding: 1rem 1rem 1rem 3rem;
+            border: 2px solid var(--docc-border);
             border-radius: 8px;
             margin-bottom: 0.75rem;
             cursor: pointer;
             transition: border-color 0.15s ease, background-color 0.15s ease;
+            position: relative;
         }
 
         .choice:hover {
             border-color: var(--docc-accent);
             background: rgba(0, 102, 204, 0.05);
+        }
+
+        /* Hide the radio input but keep it accessible */
+        .choice-input {
+            position: absolute;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            left: 0;
+            top: 0;
+            cursor: pointer;
+            margin: 0;
+            z-index: 1;
+        }
+
+        /* Choice indicator (circle/checkmark area) */
+        .choice-indicator {
+            position: absolute;
+            left: 1rem;
+            top: 1.25rem;
+            width: 18px;
+            height: 18px;
+            border: 2px solid var(--docc-border);
+            border-radius: 50%;
+            background: var(--docc-bg);
+            transition: all 0.15s ease;
+        }
+
+        .choice-indicator::after {
+            content: '';
+            position: absolute;
+            display: none;
+        }
+
+        .choice-content {
+            flex: 1;
+        }
+
+        .choice-content p {
+            margin: 0;
+        }
+
+        /* Hide justification by default */
+        .choice-justification {
+            display: none;
+            margin-top: 0.75rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid currentColor;
+            opacity: 0.9;
+            font-size: 0.9rem;
+        }
+
+        /* Correct answer styling when selected */
+        .choice.correct-answer:has(.choice-input:checked) {
+            border-color: #34c759;
+            background: rgba(52, 199, 89, 0.1);
+        }
+
+        .choice.correct-answer:has(.choice-input:checked) .choice-indicator {
+            border-color: #34c759;
+            background: #34c759;
+        }
+
+        .choice.correct-answer:has(.choice-input:checked) .choice-indicator::after {
+            display: block;
+            left: 5px;
+            top: 2px;
+            width: 4px;
+            height: 8px;
+            border: solid white;
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
+        }
+
+        .choice.correct-answer:has(.choice-input:checked) .choice-justification {
+            display: block;
+            border-color: rgba(52, 199, 89, 0.3);
+        }
+
+        /* Incorrect answer styling when selected */
+        .choice.incorrect-answer:has(.choice-input:checked) {
+            border-color: #ff3b30;
+            background: rgba(255, 59, 48, 0.1);
+        }
+
+        .choice.incorrect-answer:has(.choice-input:checked) .choice-indicator {
+            border-color: #ff3b30;
+            background: #ff3b30;
+        }
+
+        .choice.incorrect-answer:has(.choice-input:checked) .choice-indicator::after {
+            display: block;
+            left: 3px;
+            top: 3px;
+            width: 8px;
+            height: 8px;
+            background: white;
+            clip-path: polygon(20% 0%, 0% 20%, 30% 50%, 0% 80%, 20% 100%, 50% 70%, 80% 100%, 100% 80%, 70% 50%, 100% 20%, 80% 0%, 50% 30%);
+        }
+
+        .choice.incorrect-answer:has(.choice-input:checked) .choice-justification {
+            display: block;
+            border-color: rgba(255, 59, 48, 0.3);
+        }
+
+        /* Disable pointer events on other choices once one is selected */
+        .choices:has(.choice-input:checked) .choice:not(:has(.choice-input:checked)) {
+            pointer-events: none;
+            opacity: 0.6;
         }
 
         /* ========================================

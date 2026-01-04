@@ -1322,6 +1322,7 @@ private extension HTMLPageBuilder {
         """
 
         for (index, assessment) in section.assessments.enumerated() {
+            let questionId = "q\(index)"
             html += """
 
                         <div class="assessment">
@@ -1339,28 +1340,47 @@ private extension HTMLPageBuilder {
             html += """
 
                             </div>
-                            <ul class="choices">
+                            <fieldset class="choices">
             """
 
-            // Choices
-            for choice in assessment.choices {
-                let isCorrect = choice.isCorrect ? " data-correct=\"true\"" : ""
+            // Choices - use hidden radio inputs for pure CSS interaction
+            for (choiceIndex, choice) in assessment.choices.enumerated() {
+                let choiceId = "\(questionId)c\(choiceIndex)"
+                let correctClass = choice.isCorrect ? " correct-answer" : " incorrect-answer"
                 html += """
 
-                                <li class="choice"\(isCorrect)>
+                                <label class="choice\(correctClass)" for="\(choiceId)">
+                                    <input type="radio" id="\(choiceId)" name="\(questionId)" class="choice-input">
+                                    <span class="choice-indicator"></span>
+                                    <span class="choice-content">
                 """
                 for block in choice.content {
                     html += contentRenderer.renderBlockContent(block, references: references, depth: depth)
                 }
+                // Add justification if available (shown when selected)
+                if let justification = choice.justification {
+                    html += """
+
+                                        <span class="choice-justification">
+                    """
+                    for block in justification {
+                        html += contentRenderer.renderBlockContent(block, references: references, depth: depth)
+                    }
+                    html += """
+
+                                        </span>
+                    """
+                }
                 html += """
 
-                                </li>
+                                    </span>
+                                </label>
                 """
             }
 
             html += """
 
-                            </ul>
+                            </fieldset>
                         </div>
             """
         }
