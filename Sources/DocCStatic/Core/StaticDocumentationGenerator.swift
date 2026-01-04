@@ -2432,12 +2432,13 @@ enum DocCStylesheet {
 
         .step-code-panel {
             flex: 1;
-            background: #1d1d1f;
+            background: var(--docc-bg-secondary);
             border-radius: 12px;
             overflow: hidden;
             max-height: 500px;
             display: flex;
             flex-direction: column;
+            border: 1px solid var(--docc-border);
         }
 
         .code-panel-header {
@@ -2445,19 +2446,19 @@ enum DocCStylesheet {
             align-items: center;
             gap: 0.5rem;
             padding: 0.875rem 1rem;
-            background: #2d2d2f;
-            border-bottom: 1px solid #3d3d3f;
+            background: var(--docc-bg);
+            border-bottom: 1px solid var(--docc-border);
         }
 
         .code-panel-header .file-icon {
-            color: #8e8e93;
+            color: var(--docc-fg-secondary);
         }
 
         .code-panel-header .file-name {
             font-family: var(--typeface-mono);
             font-size: 0.8125rem;
             font-weight: 500;
-            color: #ffffff;
+            color: var(--docc-fg);
         }
 
         .code-panel-content {
@@ -2478,7 +2479,7 @@ enum DocCStylesheet {
             display: block;
             background: transparent;
             padding: 0;
-            color: #ffffff;
+            color: var(--docc-fg);
         }
 
         .code-panel-content .line {
@@ -2487,7 +2488,7 @@ enum DocCStylesheet {
         }
 
         .code-panel-content .line:hover {
-            background: rgba(255, 255, 255, 0.05);
+            background: var(--docc-bg);
         }
 
         .code-panel-content .line-number {
@@ -2495,7 +2496,7 @@ enum DocCStylesheet {
             width: 3rem;
             text-align: right;
             padding-right: 1rem;
-            color: #5d5d5f;
+            color: var(--docc-fg-secondary);
             user-select: none;
         }
 
