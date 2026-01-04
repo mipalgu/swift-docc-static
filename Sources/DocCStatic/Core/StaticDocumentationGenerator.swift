@@ -2390,7 +2390,9 @@ enum DocCStylesheet {
             padding: 0;
         }
 
-        body.tutorial-page .doc-footer {
+        body.tutorial-page .doc-footer,
+        body.tutorial-overview-page .doc-footer,
+        body.index-page .doc-footer {
             margin-left: 0;
         }
 
@@ -2720,9 +2722,7 @@ enum DocCStylesheet {
             display: flex;
             align-items: center;
             justify-content: center;
-            background: var(--docc-bg-secondary);
             border-radius: 12px;
-            padding: 1.5rem;
             min-height: 250px;
         }
 

@@ -85,7 +85,7 @@ public extension IndexPageBuilder {
             <title>\(escapeHTML(title))</title>
             <link rel="stylesheet" href="css/main.css">
         </head>
-        <body>
+        <body class="index-page">
             <div class="container">
                 <header class="index-header">
                     <h1>\(escapeHTML(title))</h1>

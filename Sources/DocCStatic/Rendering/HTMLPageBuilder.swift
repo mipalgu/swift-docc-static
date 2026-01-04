@@ -639,6 +639,13 @@ private extension HTMLPageBuilder {
         return "\(name)~dark\(ext)"
     }
 
+    /// Converts an image path to its light variant path by removing `~dark` suffix.
+    /// For example: `images/foo~dark.svg` becomes `images/foo.svg`
+    /// If the path doesn't contain `~dark`, returns it unchanged.
+    func makeLightVariantPath(_ path: String) -> String {
+        path.replacingOccurrences(of: "~dark", with: "")
+    }
+
     func buildMainContent(
         from renderNode: RenderNode,
         references: [String: any RenderReference],
@@ -1957,12 +1964,17 @@ private extension HTMLPageBuilder {
         if let imageRef = section.image,
            let imageReference = references[imageRef.identifier] as? ImageReference,
            let variant = imageReference.asset.variants.first {
-            let src = makeRelativeAssetURL(variant.value.absoluteString, depth: depth)
+            let rawSrc = makeRelativeAssetURL(variant.value.absoluteString, depth: depth)
+            let lightSrc = makeLightVariantPath(rawSrc)
+            let darkSrc = makeDarkVariantPath(lightSrc)
             let alt = imageReference.altText ?? ""
             html += """
 
                     <div class="intro-media">
-                        <img src="\(escapeHTML(src))" alt="\(escapeHTML(alt))">
+                        <picture>
+                            <source srcset="\(escapeHTML(darkSrc))" media="(prefers-color-scheme: dark)">
+                            <img src="\(escapeHTML(lightSrc))" alt="\(escapeHTML(alt))">
+                        </picture>
                     </div>
             """
         }
@@ -2025,15 +2037,17 @@ private extension HTMLPageBuilder {
                         if let mediaRef = contentAndMedia.media,
                            let imageReference = references[mediaRef.identifier] as? ImageReference,
                            let variant = imageReference.asset.variants.first {
-                            let src = makeRelativeAssetURL(variant.value.absoluteString, depth: depth)
-                            let darkSrc = makeDarkVariantPath(src)
+                            let rawSrc = makeRelativeAssetURL(variant.value.absoluteString, depth: depth)
+                            // Ensure we use the light variant for img src, dark variant for source
+                            let lightSrc = makeLightVariantPath(rawSrc)
+                            let darkSrc = makeDarkVariantPath(lightSrc)
                             let alt = imageReference.altText ?? ""
                             html += """
 
                         <div class="section-media">
                             <picture>
                                 <source srcset="\(escapeHTML(darkSrc))" media="(prefers-color-scheme: dark)">
-                                <img src="\(escapeHTML(src))" alt="\(escapeHTML(alt))">
+                                <img src="\(escapeHTML(lightSrc))" alt="\(escapeHTML(alt))">
                             </picture>
                         </div>
                 """
@@ -2152,12 +2166,17 @@ private extension HTMLPageBuilder {
                   let mediaRef = references[mediaIdentifier.identifier] as? ImageReference,
                   let variant = mediaRef.asset.variants.first {
             // Media panel instead of code
-            let src = makeRelativeAssetURL(variant.value.absoluteString, depth: depth)
+            let rawSrc = makeRelativeAssetURL(variant.value.absoluteString, depth: depth)
+            let lightSrc = makeLightVariantPath(rawSrc)
+            let darkSrc = makeDarkVariantPath(lightSrc)
             let alt = mediaRef.altText ?? ""
             html += """
 
                             <div class="step-media-panel">
-                                <img src="\(escapeHTML(src))" alt="\(escapeHTML(alt))">
+                                <picture>
+                                    <source srcset="\(escapeHTML(darkSrc))" media="(prefers-color-scheme: dark)">
+                                    <img src="\(escapeHTML(lightSrc))" alt="\(escapeHTML(alt))">
+                                </picture>
                             </div>
             """
         }
