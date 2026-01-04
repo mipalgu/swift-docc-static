@@ -2084,11 +2084,12 @@ enum DocCStylesheet {
             padding-left: 2rem;
         }
 
-        .tutorial-hero-chapter {
+        .tutorial-chapter {
             font-size: 1.0625rem;
             font-weight: 400;
             color: rgba(255, 255, 255, 0.9);
-            margin-bottom: 0.5rem;
+            margin: 0 0 0.5rem 0;
+            padding-top: 0.5rem;
         }
 
         .tutorial-hero h1,
@@ -2218,11 +2219,15 @@ enum DocCStylesheet {
             display: flex;
             align-items: flex-start;
             justify-content: center;
+            background: var(--docc-bg-secondary);
+            border-radius: 12px;
+            padding: 2rem;
         }
 
         .section-media img {
             max-width: 100%;
             height: auto;
+            border-radius: 8px;
         }
 
         /* ========================================
@@ -2571,6 +2576,46 @@ enum DocCStylesheet {
         }
 
         /* ========================================
+           Tutorial Call-to-Action (Next Tutorial)
+           ======================================== */
+        .tutorial-cta {
+            padding: 3rem 4rem 4rem;
+            border-top: 1px solid var(--docc-border);
+            max-width: 900px;
+        }
+
+        .tutorial-cta h3 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin: 0 0 0.75rem 0;
+        }
+
+        .tutorial-cta .cta-abstract {
+            font-size: 1rem;
+            line-height: 1.5;
+            color: var(--docc-fg-secondary);
+            margin: 0 0 1.5rem 0;
+        }
+
+        .tutorial-cta .cta-action a {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1rem;
+            font-weight: 500;
+            color: var(--docc-accent);
+            text-decoration: none;
+        }
+
+        .tutorial-cta .cta-action a:hover {
+            text-decoration: underline;
+        }
+
+        .tutorial-cta .cta-action a::after {
+            content: '→';
+        }
+
+        /* ========================================
            Responsive Adjustments
            ======================================== */
         @media (max-width: 1024px) {
@@ -2668,7 +2713,8 @@ enum DocCStylesheet {
             .tutorial-intro-section,
             .section-header,
             .tutorial-steps-container,
-            .tutorial-assessments {
+            .tutorial-assessments,
+            .tutorial-cta {
                 padding-left: 1.5rem;
                 padding-right: 1.5rem;
             }
