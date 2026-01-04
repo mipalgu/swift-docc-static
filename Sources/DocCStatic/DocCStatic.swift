@@ -126,7 +126,7 @@ public struct Configuration: Sendable {
 
     /// The default footer HTML.
     public static let defaultFooter = """
-        Generated with <a href="https://github.com/mipalgu/swift-docc-static">swift-docc-static</a> \
+        <a href="https://github.com/mipalgu/swift-docc-static">swift-docc-static</a> \
         by <a href="https://hexel.au">René Hexel</a>
         """
 

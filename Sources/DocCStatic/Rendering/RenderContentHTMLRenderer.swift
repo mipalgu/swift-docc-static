@@ -192,7 +192,7 @@ private extension RenderContentHTMLRenderer {
             if let firstVariant = imageRef.asset.variants.first {
                 let src = firstVariant.value.absoluteString
                 // Make image paths relative if they start with /
-                let relativeSrc = src.hasPrefix("/") ? makeRelativeURL(src, depth: depth) : src
+                let relativeSrc = src.hasPrefix("/") ? makeRelativeAssetURL(src, depth: depth) : src
                 return InlineResult(
                     html: "<img src=\"\(escapeHTML(relativeSrc))\" alt=\"\(escapeHTML(altText))\">",
                     plainText: altText
@@ -211,6 +211,13 @@ private extension RenderContentHTMLRenderer {
             return url
         }
         return "\(prefix)\(cleanPath)/index.html"
+    }
+
+    /// Converts an absolute asset URL to a relative URL (no index.html suffix).
+    func makeRelativeAssetURL(_ url: String, depth: Int) -> String {
+        let cleanPath = url.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+        let prefix = String(repeating: "../", count: depth)
+        return "\(prefix)\(cleanPath)"
     }
 }
 
@@ -446,7 +453,7 @@ private extension RenderContentHTMLRenderer {
             // Use the first available asset variant
             if let firstVariant = mediaRef.asset.variants.first {
                 let src = firstVariant.value.absoluteString
-                let relativeSrc = src.hasPrefix("/") ? makeRelativeURL(src, depth: depth) : src
+                let relativeSrc = src.hasPrefix("/") ? makeRelativeAssetURL(src, depth: depth) : src
                 let altText = mediaRef.altText ?? ""
                 html += """
 

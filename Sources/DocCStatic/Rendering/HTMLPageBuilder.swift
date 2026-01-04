@@ -44,6 +44,11 @@ public extension HTMLPageBuilder {
     ///   - references: The references dictionary for resolving links.
     /// - Returns: The complete HTML document as a string.
     func buildPage(from renderNode: RenderNode, references: [String: any RenderReference]) throws -> String {
+        // Use specialized layout for tutorials
+        if renderNode.kind == .tutorial {
+            return buildTutorialPage(from: renderNode, references: references)
+        }
+
         let title = extractTitle(from: renderNode)
         let description = extractDescription(from: renderNode)
         let depth = calculateDepth(for: renderNode)
@@ -120,6 +125,75 @@ public extension HTMLPageBuilder {
         }
 
         // Add appearance selector script
+        html += appearanceSelectorScript
+
+        html += """
+
+        </body>
+        </html>
+        """
+
+        return html
+    }
+
+    /// Builds a complete HTML page for tutorials with specialized navigation and layout.
+    ///
+    /// Tutorials use a different layout from regular documentation:
+    /// - No sidebar navigation
+    /// - Top navigation bar with: overview link, tutorial dropdown, section dropdown
+    /// - Side-by-side layout for content and media/code
+    func buildTutorialPage(from renderNode: RenderNode, references: [String: any RenderReference]) -> String {
+        let title = extractTitle(from: renderNode)
+        let description = extractDescription(from: renderNode)
+        let depth = calculateDepth(for: renderNode)
+
+        let cssPath = String(repeating: "../", count: depth) + "css/main.css"
+
+        var html = """
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>\(escapeHTML(title))</title>
+        """
+
+        if let description = description {
+            html += """
+
+                <meta name="description" content="\(escapeHTML(description))">
+            """
+        }
+
+        html += """
+
+            <link rel="stylesheet" href="\(cssPath)">
+        </head>
+        <body class="tutorial-page">
+        """
+
+        // Add tutorial navigation bar
+        html += buildTutorialNavigation(for: renderNode, references: references, depth: depth)
+
+        // Add main content area (no sidebar wrapper)
+        html += """
+
+            <main class="tutorial-main">
+        """
+
+        // Add tutorial content
+        html += buildTutorialContent(from: renderNode, references: references, depth: depth)
+
+        html += """
+
+            </main>
+        """
+
+        // Add footer
+        html += buildFooter()
+
+        // Add appearance selector and dropdown scripts
+        html += tutorialDropdownScript
         html += appearanceSelectorScript
 
         html += """
@@ -363,6 +437,14 @@ private extension HTMLPageBuilder {
         let cleanPath = url.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
         let prefix = String(repeating: "../", count: depth)
         return "\(prefix)\(cleanPath)/index.html"
+    }
+
+    /// Builds a relative path for image/media assets (no index.html suffix).
+    func makeRelativeAssetURL(_ url: String, depth: Int) -> String {
+        // Remove leading slash and create relative path for assets
+        let cleanPath = url.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+        let prefix = String(repeating: "../", count: depth)
+        return "\(prefix)\(cleanPath)"
     }
 
     func buildMainContent(
@@ -1010,7 +1092,7 @@ private extension HTMLPageBuilder {
             if let imageRef = references[mediaRef.identifier] as? ImageReference {
                 // Use the identifier as the image path - it's typically the relative path from the archive
                 let imagePath = "images/\(mediaRef.identifier)"
-                let relativeURL = makeRelativeURL(imagePath, depth: depth)
+                let relativeURL = makeRelativeAssetURL(imagePath, depth: depth)
                 html += """
 
                                 <div class="media-side">
@@ -1395,6 +1477,495 @@ private extension HTMLPageBuilder {
                     const active = document.activeElement;
                     return active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.isContentEditable);
                 }
+            })();
+            </script>
+        """
+    }
+
+    // MARK: - Tutorial-Specific Methods
+
+    /// Builds the tutorial navigation bar with overview link and dropdowns.
+    func buildTutorialNavigation(
+        for renderNode: RenderNode,
+        references: [String: any RenderReference],
+        depth: Int
+    ) -> String {
+        let title = extractTitle(from: renderNode)
+
+        // Extract tutorial overview link from hierarchy
+        var overviewTitle = "Tutorials"
+        var overviewURL = makeRelativeURL("/tutorials/tutorials/index.html", depth: depth)
+
+        if let hierarchy = renderNode.hierarchyVariants.defaultValue {
+            switch hierarchy {
+            case .tutorials(let tutorialsHierarchy):
+                if let paths = tutorialsHierarchy.paths.first,
+                   let firstPath = paths.first,
+                   let ref = references[firstPath] as? TopicRenderReference {
+                    overviewTitle = ref.title
+                    overviewURL = makeRelativeURL(ref.url, depth: depth)
+                }
+            case .reference:
+                break
+            }
+        }
+
+        // Build section list for the dropdown
+        var sectionItems: [(title: String, anchor: String)] = []
+        sectionItems.append(("Introduction", ""))
+
+        for section in renderNode.sections {
+            if let tasksSection = section as? TutorialSectionsRenderSection {
+                for (index, task) in tasksSection.tasks.enumerated() {
+                    sectionItems.append((task.title, task.anchor))
+                    _ = index // Silence unused variable warning
+                }
+            } else if let assessmentSection = section as? TutorialAssessmentsRenderSection {
+                sectionItems.append(("Check Your Understanding", assessmentSection.anchor))
+            }
+        }
+
+        var html = """
+
+            <nav class="tutorial-nav">
+                <div class="tutorial-nav-content">
+                    <a href="\(overviewURL)" class="tutorial-nav-title">\(escapeHTML(overviewTitle))</a>
+                    <div class="tutorial-nav-dropdowns">
+                        <div class="tutorial-dropdown">
+                            <button class="tutorial-dropdown-toggle" aria-expanded="false" aria-haspopup="true">
+                                <span class="dropdown-label">\(escapeHTML(title))</span>
+                                <svg class="dropdown-chevron" width="12" height="12" viewBox="0 0 12 12">
+                                    <path d="M2 4l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.5"/>
+                                </svg>
+                            </button>
+                            <div class="tutorial-dropdown-menu" role="menu">
+        """
+
+        // Add tutorial options from siblings (if available from hierarchy)
+        // For now, just show the current tutorial as selected
+        html += """
+                                <a href="#" class="dropdown-item selected" role="menuitem">\(escapeHTML(title))</a>
+        """
+
+        html += """
+                            </div>
+                        </div>
+                        <span class="nav-separator">›</span>
+                        <div class="tutorial-dropdown section-dropdown">
+                            <button class="tutorial-dropdown-toggle" aria-expanded="false" aria-haspopup="true">
+                                <span class="dropdown-label">Introduction</span>
+                                <svg class="dropdown-chevron" width="12" height="12" viewBox="0 0 12 12">
+                                    <path d="M2 4l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.5"/>
+                                </svg>
+                            </button>
+                            <div class="tutorial-dropdown-menu" role="menu">
+        """
+
+        for (sectionTitle, anchor) in sectionItems {
+            let href = anchor.isEmpty ? "#" : "#\(anchor)"
+            let selectedClass = anchor.isEmpty ? " selected" : ""
+            html += """
+                                <a href="\(href)" class="dropdown-item\(selectedClass)" role="menuitem">\(escapeHTML(sectionTitle))</a>
+
+            """
+        }
+
+        html += """
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+        """
+
+        return html
+    }
+
+    /// Builds the tutorial content with side-by-side layouts.
+    func buildTutorialContent(
+        from renderNode: RenderNode,
+        references: [String: any RenderReference],
+        depth: Int
+    ) -> String {
+        var html = ""
+
+        // Hero section with dark background (includes intro content)
+        html += buildTutorialHero(from: renderNode, references: references, depth: depth)
+
+        // Tutorial sections with side-by-side layout
+        // Skip intro section as its content is now in the hero
+        for section in renderNode.sections {
+            if section is IntroRenderSection {
+                // Skip - intro content is rendered in the hero
+                continue
+            } else if let tasksSection = section as? TutorialSectionsRenderSection {
+                html += buildTutorialTasksSectionSideBySide(tasksSection, references: references, depth: depth)
+            } else if let assessmentSection = section as? TutorialAssessmentsRenderSection {
+                html += buildAssessmentsSection(assessmentSection, references: references, depth: depth)
+            } else if let ctaSection = section as? CallToActionSection {
+                html += buildCallToActionSection(ctaSection, references: references, depth: depth)
+            }
+        }
+
+        return html
+    }
+
+    /// Builds the tutorial hero section with dark background.
+    func buildTutorialHero(
+        from renderNode: RenderNode,
+        references: [String: any RenderReference],
+        depth: Int
+    ) -> String {
+        let title = extractTitle(from: renderNode)
+
+        // Get chapter name, time, and intro content from intro section
+        var chapterName = ""
+        var estimatedTime = ""
+        var heroImage: String?
+        var introContent: [RenderBlockContent] = []
+
+        for section in renderNode.sections {
+            if let intro = section as? IntroRenderSection {
+                chapterName = intro.chapter ?? ""
+                if let time = intro.estimatedTimeInMinutes {
+                    estimatedTime = "\(time) mins"
+                }
+                if let imageRef = intro.backgroundImage,
+                   let imgReference = references[imageRef.identifier] as? ImageReference,
+                   let variant = imgReference.asset.variants.first {
+                    heroImage = variant.value.absoluteString
+                }
+                introContent = intro.content
+                break
+            }
+        }
+
+        var html = """
+
+                <section class="tutorial-hero">
+                    <div class="tutorial-hero-content">
+        """
+
+        if !chapterName.isEmpty {
+            html += "\n                        <p class=\"tutorial-chapter\">\(escapeHTML(chapterName))</p>"
+        }
+
+        html += "\n                        <h1 class=\"tutorial-title\">\(escapeHTML(title))</h1>"
+
+        // Render intro content as the description in the hero
+        if !introContent.isEmpty {
+            html += "\n                        <div class=\"tutorial-abstract\">"
+            for block in introContent {
+                html += contentRenderer.renderBlockContent(block, references: references, depth: depth)
+            }
+            html += "\n                        </div>"
+        } else if let abstract = renderNode.abstract {
+            // Fallback to abstract if no intro content
+            let abstractHTML = contentRenderer.renderInlineContent(abstract, references: references, depth: depth)
+            html += "\n                        <p class=\"tutorial-abstract\">\(abstractHTML.html)</p>"
+        }
+
+        if !estimatedTime.isEmpty {
+            html += """
+
+                        <div class="tutorial-time">
+                            <span class="time-value">\(estimatedTime)</span>
+                            <span class="time-label">Estimated Time</span>
+                        </div>
+            """
+        }
+
+        html += "\n                    </div>"
+
+        // Hero background/decoration
+        if let image = heroImage {
+            let imagePath = makeRelativeAssetURL(image, depth: depth)
+            html += "\n                    <div class=\"tutorial-hero-background\">\n                        <img src=\"\(escapeHTML(imagePath))\" alt=\"\" aria-hidden=\"true\">\n                    </div>"
+        }
+
+        html += "\n                </section>"
+
+        return html
+    }
+
+    /// Builds tutorial intro section.
+    func buildTutorialIntroSection(
+        _ section: IntroRenderSection,
+        references: [String: any RenderReference],
+        depth: Int
+    ) -> String {
+        var html = """
+
+                <section class="tutorial-intro-section">
+        """
+
+        // Render intro content
+        for block in section.content {
+            html += contentRenderer.renderBlockContent(block, references: references, depth: depth)
+        }
+
+        // Render image if present
+        if let imageRef = section.image,
+           let imageReference = references[imageRef.identifier] as? ImageReference,
+           let variant = imageReference.asset.variants.first {
+            let src = makeRelativeAssetURL(variant.value.absoluteString, depth: depth)
+            let alt = imageReference.altText ?? ""
+            html += """
+
+                    <div class="intro-media">
+                        <img src="\(escapeHTML(src))" alt="\(escapeHTML(alt))">
+                    </div>
+            """
+        }
+
+        html += """
+
+                </section>
+        """
+
+        return html
+    }
+
+    /// Builds tutorial tasks section with side-by-side layout for steps.
+    func buildTutorialTasksSectionSideBySide(
+        _ section: TutorialSectionsRenderSection,
+        references: [String: any RenderReference],
+        depth: Int
+    ) -> String {
+        var html = ""
+
+        for (taskIndex, task) in section.tasks.enumerated() {
+            html += """
+
+                <section class="tutorial-section" id="\(task.anchor)">
+                    <div class="section-header">
+                        <p class="section-number">Section \(taskIndex + 1)</p>
+                        <h2 class="section-title">\(escapeHTML(task.title))</h2>
+                    </div>
+            """
+
+            // Content section (intro text with optional media) - side by side
+            if !task.contentSection.isEmpty {
+                html += "\n                    <div class=\"section-content-row\">\n                        <div class=\"section-text\">"
+
+                // Render content from each layout - just the text part
+                for layout in task.contentSection {
+                    switch layout {
+                    case .fullWidth(let content):
+                        for block in content {
+                            html += contentRenderer.renderBlockContent(block, references: references, depth: depth)
+                        }
+                    case .contentAndMedia(let section):
+                        for block in section.content {
+                            html += contentRenderer.renderBlockContent(block, references: references, depth: depth)
+                        }
+                    case .columns(let sections):
+                        for section in sections {
+                            for block in section.content {
+                                html += contentRenderer.renderBlockContent(block, references: references, depth: depth)
+                            }
+                        }
+                    }
+                }
+
+                html += "\n                        </div>"
+
+                // Check if there's media in the content section - render on the right
+                for layout in task.contentSection {
+                    if case .contentAndMedia(let contentAndMedia) = layout {
+                        if let mediaRef = contentAndMedia.media,
+                           let imageReference = references[mediaRef.identifier] as? ImageReference,
+                           let variant = imageReference.asset.variants.first {
+                            let src = makeRelativeAssetURL(variant.value.absoluteString, depth: depth)
+                            let alt = imageReference.altText ?? ""
+                            html += "\n                        <div class=\"section-media\">\n                            <img src=\"\(escapeHTML(src))\" alt=\"\(escapeHTML(alt))\">\n                        </div>"
+                        }
+                    }
+                }
+
+                html += "\n                    </div>"
+            }
+
+            // Steps section - each step is a card with code on the right
+            if !task.stepsSection.isEmpty {
+                html += """
+
+                    <div class="tutorial-steps-container">
+                """
+
+                for (stepIndex, step) in task.stepsSection.enumerated() {
+                    html += buildTutorialStepSideBySide(
+                        step,
+                        stepNumber: stepIndex + 1,
+                        references: references,
+                        depth: depth
+                    )
+                }
+
+                html += """
+
+                    </div>
+                """
+            }
+
+            html += """
+
+                </section>
+            """
+        }
+
+        return html
+    }
+
+    /// Builds a single tutorial step with side-by-side layout (step card + code panel).
+    func buildTutorialStepSideBySide(
+        _ step: RenderBlockContent,
+        stepNumber: Int,
+        references: [String: any RenderReference],
+        depth: Int
+    ) -> String {
+        guard case .step(let tutorialStep) = step else {
+            return contentRenderer.renderBlockContent(step, references: references, depth: depth)
+        }
+
+        var html = """
+
+                        <div class="tutorial-step-row">
+                            <div class="step-card">
+                                <p class="step-label">Step \(stepNumber)</p>
+                                <div class="step-content">
+        """
+
+        // Step description
+        for block in tutorialStep.content {
+            html += contentRenderer.renderBlockContent(block, references: references, depth: depth)
+        }
+
+        // Caption (if present)
+        if !tutorialStep.caption.isEmpty {
+            html += """
+
+                                    <div class="step-caption">
+            """
+            for block in tutorialStep.caption {
+                html += contentRenderer.renderBlockContent(block, references: references, depth: depth)
+            }
+            html += """
+
+                                    </div>
+            """
+        }
+
+        html += """
+
+                                </div>
+                            </div>
+        """
+
+        // Code panel (if present) - displayed on the right
+        if let codeIdentifier = tutorialStep.code,
+           let codeRef = references[codeIdentifier.identifier] as? FileReference {
+            html += """
+
+                            <div class="step-code-panel">
+                                <div class="code-panel-header">
+                                    <span class="file-icon">
+                                        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                                            <path d="M4 1h5l4 4v9a1 1 0 01-1 1H4a1 1 0 01-1-1V2a1 1 0 011-1z"/>
+                                            <path d="M9 1v4h4" fill="none" stroke="currentColor"/>
+                                        </svg>
+                                    </span>
+                                    <span class="file-name">\(escapeHTML(codeRef.fileName))</span>
+                                </div>
+                                <div class="code-panel-content">
+                                    <pre><code>
+            """
+
+            // Add line numbers and code - each line on its own row
+            let lines = codeRef.content
+            for (lineIndex, line) in lines.enumerated() {
+                let lineNum = lineIndex + 1
+                let escapedLine = escapeHTML(line)
+                html += "<div class=\"line\"><span class=\"line-number\">\(lineNum)</span><span class=\"line-content\">\(escapedLine)</span></div>\n"
+            }
+
+            html += "</code></pre>\n                                </div>\n                            </div>"
+        } else if let mediaIdentifier = tutorialStep.media,
+                  let mediaRef = references[mediaIdentifier.identifier] as? ImageReference,
+                  let variant = mediaRef.asset.variants.first {
+            // Media panel instead of code
+            let src = makeRelativeAssetURL(variant.value.absoluteString, depth: depth)
+            let alt = mediaRef.altText ?? ""
+            html += """
+
+                            <div class="step-media-panel">
+                                <img src="\(escapeHTML(src))" alt="\(escapeHTML(alt))">
+                            </div>
+            """
+        }
+
+        html += """
+
+                        </div>
+        """
+
+        return html
+    }
+
+    /// JavaScript for tutorial dropdown menus.
+    var tutorialDropdownScript: String {
+        """
+
+            <script>
+            (function() {
+                // --- Tutorial Dropdowns ---
+                const dropdowns = document.querySelectorAll('.tutorial-dropdown');
+                dropdowns.forEach(dropdown => {
+                    const toggle = dropdown.querySelector('.tutorial-dropdown-toggle');
+                    const menu = dropdown.querySelector('.tutorial-dropdown-menu');
+
+                    if (toggle && menu) {
+                        toggle.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            const isExpanded = toggle.getAttribute('aria-expanded') === 'true';
+                            closeAllDropdowns();
+                            if (!isExpanded) {
+                                toggle.setAttribute('aria-expanded', 'true');
+                                menu.classList.add('open');
+                            }
+                        });
+
+                        // Handle menu item clicks for section navigation
+                        menu.querySelectorAll('.dropdown-item').forEach(item => {
+                            item.addEventListener('click', (e) => {
+                                const href = item.getAttribute('href');
+                                if (href && href.startsWith('#')) {
+                                    // Update dropdown label
+                                    const label = toggle.querySelector('.dropdown-label');
+                                    if (label) {
+                                        label.textContent = item.textContent;
+                                    }
+                                    // Update selected state
+                                    menu.querySelectorAll('.dropdown-item').forEach(i => i.classList.remove('selected'));
+                                    item.classList.add('selected');
+                                }
+                                closeAllDropdowns();
+                            });
+                        });
+                    }
+                });
+
+                function closeAllDropdowns() {
+                    dropdowns.forEach(d => {
+                        const t = d.querySelector('.tutorial-dropdown-toggle');
+                        const m = d.querySelector('.tutorial-dropdown-menu');
+                        if (t) t.setAttribute('aria-expanded', 'false');
+                        if (m) m.classList.remove('open');
+                    });
+                }
+
+                // Close dropdowns when clicking outside
+                document.addEventListener('click', closeAllDropdowns);
             })();
             </script>
         """

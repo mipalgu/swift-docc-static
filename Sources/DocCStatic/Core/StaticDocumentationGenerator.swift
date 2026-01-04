@@ -1907,6 +1907,773 @@ enum DocCStylesheet {
             font-size: 0.8rem;
         }
 
+        /* ========================================
+           Tutorial Page Styles
+           Based on swift-docc-render structure
+           ======================================== */
+
+        /* Tutorial pages have no sidebar */
+        body.tutorial-page {
+            --sidebar-width: 0px;
+        }
+
+        body.tutorial-page .doc-sidebar {
+            display: none;
+        }
+
+        body.tutorial-page .doc-main {
+            margin-left: 0;
+            max-width: 100%;
+            padding: 0;
+        }
+
+        body.tutorial-page .doc-footer {
+            margin-left: 0;
+        }
+
+        body.tutorial-page .doc-layout {
+            padding-top: var(--header-height);
+        }
+
+        /* Tutorial Navigation Bar */
+        .tutorial-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: var(--header-height);
+            background: var(--docc-bg);
+            border-bottom: 1px solid var(--docc-border);
+            z-index: 100;
+            display: flex;
+            align-items: center;
+        }
+
+        .tutorial-nav-content {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            padding: 0 1.5rem;
+            gap: 1rem;
+        }
+
+        .tutorial-nav-title {
+            font-size: 0.9375rem;
+            font-weight: 600;
+            color: var(--docc-fg);
+            text-decoration: none;
+            white-space: nowrap;
+        }
+
+        .tutorial-nav-title:hover {
+            color: var(--docc-accent);
+            text-decoration: none;
+        }
+
+        .nav-separator {
+            color: var(--docc-fg-secondary);
+            font-size: 0.875rem;
+        }
+
+        .tutorial-nav-dropdowns {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-left: auto;
+        }
+
+        /* Tutorial dropdowns */
+        .tutorial-dropdown {
+            position: relative;
+        }
+
+        .tutorial-dropdown-toggle {
+            background: var(--docc-bg);
+            border: 1px solid var(--docc-border);
+            border-radius: 6px;
+            padding: 0.5rem 0.75rem;
+            font-size: 0.8125rem;
+            font-weight: 500;
+            color: var(--docc-fg);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            min-width: 180px;
+            max-width: 280px;
+        }
+
+        .tutorial-dropdown-toggle:hover {
+            background: var(--docc-bg-secondary);
+        }
+
+        .dropdown-label {
+            flex: 1;
+            text-align: left;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .dropdown-chevron {
+            flex-shrink: 0;
+            transition: transform 0.2s ease;
+        }
+
+        .tutorial-dropdown.open .dropdown-chevron {
+            transform: rotate(180deg);
+        }
+
+        .tutorial-dropdown-menu {
+            position: absolute;
+            top: calc(100% + 4px);
+            left: 0;
+            min-width: 100%;
+            max-width: 320px;
+            background: var(--docc-bg);
+            border: 1px solid var(--docc-border);
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            padding: 0.5rem 0;
+            z-index: 200;
+            display: none;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .tutorial-dropdown.open .tutorial-dropdown-menu {
+            display: block;
+        }
+
+        .dropdown-item {
+            display: block;
+            padding: 0.625rem 1rem;
+            font-size: 0.8125rem;
+            color: var(--docc-fg);
+            text-decoration: none;
+        }
+
+        .dropdown-item:hover {
+            background: var(--docc-bg-secondary);
+            text-decoration: none;
+        }
+
+        .dropdown-item.selected {
+            font-weight: 600;
+            color: var(--docc-accent);
+        }
+
+        /* ========================================
+           Tutorial Hero Section
+           Large dark section with left-aligned content
+           ======================================== */
+        .tutorial-hero {
+            background: #1d1d1f;
+            color: #ffffff;
+            min-height: 420px;
+            padding: 3rem 2rem;
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .tutorial-hero-content {
+            position: relative;
+            z-index: 2;
+            max-width: 600px;
+            padding-left: 2rem;
+        }
+
+        .tutorial-hero-chapter {
+            font-size: 1.0625rem;
+            font-weight: 400;
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 0.5rem;
+        }
+
+        .tutorial-hero h1,
+        .tutorial-hero .tutorial-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            line-height: 1.1;
+            margin: 0 0 1.25rem 0;
+            color: #ffffff;
+        }
+
+        .tutorial-hero .tutorial-abstract {
+            font-size: 1.0625rem;
+            line-height: 1.5;
+            color: rgba(255, 255, 255, 0.85);
+            margin-bottom: 2rem;
+        }
+
+        .tutorial-hero .tutorial-time {
+            display: flex;
+            flex-direction: column;
+            gap: 0.125rem;
+        }
+
+        .tutorial-hero .time-value {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .tutorial-hero .time-label {
+            font-size: 0.8125rem;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .tutorial-hero-background {
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            width: 60%;
+            z-index: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .tutorial-hero-background img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            opacity: 0.4;
+        }
+
+        /* ========================================
+           Tutorial Intro Section
+           ======================================== */
+        .tutorial-intro-section {
+            padding: 3rem 4rem;
+            max-width: 900px;
+        }
+
+        .tutorial-intro-section p {
+            font-size: 1.0625rem;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+        }
+
+        .intro-media {
+            margin-top: 2rem;
+        }
+
+        .intro-media img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+        }
+
+        /* ========================================
+           Tutorial Section with Steps
+           Two-column layout: steps left, sticky asset right
+           ======================================== */
+        .tutorial-section {
+            border-top: 1px solid var(--docc-border);
+            padding: 0;
+        }
+
+        .section-header {
+            padding: 3rem 4rem 2rem;
+            max-width: 900px;
+        }
+
+        .section-number {
+            font-size: 0.9375rem;
+            font-weight: 400;
+            color: var(--docc-fg-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .section-title {
+            font-size: 1.75rem;
+            font-weight: 600;
+            margin: 0;
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        /* Section intro content row */
+        .section-content-row {
+            display: flex;
+            padding: 0 4rem 2rem;
+        }
+
+        .section-text {
+            flex: 0 0 45%;
+            max-width: 500px;
+            padding-right: 3rem;
+        }
+
+        .section-text p {
+            font-size: 1rem;
+            line-height: 1.6;
+        }
+
+        .section-media {
+            flex: 1;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+        }
+
+        .section-media img {
+            max-width: 100%;
+            height: auto;
+        }
+
+        /* ========================================
+           Steps Layout (Two-Column with Sticky Asset)
+           ======================================== */
+        .tutorial-steps-wrapper {
+            display: flex;
+            position: relative;
+        }
+
+        .steps-content {
+            flex: 0 0 45%;
+            max-width: 500px;
+            padding: 0 2rem 0 4rem;
+        }
+
+        .steps-asset-container {
+            flex: 1;
+            position: sticky;
+            top: calc(var(--header-height) + 1rem);
+            height: calc(100vh - var(--header-height) - 2rem);
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            padding: 0 2rem;
+        }
+
+        /* Individual Step */
+        .tutorial-step {
+            padding: 1.5rem 0;
+            border-left: 3px solid transparent;
+            padding-left: 1.5rem;
+            margin-left: -1.5rem;
+        }
+
+        .tutorial-step.active {
+            border-left-color: var(--docc-accent);
+        }
+
+        .step-label {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--docc-accent);
+            margin-bottom: 0.75rem;
+        }
+
+        .step-content {
+            font-size: 1rem;
+            line-height: 1.6;
+        }
+
+        .step-content p {
+            margin: 0 0 1rem 0;
+        }
+
+        .step-content p:last-child {
+            margin-bottom: 0;
+        }
+
+        .step-caption {
+            margin-top: 1.25rem;
+            padding-top: 1.25rem;
+            border-top: 1px solid var(--docc-border);
+            font-size: 0.9375rem;
+            color: var(--docc-fg-secondary);
+        }
+
+        /* ========================================
+           Code Preview Panel (Right Side)
+           ======================================== */
+        .code-preview {
+            background: #1d1d1f;
+            border-radius: 12px;
+            overflow: hidden;
+            width: 100%;
+            max-width: 600px;
+            display: flex;
+            flex-direction: column;
+            max-height: calc(100vh - var(--header-height) - 4rem);
+        }
+
+        .code-preview-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.875rem 1rem;
+            background: #2d2d2f;
+            border-bottom: 1px solid #3d3d3f;
+        }
+
+        .file-icon {
+            color: #8e8e93;
+        }
+
+        .file-icon svg {
+            width: 16px;
+            height: 16px;
+            display: block;
+        }
+
+        .file-name {
+            font-family: var(--typeface-mono);
+            font-size: 0.8125rem;
+            font-weight: 500;
+            color: #ffffff;
+        }
+
+        .code-preview-content {
+            flex: 1;
+            overflow: auto;
+            padding: 1rem 0;
+        }
+
+        .code-preview-content pre {
+            margin: 0;
+            padding: 0;
+            background: transparent;
+            font-size: 0.8125rem;
+            line-height: 1.7;
+        }
+
+        .code-preview-content code {
+            display: block;
+            background: transparent;
+            padding: 0;
+            color: #ffffff;
+        }
+
+        .code-line {
+            display: flex;
+            padding: 0 1rem;
+        }
+
+        .code-line:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .line-number {
+            flex-shrink: 0;
+            width: 3rem;
+            text-align: right;
+            padding-right: 1rem;
+            color: #5d5d5f;
+            user-select: none;
+        }
+
+        .line-content {
+            flex: 1;
+            white-space: pre;
+        }
+
+        /* Code syntax highlighting for dark theme */
+        .code-preview .syntax-keyword { color: #ff7ab2; }
+        .code-preview .syntax-type { color: #dabaff; }
+        .code-preview .syntax-string { color: #ff8170; }
+        .code-preview .syntax-number { color: #d9c97c; }
+        .code-preview .syntax-comment { color: #7f8c8d; }
+
+        /* ========================================
+           Media Preview Panel
+           ======================================== */
+        .media-preview {
+            background: var(--docc-bg-secondary);
+            border-radius: 12px;
+            overflow: hidden;
+            width: 100%;
+            max-width: 600px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .media-preview img,
+        .media-preview video {
+            max-width: 100%;
+            max-height: calc(100vh - var(--header-height) - 8rem);
+            height: auto;
+            border-radius: 8px;
+        }
+
+        /* ========================================
+           Fallback: Simple Step Row Layout
+           Used when steps don't have associated media
+           ======================================== */
+        .tutorial-steps-container {
+            padding: 0 4rem 2rem;
+            max-width: 900px;
+        }
+
+        .tutorial-step-row {
+            display: flex;
+            gap: 2rem;
+            margin-bottom: 2rem;
+            align-items: flex-start;
+        }
+
+        .step-card {
+            flex: 0 0 45%;
+            max-width: 400px;
+        }
+
+        .step-code-panel {
+            flex: 1;
+            background: #1d1d1f;
+            border-radius: 12px;
+            overflow: hidden;
+            max-height: 500px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .code-panel-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.875rem 1rem;
+            background: #2d2d2f;
+            border-bottom: 1px solid #3d3d3f;
+        }
+
+        .code-panel-header .file-icon {
+            color: #8e8e93;
+        }
+
+        .code-panel-header .file-name {
+            font-family: var(--typeface-mono);
+            font-size: 0.8125rem;
+            font-weight: 500;
+            color: #ffffff;
+        }
+
+        .code-panel-content {
+            flex: 1;
+            overflow: auto;
+            padding: 1rem 0;
+        }
+
+        .code-panel-content pre {
+            margin: 0;
+            padding: 0;
+            background: transparent;
+            font-size: 0.8125rem;
+            line-height: 1.7;
+        }
+
+        .code-panel-content code {
+            display: block;
+            background: transparent;
+            padding: 0;
+            color: #ffffff;
+        }
+
+        .code-panel-content .line {
+            display: flex;
+            padding: 0 1rem;
+        }
+
+        .code-panel-content .line:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .code-panel-content .line-number {
+            flex-shrink: 0;
+            width: 3rem;
+            text-align: right;
+            padding-right: 1rem;
+            color: #5d5d5f;
+            user-select: none;
+        }
+
+        .code-panel-content .line-content {
+            flex: 1;
+            white-space: pre;
+        }
+
+        /* Step media panel */
+        .step-media-panel {
+            flex: 1;
+            background: var(--docc-bg-secondary);
+            border-radius: 12px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            max-height: 500px;
+        }
+
+        .step-media-panel img {
+            max-width: 100%;
+            max-height: 100%;
+            height: auto;
+            object-fit: contain;
+        }
+
+        /* ========================================
+           Tutorial Assessments
+           ======================================== */
+        .tutorial-assessments {
+            padding: 3rem 4rem;
+            max-width: 900px;
+        }
+
+        .tutorial-assessments h3 {
+            font-size: 1.5rem;
+            margin: 0 0 2rem 0;
+        }
+
+        .assessment {
+            background: var(--docc-bg-secondary);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .question-number {
+            font-size: 0.875rem;
+            color: var(--docc-fg-secondary);
+            margin-bottom: 1rem;
+        }
+
+        .question {
+            font-size: 1.0625rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .choices {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .choice {
+            padding: 1rem;
+            border: 1px solid var(--docc-border);
+            border-radius: 8px;
+            margin-bottom: 0.75rem;
+            cursor: pointer;
+            transition: border-color 0.15s ease, background-color 0.15s ease;
+        }
+
+        .choice:hover {
+            border-color: var(--docc-accent);
+            background: rgba(0, 102, 204, 0.05);
+        }
+
+        /* ========================================
+           Responsive Adjustments
+           ======================================== */
+        @media (max-width: 1024px) {
+            .tutorial-hero-content {
+                max-width: 500px;
+            }
+
+            .tutorial-hero-background {
+                width: 50%;
+                opacity: 0.3;
+            }
+
+            .section-content-row {
+                flex-direction: column;
+                padding: 0 2rem 2rem;
+            }
+
+            .section-text {
+                flex: none;
+                max-width: none;
+                padding-right: 0;
+                margin-bottom: 2rem;
+            }
+
+            .section-media {
+                width: 100%;
+            }
+
+            .tutorial-steps-wrapper {
+                flex-direction: column;
+            }
+
+            .steps-content {
+                flex: none;
+                max-width: none;
+                padding: 0 2rem;
+            }
+
+            .steps-asset-container {
+                position: relative;
+                top: auto;
+                height: auto;
+                padding: 2rem;
+            }
+
+            .tutorial-step-row {
+                flex-direction: column;
+            }
+
+            .step-card {
+                flex: none;
+                max-width: none;
+            }
+
+            .step-code-panel,
+            .step-media-panel {
+                max-height: 400px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .tutorial-nav-content {
+                padding: 0 1rem;
+            }
+
+            .tutorial-nav-title {
+                font-size: 0.8125rem;
+            }
+
+            .tutorial-dropdown-toggle {
+                min-width: 120px;
+                padding: 0.375rem 0.5rem;
+                font-size: 0.75rem;
+            }
+
+            .tutorial-hero {
+                min-height: 320px;
+                padding: 2rem 1rem;
+            }
+
+            .tutorial-hero-content {
+                padding-left: 1rem;
+                max-width: 100%;
+            }
+
+            .tutorial-hero h1,
+            .tutorial-hero .tutorial-title {
+                font-size: 1.75rem;
+            }
+
+            .tutorial-hero-background {
+                display: none;
+            }
+
+            .tutorial-intro-section,
+            .section-header,
+            .tutorial-steps-container,
+            .tutorial-assessments {
+                padding-left: 1.5rem;
+                padding-right: 1.5rem;
+            }
+        }
+
         \(theme.customCSS ?? "")
         """
     }
