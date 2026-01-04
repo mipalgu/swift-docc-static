@@ -108,6 +108,16 @@ public struct Configuration: Sendable {
     /// Whether to output verbose logging during generation.
     public var isVerbose: Bool
 
+    /// Custom scratch path for Swift build operations.
+    ///
+    /// If `nil`, uses the default `.build` directory in the package.
+    public var scratchPath: URL?
+
+    /// Pre-generated symbol graph directory.
+    ///
+    /// If set, skips the `swift build` step and uses these symbol graphs directly.
+    public var symbolGraphDir: URL?
+
     /// Custom HTML for the footer.
     ///
     /// This HTML is displayed at the bottom of each page when the user scrolls
@@ -131,6 +141,8 @@ public struct Configuration: Sendable {
     ///   - includeSearch: Whether to generate a search index.
     ///   - theme: Theme configuration.
     ///   - isVerbose: Whether to enable verbose logging.
+    ///   - scratchPath: Custom scratch path for builds, or nil for default.
+    ///   - symbolGraphDir: Pre-generated symbol graphs, or nil to generate.
     ///   - footerHTML: Custom footer HTML, or nil for the default.
     public init(
         packageDirectory: URL,
@@ -141,6 +153,8 @@ public struct Configuration: Sendable {
         includeSearch: Bool = false,
         theme: ThemeConfiguration = .default,
         isVerbose: Bool = false,
+        scratchPath: URL? = nil,
+        symbolGraphDir: URL? = nil,
         footerHTML: String? = nil
     ) {
         self.packageDirectory = packageDirectory
@@ -151,6 +165,8 @@ public struct Configuration: Sendable {
         self.includeSearch = includeSearch
         self.theme = theme
         self.isVerbose = isVerbose
+        self.scratchPath = scratchPath
+        self.symbolGraphDir = symbolGraphDir
         self.footerHTML = footerHTML
     }
 }

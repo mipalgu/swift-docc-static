@@ -41,6 +41,12 @@ struct Generate: AsyncParsableCommand {
     @Option(name: .shortAndLong, help: "Output directory for generated documentation.")
     var output: String = ".build/documentation"
 
+    @Option(name: .long, help: "Scratch path for Swift build operations.")
+    var scratchPath: String?
+
+    @Option(name: .long, help: "Pre-generated symbol graph directory (skips build step).")
+    var symbolGraphDir: String?
+
     @Option(name: .shortAndLong, help: "Specific targets to document (can be repeated).")
     var target: [String] = []
 
@@ -56,7 +62,7 @@ struct Generate: AsyncParsableCommand {
     @Option(name: .shortAndLong, help: "External documentation URL for a dependency (format: PackageName=URL).")
     var externalDocs: [String] = []
 
-    @Flag(name: .shortAndLong, help: "Generate client-side search functionality.")
+    @Flag(name: [.customShort("s"), .customLong("include-search")], help: "Generate client-side search functionality.")
     var includeSearch: Bool = false
 
     @Flag(name: [.customShort("v"), .customLong("verbose")], help: "Enable verbose output.")
@@ -105,6 +111,8 @@ struct Generate: AsyncParsableCommand {
             externalDocumentationURLs: externalURLs,
             includeSearch: includeSearch,
             isVerbose: isVerbose,
+            scratchPath: scratchPath.map { URL(fileURLWithPath: $0).standardizedFileURL },
+            symbolGraphDir: symbolGraphDir.map { URL(fileURLWithPath: $0).standardizedFileURL },
             footerHTML: footer
         )
 

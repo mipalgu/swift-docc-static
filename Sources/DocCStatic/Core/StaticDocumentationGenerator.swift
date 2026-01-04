@@ -6,7 +6,9 @@
 //  Copyright © 2026 Rene Hexel. All rights reserved.
 //
 import Foundation
+import Subprocess
 import SwiftDocC
+import System
 
 /// Errors that can occur during documentation generation.
 public enum GenerationError: Error, LocalizedError {
@@ -114,14 +116,30 @@ public struct StaticDocumentationGenerator: Sendable {
             try? fileManager.removeItem(at: tempDir)
         }
 
-        // Generate symbol graphs and run docc convert
-        let symbolGraphsDir = tempDir.appendingPathComponent("symbol-graphs")
+        // Use pre-generated symbol graphs or generate them
+        let symbolGraphsDir: URL
+        if let preGeneratedDir = configuration.symbolGraphDir {
+            if configuration.isVerbose {
+                log("Using pre-generated symbol graphs from: \(preGeneratedDir.path)")
+            }
+            symbolGraphsDir = preGeneratedDir
+        } else {
+            symbolGraphsDir = tempDir.appendingPathComponent("symbol-graphs")
+            try await generateSymbolGraphs(to: symbolGraphsDir)
+        }
+
         let archiveDir = tempDir.appendingPathComponent("archive.doccarchive")
 
         // Discover package targets for dependency filtering
-        let packageTargets = try await getPackageTargets()
+        // When using pre-generated symbol graphs, include all modules since the plugin
+        // already filtered what to generate symbol graphs for
+        let packageTargets: Set<String>
+        if configuration.symbolGraphDir != nil {
+            packageTargets = []  // Empty means include all
+        } else {
+            packageTargets = try await getPackageTargets()
+        }
 
-        try await generateSymbolGraphs(to: symbolGraphsDir)
         try await runDoccConvert(
             symbolGraphsDir: symbolGraphsDir,
             outputDir: archiveDir
@@ -166,23 +184,17 @@ public struct StaticDocumentationGenerator: Sendable {
     ///
     /// This distinguishes between the package's own targets and external dependencies.
     private func getPackageTargets() async throws -> Set<String> {
-        let process = Process()
-        process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
-        process.arguments = [
-            "swift", "package", "describe",
-            "--package-path", configuration.packageDirectory.path,
-            "--type", "json"
-        ]
+        let result = try await run(
+            .name("swift"),
+            arguments: Arguments([
+                "package", "describe",
+                "--package-path", configuration.packageDirectory.path,
+                "--type", "json"
+            ]),
+            output: .string(limit: 10 * 1024 * 1024)  // 10MB limit
+        )
 
-        let outputPipe = Pipe()
-        let errorPipe = Pipe()
-        process.standardOutput = outputPipe
-        process.standardError = errorPipe
-
-        try process.run()
-        process.waitUntilExit()
-
-        guard process.terminationStatus == 0 else {
+        guard result.terminationStatus.isSuccess else {
             // If we can't get package info, fall back to empty set
             // which means we'll include everything
             if configuration.isVerbose {
@@ -191,10 +203,10 @@ public struct StaticDocumentationGenerator: Sendable {
             return []
         }
 
-        let data = outputPipe.fileHandleForReading.readDataToEndOfFile()
-
         // Parse the JSON to extract target names
-        guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+        guard let outputString = result.standardOutput,
+              let data = outputString.data(using: .utf8),
+              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
               let targets = json["targets"] as? [[String: Any]] else {
             return []
         }
@@ -220,6 +232,12 @@ public struct StaticDocumentationGenerator: Sendable {
     ///   - packageTargets: The set of target names from the current package.
     /// - Returns: `true` if the module should be included, `false` otherwise.
     private func shouldIncludeModule(_ moduleName: String, packageTargets: Set<String>) -> Bool {
+        // When using pre-generated symbol graphs (from plugin), include all modules
+        // since the plugin already filtered what to generate symbol graphs for
+        if configuration.symbolGraphDir != nil {
+            return true
+        }
+
         // Package's own targets are always included
         if packageTargets.contains(moduleName) {
             return true
@@ -249,34 +267,45 @@ public struct StaticDocumentationGenerator: Sendable {
 
         try fileManager.createDirectory(at: outputDir, withIntermediateDirectories: true)
 
-        // Run swift build with emit-symbol-graph
-        let process = Process()
-        process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
-        process.arguments = [
-            "swift", "build",
+        // Build arguments for swift build with emit-symbol-graph
+        var arguments = [
+            "build",
             "--package-path", configuration.packageDirectory.path,
             "-Xswiftc", "-emit-symbol-graph",
             "-Xswiftc", "-emit-symbol-graph-dir",
             "-Xswiftc", outputDir.path
         ]
 
-        // Add target restrictions if specified
-        for target in configuration.targets {
-            process.arguments?.append(contentsOf: ["--target", target])
+        // Add scratch path if specified
+        if let scratchPath = configuration.scratchPath {
+            arguments.append(contentsOf: ["--scratch-path", scratchPath.path])
         }
 
-        let outputPipe = Pipe()
-        let errorPipe = Pipe()
-        process.standardOutput = outputPipe
-        process.standardError = errorPipe
+        // Add target restrictions if specified
+        for target in configuration.targets {
+            arguments.append(contentsOf: ["--target", target])
+        }
 
-        try process.run()
-        process.waitUntilExit()
+        // Use streaming API to show output as it arrives
+        // Note: swift-subprocess requires discarding stderr when streaming stdout
+        // Build diagnostics typically go to stdout anyway
+        let isVerbose = configuration.isVerbose
+        let result = try await run(
+            .name("swift"),
+            arguments: Arguments(arguments)
+        ) { execution, standardOutput in
+            // Stream stdout lines as they arrive
+            for try await line in standardOutput.lines(encoding: UTF8.self) {
+                if isVerbose {
+                    print(line)
+                }
+            }
+        }
 
-        if process.terminationStatus != 0 {
-            let errorData = errorPipe.fileHandleForReading.readDataToEndOfFile()
-            let errorMessage = String(data: errorData, encoding: .utf8) ?? "Unknown error"
-            throw GenerationError.symbolGraphGenerationFailed(errorMessage)
+        if !result.terminationStatus.isSuccess {
+            throw GenerationError.symbolGraphGenerationFailed(
+                "Build failed with exit code \(result.terminationStatus)"
+            )
         }
 
         if configuration.isVerbose {
@@ -292,11 +321,10 @@ public struct StaticDocumentationGenerator: Sendable {
         }
 
         // Find docc executable
-        let doccPath = try findDoccExecutable()
+        let doccPath = try await findDoccExecutable()
 
-        let process = Process()
-        process.executableURL = URL(fileURLWithPath: doccPath)
-        process.arguments = [
+        // Build arguments for docc convert
+        var arguments = [
             "convert",
             "--additional-symbol-graph-dir", symbolGraphsDir.path,
             "--output-path", outputDir.path,
@@ -310,25 +338,28 @@ public struct StaticDocumentationGenerator: Sendable {
             .appendingPathExtension("docc")
         let fileManager = FileManager.default
         if fileManager.fileExists(atPath: catalogPath.path) {
-            process.arguments?.insert(catalogPath.path, at: 1)
+            arguments.insert(catalogPath.path, at: 1)
         }
 
-        let outputPipe = Pipe()
-        let errorPipe = Pipe()
-        process.standardOutput = outputPipe
-        process.standardError = errorPipe
-
-        try process.run()
-        process.waitUntilExit()
+        // Use streaming API to show output as it arrives
+        // Note: swift-subprocess requires discarding stderr when streaming stdout
+        // docc diagnostics typically go to stdout anyway
+        let verbose = configuration.isVerbose
+        let result = try await run(
+            .path(FilePath(doccPath)),
+            arguments: Arguments(arguments)
+        ) { execution, standardOutput in
+            // Stream stdout lines as they arrive
+            for try await line in standardOutput.lines(encoding: UTF8.self) {
+                if verbose {
+                    print(line)
+                }
+            }
+        }
 
         // docc may return non-zero for warnings, which is fine
-        if process.terminationStatus != 0 {
-            let errorData = errorPipe.fileHandleForReading.readDataToEndOfFile()
-            let errorMessage = (String(data: errorData, encoding: .utf8) ?? "")
-                                .trimmingCharacters(in: .whitespacesAndNewlines)
-            if !errorMessage.isEmpty {
-                logWarning("docc: \(errorMessage)")
-            }
+        if !result.terminationStatus.isSuccess {
+            logWarning("docc exited with status: \(result.terminationStatus)")
         }
 
         if configuration.isVerbose {
@@ -336,7 +367,7 @@ public struct StaticDocumentationGenerator: Sendable {
         }
     }
 
-    private func findDoccExecutable() throws -> String {
+    private func findDoccExecutable() async throws -> String {
         // Try to find docc in common locations
         let possiblePaths = [
             "/usr/bin/docc",
@@ -352,19 +383,18 @@ public struct StaticDocumentationGenerator: Sendable {
         }
 
         // Try using xcrun
-        let xcrunProcess = Process()
-        xcrunProcess.executableURL = URL(fileURLWithPath: "/usr/bin/xcrun")
-        xcrunProcess.arguments = ["--find", "docc"]
-        let pipe = Pipe()
-        xcrunProcess.standardOutput = pipe
-        try? xcrunProcess.run()
-        xcrunProcess.waitUntilExit()
+        let result = try await run(
+            .path(FilePath("/usr/bin/xcrun")),
+            arguments: Arguments(["--find", "docc"]),
+            output: .string(limit: 4096)
+        )
 
-        if xcrunProcess.terminationStatus == 0 {
-            let data = pipe.fileHandleForReading.readDataToEndOfFile()
-            if let path = String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines),
-               !path.isEmpty {
-                return path
+        if result.terminationStatus.isSuccess {
+            if let output = result.standardOutput {
+                let path = output.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
+                if !path.isEmpty {
+                    return path
+                }
             }
         }
 

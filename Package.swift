@@ -18,6 +18,11 @@ let package = Package(
             name: "docc-static",
             targets: ["docc-static"]
         ),
+        // SPM plugin for documentation generation
+        .plugin(
+            name: "Generate Static Documentation",
+            targets: ["GenerateStaticDocumentation"]
+        ),
     ],
     dependencies: [
         // Core DocC functionality
@@ -25,6 +30,10 @@ let package = Package(
 
         // CLI argument parsing
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.5.0"),
+
+        // Subprocess handling
+        .package(url: "https://github.com/swiftlang/swift-subprocess.git", from: "0.1.0"),
+        .package(url: "https://github.com/swiftlang/swift-docc-plugin", from: "1.4.0"),
     ],
     targets: [
         // MARK: - Core Library
@@ -33,6 +42,7 @@ let package = Package(
             name: "DocCStatic",
             dependencies: [
                 .product(name: "SwiftDocC", package: "swift-docc"),
+                .product(name: "Subprocess", package: "swift-subprocess"),
             ],
             path: "Sources/DocCStatic"
         ),
@@ -56,10 +66,7 @@ let package = Package(
                 intent: .custom(
                     verb: "generate-static-documentation",
                     description: "Generate static HTML documentation for the package"
-                ),
-                permissions: [
-                    .writeToPackageDirectory(reason: "Write generated documentation to the package directory"),
-                ]
+                )
             ),
             dependencies: [
                 "docc-static",
