@@ -49,11 +49,30 @@ public extension IndexPageBuilder {
         }
     }
 
+    /// A tutorial collection entry.
+    struct TutorialEntry: Sendable {
+        /// The tutorial collection title.
+        public let title: String
+        /// The relative URL path to the tutorial overview.
+        public let path: String
+        /// The number of tutorials in the collection.
+        public let tutorialCount: Int
+
+        /// Creates a new tutorial entry.
+        public init(title: String, path: String, tutorialCount: Int) {
+            self.title = title
+            self.path = path
+            self.tutorialCount = tutorialCount
+        }
+    }
+
     /// Builds the combined index page HTML.
     ///
-    /// - Parameter modules: The documented modules to include.
+    /// - Parameters:
+    ///   - modules: The documented modules to include.
+    ///   - tutorials: The tutorial collections to include.
     /// - Returns: The complete HTML document as a string.
-    func buildIndexPage(modules: [ModuleEntry]) -> String {
+    func buildIndexPage(modules: [ModuleEntry], tutorials: [TutorialEntry] = []) -> String {
         let packageName = configuration.packageDirectory.lastPathComponent
         let title = "\(packageName) Documentation"
 
@@ -106,6 +125,27 @@ public extension IndexPageBuilder {
 
         """
 
+        // Tutorials section if available
+        if !tutorials.isEmpty {
+            html += """
+
+                <section class="tutorials-section">
+                    <h2>Tutorials</h2>
+                    <div class="tutorial-list">
+            """
+
+            for tutorial in tutorials {
+                html += buildTutorialCard(tutorial)
+            }
+
+            html += """
+
+                    </div>
+                </section>
+
+            """
+        }
+
         html += """
 
             </div>
@@ -145,6 +185,17 @@ private extension IndexPageBuilder {
                             <a href="\(escapeHTML(module.path))" class="module-name">\(escapeHTML(module.name))</a>
                             <p class="module-abstract">\(escapeHTML(module.abstract))</p>
                             <p class="module-stats">\(module.symbolCount) symbols</p>
+                        </div>
+        """
+    }
+
+    func buildTutorialCard(_ tutorial: TutorialEntry) -> String {
+        let tutorialText = tutorial.tutorialCount == 1 ? "tutorial" : "tutorials"
+        return """
+
+                        <div class="tutorial-collection-card">
+                            <a href="\(escapeHTML(tutorial.path))" class="tutorial-collection-name">\(escapeHTML(tutorial.title))</a>
+                            <p class="tutorial-collection-stats">\(tutorial.tutorialCount) \(tutorialText)</p>
                         </div>
         """
     }

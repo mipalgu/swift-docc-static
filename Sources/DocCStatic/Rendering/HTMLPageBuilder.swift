@@ -49,6 +49,10 @@ public extension HTMLPageBuilder {
             return buildTutorialPage(from: renderNode, references: references)
         }
 
+        if renderNode.kind == .overview {
+            return buildTutorialOverviewPage(from: renderNode, references: references)
+        }
+
         let title = extractTitle(from: renderNode)
         let description = extractDescription(from: renderNode)
         let depth = calculateDepth(for: renderNode)
@@ -138,6 +142,178 @@ public extension HTMLPageBuilder {
 
     /// Builds a complete HTML page for tutorials with specialized navigation and layout.
     ///
+    /// Builds a tutorial overview page showing all available tutorials grouped by chapter.
+    func buildTutorialOverviewPage(from renderNode: RenderNode, references: [String: any RenderReference]) -> String {
+        let title = extractTitle(from: renderNode)
+        let description = extractDescription(from: renderNode)
+        let depth = calculateDepth(for: renderNode)
+
+        let cssPath = String(repeating: "../", count: depth) + "css/main.css"
+
+        var html = """
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>\(escapeHTML(title))</title>
+        """
+
+        if let description = description {
+            html += """
+
+                <meta name="description" content="\(escapeHTML(description))">
+            """
+        }
+
+        html += """
+
+            <link rel="stylesheet" href="\(cssPath)">
+        </head>
+        <body class="tutorial-overview-page">
+            <main class="tutorial-overview-main">
+        """
+
+        // Build hero section
+        for section in renderNode.sections {
+            if let introSection = section as? IntroRenderSection {
+                html += buildOverviewHero(introSection, references: references, depth: depth)
+            } else if let volumeSection = section as? VolumeRenderSection {
+                html += buildOverviewVolume(volumeSection, references: references, depth: depth)
+            }
+        }
+
+        html += """
+
+            </main>
+        """
+
+        // Add footer
+        html += buildFooter()
+        html += appearanceSelectorScript
+
+        html += """
+
+        </body>
+        </html>
+        """
+
+        return html
+    }
+
+    /// Builds the hero section for tutorial overview.
+    private func buildOverviewHero(
+        _ hero: IntroRenderSection,
+        references: [String: any RenderReference],
+        depth: Int
+    ) -> String {
+        var html = """
+
+                <section class="overview-hero">
+                    <div class="overview-hero-content">
+                        <h1 class="overview-title">\(escapeHTML(hero.title))</h1>
+        """
+
+        for block in hero.content {
+            html += contentRenderer.renderBlockContent(block, references: references, depth: depth)
+        }
+
+        html += """
+
+                    </div>
+                </section>
+        """
+
+        return html
+    }
+
+    /// Builds the volume section with chapters and tutorials.
+    private func buildOverviewVolume(
+        _ volume: VolumeRenderSection,
+        references: [String: any RenderReference],
+        depth: Int
+    ) -> String {
+        var html = """
+
+                <section class="overview-volume">
+        """
+
+        for chapter in volume.chapters {
+            let chapterTitle = chapter.name ?? "Untitled Chapter"
+            html += """
+
+                    <div class="overview-chapter">
+                        <h2 class="chapter-title">\(escapeHTML(chapterTitle))</h2>
+            """
+
+            if !chapter.content.isEmpty {
+                html += "<div class=\"chapter-description\">"
+                for block in chapter.content {
+                    html += contentRenderer.renderBlockContent(block, references: references, depth: depth)
+                }
+                html += "</div>"
+            }
+
+            html += """
+
+                        <div class="chapter-tutorials">
+            """
+
+            for tutorialRefId in chapter.tutorials {
+                if let topicRef = references[tutorialRefId.identifier] as? TopicRenderReference {
+                    let tutorialURL = makeRelativeURL(topicRef.url, depth: depth)
+                    html += """
+
+                            <a href="\(tutorialURL)" class="tutorial-card">
+                                <span class="tutorial-card-title">\(escapeHTML(topicRef.title))</span>
+                    """
+
+                    if !topicRef.abstract.isEmpty {
+                        let abstractText = topicRef.abstract.map { renderInlineContentAsText($0) }.joined()
+                        html += """
+
+                                <span class="tutorial-card-abstract">\(escapeHTML(abstractText))</span>
+                        """
+                    }
+
+                    html += """
+
+                            </a>
+                    """
+                }
+            }
+
+            html += """
+
+                        </div>
+                    </div>
+            """
+        }
+
+        html += """
+
+                </section>
+        """
+
+        return html
+    }
+
+    /// Renders inline content to plain text for abstracts.
+    private func renderInlineContentAsText(_ content: RenderInlineContent) -> String {
+        switch content {
+        case .text(let text):
+            return text
+        case .codeVoice(let code):
+            return code
+        case .emphasis(let children), .strong(let children), .strikethrough(let children):
+            return children.map { renderInlineContentAsText($0) }.joined()
+        case .reference, .image:
+            return ""
+        default:
+            return ""
+        }
+    }
+
     /// Tutorials use a different layout from regular documentation:
     /// - No sidebar navigation
     /// - Top navigation bar with: overview link, tutorial dropdown, section dropdown
@@ -445,6 +621,22 @@ private extension HTMLPageBuilder {
         let cleanPath = url.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
         let prefix = String(repeating: "../", count: depth)
         return "\(prefix)\(cleanPath)"
+    }
+
+    /// Converts an image path to its dark variant path.
+    /// For example: `images/foo.svg` becomes `images/foo~dark.svg`
+    /// If the path already contains `~dark`, returns it unchanged.
+    func makeDarkVariantPath(_ path: String) -> String {
+        // Don't add ~dark if it's already there
+        if path.contains("~dark") {
+            return path
+        }
+        guard let dotIndex = path.lastIndex(of: ".") else {
+            return path + "~dark"
+        }
+        let name = path[..<dotIndex]
+        let ext = path[dotIndex...]
+        return "\(name)~dark\(ext)"
     }
 
     func buildMainContent(
@@ -1531,33 +1723,67 @@ private extension HTMLPageBuilder {
                 <div class="tutorial-nav-content">
                     <a href="\(overviewURL)" class="tutorial-nav-title">\(escapeHTML(overviewTitle))</a>
                     <div class="tutorial-nav-dropdowns">
-                        <div class="tutorial-dropdown">
-                            <button class="tutorial-dropdown-toggle" aria-expanded="false" aria-haspopup="true">
+                        <details class="tutorial-dropdown">
+                            <summary class="tutorial-dropdown-toggle">
                                 <span class="dropdown-label">\(escapeHTML(title))</span>
                                 <svg class="dropdown-chevron" width="12" height="12" viewBox="0 0 12 12">
                                     <path d="M2 4l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.5"/>
                                 </svg>
-                            </button>
+                            </summary>
                             <div class="tutorial-dropdown-menu" role="menu">
         """
 
-        // Add tutorial options from siblings (if available from hierarchy)
-        // For now, just show the current tutorial as selected
-        html += """
-                                <a href="#" class="dropdown-item selected" role="menuitem">\(escapeHTML(title))</a>
-        """
+        // Build tutorials dropdown from hierarchy
+        var siblingTutorials: [(title: String, url: String, isSelected: Bool)] = []
+        let currentPath = renderNode.identifier.path
+
+        if let hierarchy = renderNode.hierarchyVariants.defaultValue,
+           case .tutorials(let tutorialsHierarchy) = hierarchy,
+           let modules = tutorialsHierarchy.modules {
+            // Find sibling tutorials in the same module
+            for module in modules {
+                for tutorial in module.tutorials {
+                    if let tutorialRef = references[tutorial.reference.identifier] as? TopicRenderReference {
+                        let isSelected = tutorial.reference.identifier.contains(currentPath.split(separator: "/").last.map(String.init) ?? "")
+                            || tutorialRef.url == currentPath
+                        siblingTutorials.append((
+                            title: tutorialRef.title,
+                            url: makeRelativeURL(tutorialRef.url, depth: depth),
+                            isSelected: isSelected
+                        ))
+                    }
+                }
+                // If we found tutorials in this module, stop looking
+                if !siblingTutorials.isEmpty {
+                    break
+                }
+            }
+        }
+
+        // If no siblings found, just show current tutorial
+        if siblingTutorials.isEmpty {
+            siblingTutorials.append((title: title, url: "#", isSelected: true))
+        }
+
+        for (tutorialTitle, tutorialURL, isSelected) in siblingTutorials {
+            let selectedClass = isSelected ? " selected" : ""
+            html += """
+                                <a href="\(tutorialURL)" class="dropdown-item\(selectedClass)" role="menuitem">\(escapeHTML(tutorialTitle))</a>
+
+            """
+        }
 
         html += """
                             </div>
-                        </div>
+                        </details>
                         <span class="nav-separator">›</span>
-                        <div class="tutorial-dropdown section-dropdown">
-                            <button class="tutorial-dropdown-toggle" aria-expanded="false" aria-haspopup="true">
+                        <details class="tutorial-dropdown section-dropdown">
+                            <summary class="tutorial-dropdown-toggle">
                                 <span class="dropdown-label">Introduction</span>
                                 <svg class="dropdown-chevron" width="12" height="12" viewBox="0 0 12 12">
                                     <path d="M2 4l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.5"/>
                                 </svg>
-                            </button>
+                            </summary>
                             <div class="tutorial-dropdown-menu" role="menu">
         """
 
@@ -1572,7 +1798,7 @@ private extension HTMLPageBuilder {
 
         html += """
                             </div>
-                        </div>
+                        </details>
                     </div>
                 </div>
             </nav>
@@ -1677,10 +1903,20 @@ private extension HTMLPageBuilder {
 
         html += "\n                    </div>"
 
-        // Hero background/decoration
+        // Hero background/decoration - hero is always dark, so prefer dark variant
         if let image = heroImage {
             let imagePath = makeRelativeAssetURL(image, depth: depth)
-            html += "\n                    <div class=\"tutorial-hero-background\">\n                        <img src=\"\(escapeHTML(imagePath))\" alt=\"\" aria-hidden=\"true\">\n                    </div>"
+            let darkImagePath = makeDarkVariantPath(imagePath)
+            html += """
+
+                    <div class="tutorial-hero-background">
+                        <picture>
+                            <source srcset="\(escapeHTML(darkImagePath))" media="(prefers-color-scheme: dark)">
+                            <source srcset="\(escapeHTML(darkImagePath))">
+                            <img src="\(escapeHTML(darkImagePath))" alt="" aria-hidden="true">
+                        </picture>
+                    </div>
+            """
         }
 
         html += "\n                </section>"
@@ -1777,8 +2013,17 @@ private extension HTMLPageBuilder {
                            let imageReference = references[mediaRef.identifier] as? ImageReference,
                            let variant = imageReference.asset.variants.first {
                             let src = makeRelativeAssetURL(variant.value.absoluteString, depth: depth)
+                            let darkSrc = makeDarkVariantPath(src)
                             let alt = imageReference.altText ?? ""
-                            html += "\n                        <div class=\"section-media\">\n                            <img src=\"\(escapeHTML(src))\" alt=\"\(escapeHTML(alt))\">\n                        </div>"
+                            html += """
+
+                        <div class="section-media">
+                            <picture>
+                                <source srcset="\(escapeHTML(darkSrc))" media="(prefers-color-scheme: dark)">
+                                <img src="\(escapeHTML(src))" alt="\(escapeHTML(alt))">
+                            </picture>
+                        </div>
+                """
                         }
                     }
                 }

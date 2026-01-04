@@ -170,10 +170,15 @@ public struct StaticDocumentationGenerator: Sendable {
                 searchIndexBuilder: &searchIndexBuilder,
                 packageTargets: packageTargets
             )
+            // Copy images and other assets from this archive
+            try copyArchiveAssets(from: archiveDir)
         }
 
         // Write assets
         try writeAssets()
+
+        // Generate tutorial overview pages (landing pages for tutorials)
+        try generateTutorialOverviewPages()
 
         // Generate combined index page
         try generateIndexPage(consumer: consumer)
@@ -728,6 +733,12 @@ public struct StaticDocumentationGenerator: Sendable {
             packageTargets: []  // Empty means include all
         )
 
+        // Copy images and other assets from the archive
+        try copyArchiveAssets(from: archiveURL)
+
+        // Generate tutorial overview pages
+        try generateTutorialOverviewPages()
+
         // Generate index page
         try generateIndexPage(consumer: consumer)
 
@@ -770,6 +781,185 @@ public struct StaticDocumentationGenerator: Sendable {
         if configuration.isVerbose {
             log("Wrote search index: \(indexPath.path)")
         }
+    }
+
+    // MARK: - Tutorial Overview Page Generation
+
+    /// Generates tutorial overview (landing) pages for each module that has tutorials.
+    ///
+    /// This scans the generated tutorials directory and creates an overview page
+    /// listing all tutorials for each module.
+    private func generateTutorialOverviewPages() throws {
+        let fileManager = FileManager.default
+        let tutorialsRoot = configuration.outputDirectory.appendingPathComponent("tutorials")
+
+        guard fileManager.fileExists(atPath: tutorialsRoot.path) else {
+            return // No tutorials to generate overview for
+        }
+
+        // Get all module directories under tutorials/
+        guard let moduleDirectories = try? fileManager.contentsOfDirectory(
+            at: tutorialsRoot,
+            includingPropertiesForKeys: [.isDirectoryKey]
+        ) else {
+            return
+        }
+
+        for moduleDir in moduleDirectories {
+            var isDirectory: ObjCBool = false
+            guard fileManager.fileExists(atPath: moduleDir.path, isDirectory: &isDirectory),
+                  isDirectory.boolValue else {
+                continue
+            }
+
+            let moduleName = moduleDir.lastPathComponent
+
+            // Skip if overview already exists
+            let overviewPath = moduleDir.appendingPathComponent("index.html")
+            if fileManager.fileExists(atPath: overviewPath.path) {
+                continue
+            }
+
+            // Collect all tutorials in this module
+            guard let tutorialDirs = try? fileManager.contentsOfDirectory(
+                at: moduleDir,
+                includingPropertiesForKeys: [.isDirectoryKey]
+            ) else {
+                continue
+            }
+
+            var tutorials: [(title: String, abstract: String, path: String)] = []
+
+            for tutorialDir in tutorialDirs.sorted(by: { $0.lastPathComponent < $1.lastPathComponent }) {
+                var isTutorialDir: ObjCBool = false
+                guard fileManager.fileExists(atPath: tutorialDir.path, isDirectory: &isTutorialDir),
+                      isTutorialDir.boolValue else {
+                    continue
+                }
+
+                let tutorialIndexPath = tutorialDir.appendingPathComponent("index.html")
+                guard let tutorialHTML = try? String(contentsOf: tutorialIndexPath, encoding: .utf8) else {
+                    continue
+                }
+
+                // Extract title and abstract from the tutorial page
+                let info = extractTutorialInfo(from: tutorialHTML, fallbackName: tutorialDir.lastPathComponent)
+                tutorials.append((
+                    title: info.title,
+                    abstract: info.abstract,
+                    path: "\(tutorialDir.lastPathComponent)/index.html"
+                ))
+            }
+
+            guard !tutorials.isEmpty else {
+                continue
+            }
+
+            // Extract the overview title from any tutorial page's nav-title link
+            var overviewTitle = moduleName.capitalized + " Tutorials"
+            if let firstTutorialPath = tutorialDirs.first?.appendingPathComponent("index.html"),
+               let html = try? String(contentsOf: firstTutorialPath, encoding: .utf8),
+               let titleStart = html.range(of: "class=\"tutorial-nav-title\">"),
+               let titleEnd = html.range(of: "</a>", range: titleStart.upperBound..<html.endIndex) {
+                overviewTitle = String(html[titleStart.upperBound..<titleEnd.lowerBound])
+            }
+
+            // Generate the overview page HTML
+            let overviewHTML = buildTutorialOverviewHTML(
+                title: overviewTitle,
+                moduleName: moduleName,
+                tutorials: tutorials
+            )
+
+            // Create the tutorials/tutorials directory if needed (for the general landing)
+            let tutorialsTutorialsDir = tutorialsRoot.appendingPathComponent("tutorials")
+            try fileManager.createDirectory(at: tutorialsTutorialsDir, withIntermediateDirectories: true)
+
+            // Write to tutorials/tutorials/index.html (the general tutorials landing page)
+            let generalOverviewPath = tutorialsTutorialsDir.appendingPathComponent("index.html")
+            try overviewHTML.write(to: generalOverviewPath, atomically: true, encoding: .utf8)
+
+            if configuration.isVerbose {
+                log("Generated tutorial overview: \(generalOverviewPath.path)")
+            }
+        }
+    }
+
+    /// Extracts title and abstract from tutorial HTML.
+    private func extractTutorialInfo(from html: String, fallbackName: String) -> (title: String, abstract: String) {
+        var title = fallbackName.replacingOccurrences(of: "-", with: " ").capitalized
+
+        // Extract from <title> tag
+        if let titleStart = html.range(of: "<title>"),
+           let titleEnd = html.range(of: "</title>", range: titleStart.upperBound..<html.endIndex) {
+            title = String(html[titleStart.upperBound..<titleEnd.lowerBound])
+        }
+
+        // Extract abstract from tutorial-abstract div
+        var abstract = ""
+        if let abstractStart = html.range(of: "<div class=\"tutorial-abstract\">"),
+           let pStart = html.range(of: "<p>", range: abstractStart.upperBound..<html.endIndex),
+           let pEnd = html.range(of: "</p>", range: pStart.upperBound..<html.endIndex) {
+            abstract = String(html[pStart.upperBound..<pEnd.lowerBound])
+                .replacingOccurrences(of: "<[^>]+>", with: "", options: .regularExpression)
+        }
+
+        return (title: title, abstract: abstract)
+    }
+
+    /// Builds the HTML for a tutorial overview page.
+    private func buildTutorialOverviewHTML(
+        title: String,
+        moduleName: String,
+        tutorials: [(title: String, abstract: String, path: String)]
+    ) -> String {
+        var tutorialCards = ""
+        for tutorial in tutorials {
+            tutorialCards += """
+
+                    <a href="../\(moduleName)/\(escapeHTML(tutorial.path))" class="tutorial-card">
+                        <h3 class="tutorial-card-title">\(escapeHTML(tutorial.title))</h3>
+                        <p class="tutorial-card-abstract">\(escapeHTML(tutorial.abstract))</p>
+                    </a>
+            """
+        }
+
+        return """
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>\(escapeHTML(title))</title>
+            <link rel="stylesheet" href="../../css/main.css">
+        </head>
+        <body class="tutorial-overview-page">
+            <main class="tutorial-overview-main">
+                <section class="overview-hero">
+                    <div class="overview-hero-content">
+                        <h1 class="overview-title">\(escapeHTML(title))</h1>
+                        <p>Learn through hands-on tutorials covering all aspects of the framework.</p>
+                    </div>
+                </section>
+                <section class="overview-tutorials">
+                    <div class="tutorial-grid">
+        \(tutorialCards)
+                    </div>
+                </section>
+            </main>
+            \(configuration.footerHTML.map { "<footer class=\"doc-footer\">\($0)</footer>" } ?? "")
+        </body>
+        </html>
+        """
+    }
+
+    /// Escapes HTML special characters.
+    private func escapeHTML(_ string: String) -> String {
+        string
+            .replacingOccurrences(of: "&", with: "&amp;")
+            .replacingOccurrences(of: "<", with: "&lt;")
+            .replacingOccurrences(of: ">", with: "&gt;")
+            .replacingOccurrences(of: "\"", with: "&quot;")
     }
 
     // MARK: - Index Page Generation
@@ -821,7 +1011,58 @@ public struct StaticDocumentationGenerator: Sendable {
             }
         }
 
-        let html = indexBuilder.buildIndexPage(modules: modules)
+        // Collect tutorial collections
+        var tutorials: [IndexPageBuilder.TutorialEntry] = []
+        let tutorialsOverviewDir = configuration.outputDirectory
+            .appendingPathComponent("tutorials")
+            .appendingPathComponent("tutorials")
+        if fileManager.fileExists(atPath: tutorialsOverviewDir.path) {
+            // Count tutorials by scanning the tutorials/swiftmodelling/ etc. directories
+            let tutorialsRoot = configuration.outputDirectory.appendingPathComponent("tutorials")
+            if let tutorialModuleDirs = try? fileManager.contentsOfDirectory(
+                at: tutorialsRoot,
+                includingPropertiesForKeys: [.isDirectoryKey]
+            ) {
+                for moduleDir in tutorialModuleDirs {
+                    let moduleName = moduleDir.lastPathComponent
+                    // Skip the "tutorials" directory itself (that's the overview)
+                    guard moduleName != "tutorials" else { continue }
+                    var isDir: ObjCBool = false
+                    guard fileManager.fileExists(atPath: moduleDir.path, isDirectory: &isDir),
+                          isDir.boolValue else { continue }
+
+                    // Count tutorials in this module
+                    if let tutorialDirs = try? fileManager.contentsOfDirectory(
+                        at: moduleDir,
+                        includingPropertiesForKeys: [.isDirectoryKey]
+                    ) {
+                        let tutorialCount = tutorialDirs.filter { dir in
+                            var isDirCheck: ObjCBool = false
+                            return fileManager.fileExists(atPath: dir.path, isDirectory: &isDirCheck) && isDirCheck.boolValue
+                        }.count
+
+                        if tutorialCount > 0 {
+                            // Extract title from overview page
+                            let overviewPath = tutorialsOverviewDir.appendingPathComponent("index.html")
+                            var title = moduleName.capitalized + " Tutorials"
+                            if let html = try? String(contentsOf: overviewPath, encoding: .utf8),
+                               let titleStart = html.range(of: "<h1 class=\"overview-title\">"),
+                               let titleEnd = html.range(of: "</h1>", range: titleStart.upperBound..<html.endIndex) {
+                                title = String(html[titleStart.upperBound..<titleEnd.lowerBound])
+                            }
+
+                            tutorials.append(IndexPageBuilder.TutorialEntry(
+                                title: title,
+                                path: "tutorials/tutorials/index.html",
+                                tutorialCount: tutorialCount
+                            ))
+                        }
+                    }
+                }
+            }
+        }
+
+        let html = indexBuilder.buildIndexPage(modules: modules, tutorials: tutorials)
         let indexPath = configuration.outputDirectory.appendingPathComponent("index.html")
 
         try html.write(to: indexPath, atomically: true, encoding: .utf8)
@@ -944,6 +1185,102 @@ public struct StaticDocumentationGenerator: Sendable {
 
             if configuration.isVerbose {
                 log("Wrote search scripts: \(lunrPath.path), \(jsPath.path)")
+            }
+        }
+    }
+
+    /// Copies images and other assets from a DocC archive to the output directory.
+    ///
+    /// - Parameter archiveDir: The path to the `.doccarchive` directory.
+    private func copyArchiveAssets(from archiveDir: URL) throws {
+        let fileManager = FileManager.default
+
+        // Copy images directory if it exists
+        let imagesSource = archiveDir.appendingPathComponent("images")
+        if fileManager.fileExists(atPath: imagesSource.path) {
+            let imagesDestination = configuration.outputDirectory.appendingPathComponent("images")
+
+            // Copy each subdirectory/file, merging with existing content
+            if let contents = try? fileManager.contentsOfDirectory(
+                at: imagesSource,
+                includingPropertiesForKeys: [.isDirectoryKey]
+            ) {
+                try fileManager.createDirectory(at: imagesDestination, withIntermediateDirectories: true)
+
+                for item in contents {
+                    let destItem = imagesDestination.appendingPathComponent(item.lastPathComponent)
+
+                    // If it's a directory, copy recursively
+                    var isDirectory: ObjCBool = false
+                    if fileManager.fileExists(atPath: item.path, isDirectory: &isDirectory) {
+                        if isDirectory.boolValue {
+                            // Create destination directory and copy contents
+                            try fileManager.createDirectory(at: destItem, withIntermediateDirectories: true)
+                            try copyDirectoryContents(from: item, to: destItem)
+                        } else {
+                            // Copy file, overwriting if exists
+                            if fileManager.fileExists(atPath: destItem.path) {
+                                try fileManager.removeItem(at: destItem)
+                            }
+                            try fileManager.copyItem(at: item, to: destItem)
+                        }
+                    }
+                }
+
+                if configuration.isVerbose {
+                    log("Copied images from: \(imagesSource.path)")
+                }
+            }
+        }
+
+        // Copy downloads directory if it exists
+        let downloadsSource = archiveDir.appendingPathComponent("downloads")
+        if fileManager.fileExists(atPath: downloadsSource.path) {
+            let downloadsDestination = configuration.outputDirectory.appendingPathComponent("downloads")
+            try fileManager.createDirectory(at: downloadsDestination, withIntermediateDirectories: true)
+            try copyDirectoryContents(from: downloadsSource, to: downloadsDestination)
+
+            if configuration.isVerbose {
+                log("Copied downloads from: \(downloadsSource.path)")
+            }
+        }
+
+        // Copy videos directory if it exists
+        let videosSource = archiveDir.appendingPathComponent("videos")
+        if fileManager.fileExists(atPath: videosSource.path) {
+            let videosDestination = configuration.outputDirectory.appendingPathComponent("videos")
+            try fileManager.createDirectory(at: videosDestination, withIntermediateDirectories: true)
+            try copyDirectoryContents(from: videosSource, to: videosDestination)
+
+            if configuration.isVerbose {
+                log("Copied videos from: \(videosSource.path)")
+            }
+        }
+    }
+
+    /// Recursively copies the contents of a directory.
+    private func copyDirectoryContents(from source: URL, to destination: URL) throws {
+        let fileManager = FileManager.default
+
+        guard let contents = try? fileManager.contentsOfDirectory(
+            at: source,
+            includingPropertiesForKeys: [.isDirectoryKey]
+        ) else { return }
+
+        for item in contents {
+            let destItem = destination.appendingPathComponent(item.lastPathComponent)
+
+            var isDirectory: ObjCBool = false
+            if fileManager.fileExists(atPath: item.path, isDirectory: &isDirectory) {
+                if isDirectory.boolValue {
+                    try fileManager.createDirectory(at: destItem, withIntermediateDirectories: true)
+                    try copyDirectoryContents(from: item, to: destItem)
+                } else {
+                    if fileManager.fileExists(atPath: destItem.path) {
+                        try fileManager.removeItem(at: destItem)
+                    }
+                    try fileManager.copyItem(at: item, to: destItem)
+                }
             }
         }
     }
@@ -1907,6 +2244,51 @@ enum DocCStylesheet {
             font-size: 0.8rem;
         }
 
+        /* Tutorials section on index page */
+        .tutorials-section {
+            margin-top: 2.5rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--docc-border);
+        }
+
+        .tutorials-section h2 {
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .tutorial-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1rem;
+        }
+
+        .tutorial-collection-card {
+            padding: 1.25rem;
+            border: 1px solid var(--docc-border);
+            border-radius: 12px;
+            background: var(--docc-bg);
+            transition: box-shadow 0.2s, border-color 0.2s;
+        }
+
+        .tutorial-collection-card:hover {
+            border-color: var(--docc-accent);
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        .tutorial-collection-name {
+            font-size: 1.0625rem;
+            font-weight: 600;
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+
+        .tutorial-collection-stats {
+            color: var(--docc-fg-secondary);
+            font-size: 0.8rem;
+        }
+
         /* ========================================
            Tutorial Page Styles
            Based on swift-docc-render structure
@@ -1982,9 +2364,20 @@ enum DocCStylesheet {
             margin-left: auto;
         }
 
-        /* Tutorial dropdowns */
-        .tutorial-dropdown {
+        /* Tutorial dropdowns - pure CSS using details/summary */
+        details.tutorial-dropdown {
             position: relative;
+        }
+
+        /* Hide the default disclosure triangle */
+        details.tutorial-dropdown > summary {
+            list-style: none;
+        }
+        details.tutorial-dropdown > summary::-webkit-details-marker {
+            display: none;
+        }
+        details.tutorial-dropdown > summary::marker {
+            display: none;
         }
 
         .tutorial-dropdown-toggle {
@@ -2020,7 +2413,7 @@ enum DocCStylesheet {
             transition: transform 0.2s ease;
         }
 
-        .tutorial-dropdown.open .dropdown-chevron {
+        details.tutorial-dropdown[open] .dropdown-chevron {
             transform: rotate(180deg);
         }
 
@@ -2036,13 +2429,8 @@ enum DocCStylesheet {
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
             padding: 0.5rem 0;
             z-index: 200;
-            display: none;
             max-height: 400px;
             overflow-y: auto;
-        }
-
-        .tutorial-dropdown.open .tutorial-dropdown-menu {
-            display: block;
         }
 
         .dropdown-item {
@@ -2131,17 +2519,21 @@ enum DocCStylesheet {
             bottom: 0;
             width: 60%;
             z-index: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
             overflow: hidden;
         }
 
+        .tutorial-hero-background picture {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
         .tutorial-hero-background img {
-            max-width: 100%;
-            max-height: 100%;
-            object-fit: contain;
-            opacity: 0.4;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center;
+            opacity: 0.5;
         }
 
         /* ========================================
@@ -2200,13 +2592,16 @@ enum DocCStylesheet {
         /* Section intro content row */
         .section-content-row {
             display: flex;
+            gap: 3rem;
             padding: 0 4rem 2rem;
+            align-items: flex-start;
         }
 
         .section-text {
-            flex: 0 0 45%;
-            max-width: 500px;
-            padding-right: 3rem;
+            flex: 0 0 auto;
+            width: 40%;
+            min-width: 300px;
+            max-width: 450px;
         }
 
         .section-text p {
@@ -2215,19 +2610,29 @@ enum DocCStylesheet {
         }
 
         .section-media {
-            flex: 1;
+            flex: 1 1 auto;
             display: flex;
-            align-items: flex-start;
+            align-items: center;
             justify-content: center;
             background: var(--docc-bg-secondary);
             border-radius: 12px;
-            padding: 2rem;
+            padding: 1.5rem;
+            min-height: 250px;
+        }
+
+        .section-media picture {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
         }
 
         .section-media img {
-            max-width: 100%;
+            width: 100%;
             height: auto;
-            border-radius: 8px;
+            max-height: 400px;
+            object-fit: contain;
         }
 
         /* ========================================
@@ -2617,6 +3022,108 @@ enum DocCStylesheet {
         }
 
         /* ========================================
+           Tutorial Overview Page
+           ======================================== */
+        .tutorial-overview-page {
+            background: var(--docc-bg);
+            color: var(--docc-fg);
+            min-height: 100vh;
+        }
+
+        .tutorial-overview-main {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .overview-hero {
+            text-align: center;
+            padding: 4rem 2rem;
+            border-bottom: 1px solid var(--docc-border);
+        }
+
+        .overview-hero-content {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .overview-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin: 0 0 1.5rem 0;
+            color: var(--docc-fg);
+        }
+
+        .overview-hero p {
+            font-size: 1.125rem;
+            line-height: 1.6;
+            color: var(--docc-fg-secondary);
+            margin-bottom: 1rem;
+        }
+
+        .overview-volume {
+            padding: 3rem 0;
+        }
+
+        .overview-chapter {
+            margin-bottom: 3rem;
+        }
+
+        .chapter-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin: 0 0 1rem 0;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--docc-accent);
+        }
+
+        .chapter-description {
+            color: var(--docc-fg-secondary);
+            margin-bottom: 1.5rem;
+        }
+
+        .chapter-tutorials,
+        .tutorial-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .overview-tutorials {
+            padding: 3rem 4rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .tutorial-card {
+            display: flex;
+            flex-direction: column;
+            padding: 1.5rem;
+            background: var(--docc-bg-secondary);
+            border-radius: 12px;
+            text-decoration: none;
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        .tutorial-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .tutorial-card-title {
+            font-size: 1.0625rem;
+            font-weight: 600;
+            color: var(--docc-fg);
+            margin-bottom: 0.5rem;
+        }
+
+        .tutorial-card-abstract {
+            font-size: 0.875rem;
+            color: var(--docc-fg-secondary);
+            line-height: 1.5;
+        }
+
+        /* ========================================
            Responsive Adjustments
            ======================================== */
         @media (max-width: 1024px) {
@@ -2636,8 +3143,8 @@ enum DocCStylesheet {
 
             .section-text {
                 flex: none;
+                min-width: auto;
                 max-width: none;
-                padding-right: 0;
                 margin-bottom: 2rem;
             }
 
