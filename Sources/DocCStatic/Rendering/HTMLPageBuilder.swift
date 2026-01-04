@@ -1733,42 +1733,55 @@ private extension HTMLPageBuilder {
                             <div class="tutorial-dropdown-menu" role="menu">
         """
 
-        // Build tutorials dropdown from hierarchy
-        var siblingTutorials: [(title: String, url: String, isSelected: Bool)] = []
+        // Build tutorials dropdown from hierarchy - show ALL tutorials organized by chapter
         let currentPath = renderNode.identifier.path
+        var hasContent = false
 
         if let hierarchy = renderNode.hierarchyVariants.defaultValue,
            case .tutorials(let tutorialsHierarchy) = hierarchy,
-           let modules = tutorialsHierarchy.modules {
-            // Find sibling tutorials in the same module
-            for module in modules {
-                for tutorial in module.tutorials {
+           let chapters = tutorialsHierarchy.modules {
+            // Show all chapters with their tutorials
+            for chapter in chapters {
+                // Get chapter name from reference
+                let chapterTitle: String
+                if let chapterRef = references[chapter.reference.identifier] as? TopicRenderReference {
+                    chapterTitle = chapterRef.title
+                } else {
+                    chapterTitle = chapter.reference.identifier.components(separatedBy: "/").last ?? "Chapter"
+                }
+
+                // Only show chapter header if there are tutorials
+                guard !chapter.tutorials.isEmpty else { continue }
+                hasContent = true
+
+                html += """
+                                <div class="dropdown-chapter">
+                                    <span class="dropdown-chapter-title">\(escapeHTML(chapterTitle))</span>
+
+                """
+
+                for tutorial in chapter.tutorials {
                     if let tutorialRef = references[tutorial.reference.identifier] as? TopicRenderReference {
-                        let isSelected = tutorial.reference.identifier.contains(currentPath.split(separator: "/").last.map(String.init) ?? "")
-                            || tutorialRef.url == currentPath
-                        siblingTutorials.append((
-                            title: tutorialRef.title,
-                            url: makeRelativeURL(tutorialRef.url, depth: depth),
-                            isSelected: isSelected
-                        ))
+                        let isSelected = tutorialRef.url == currentPath
+                        let selectedClass = isSelected ? " selected" : ""
+                        html += """
+                                    <a href="\(makeRelativeURL(tutorialRef.url, depth: depth))" class="dropdown-item\(selectedClass)" role="menuitem">\(escapeHTML(tutorialRef.title))</a>
+
+                """
                     }
                 }
-                // If we found tutorials in this module, stop looking
-                if !siblingTutorials.isEmpty {
-                    break
-                }
+
+                html += """
+                                </div>
+
+                """
             }
         }
 
-        // If no siblings found, just show current tutorial
-        if siblingTutorials.isEmpty {
-            siblingTutorials.append((title: title, url: "#", isSelected: true))
-        }
-
-        for (tutorialTitle, tutorialURL, isSelected) in siblingTutorials {
-            let selectedClass = isSelected ? " selected" : ""
+        // Fallback if no tutorials found
+        if !hasContent {
             html += """
-                                <a href="\(tutorialURL)" class="dropdown-item\(selectedClass)" role="menuitem">\(escapeHTML(tutorialTitle))</a>
+                                <a href="#" class="dropdown-item selected" role="menuitem">\(escapeHTML(title))</a>
 
             """
         }

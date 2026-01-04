@@ -828,9 +828,12 @@ public struct StaticDocumentationGenerator: Sendable {
                 continue
             }
 
-            var tutorials: [(title: String, abstract: String, path: String)] = []
+            // Find any tutorial page to extract the hierarchy order
+            var orderedTutorialPaths: [String] = []
+            var overviewTitle = moduleName.capitalized + " Tutorials"
 
-            for tutorialDir in tutorialDirs.sorted(by: { $0.lastPathComponent < $1.lastPathComponent }) {
+            // Read hierarchy from first tutorial to get correct order
+            for tutorialDir in tutorialDirs {
                 var isTutorialDir: ObjCBool = false
                 guard fileManager.fileExists(atPath: tutorialDir.path, isDirectory: &isTutorialDir),
                       isTutorialDir.boolValue else {
@@ -838,30 +841,58 @@ public struct StaticDocumentationGenerator: Sendable {
                 }
 
                 let tutorialIndexPath = tutorialDir.appendingPathComponent("index.html")
+                guard let html = try? String(contentsOf: tutorialIndexPath, encoding: .utf8) else {
+                    continue
+                }
+
+                // Extract overview title
+                if let titleStart = html.range(of: "class=\"tutorial-nav-title\">"),
+                   let titleEnd = html.range(of: "</a>", range: titleStart.upperBound..<html.endIndex) {
+                    overviewTitle = String(html[titleStart.upperBound..<titleEnd.lowerBound])
+                }
+
+                // Extract tutorial order from dropdown - all href links in dropdown-chapter or dropdown-item
+                let pattern = "href=\"[^\"]*\(moduleName)/([^/\"]+)/index\\.html\""
+                if let regex = try? NSRegularExpression(pattern: pattern, options: []) {
+                    let range = NSRange(html.startIndex..<html.endIndex, in: html)
+                    let matches = regex.matches(in: html, options: [], range: range)
+                    for match in matches {
+                        if let pathRange = Range(match.range(at: 1), in: html) {
+                            let path = String(html[pathRange])
+                            if !orderedTutorialPaths.contains(path) {
+                                orderedTutorialPaths.append(path)
+                            }
+                        }
+                    }
+                }
+
+                // We only need to process one tutorial to get the hierarchy
+                if !orderedTutorialPaths.isEmpty {
+                    break
+                }
+            }
+
+            // Build tutorials list in correct order
+            var tutorials: [(title: String, abstract: String, path: String)] = []
+
+            for tutorialPath in orderedTutorialPaths {
+                let tutorialDir = moduleDir.appendingPathComponent(tutorialPath)
+                let tutorialIndexPath = tutorialDir.appendingPathComponent("index.html")
+
                 guard let tutorialHTML = try? String(contentsOf: tutorialIndexPath, encoding: .utf8) else {
                     continue
                 }
 
-                // Extract title and abstract from the tutorial page
-                let info = extractTutorialInfo(from: tutorialHTML, fallbackName: tutorialDir.lastPathComponent)
+                let info = extractTutorialInfo(from: tutorialHTML, fallbackName: tutorialPath)
                 tutorials.append((
                     title: info.title,
                     abstract: info.abstract,
-                    path: "\(tutorialDir.lastPathComponent)/index.html"
+                    path: "\(tutorialPath)/index.html"
                 ))
             }
 
             guard !tutorials.isEmpty else {
                 continue
-            }
-
-            // Extract the overview title from any tutorial page's nav-title link
-            var overviewTitle = moduleName.capitalized + " Tutorials"
-            if let firstTutorialPath = tutorialDirs.first?.appendingPathComponent("index.html"),
-               let html = try? String(contentsOf: firstTutorialPath, encoding: .utf8),
-               let titleStart = html.range(of: "class=\"tutorial-nav-title\">"),
-               let titleEnd = html.range(of: "</a>", range: titleStart.upperBound..<html.endIndex) {
-                overviewTitle = String(html[titleStart.upperBound..<titleEnd.lowerBound])
             }
 
             // Generate the overview page HTML
@@ -924,6 +955,8 @@ public struct StaticDocumentationGenerator: Sendable {
             """
         }
 
+        let footerContent = configuration.footerHTML ?? Configuration.defaultFooter
+
         return """
         <!DOCTYPE html>
         <html lang="en">
@@ -947,7 +980,55 @@ public struct StaticDocumentationGenerator: Sendable {
                     </div>
                 </section>
             </main>
-            \(configuration.footerHTML.map { "<footer class=\"doc-footer\">\($0)</footer>" } ?? "")
+            <footer class="doc-footer">
+                <div class="footer-content">\(footerContent)</div>
+                <div class="appearance-selector" id="appearance-selector">
+                    <button type="button" class="appearance-btn" data-theme="light" aria-label="Light mode">Light</button>
+                    <button type="button" class="appearance-btn" data-theme="dark" aria-label="Dark mode">Dark</button>
+                    <button type="button" class="appearance-btn active" data-theme="auto" aria-label="Auto mode">Auto</button>
+                </div>
+            </footer>
+            <script>
+            (function() {
+                const selector = document.getElementById('appearance-selector');
+                if (!selector) return;
+
+                // Show the selector (hidden by default for no-JS fallback)
+                selector.style.visibility = 'visible';
+
+                const buttons = selector.querySelectorAll('.appearance-btn');
+                const html = document.documentElement;
+
+                // Load saved preference
+                const saved = localStorage.getItem('docc-theme') || 'auto';
+                applyTheme(saved);
+                updateButtons(saved);
+
+                // Add click handlers
+                buttons.forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const theme = btn.dataset.theme;
+                        localStorage.setItem('docc-theme', theme);
+                        applyTheme(theme);
+                        updateButtons(theme);
+                    });
+                });
+
+                function applyTheme(theme) {
+                    if (theme === 'auto') {
+                        html.removeAttribute('data-theme');
+                    } else {
+                        html.setAttribute('data-theme', theme);
+                    }
+                }
+
+                function updateButtons(theme) {
+                    buttons.forEach(btn => {
+                        btn.classList.toggle('active', btn.dataset.theme === theme);
+                    });
+                }
+            })();
+            </script>
         </body>
         </html>
         """
@@ -2451,6 +2532,31 @@ enum DocCStylesheet {
             color: var(--docc-accent);
         }
 
+        /* Dropdown chapter grouping */
+        .dropdown-chapter {
+            padding: 0.25rem 0;
+        }
+
+        .dropdown-chapter:not(:first-child) {
+            border-top: 1px solid var(--docc-border);
+            margin-top: 0.5rem;
+            padding-top: 0.75rem;
+        }
+
+        .dropdown-chapter-title {
+            display: block;
+            padding: 0.375rem 1rem;
+            font-size: 0.6875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--docc-fg-secondary);
+        }
+
+        .dropdown-chapter .dropdown-item {
+            padding-left: 1.25rem;
+        }
+
         /* ========================================
            Tutorial Hero Section
            Large dark section with left-aligned content
@@ -2515,9 +2621,9 @@ enum DocCStylesheet {
         .tutorial-hero-background {
             position: absolute;
             top: 0;
+            left: 0;
             right: 0;
             bottom: 0;
-            width: 60%;
             z-index: 1;
             overflow: hidden;
         }
@@ -2532,7 +2638,7 @@ enum DocCStylesheet {
             width: 100%;
             height: 100%;
             object-fit: cover;
-            object-position: center;
+            object-position: right center;
             opacity: 0.5;
         }
 
@@ -2820,19 +2926,20 @@ enum DocCStylesheet {
            ======================================== */
         .tutorial-steps-container {
             padding: 0 4rem 2rem;
-            max-width: 900px;
         }
 
         .tutorial-step-row {
             display: flex;
-            gap: 2rem;
+            gap: 3rem;
             margin-bottom: 2rem;
             align-items: flex-start;
         }
 
         .step-card {
-            flex: 0 0 45%;
-            max-width: 400px;
+            flex: 0 0 auto;
+            width: 40%;
+            min-width: 300px;
+            max-width: 450px;
         }
 
         .step-code-panel {
@@ -3132,7 +3239,6 @@ enum DocCStylesheet {
             }
 
             .tutorial-hero-background {
-                width: 50%;
                 opacity: 0.3;
             }
 
