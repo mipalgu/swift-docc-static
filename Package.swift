@@ -33,6 +33,10 @@ let package = Package(
 
         // Subprocess handling
         .package(url: "https://github.com/swiftlang/swift-subprocess.git", from: "0.1.0"),
+
+        // System types (for Linux compatibility)
+        .package(url: "https://github.com/apple/swift-system.git", from: "1.4.0"),
+
         .package(url: "https://github.com/swiftlang/swift-docc-plugin", from: "1.4.0"),
     ],
     targets: [
@@ -43,6 +47,7 @@ let package = Package(
             dependencies: [
                 .product(name: "SwiftDocC", package: "swift-docc"),
                 .product(name: "Subprocess", package: "swift-subprocess"),
+                .product(name: "SystemPackage", package: "swift-system"),
             ],
             path: "Sources/DocCStatic"
         ),

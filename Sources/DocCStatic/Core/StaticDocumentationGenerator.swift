@@ -8,7 +8,12 @@
 import Foundation
 import Subprocess
 import SwiftDocC
+
+#if canImport(System)
 import System
+#else
+import SystemPackage
+#endif
 
 /// Errors that can occur during documentation generation.
 public enum GenerationError: Error, LocalizedError {
