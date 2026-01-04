@@ -637,44 +637,52 @@ public struct StaticDocumentationGenerator: Sendable {
         // Track which modules have been skipped
         var skippedModules = Set<String>()
 
-        // Find all JSON files in the data/documentation directory
-        let enumerator = fileManager.enumerator(
-            at: documentationDir,
-            includingPropertiesForKeys: [.isRegularFileKey],
-            options: [.skipsHiddenFiles]
-        )
-
         let decoder = JSONDecoder()
 
-        while let fileURL = enumerator?.nextObject() as? URL {
-            guard fileURL.pathExtension == "json" else { continue }
+        // Process both documentation and tutorials directories
+        let tutorialsDir = dataDir.appendingPathComponent("tutorials")
+        let dirsToProcess = [documentationDir, tutorialsDir].filter {
+            fileManager.fileExists(atPath: $0.path)
+        }
 
-            do {
-                let data = try Data(contentsOf: fileURL)
-                let renderNode = try decoder.decode(RenderNode.self, from: data)
+        for dir in dirsToProcess {
+            // Find all JSON files in the directory
+            let enumerator = fileManager.enumerator(
+                at: dir,
+                includingPropertiesForKeys: [.isRegularFileKey],
+                options: [.skipsHiddenFiles]
+            )
 
-                // Extract module name from the identifier path
-                // Path format: /documentation/ModuleName/... or doc://PackageName/documentation/ModuleName/...
-                let moduleName = extractModuleName(from: renderNode.identifier.path)
+            while let fileURL = enumerator?.nextObject() as? URL {
+                guard fileURL.pathExtension == "json" else { continue }
 
-                // Check if this module should be included
-                guard shouldIncludeModule(moduleName, packageTargets: packageTargets) else {
-                    if !skippedModules.contains(moduleName) {
-                        skippedModules.insert(moduleName)
-                        if configuration.isVerbose {
-                            log("Skipping dependency: \(moduleName)")
+                do {
+                    let data = try Data(contentsOf: fileURL)
+                    let renderNode = try decoder.decode(RenderNode.self, from: data)
+
+                    // Extract module name from the identifier path
+                    // Path format: /documentation/ModuleName/... or /tutorials/ModuleName/...
+                    let moduleName = extractModuleName(from: renderNode.identifier.path)
+
+                    // Check if this module should be included
+                    guard shouldIncludeModule(moduleName, packageTargets: packageTargets) else {
+                        if !skippedModules.contains(moduleName) {
+                            skippedModules.insert(moduleName)
+                            if configuration.isVerbose {
+                                log("Skipping dependency: \(moduleName)")
+                            }
                         }
+                        continue
                     }
-                    continue
-                }
 
-                try consumer.consume(renderNode: renderNode)
+                    try consumer.consume(renderNode: renderNode)
 
-                // Add to search index if enabled
-                searchIndexBuilder?.addToIndex(renderNode)
-            } catch {
-                if configuration.isVerbose {
-                    log("Warning: Failed to process \(fileURL.lastPathComponent): \(error)")
+                    // Add to search index if enabled
+                    searchIndexBuilder?.addToIndex(renderNode)
+                } catch {
+                    if configuration.isVerbose {
+                        log("Warning: Failed to process \(fileURL.lastPathComponent): \(error)")
+                    }
                 }
             }
         }
@@ -684,19 +692,22 @@ public struct StaticDocumentationGenerator: Sendable {
         }
     }
 
-    /// Extracts the module name from a documentation path.
+    /// Extracts the module name from a documentation or tutorial path.
     ///
-    /// - Parameter path: The identifier path (e.g., "/documentation/ModuleName/Symbol").
+    /// - Parameter path: The identifier path (e.g., "/documentation/ModuleName/Symbol" or "/tutorials/ModuleName/Tutorial").
     /// - Returns: The module name, or an empty string if not found.
     private func extractModuleName(from path: String) -> String {
-        // Path format: /documentation/ModuleName/...
+        // Path format: /documentation/ModuleName/... or /tutorials/ModuleName/...
         let components = path.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
             .components(separatedBy: "/")
             .filter { !$0.isEmpty }
 
-        // Module name is the second component after "documentation"
-        if components.count >= 2, components[0].lowercased() == "documentation" {
-            return components[1]
+        // Module name is the second component after "documentation" or "tutorials"
+        if components.count >= 2 {
+            let firstComponent = components[0].lowercased()
+            if firstComponent == "documentation" || firstComponent == "tutorials" {
+                return components[1]
+            }
         }
 
         return ""
