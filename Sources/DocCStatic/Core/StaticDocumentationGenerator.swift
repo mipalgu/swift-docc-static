@@ -133,8 +133,6 @@ public struct StaticDocumentationGenerator: Sendable {
             try await generateSymbolGraphs(to: symbolGraphsDir)
         }
 
-        let archiveDir = tempDir.appendingPathComponent("archive.doccarchive")
-
         // Discover package targets for dependency filtering
         // When using pre-generated symbol graphs, include all modules since the plugin
         // already filtered what to generate symbol graphs for
@@ -144,11 +142,6 @@ public struct StaticDocumentationGenerator: Sendable {
         } else {
             packageTargets = try await getPackageTargets()
         }
-
-        try await runDoccConvert(
-            symbolGraphsDir: symbolGraphsDir,
-            outputDir: archiveDir
-        )
 
         // Parse and render the documentation
         let consumer = StaticHTMLConsumer(
@@ -162,12 +155,22 @@ public struct StaticDocumentationGenerator: Sendable {
             searchIndexBuilder = SearchIndexBuilder(configuration: configuration)
         }
 
-        try await renderFromArchive(
-            archiveDir,
-            consumer: consumer,
-            searchIndexBuilder: &searchIndexBuilder,
-            packageTargets: packageTargets
+        // Run docc convert for each catalog separately, then for remaining symbol graphs
+        // This is necessary because docc doesn't properly associate catalogs with modules
+        // when multiple symbol graphs are present
+        let archives = try await runDoccConvertForAllTargets(
+            symbolGraphsDir: symbolGraphsDir,
+            tempDir: tempDir
         )
+
+        for archiveDir in archives {
+            try await renderFromArchive(
+                archiveDir,
+                consumer: consumer,
+                searchIndexBuilder: &searchIndexBuilder,
+                packageTargets: packageTargets
+            )
+        }
 
         // Write assets
         try writeAssets()
@@ -320,7 +323,19 @@ public struct StaticDocumentationGenerator: Sendable {
 
     // MARK: - DocC Conversion
 
-    private func runDoccConvert(symbolGraphsDir: URL, outputDir: URL) async throws {
+    /// Runs docc convert with optional catalog and target name.
+    ///
+    /// - Parameters:
+    ///   - symbolGraphsDir: Directory containing symbol graph JSON files.
+    ///   - outputDir: Output directory for the doccarchive.
+    ///   - catalog: Optional DocC catalog to include.
+    ///   - targetName: Optional target name for fallback metadata.
+    private func runDoccConvert(
+        symbolGraphsDir: URL,
+        outputDir: URL,
+        catalog: URL? = nil,
+        targetName: String? = nil
+    ) async throws {
         if configuration.isVerbose {
             log("Running docc convert...")
         }
@@ -328,22 +343,33 @@ public struct StaticDocumentationGenerator: Sendable {
         // Find docc executable
         let doccPath = try await findDoccExecutable()
 
+        // Determine the target/module name for fallback metadata
+        let moduleName: String
+        if let name = targetName {
+            moduleName = name
+        } else if let firstTarget = configuration.targets.first {
+            moduleName = firstTarget
+        } else {
+            // Fall back to package directory name
+            moduleName = configuration.packageDirectory.lastPathComponent
+        }
+
         // Build arguments for docc convert
         var arguments = [
             "convert",
             "--additional-symbol-graph-dir", symbolGraphsDir.path,
             "--output-path", outputDir.path,
-            "--emit-digest"
+            "--emit-digest",
+            "--fallback-display-name", moduleName,
+            "--fallback-bundle-identifier", moduleName
         ]
 
-        // Add DocC catalog if it exists
-        let catalogPath = configuration.packageDirectory
-            .appendingPathComponent("Sources")
-            .appendingPathComponent(configuration.targets.first ?? "")
-            .appendingPathExtension("docc")
-        let fileManager = FileManager.default
-        if fileManager.fileExists(atPath: catalogPath.path) {
-            arguments.insert(catalogPath.path, at: 1)
+        // Add catalog as the main input if provided
+        if let catalogURL = catalog {
+            arguments.insert(catalogURL.path, at: 1)
+            if configuration.isVerbose {
+                log("Using DocC catalog: \(catalogURL.path)")
+            }
         }
 
         // Use streaming API to show output as it arrives
@@ -370,6 +396,128 @@ public struct StaticDocumentationGenerator: Sendable {
         if configuration.isVerbose {
             log("DocC archive created at: \(outputDir.path)")
         }
+    }
+
+    /// Runs docc convert for all targets, handling catalogs separately.
+    ///
+    /// This runs docc convert once per DocC catalog with only the matching symbol graph,
+    /// then runs a final conversion for any remaining symbol graphs. This is necessary
+    /// because docc doesn't properly associate catalogs with modules when multiple
+    /// symbol graphs are present.
+    ///
+    /// - Parameters:
+    ///   - symbolGraphsDir: The directory containing all symbol graph JSON files.
+    ///   - tempDir: The temporary directory for archives.
+    /// - Returns: Array of archive directories to process.
+    private func runDoccConvertForAllTargets(
+        symbolGraphsDir: URL,
+        tempDir: URL
+    ) async throws -> [URL] {
+        let fileManager = FileManager.default
+        var archives: [URL] = []
+
+        // Find all DocC catalogs
+        let catalogs = findDoccCatalogs(in: configuration.packageDirectory, fileManager: fileManager)
+
+        // Track which symbol graphs have been processed
+        var processedSymbolGraphs = Set<String>()
+
+        // Process each catalog with its matching symbol graph
+        for catalog in catalogs {
+            let catalogName = catalog.deletingPathExtension().lastPathComponent
+
+            // Find matching symbol graph file
+            let matchingSymbolGraph = findMatchingSymbolGraph(
+                for: catalogName,
+                in: symbolGraphsDir,
+                fileManager: fileManager
+            )
+
+            // Create a temporary directory with just this symbol graph
+            let catalogSymbolGraphsDir = tempDir.appendingPathComponent("sg-\(catalogName)")
+            try fileManager.createDirectory(at: catalogSymbolGraphsDir, withIntermediateDirectories: true)
+
+            if let symbolGraph = matchingSymbolGraph {
+                let destPath = catalogSymbolGraphsDir.appendingPathComponent(symbolGraph.lastPathComponent)
+                try fileManager.copyItem(at: symbolGraph, to: destPath)
+                processedSymbolGraphs.insert(symbolGraph.lastPathComponent)
+            }
+
+            // Run docc convert for this catalog
+            let archiveDir = tempDir.appendingPathComponent("archive-\(catalogName).doccarchive")
+            try await runDoccConvert(
+                symbolGraphsDir: catalogSymbolGraphsDir,
+                outputDir: archiveDir,
+                catalog: catalog,
+                targetName: catalogName
+            )
+            archives.append(archiveDir)
+        }
+
+        // Find remaining symbol graphs that weren't matched to catalogs
+        let allSymbolGraphs = try fileManager.contentsOfDirectory(atPath: symbolGraphsDir.path)
+            .filter { $0.hasSuffix(".symbols.json") }
+
+        let remainingSymbolGraphs = allSymbolGraphs.filter { !processedSymbolGraphs.contains($0) }
+
+        if !remainingSymbolGraphs.isEmpty {
+            // Create temp directory for remaining symbol graphs
+            let remainingSymbolGraphsDir = tempDir.appendingPathComponent("sg-remaining")
+            try fileManager.createDirectory(at: remainingSymbolGraphsDir, withIntermediateDirectories: true)
+
+            for symbolGraph in remainingSymbolGraphs {
+                let sourcePath = symbolGraphsDir.appendingPathComponent(symbolGraph)
+                let destPath = remainingSymbolGraphsDir.appendingPathComponent(symbolGraph)
+                try fileManager.copyItem(at: sourcePath, to: destPath)
+            }
+
+            // Run docc convert for remaining symbol graphs (no catalog)
+            let archiveDir = tempDir.appendingPathComponent("archive-remaining.doccarchive")
+            try await runDoccConvert(
+                symbolGraphsDir: remainingSymbolGraphsDir,
+                outputDir: archiveDir,
+                catalog: nil,
+                targetName: nil
+            )
+            archives.append(archiveDir)
+        }
+
+        return archives
+    }
+
+    /// Finds a symbol graph file matching the given catalog name.
+    private func findMatchingSymbolGraph(
+        for catalogName: String,
+        in symbolGraphsDir: URL,
+        fileManager: FileManager
+    ) -> URL? {
+        guard let contents = try? fileManager.contentsOfDirectory(atPath: symbolGraphsDir.path) else {
+            return nil
+        }
+
+        // Try exact match first (e.g., "SwiftModelling" -> "SwiftModelling.symbols.json")
+        let exactMatch = "\(catalogName).symbols.json"
+        if contents.contains(exactMatch) {
+            return symbolGraphsDir.appendingPathComponent(exactMatch)
+        }
+
+        // Try with underscores replacing hyphens (e.g., "swift-atl" -> "swift_atl.symbols.json")
+        let underscoreMatch = catalogName.replacingOccurrences(of: "-", with: "_") + ".symbols.json"
+        if contents.contains(underscoreMatch) {
+            return symbolGraphsDir.appendingPathComponent(underscoreMatch)
+        }
+
+        // Try case-insensitive match
+        let lowercaseName = catalogName.lowercased()
+        for file in contents where file.hasSuffix(".symbols.json") {
+            let baseName = String(file.dropLast(".symbols.json".count))
+            if baseName.lowercased() == lowercaseName ||
+               baseName.lowercased().replacingOccurrences(of: "_", with: "-") == lowercaseName {
+                return symbolGraphsDir.appendingPathComponent(file)
+            }
+        }
+
+        return nil
     }
 
     private func findDoccExecutable() async throws -> String {
@@ -404,6 +552,47 @@ public struct StaticDocumentationGenerator: Sendable {
         }
 
         throw GenerationError.doccNotFound
+    }
+
+    /// Finds all DocC catalogs (.docc directories) in a package.
+    ///
+    /// - Parameters:
+    ///   - packageDirectory: The root directory of the Swift package.
+    ///   - fileManager: The file manager to use for directory enumeration.
+    /// - Returns: An array of URLs pointing to DocC catalog directories.
+    private func findDoccCatalogs(in packageDirectory: URL, fileManager: FileManager) -> [URL] {
+        let sourcesDir = packageDirectory.appendingPathComponent("Sources")
+        var catalogs: [URL] = []
+
+        // Check if Sources directory exists
+        guard fileManager.fileExists(atPath: sourcesDir.path) else {
+            return catalogs
+        }
+
+        // Enumerate all items in Sources directory
+        guard let enumerator = fileManager.enumerator(
+            at: sourcesDir,
+            includingPropertiesForKeys: [.isDirectoryKey],
+            options: [.skipsHiddenFiles]
+        ) else {
+            return catalogs
+        }
+
+        while let url = enumerator.nextObject() as? URL {
+            // Check if this is a .docc directory
+            if url.pathExtension == "docc" {
+                var isDirectory: ObjCBool = false
+                if fileManager.fileExists(atPath: url.path, isDirectory: &isDirectory),
+                   isDirectory.boolValue {
+                    catalogs.append(url)
+                    // Don't descend into .docc directories
+                    enumerator.skipDescendants()
+                }
+            }
+        }
+
+        // Sort catalogs by name for deterministic ordering
+        return catalogs.sorted { $0.lastPathComponent < $1.lastPathComponent }
     }
 
     // MARK: - Archive Rendering
