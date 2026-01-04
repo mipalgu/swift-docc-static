@@ -414,7 +414,7 @@ private extension HTMLPageBuilder {
 
         // Declaration (for symbols)
         if renderNode.kind == .symbol {
-            html += buildDeclaration(from: renderNode, references: references)
+            html += buildDeclaration(from: renderNode, references: references, depth: depth)
         }
 
         // Primary content sections
@@ -558,17 +558,17 @@ private extension HTMLPageBuilder {
         }
     }
 
-    func buildDeclaration(from renderNode: RenderNode, references: [String: any RenderReference]) -> String {
+    func buildDeclaration(from renderNode: RenderNode, references: [String: any RenderReference], depth: Int) -> String {
         // Look for declaration section in primary content
         for section in renderNode.primaryContentSections {
             if let declarationSection = section as? DeclarationsRenderSection {
-                return buildDeclarationsSection(declarationSection)
+                return buildDeclarationsSection(declarationSection, references: references, depth: depth)
             }
         }
         return ""
     }
 
-    func buildDeclarationsSection(_ section: DeclarationsRenderSection) -> String {
+    func buildDeclarationsSection(_ section: DeclarationsRenderSection, references: [String: any RenderReference], depth: Int) -> String {
         var html = """
 
                 <div class="declaration">
@@ -579,10 +579,20 @@ private extension HTMLPageBuilder {
 
             for token in declaration.tokens {
                 let tokenClass = tokenCSSClass(for: token.kind)
+                let escapedText = escapeHTML(token.text)
+
+                // Check if this token has a reference we can link to
+                var linkedText = escapedText
+                if let identifier = token.identifier,
+                   let reference = references[identifier] as? TopicRenderReference {
+                    let relativeURL = makeRelativeURL(reference.url, depth: depth)
+                    linkedText = "<a href=\"\(escapeHTML(relativeURL))\">\(escapedText)</a>"
+                }
+
                 if let tokenClass = tokenClass {
-                    html += "<span class=\"\(tokenClass)\">\(escapeHTML(token.text))</span>"
+                    html += "<span class=\"\(tokenClass)\">\(linkedText)</span>"
                 } else {
-                    html += escapeHTML(token.text)
+                    html += linkedText
                 }
             }
 
