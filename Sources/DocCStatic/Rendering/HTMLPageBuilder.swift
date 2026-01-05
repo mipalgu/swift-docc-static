@@ -1330,7 +1330,12 @@ private extension HTMLPageBuilder {
                             <div class="question">
             """
 
-            // Question content
+            // Question title (the main question text)
+            for block in assessment.title {
+                html += contentRenderer.renderBlockContent(block, references: references, depth: depth)
+            }
+
+            // Optional additional question content
             if let content = assessment.content {
                 for block in content {
                     html += contentRenderer.renderBlockContent(block, references: references, depth: depth)
