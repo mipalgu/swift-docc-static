@@ -63,8 +63,8 @@ struct Generate: AsyncParsableCommand {
     @Option(name: .shortAndLong, help: "External documentation URL for a dependency (format: PackageName=URL).")
     var externalDocs: [String] = []
 
-    @Flag(name: [.customShort("s"), .customLong("include-search")], help: "Generate client-side search functionality.")
-    var includeSearch: Bool = false
+    @Flag(name: [.customShort("D"), .customLong("disable-search")], help: "Disable client-side search functionality.")
+    var disableSearch: Bool = false
 
     @Flag(name: [.customShort("v"), .customLong("verbose")], help: "Enable verbose output.")
     var isVerbose: Bool = false
@@ -110,7 +110,7 @@ struct Generate: AsyncParsableCommand {
             targets: target,
             dependencyPolicy: dependencyPolicy,
             externalDocumentationURLs: externalURLs,
-            includeSearch: includeSearch,
+            includeSearch: !disableSearch,
             isVerbose: isVerbose,
             scratchPath: scratchPath.map { URL(fileURLWithPath: $0).standardizedFileURL },
             symbolGraphDir: symbolGraphDir.map { URL(fileURLWithPath: $0).standardizedFileURL },
@@ -159,6 +159,9 @@ struct Render: AsyncParsableCommand {
     @Option(name: .shortAndLong, help: "Output directory for generated documentation.")
     var output: String = ".build/documentation"
 
+    @Flag(name: [.customShort("D"), .customLong("disable-search")], help: "Disable client-side search functionality.")
+    var disableSearch: Bool = false
+
     @Flag(name: [.customShort("v"), .customLong("verbose")], help: "Enable verbose output.")
     var isVerbose: Bool = false
 
@@ -179,7 +182,7 @@ struct Render: AsyncParsableCommand {
             targets: [],
             dependencyPolicy: .none,
             externalDocumentationURLs: [:],
-            includeSearch: false,
+            includeSearch: !disableSearch,
             isVerbose: isVerbose,
             scratchPath: nil,
             symbolGraphDir: nil,
