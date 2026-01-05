@@ -2178,7 +2178,7 @@ private extension HTMLPageBuilder {
             for (lineIndex, line) in lines.enumerated() {
                 let lineNum = lineIndex + 1
                 let escapedLine = escapeHTML(line)
-                html += "<div class=\"line\"><span class=\"line-number\">\(lineNum)</span><span class=\"line-content\">\(escapedLine)</span></div>\n"
+                html += "<div class=\"line\"><span class=\"line-number\">\(lineNum)</span><span class=\"line-content\">\(escapedLine)</span></div>"
             }
 
             html += "</code></pre>\n                                </div>\n                            </div>"
