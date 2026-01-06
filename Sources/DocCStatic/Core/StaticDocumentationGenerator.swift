@@ -133,10 +133,10 @@ public struct StaticDocumentationGenerator: Sendable {
             try await generateSymbolGraphs(to: symbolGraphsDir)
         }
 
-        // Discover package targets for dependency filtering
+        // Discover package targets for dependency filtering (preserving order from Package.swift)
         // When using pre-generated symbol graphs, include all modules since the plugin
         // already filtered what to generate symbol graphs for
-        let packageTargets: Set<String>
+        let packageTargets: [String]
         if configuration.symbolGraphDir != nil {
             packageTargets = []  // Empty means include all
         } else {
@@ -163,6 +163,22 @@ public struct StaticDocumentationGenerator: Sendable {
             tempDir: tempDir
         )
 
+        // First pass: Load all navigation indices and merge them
+        var mergedNavigationIndex = try loadAndMergeNavigationIndices(from: archives)
+
+        // Filter to only include package targets (not dependencies)
+        if !packageTargets.isEmpty, let merged = mergedNavigationIndex {
+            mergedNavigationIndex = filterNavigationIndex(merged, packageTargets: packageTargets)
+        }
+
+        consumer.navigationIndex = mergedNavigationIndex
+
+        if configuration.isVerbose {
+            let moduleCount = mergedNavigationIndex?.allModules().count ?? 0
+            log("Merged navigation index with \(moduleCount) modules")
+        }
+
+        // Second pass: Render pages from all archives using the merged index
         for archiveDir in archives {
             try await renderFromArchive(
                 archiveDir,
@@ -193,22 +209,23 @@ public struct StaticDocumentationGenerator: Sendable {
 
     // MARK: - Package Target Discovery
 
-    /// Returns the set of target names defined in the current package.
+    /// Returns the target names defined in the current package, in the order they appear in Package.swift.
     ///
     /// This distinguishes between the package's own targets and external dependencies.
-    private func getPackageTargets() async throws -> Set<String> {
+    /// The order is preserved to maintain consistent ordering in the documentation.
+    private func getPackageTargets() async throws -> [String] {
+        // Use dump-package instead of describe to get Package.swift order
         let result = try await run(
             .name("swift"),
             arguments: Arguments([
-                "package", "describe",
-                "--package-path", configuration.packageDirectory.path,
-                "--type", "json"
+                "package", "dump-package",
+                "--package-path", configuration.packageDirectory.path
             ]),
             output: .string(limit: 10 * 1024 * 1024)  // 10MB limit
         )
 
         guard result.terminationStatus.isSuccess else {
-            // If we can't get package info, fall back to empty set
+            // If we can't get package info, fall back to empty array
             // which means we'll include everything
             if configuration.isVerbose {
                 log("Warning: Could not determine package targets, including all modules")
@@ -216,7 +233,7 @@ public struct StaticDocumentationGenerator: Sendable {
             return []
         }
 
-        // Parse the JSON to extract target names
+        // Parse the JSON to extract target names (preserving Package.swift order)
         guard let outputString = result.standardOutput,
               let data = outputString.data(using: .utf8),
               let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
@@ -224,27 +241,35 @@ public struct StaticDocumentationGenerator: Sendable {
             return []
         }
 
-        var targetNames = Set<String>()
+        var targetNames: [String] = []
         for target in targets {
             if let name = target["name"] as? String {
-                targetNames.insert(name)
+                targetNames.append(name)
             }
         }
 
         if configuration.isVerbose {
-            log("Package targets: \(targetNames.sorted().joined(separator: ", "))")
+            log("Package targets: \(targetNames.joined(separator: ", "))")
         }
 
         return targetNames
     }
 
+    /// Converts a target name to its Swift module name equivalent.
+    ///
+    /// Swift automatically converts hyphens to underscores in module names,
+    /// so a target named "docc-static" becomes module "docc_static".
+    private func normalizeModuleName(_ name: String) -> String {
+        name.replacingOccurrences(of: "-", with: "_")
+    }
+
     /// Determines if a module should be included based on the dependency policy.
     ///
     /// - Parameters:
-    ///   - moduleName: The name of the module to check.
-    ///   - packageTargets: The set of target names from the current package.
+    ///   - moduleName: The name of the module to check (from the archive).
+    ///   - packageTargets: The target names from the current package (in Package.swift order).
     /// - Returns: `true` if the module should be included, `false` otherwise.
-    private func shouldIncludeModule(_ moduleName: String, packageTargets: Set<String>) -> Bool {
+    private func shouldIncludeModule(_ moduleName: String, packageTargets: [String]) -> Bool {
         // When using pre-generated symbol graphs (from plugin), include all modules
         // since the plugin already filtered what to generate symbol graphs for
         if configuration.symbolGraphDir != nil {
@@ -258,7 +283,10 @@ public struct StaticDocumentationGenerator: Sendable {
         }
 
         // Package's own targets are always included
-        if packageTargets.contains(moduleName) {
+        // Normalize names because Swift converts hyphens to underscores in module names
+        let normalizedModuleName = normalizeModuleName(moduleName)
+        let normalizedTargets = packageTargets.map { normalizeModuleName($0) }
+        if normalizedTargets.contains(normalizedModuleName) {
             return true
         }
 
@@ -269,9 +297,11 @@ public struct StaticDocumentationGenerator: Sendable {
         case .none:
             return false
         case .exclude(let excluded):
-            return !excluded.contains(moduleName)
+            let normalizedExcluded = Set(excluded.map { normalizeModuleName($0) })
+            return !normalizedExcluded.contains(normalizedModuleName)
         case .includeOnly(let included):
-            return included.contains(moduleName)
+            let normalizedIncluded = Set(included.map { normalizeModuleName($0) })
+            return normalizedIncluded.contains(normalizedModuleName)
         }
     }
 
@@ -614,32 +644,39 @@ public struct StaticDocumentationGenerator: Sendable {
     ///   - fileManager: The file manager to use for directory enumeration.
     /// - Returns: An array of URLs pointing to DocC catalog directories.
     private func findDoccCatalogs(in packageDirectory: URL, fileManager: FileManager) -> [URL] {
-        let sourcesDir = packageDirectory.appendingPathComponent("Sources")
         var catalogs: [URL] = []
 
-        // Check if Sources directory exists
-        guard fileManager.fileExists(atPath: sourcesDir.path) else {
-            return catalogs
-        }
+        // Search in both Sources and Plugins directories
+        let searchDirs = [
+            packageDirectory.appendingPathComponent("Sources"),
+            packageDirectory.appendingPathComponent("Plugins")
+        ]
 
-        // Enumerate all items in Sources directory
-        guard let enumerator = fileManager.enumerator(
-            at: sourcesDir,
-            includingPropertiesForKeys: [.isDirectoryKey],
-            options: [.skipsHiddenFiles]
-        ) else {
-            return catalogs
-        }
+        for searchDir in searchDirs {
+            // Check if directory exists
+            guard fileManager.fileExists(atPath: searchDir.path) else {
+                continue
+            }
 
-        while let url = enumerator.nextObject() as? URL {
-            // Check if this is a .docc directory
-            if url.pathExtension == "docc" {
-                var isDirectory: ObjCBool = false
-                if fileManager.fileExists(atPath: url.path, isDirectory: &isDirectory),
-                   isDirectory.boolValue {
-                    catalogs.append(url)
-                    // Don't descend into .docc directories
-                    enumerator.skipDescendants()
+            // Enumerate all items in directory
+            guard let enumerator = fileManager.enumerator(
+                at: searchDir,
+                includingPropertiesForKeys: [.isDirectoryKey],
+                options: [.skipsHiddenFiles]
+            ) else {
+                continue
+            }
+
+            while let url = enumerator.nextObject() as? URL {
+                // Check if this is a .docc directory
+                if url.pathExtension == "docc" {
+                    var isDirectory: ObjCBool = false
+                    if fileManager.fileExists(atPath: url.path, isDirectory: &isDirectory),
+                       isDirectory.boolValue {
+                        catalogs.append(url)
+                        // Don't descend into .docc directories
+                        enumerator.skipDescendants()
+                    }
                 }
             }
         }
@@ -648,13 +685,119 @@ public struct StaticDocumentationGenerator: Sendable {
         return catalogs.sorted { $0.lastPathComponent < $1.lastPathComponent }
     }
 
+    // MARK: - Navigation Index
+
+    /// Filters a navigation index to only include modules that are package targets.
+    ///
+    /// This excludes dependencies from the sidebar navigation.
+    ///
+    /// - Parameters:
+    ///   - index: The navigation index to filter.
+    ///   - packageTargets: The set of target names from the current package.
+    /// - Returns: A filtered navigation index containing only package targets.
+    /// Filters and sorts a navigation index to only include package targets in their defined order.
+    private func filterNavigationIndex(_ index: NavigationIndex, packageTargets: [String]) -> NavigationIndex {
+        var filteredLanguages: [String: [NavigationNode]] = [:]
+
+        // Create ordered list of normalised target names for filtering and sorting
+        let normalizedTargetOrder = packageTargets.map {
+            normalizeModuleName($0).lowercased()
+        }
+        let normalizedTargetSet = Set(normalizedTargetOrder)
+
+        for (language, nodes) in index.interfaceLanguages {
+            // Filter nodes to only include package targets
+            let filteredNodes = nodes.filter { node in
+                guard let path = node.path else { return false }
+                let pathComponents = path
+                    .trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+                    .lowercased()
+                    .components(separatedBy: "/")
+
+                guard pathComponents.count >= 2,
+                      pathComponents[0] == "documentation" else {
+                    return false
+                }
+
+                let moduleName = normalizeModuleName(pathComponents[1])
+                return normalizedTargetSet.contains(moduleName)
+            }
+
+            // Sort nodes by their order in Package.swift
+            let sortedNodes = filteredNodes.sorted { a, b in
+                let aIndex = targetOrderIndex(for: a, in: normalizedTargetOrder)
+                let bIndex = targetOrderIndex(for: b, in: normalizedTargetOrder)
+                return aIndex < bIndex
+            }
+
+            filteredLanguages[language] = sortedNodes
+        }
+
+        return NavigationIndex(
+            schemaVersion: index.schemaVersion,
+            includedArchiveIdentifiers: index.includedArchiveIdentifiers,
+            interfaceLanguages: filteredLanguages
+        )
+    }
+
+    /// Returns the index of a navigation node in the target order list.
+    private func targetOrderIndex(for node: NavigationNode, in targetOrder: [String]) -> Int {
+        guard let path = node.path else { return Int.max }
+        let pathComponents = path
+            .trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+            .lowercased()
+            .components(separatedBy: "/")
+
+        guard pathComponents.count >= 2,
+              pathComponents[0] == "documentation" else {
+            return Int.max
+        }
+
+        let moduleName = normalizeModuleName(pathComponents[1])
+        return targetOrder.firstIndex(of: moduleName) ?? Int.max
+    }
+
+    /// Loads navigation indices from all archives and merges them into a single index.
+    ///
+    /// This allows the sidebar to show all modules, not just the current one.
+    ///
+    /// - Parameter archives: The archive directories to load indices from.
+    /// - Returns: A merged navigation index, or nil if no indices could be loaded.
+    private func loadAndMergeNavigationIndices(from archives: [URL]) throws -> NavigationIndex? {
+        let fileManager = FileManager.default
+        var indices: [NavigationIndex] = []
+
+        for archiveDir in archives {
+            let indexPath = archiveDir
+                .appendingPathComponent("index")
+                .appendingPathComponent("index.json")
+
+            guard fileManager.fileExists(atPath: indexPath.path) else { continue }
+
+            do {
+                let index = try NavigationIndex.load(from: indexPath)
+                indices.append(index)
+                if configuration.isVerbose {
+                    log("Loaded navigation index from: \(indexPath.path)")
+                }
+            } catch {
+                if configuration.isVerbose {
+                    log("Warning: Failed to load navigation index from \(indexPath.path): \(error)")
+                }
+            }
+        }
+
+        guard !indices.isEmpty else { return nil }
+        return NavigationIndex.merge(indices)
+    }
+
     // MARK: - Archive Rendering
 
     private func renderFromArchive(
         _ archiveDir: URL,
         consumer: StaticHTMLConsumer,
         searchIndexBuilder: inout SearchIndexBuilder?,
-        packageTargets: Set<String>
+        packageTargets: [String]
     ) async throws {
         if configuration.isVerbose {
             log("Rendering pages from archive...")
@@ -668,24 +811,8 @@ public struct StaticDocumentationGenerator: Sendable {
             throw GenerationError.archiveParsingFailed("No documentation data found in archive")
         }
 
-        // Load the navigation index
-        let indexPath = archiveDir.appendingPathComponent("index").appendingPathComponent("index.json")
-        var navigationIndex: NavigationIndex?
-        if fileManager.fileExists(atPath: indexPath.path) {
-            do {
-                navigationIndex = try NavigationIndex.load(from: indexPath)
-                if configuration.isVerbose {
-                    log("Loaded navigation index from: \(indexPath.path)")
-                }
-            } catch {
-                if configuration.isVerbose {
-                    log("Warning: Failed to load navigation index: \(error)")
-                }
-            }
-        }
-
-        // Set the navigation index on the consumer
-        consumer.navigationIndex = navigationIndex
+        // Note: Navigation index is already loaded and merged upfront in generate()
+        // The consumer already has the merged navigation index set
 
         // Track which modules have been skipped
         var skippedModules = Set<String>()
@@ -1189,7 +1316,23 @@ public struct StaticDocumentationGenerator: Sendable {
             }
         }
 
-        let html = indexBuilder.buildIndexPage(modules: modules, tutorials: tutorials)
+        // Load optional INDEX.md content
+        let indexContent = indexBuilder.loadIndexContent(from: configuration.packageDirectory)
+        if configuration.isVerbose {
+            if let content = indexContent {
+                if content.title != nil {
+                    log("Loaded custom index from \(IndexPageBuilder.indexMarkdownFilename) with title")
+                } else {
+                    log("Loaded custom index from \(IndexPageBuilder.indexMarkdownFilename)")
+                }
+            }
+        }
+
+        let html = indexBuilder.buildIndexPage(
+            modules: modules,
+            tutorials: tutorials,
+            indexContent: indexContent
+        )
         let indexPath = configuration.outputDirectory.appendingPathComponent("index.html")
 
         try html.write(to: indexPath, atomically: true, encoding: .utf8)
@@ -1733,6 +1876,45 @@ enum DocCStylesheet {
 
         .sidebar-section {
             margin-bottom: 0.5rem;
+        }
+
+        /* Module section in multi-module sidebar */
+        .module-section {
+            position: relative;
+            padding-left: 0;
+        }
+
+        .module-section .module-header {
+            display: flex;
+            align-items: center;
+            padding: 0.5rem 1rem;
+        }
+
+        .module-section .module-header .disclosure-chevron {
+            position: static;
+            margin-right: 0.5rem;
+        }
+
+        .module-section .module-name {
+            font-size: 0.9375rem;
+            font-weight: 600;
+            color: var(--docc-fg);
+            margin: 0;
+            padding: 0;
+        }
+
+        .module-section .module-contents {
+            display: none;
+            padding-left: 1rem;
+            margin: 0;
+        }
+
+        .module-section > .disclosure-checkbox:checked ~ .module-contents {
+            display: block;
+        }
+
+        .module-section > .disclosure-checkbox:checked ~ .module-header .disclosure-chevron svg {
+            transform: rotate(90deg);
         }
 
         .sidebar-heading {
@@ -2393,6 +2575,72 @@ enum DocCStylesheet {
         .index-header .subtitle {
             color: var(--docc-fg-secondary);
             font-size: 1.1rem;
+        }
+
+        .index-intro {
+            max-width: 800px;
+            margin: 0 auto 2rem;
+            padding: 1rem 0;
+            line-height: 1.6;
+        }
+
+        .index-intro p {
+            margin-bottom: 1rem;
+        }
+
+        .index-intro h2 {
+            font-size: 1.5rem;
+            margin: 1.5rem 0 1rem;
+            color: var(--docc-fg);
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .index-intro h3 {
+            font-size: 1.25rem;
+            margin: 1.25rem 0 0.75rem;
+            color: var(--docc-fg);
+        }
+
+        .index-intro ul, .index-intro ol {
+            margin: 1rem 0;
+            padding-left: 1.5rem;
+        }
+
+        .index-intro li {
+            margin-bottom: 0.5rem;
+        }
+
+        .index-intro code {
+            background: var(--docc-bg-secondary);
+            padding: 0.15rem 0.4rem;
+            border-radius: 4px;
+            font-family: var(--typeface-mono);
+            font-size: 0.9em;
+        }
+
+        .index-intro pre {
+            background: var(--docc-bg-secondary);
+            padding: 1rem 1.25rem;
+            border-radius: 12px;
+            overflow-x: auto;
+            margin: 1rem 0;
+            font-family: var(--typeface-mono);
+            font-size: 0.8125rem;
+            line-height: 1.6;
+        }
+
+        .index-intro pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .index-intro a {
+            color: var(--docc-link);
+        }
+
+        .index-intro a:hover {
+            text-decoration: underline;
         }
 
         .search-form {

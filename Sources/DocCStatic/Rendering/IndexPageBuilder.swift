@@ -6,6 +6,7 @@
 //  Copyright © 2026 Rene Hexel. All rights reserved.
 //
 import Foundation
+import Markdown
 import SwiftDocC
 
 /// Builds a combined index page listing all documented modules.
@@ -15,11 +16,79 @@ import SwiftDocC
 public struct IndexPageBuilder: Sendable {
     /// The configuration for page building.
     public let configuration: Configuration
+
     /// Creates a new index page builder.
     ///
     /// - Parameter configuration: The generation configuration.
     public init(configuration: Configuration) {
         self.configuration = configuration
+    }
+
+    /// The standard filename for the index page introduction content.
+    ///
+    /// Place an `INDEX.md` file in the root of your package to customise
+    /// the content displayed at the top of the documentation index page.
+    /// This filename is chosen to avoid conflicts with:
+    /// - Swift Package Manager (`Package.swift`, `README.md`)
+    /// - DocC (`.docc` directories)
+    /// - Standard Git files (`README.md`, `CONTRIBUTING.md`)
+    public static let indexMarkdownFilename = "INDEX.md"
+
+    /// The content extracted from an INDEX.md file.
+    public struct IndexContent: Sendable {
+        /// The page title (from the H1 heading, if present).
+        public let title: String?
+        /// The HTML content to display after the title.
+        public let bodyHTML: String
+    }
+
+    /// Loads and parses the `INDEX.md` file if it exists.
+    ///
+    /// If the file starts with an H1 heading, it is extracted as the page title
+    /// and removed from the body content.
+    ///
+    /// - Parameter packageDirectory: The root directory of the package.
+    /// - Returns: The parsed index content, or `nil` if no `INDEX.md` exists.
+    public func loadIndexContent(from packageDirectory: URL) -> IndexContent? {
+        let indexPath = packageDirectory.appendingPathComponent(Self.indexMarkdownFilename)
+        guard let markdownContent = try? String(contentsOf: indexPath, encoding: .utf8) else {
+            return nil
+        }
+        return parseIndexMarkdown(markdownContent)
+    }
+
+    /// Parses INDEX.md content, extracting the title from the first H1 if present.
+    ///
+    /// - Parameter markdown: The Markdown source text.
+    /// - Returns: The parsed index content with optional title and body HTML.
+    private func parseIndexMarkdown(_ markdown: String) -> IndexContent {
+        let document = Document(parsing: markdown)
+
+        // Check if the first block element is an H1
+        var title: String?
+        var remainingChildren: [Markup] = []
+        var foundFirstElement = false
+
+        for child in document.children {
+            if !foundFirstElement, let heading = child as? Heading, heading.level == 1 {
+                // Extract the title text from the H1
+                title = heading.plainText
+                foundFirstElement = true
+            } else {
+                remainingChildren.append(child)
+                foundFirstElement = true
+            }
+        }
+
+        // Render the remaining content (without the H1)
+        var bodyHTML = ""
+        for child in remainingChildren {
+            var htmlFormatter = HTMLFormatter()
+            htmlFormatter.visit(child)
+            bodyHTML += htmlFormatter.result
+        }
+
+        return IndexContent(title: title, bodyHTML: bodyHTML)
     }
 }
 
@@ -71,10 +140,18 @@ public extension IndexPageBuilder {
     /// - Parameters:
     ///   - modules: The documented modules to include.
     ///   - tutorials: The tutorial collections to include.
+    ///   - indexContent: Optional content from an `INDEX.md` file. If provided,
+    ///                   the title (if any) and body content are used. If `nil`,
+    ///                   a default title and subtitle are shown instead.
     /// - Returns: The complete HTML document as a string.
-    func buildIndexPage(modules: [ModuleEntry], tutorials: [TutorialEntry] = []) -> String {
+    func buildIndexPage(
+        modules: [ModuleEntry],
+        tutorials: [TutorialEntry] = [],
+        indexContent: IndexContent? = nil
+    ) -> String {
         let packageName = configuration.packageDirectory.lastPathComponent
-        let title = "\(packageName) Documentation"
+        let defaultTitle = "\(packageName) Documentation"
+        let title = indexContent?.title ?? defaultTitle
 
         var html = """
         <!DOCTYPE html>
@@ -89,20 +166,46 @@ public extension IndexPageBuilder {
             <div class="container">
                 <header class="index-header">
                     <h1>\(escapeHTML(title))</h1>
+        """
+
+        // Add either the custom intro content or the default subtitle
+        if let indexContent {
+            html += """
+
+                </header>
+                <section class="index-intro">
+                    \(indexContent.bodyHTML)
+                </section>
+
+            """
+        } else {
+            html += """
+
                     <p class="subtitle">API Reference Documentation</p>
                 </header>
 
-        """
+            """
+        }
 
-        // Module list
-        html += """
+        // Module list - only add heading if no custom index content
+        // (INDEX.md should provide its own "## Modules" heading)
+        if indexContent != nil {
+            html += """
 
-                <section class="modules">
-                    <h2>Modules</h2>
-                    <div class="module-list">
-        """
+                    <section class="modules">
+                        <div class="module-list">
+            """
+        } else {
+            html += """
 
-        for module in modules.sorted(by: { $0.name < $1.name }) {
+                    <section class="modules">
+                        <h2>Modules</h2>
+                        <div class="module-list">
+            """
+        }
+
+        // Modules are already in Package.swift order from filterNavigationIndex
+        for module in modules {
             html += buildModuleCard(module)
         }
 

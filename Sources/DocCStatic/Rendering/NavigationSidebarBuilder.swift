@@ -30,20 +30,131 @@ public extension NavigationSidebarBuilder {
         self.navigationIndex = navigationIndex
     }
 
-    /// Builds the sidebar HTML for a specific module and current page.
+    /// Builds the sidebar HTML showing all modules with the current module expanded.
     ///
     /// - Parameters:
-    ///   - moduleName: The name of the module to display.
+    ///   - moduleName: The name of the current module (will be expanded).
     ///   - currentPath: The path of the currently selected page.
     ///   - depth: The depth of the current page for relative URL calculation.
     /// - Returns: The sidebar HTML string.
     mutating func buildSidebar(moduleName: String, currentPath: String, depth: Int) -> String {
+        let allModules = navigationIndex.allModules()
+
+        // If we have multiple modules, show them all
+        if allModules.count > 1 {
+            return buildMultiModuleSidebar(
+                allModules: allModules,
+                currentModuleName: moduleName,
+                currentPath: currentPath,
+                depth: depth
+            )
+        }
+
+        // Single module: show its navigation tree
         guard let moduleNode = navigationIndex.findModule(moduleName) else {
-            // Fallback: try to find any module containing the current path
             return buildFallbackSidebar(currentPath: currentPath, depth: depth)
         }
 
         return buildSidebarFromNode(moduleNode, currentPath: currentPath, depth: depth)
+    }
+
+    /// Builds a sidebar showing all modules with expandable navigation.
+    ///
+    /// Modules are shown in Package.swift order. The current module is expanded,
+    /// while other modules are collapsed.
+    mutating func buildMultiModuleSidebar(
+        allModules: [NavigationNode],
+        currentModuleName: String,
+        currentPath: String,
+        depth: Int
+    ) -> String {
+        var html = """
+
+                <nav class="doc-sidebar">
+                    <div class="sidebar-content">
+                        <h2 class="sidebar-module">Documentation</h2>
+        """
+
+        // Modules are already in Package.swift order from filterNavigationIndex
+        // Add each module as an expandable section
+        for moduleNode in allModules {
+            let isCurrent = isCurrentModule(moduleNode, currentModuleName: currentModuleName)
+            html += buildModuleSection(
+                moduleNode,
+                isCurrentModule: isCurrent,
+                currentPath: currentPath,
+                depth: depth
+            )
+        }
+
+        html += """
+
+                    </div>
+                    <div class="sidebar-filter" id="sidebar-filter">
+                        <span class="filter-icon">
+                            <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
+                                <path d="M0 1.5A1.5 1.5 0 011.5 0h11A1.5 1.5 0 0114 1.5v1.75a1.5 1.5 0 01-.44 1.06L9 8.871V13.5a.5.5 0 01-.757.429l-3-1.8A.5.5 0 015 11.7V8.871L.44 4.31A1.5 1.5 0 010 3.25V1.5z"/>
+                            </svg>
+                        </span>
+                        <input type="text" placeholder="Filter" class="filter-input" aria-label="Filter navigation">
+                        <span class="filter-shortcut">/</span>
+                    </div>
+                </nav>
+        """
+
+        return html
+    }
+
+    /// Builds a module section in the multi-module sidebar.
+    mutating func buildModuleSection(
+        _ moduleNode: NavigationNode,
+        isCurrentModule: Bool,
+        currentPath: String,
+        depth: Int
+    ) -> String {
+        let checkboxId = "nav-\(checkboxCounter)"
+        checkboxCounter += 1
+
+        let relativeURL = makeRelativeURL(moduleNode.path ?? "", depth: depth)
+        // Expand current module by default
+        let isExpanded = isCurrentModule || shouldExpandNode(moduleNode, currentPath: currentPath)
+        let checkedAttr = isExpanded ? " checked" : ""
+
+        var html = """
+
+                        <div class="sidebar-section module-section">
+                            <input type="checkbox" id="\(checkboxId)" class="disclosure-checkbox"\(checkedAttr)>
+                            <div class="module-header">
+                                <label for="\(checkboxId)" class="disclosure-chevron" aria-label="Toggle \(escapeHTML(moduleNode.title))">
+                                    <svg viewBox="0 0 10 10" fill="currentColor">
+                                        <path d="M3 1.5L7 5L3 8.5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                                    </svg>
+                                </label>
+                                <a href="\(escapeHTML(relativeURL))" class="sidebar-module-link">
+                                    <h3 class="sidebar-heading module-name">\(escapeHTML(moduleNode.title))</h3>
+                                </a>
+                            </div>
+        """
+
+        // Add module's navigation tree
+        if let children = moduleNode.children {
+            html += """
+
+                            <ul class="sidebar-list module-contents">
+            """
+            html += buildNavigationTree(children, currentPath: currentPath, depth: depth, level: 0)
+            html += """
+
+                            </ul>
+            """
+        }
+
+        html += """
+
+                        </div>
+        """
+
+        return html
     }
 }
 
@@ -449,6 +560,33 @@ private extension NavigationSidebarBuilder {
         """
 
         return html
+    }
+
+    /// Checks if a module node is the current module.
+    ///
+    /// The `currentModuleName` is typically extracted from the page path (e.g., "doccstatic")
+    /// while the module node's path contains the full documentation path.
+    func isCurrentModule(_ moduleNode: NavigationNode, currentModuleName: String) -> Bool {
+        guard let path = moduleNode.path else { return false }
+
+        // Extract module name from the navigation node's path
+        // Path format: /documentation/modulename
+        let pathComponents = path.lowercased()
+            .trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+            .components(separatedBy: "/")
+
+        guard pathComponents.count >= 2,
+              pathComponents[0] == "documentation" else {
+            return false
+        }
+
+        let nodeModuleName = pathComponents[1]
+        let normalizedCurrentName = currentModuleName.lowercased()
+            .replacingOccurrences(of: "-", with: "_")
+
+        // Compare the module names (both normalised)
+        return nodeModuleName == normalizedCurrentName ||
+               nodeModuleName == currentModuleName.lowercased()
     }
 
     /// Checks if a path matches the current path.
