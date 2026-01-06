@@ -259,4 +259,62 @@ public extension NavigationIndex {
             return path.lowercased().hasSuffix("/\(moduleName.lowercased())")
         }
     }
+
+    /// Returns all module nodes in this index.
+    ///
+    /// - Parameter language: The interface language (default: "swift").
+    /// - Returns: All module navigation nodes.
+    func allModules(language: String = "swift") -> [NavigationNode] {
+        guard let nodes = interfaceLanguages[language] else { return [] }
+        return nodes.filter { $0.type == "module" || $0.path?.contains("/documentation/") == true }
+    }
+
+    /// Merges multiple navigation indices into a single combined index.
+    ///
+    /// This is used to combine navigation from multiple DocC archives into
+    /// a single sidebar that shows all modules.
+    ///
+    /// - Parameter indices: The navigation indices to merge.
+    /// - Returns: A combined navigation index containing all modules.
+    static func merge(_ indices: [NavigationIndex]) -> NavigationIndex {
+        guard !indices.isEmpty else {
+            return NavigationIndex(
+                schemaVersion: nil,
+                includedArchiveIdentifiers: nil,
+                interfaceLanguages: [:]
+            )
+        }
+
+        // Collect all modules from all indices, grouped by language
+        var mergedLanguages: [String: [NavigationNode]] = [:]
+
+        for index in indices {
+            for (language, nodes) in index.interfaceLanguages {
+                var existingNodes = mergedLanguages[language] ?? []
+                // Add nodes that aren't already present (by path)
+                let existingPaths = Set(existingNodes.compactMap { $0.path?.lowercased() })
+                for node in nodes {
+                    if let path = node.path?.lowercased(), !existingPaths.contains(path) {
+                        existingNodes.append(node)
+                    } else if node.path == nil {
+                        // Include non-path nodes (like group markers at root level)
+                        existingNodes.append(node)
+                    }
+                }
+                mergedLanguages[language] = existingNodes
+            }
+        }
+
+        // Sort modules alphabetically by title
+        for (language, nodes) in mergedLanguages {
+            mergedLanguages[language] = nodes.sorted { $0.title.lowercased() < $1.title.lowercased() }
+        }
+
+        // Use the schema version from the first index
+        return NavigationIndex(
+            schemaVersion: indices.first?.schemaVersion,
+            includedArchiveIdentifiers: indices.flatMap { $0.includedArchiveIdentifiers ?? [] },
+            interfaceLanguages: mergedLanguages
+        )
+    }
 }
