@@ -180,7 +180,7 @@ jobs:
 
       - uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: "26.2"
+          xcode-version: "26.1.1"
 
       - name: Build docc-static
         run: swift build -c release --product docc-static
