@@ -8,11 +8,6 @@ let package = Package(
         .macOS(.v14),
     ],
     products: [
-        // Core library for programmatic use
-        .library(
-            name: "DocCStatic",
-            targets: ["DocCStatic"]
-        ),
         // Command-line tool
         .executable(
             name: "docc-static",
@@ -20,8 +15,13 @@ let package = Package(
         ),
         // SPM plugin for documentation generation
         .plugin(
-            name: "Generate Static Documentation",
+            name: "Static Documentation Plugin",
             targets: ["GenerateStaticDocumentation"]
+        ),
+        // Core library for programmatic use
+        .library(
+            name: "DocCStatic",
+            targets: ["DocCStatic"]
         ),
     ],
     dependencies: [
@@ -40,20 +40,6 @@ let package = Package(
         .package(url: "https://github.com/swiftlang/swift-docc-plugin", from: "1.4.0"),
     ],
     targets: [
-        // MARK: - Core Library
-
-        .target(
-            name: "DocCStatic",
-            dependencies: [
-                .product(name: "SwiftDocC", package: "swift-docc"),
-                .product(name: "Subprocess", package: "swift-subprocess"),
-                .product(name: "SystemPackage", package: "swift-system"),
-            ],
-            path: "Sources/DocCStatic"
-        ),
-
-        // MARK: - CLI Executable
-
         .executableTarget(
             name: "docc-static",
             dependencies: [
@@ -62,9 +48,6 @@ let package = Package(
             ],
             path: "Sources/docc-static"
         ),
-
-        // MARK: - SPM Plugin
-
         .plugin(
             name: "GenerateStaticDocumentation",
             capability: .command(
@@ -78,9 +61,15 @@ let package = Package(
             ],
             path: "Plugins/GenerateStaticDocumentation"
         ),
-
-        // MARK: - Tests
-
+        .target(
+            name: "DocCStatic",
+            dependencies: [
+                .product(name: "SwiftDocC", package: "swift-docc"),
+                .product(name: "Subprocess", package: "swift-subprocess"),
+                .product(name: "SystemPackage", package: "swift-system"),
+            ],
+            path: "Sources/DocCStatic"
+        ),
         .testTarget(
             name: "DocCStaticTests",
             dependencies: ["DocCStatic"],

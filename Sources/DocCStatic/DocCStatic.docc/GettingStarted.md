@@ -120,9 +120,10 @@ docc-static generate \
     --package-path . \
     --output ./docs \
     --target MyLib \
-    --include-search \
     --verbose
 ```
+
+See the **docc-static** module documentation for a complete reference of all commands and options.
 
 ## Using the SPM Plugin
 

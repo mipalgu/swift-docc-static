@@ -23,7 +23,7 @@ without requiring JavaScript for core functionality.
 - **Light/Dark mode** - Automatic theme switching based on system preferences
 - **Interactive tutorials** - Display step-by-step tutorials with code examples and quizzes
 - **Cross-package linking** - Relative links work with `file://` URLs for testing
-- **Multi-target support** - Document all targets in a package
+- **Multi-target support** - Document all targets in a package and create a common index page
 - **Optional search** - Client-side search using Lunr.js (requires JavaScript)
 - **SPM plugin** - Integrate documentation generation into your build process
 

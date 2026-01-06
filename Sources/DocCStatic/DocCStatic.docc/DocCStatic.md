@@ -1,10 +1,19 @@
 # ``DocCStatic``
 
+@Metadata {
+    @DisplayName("DocCStatic Library")
+}
+
 Generate static HTML/CSS documentation from Swift packages.
 
 ## Overview
 
-DocCStatic generates pure HTML/CSS documentation from Swift packages, combining the symbol graph processing of Swift-DocC with a static output approach. The generated documentation works locally as file:// URLs and can be hosted on any web server without requiring JavaScript for basic navigation.
+swift-docc-static generates pure HTML/CSS documentation from Swift packages, combining the symbol graph processing of Swift-DocC with a static output approach. The generated documentation works locally as file:// URLs and can be hosted on any web server without requiring JavaScript for basic navigation.
+
+This package provides:
+- The **DocCStatic** Swift library for programmatic use (documented here)
+- The **docc-static** command-line tool (see the docc-static module)
+- The **SPM plugin** for Swift Package Manager integration (see the GenerateStaticDocumentation module)
 
 ### Key Features
 
@@ -34,12 +43,17 @@ print("Generated \(result.generatedPages) pages")
 ### Essentials
 
 - <doc:GettingStarted>
+
+### Guides
+
 - <doc:Configuration>
+- <doc:CrossPackageLinking>
+- <doc:CustomThemes>
+
+### Library API
+
 - ``Configuration``
 - ``StaticDocumentationGenerator``
-
-### Generation
-
 - ``GenerationResult``
 - ``GenerationError``
 
@@ -54,7 +68,7 @@ print("Generated \(result.generatedPages) pages")
 
 - ``SearchIndexBuilder``
 
-### Configuration Types
+### Supporting Types
 
 - ``DependencyInclusionPolicy``
 - ``ThemeConfiguration``
