@@ -40,7 +40,6 @@ jobs:
           .build/release/docc-static generate \
             --package-path . \
             --output .build/documentation \
-            --include-search \
             --verbose
 
       - name: Setup Pages

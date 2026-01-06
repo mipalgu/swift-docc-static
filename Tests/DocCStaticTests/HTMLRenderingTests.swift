@@ -153,7 +153,7 @@ struct IndexPageBuilderTests {
         #expect(html.contains("Test description"))
     }
 
-    @Test("Index page includes search form when enabled")
+    @Test("Index page includes search scripts when enabled")
     func indexPageWithSearch() {
         let config = Configuration(
             packageDirectory: URL(fileURLWithPath: "/tmp/package"),
@@ -163,8 +163,7 @@ struct IndexPageBuilderTests {
         let builder = IndexPageBuilder(configuration: config)
         let html = builder.buildIndexPage(modules: [])
 
-        #expect(html.contains("search-form"))
-        #expect(html.contains("search-input"))
+        // Search is now via spotlight overlay (activated by '/' key), not a visible form
         #expect(html.contains("js/lunr.min.js"))
         #expect(html.contains("js/search.js"))
     }

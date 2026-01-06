@@ -88,7 +88,7 @@ docc-static generate --package-path /path/to/package --output ./docs
 | `-i, --include-dependency`       | Include a specific dependency (can be repeated)        |
 | `-x, --exclude-dependency`       | Exclude a specific dependency (can be repeated)        |
 | `-e, --external-docs`            | External documentation URL (format: `PackageName=URL`) |
-| `-s, --include-search`           | Generate client-side search functionality              |
+| `--disable-search`               | Disable client-side search (enabled by default)        |
 | `--footer`                       | Custom HTML for the page footer                        |
 | `-v, --verbose`                  | Enable verbose output                                  |
 
@@ -189,8 +189,7 @@ jobs:
         run: |
           .build/release/docc-static generate \
             --package-path . \
-            --output .build/documentation \
-            --include-search
+            --output .build/documentation
 
       - uses: actions/configure-pages@v5
 

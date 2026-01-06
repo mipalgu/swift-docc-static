@@ -20,7 +20,8 @@ struct SearchIndexBuilderTests {
             path: "doc/test/symbol/index.html",
             summary: "A test symbol for testing",
             keywords: ["test", "symbol", "testing"],
-            module: "TestModule"
+            module: "TestModule",
+            content: "Test content for searching"
         )
 
         #expect(document.id == "doc/test/symbol")
@@ -41,7 +42,8 @@ struct SearchIndexBuilderTests {
             path: "doc/test/index.html",
             summary: "A test article",
             keywords: [],
-            module: nil
+            module: nil,
+            content: ""
         )
 
         #expect(document.module == nil)
@@ -53,7 +55,7 @@ struct SearchIndexBuilderTests {
         let index = SearchIndexBuilder.SearchIndex(documents: documents)
 
         #expect(index.version == "1.0")
-        #expect(index.fields == ["title", "summary", "keywords", "module"])
+        #expect(index.fields == ["title", "summary", "keywords", "module", "content"])
         #expect(index.documents.isEmpty)
     }
 
@@ -66,7 +68,8 @@ struct SearchIndexBuilderTests {
             path: "test/index.html",
             summary: "Test summary",
             keywords: ["test"],
-            module: "TestModule"
+            module: "TestModule",
+            content: "Test content"
         )
         let index = SearchIndexBuilder.SearchIndex(documents: [document])
 
@@ -110,7 +113,7 @@ struct SearchDocumentTypeTests {
     func symbolType() {
         let document = SearchIndexBuilder.SearchDocument(
             id: "test", title: "Test", type: "symbol",
-            path: "test.html", summary: "", keywords: [], module: nil
+            path: "test.html", summary: "", keywords: [], module: nil, content: ""
         )
         #expect(document.type == "symbol")
     }
@@ -119,7 +122,7 @@ struct SearchDocumentTypeTests {
     func articleType() {
         let document = SearchIndexBuilder.SearchDocument(
             id: "test", title: "Test", type: "article",
-            path: "test.html", summary: "", keywords: [], module: nil
+            path: "test.html", summary: "", keywords: [], module: nil, content: ""
         )
         #expect(document.type == "article")
     }
@@ -128,7 +131,7 @@ struct SearchDocumentTypeTests {
     func tutorialType() {
         let document = SearchIndexBuilder.SearchDocument(
             id: "test", title: "Test", type: "tutorial",
-            path: "test.html", summary: "", keywords: [], module: nil
+            path: "test.html", summary: "", keywords: [], module: nil, content: ""
         )
         #expect(document.type == "tutorial")
     }
