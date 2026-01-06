@@ -1071,6 +1071,10 @@ public struct StaticDocumentationGenerator: Sendable {
                 }
             })();
             </script>
+            \(configuration.includeSearch ? """
+            <script src="../../js/lunr.min.js" defer></script>
+            <script src="../../js/search.js" defer></script>
+            """ : "")
         </body>
         </html>
         """
@@ -3646,6 +3650,136 @@ enum DocCStylesheet {
             }
         }
 
+        /* Spotlight search overlay */
+        .search-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding-top: 15vh;
+            z-index: 10000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.15s, visibility 0.15s;
+        }
+
+        .search-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .search-overlay-container {
+            width: 90%;
+            max-width: 600px;
+            background: var(--docc-bg);
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            transform: translateY(-20px);
+            transition: transform 0.15s;
+        }
+
+        .search-overlay.active .search-overlay-container {
+            transform: translateY(0);
+        }
+
+        .search-overlay-input-wrapper {
+            padding: 1rem;
+            border-bottom: 1px solid var(--docc-border);
+        }
+
+        .search-overlay-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            font-size: 1.125rem;
+            border: 1px solid var(--docc-border);
+            border-radius: 8px;
+            background: var(--docc-bg-secondary);
+            color: var(--docc-fg);
+            outline: none;
+        }
+
+        .search-overlay-input:focus {
+            border-color: var(--docc-accent);
+        }
+
+        .search-overlay-input::placeholder {
+            color: var(--docc-fg-secondary);
+        }
+
+        .search-overlay-results {
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+
+        .search-overlay-empty {
+            padding: 2rem;
+            text-align: center;
+            color: var(--docc-fg-secondary);
+        }
+
+        .search-overlay-section {
+            padding: 0.5rem 0;
+        }
+
+        .search-overlay-section-title {
+            padding: 0.5rem 1rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--docc-fg-secondary);
+        }
+
+        .search-overlay-item {
+            display: block;
+            padding: 0.75rem 1rem;
+            text-decoration: none;
+            color: var(--docc-fg);
+            cursor: pointer;
+        }
+
+        .search-overlay-item:hover,
+        .search-overlay-item.selected {
+            background: var(--docc-bg-secondary);
+        }
+
+        .search-overlay-item-title {
+            display: block;
+            font-weight: 500;
+        }
+
+        .search-overlay-item-path {
+            display: block;
+            font-size: 0.8rem;
+            color: var(--docc-fg-secondary);
+            margin-top: 0.25rem;
+        }
+
+        .search-overlay-hint {
+            padding: 0.75rem 1rem;
+            border-top: 1px solid var(--docc-border);
+            font-size: 0.75rem;
+            color: var(--docc-fg-secondary);
+            display: flex;
+            gap: 1rem;
+        }
+
+        .search-overlay-hint kbd {
+            display: inline-block;
+            padding: 0.125rem 0.375rem;
+            background: var(--docc-bg-secondary);
+            border: 1px solid var(--docc-border);
+            border-radius: 4px;
+            font-family: var(--typeface-mono);
+            font-size: 0.7rem;
+        }
+
         \(theme.customCSS ?? "")
         """
     }
@@ -4015,7 +4149,7 @@ enum SearchScript {
                 searchContent(query);
             }
 
-            // Event listeners for filter input
+            // Event listeners for filter input (sidebar search)
             if (filterInput) {
                 let debounceTimer;
                 filterInput.addEventListener('input', (e) => {
@@ -4038,6 +4172,242 @@ enum SearchScript {
                     if (e.key === '/' && document.activeElement !== filterInput) {
                         e.preventDefault();
                         filterInput.focus();
+                    }
+                });
+            }
+
+            // Spotlight overlay search (for pages without sidebar)
+            let spotlightOverlay = null;
+            let spotlightInput = null;
+            let spotlightResults = null;
+            let selectedIndex = -1;
+            let currentResults = [];
+
+            function createSpotlightOverlay() {
+                if (spotlightOverlay) return;
+
+                spotlightOverlay = document.createElement('div');
+                spotlightOverlay.className = 'search-overlay';
+                spotlightOverlay.innerHTML = `
+                    <div class="search-overlay-container">
+                        <div class="search-overlay-input-wrapper">
+                            <input type="text" class="search-overlay-input" placeholder="Search documentation..." autocomplete="off">
+                        </div>
+                        <div class="search-overlay-results"></div>
+                        <div class="search-overlay-hint">
+                            <span><kbd>↑</kbd><kbd>↓</kbd> Navigate</span>
+                            <span><kbd>Enter</kbd> Open</span>
+                            <span><kbd>Esc</kbd> Close</span>
+                        </div>
+                    </div>
+                `;
+
+                document.body.appendChild(spotlightOverlay);
+                spotlightInput = spotlightOverlay.querySelector('.search-overlay-input');
+                spotlightResults = spotlightOverlay.querySelector('.search-overlay-results');
+
+                // Close on backdrop click
+                spotlightOverlay.addEventListener('click', (e) => {
+                    if (e.target === spotlightOverlay) {
+                        closeSpotlight();
+                    }
+                });
+
+                // Input handling
+                let debounceTimer;
+                spotlightInput.addEventListener('input', (e) => {
+                    clearTimeout(debounceTimer);
+                    debounceTimer = setTimeout(() => {
+                        performSpotlightSearch(e.target.value);
+                    }, 150);
+                });
+
+            }
+
+            function isSpotlightActive() {
+                return spotlightOverlay && spotlightOverlay.classList.contains('active');
+            }
+
+            function openSpotlight() {
+                if (!spotlightOverlay) createSpotlightOverlay();
+                spotlightOverlay.classList.add('active');
+                spotlightInput.value = '';
+                spotlightResults.innerHTML = '';
+                selectedIndex = -1;
+                currentResults = [];
+                // Prevent page scrolling when overlay is open
+                document.body.style.overflow = 'hidden';
+                setTimeout(() => spotlightInput.focus(), 50);
+            }
+
+            function closeSpotlight() {
+                if (spotlightOverlay) {
+                    spotlightOverlay.classList.remove('active');
+                    document.body.style.overflow = '';
+                }
+            }
+
+            function performSpotlightSearch(query) {
+                if (!searchIndex || !query.trim()) {
+                    spotlightResults.innerHTML = '';
+                    currentResults = [];
+                    selectedIndex = -1;
+                    return;
+                }
+
+                let results = [];
+                try {
+                    results = searchIndex.search(query);
+                } catch (e) {
+                    // Try wildcard
+                }
+
+                if (results.length === 0) {
+                    try {
+                        results = searchIndex.search(query + '*');
+                    } catch (e) {
+                        // Wildcard also failed
+                    }
+                }
+
+                if (results.length === 0) {
+                    spotlightResults.innerHTML = '<div class="search-overlay-empty">No results found</div>';
+                    currentResults = [];
+                    selectedIndex = -1;
+                    return;
+                }
+
+                // Group results by type
+                const grouped = { tutorial: [], article: [], symbol: [] };
+                results.forEach(result => {
+                    const doc = searchData[result.ref];
+                    if (doc) {
+                        if (doc.title === 'Tutorials' && doc.type === 'article') return;
+                        if (doc.type === 'section') return;
+                        const type = doc.type || 'symbol';
+                        if (grouped[type]) grouped[type].push(doc);
+                    }
+                });
+
+                displaySpotlightResults(grouped);
+            }
+
+            function displaySpotlightResults(grouped) {
+                const basePath = getBasePath();
+                const typeLabels = { tutorial: 'Tutorials', article: 'Articles', symbol: 'API' };
+                const typeOrder = ['tutorial', 'article', 'symbol'];
+
+                let html = '';
+                currentResults = [];
+
+                typeOrder.forEach(type => {
+                    const docs = grouped[type];
+                    if (docs && docs.length > 0) {
+                        html += '<div class="search-overlay-section">';
+                        html += '<div class="search-overlay-section-title">' + (typeLabels[type] || type) + '</div>';
+                        docs.slice(0, 5).forEach(doc => {
+                            const resultIndex = currentResults.length;
+                            currentResults.push(doc);
+                            html += '<a href="' + basePath + doc.path + '" class="search-overlay-item" data-index="' + resultIndex + '">';
+                            html += '<span class="search-overlay-item-title">' + escapeHtml(doc.title) + '</span>';
+                            if (doc.module) {
+                                html += '<span class="search-overlay-item-path">' + escapeHtml(doc.module) + '</span>';
+                            }
+                            html += '</a>';
+                        });
+                        html += '</div>';
+                    }
+                });
+
+                spotlightResults.innerHTML = html;
+
+                // Add hover handlers
+                spotlightResults.querySelectorAll('.search-overlay-item').forEach(item => {
+                    item.addEventListener('mouseenter', (e) => {
+                        const index = parseInt(item.getAttribute('data-index'), 10);
+                        updateSelection(index);
+                    });
+                });
+
+                // Auto-select first result so Enter works immediately
+                if (currentResults.length > 0) {
+                    updateSelection(0);
+                } else {
+                    selectedIndex = -1;
+                }
+            }
+
+            function escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+
+            function selectNext() {
+                if (currentResults.length === 0) return;
+                updateSelection(selectedIndex < currentResults.length - 1 ? selectedIndex + 1 : 0);
+            }
+
+            function selectPrevious() {
+                if (currentResults.length === 0) return;
+                updateSelection(selectedIndex > 0 ? selectedIndex - 1 : currentResults.length - 1);
+            }
+
+            function updateSelection(newIndex) {
+                const items = spotlightResults.querySelectorAll('.search-overlay-item');
+                items.forEach((item, i) => {
+                    item.classList.toggle('selected', i === newIndex);
+                });
+                selectedIndex = newIndex;
+
+                // Scroll into view
+                if (items[newIndex]) {
+                    items[newIndex].scrollIntoView({ block: 'nearest' });
+                }
+            }
+
+            function navigateToSelected() {
+                if (selectedIndex >= 0 && selectedIndex < currentResults.length) {
+                    const doc = currentResults[selectedIndex];
+                    const basePath = getBasePath();
+                    window.location.href = basePath + doc.path;
+                }
+            }
+
+            // Keyboard shortcut: "/" to open spotlight (only if no sidebar filter)
+            if (!filterInput) {
+                document.addEventListener('keydown', (e) => {
+                    // Handle Escape and navigation when overlay is active
+                    if (isSpotlightActive()) {
+                        if (e.key === 'Escape') {
+                            e.preventDefault();
+                            closeSpotlight();
+                            return;
+                        }
+                        // Handle arrow keys even if input doesn't have focus
+                        if (e.key === 'ArrowDown') {
+                            e.preventDefault();
+                            selectNext();
+                            return;
+                        }
+                        if (e.key === 'ArrowUp') {
+                            e.preventDefault();
+                            selectPrevious();
+                            return;
+                        }
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            navigateToSelected();
+                            return;
+                        }
+                    }
+
+                    // Open spotlight with "/"
+                    if (e.key === '/' &&
+                        document.activeElement.tagName !== 'INPUT' &&
+                        document.activeElement.tagName !== 'TEXTAREA') {
+                        e.preventDefault();
+                        openSpotlight();
                     }
                 });
             }

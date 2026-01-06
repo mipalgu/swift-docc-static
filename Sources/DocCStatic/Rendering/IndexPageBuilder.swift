@@ -94,18 +94,6 @@ public extension IndexPageBuilder {
 
         """
 
-        // Add search form if enabled
-        if configuration.includeSearch {
-            html += """
-
-                <form id="search-form" class="search-form">
-                    <input type="search" id="search-input" placeholder="Search documentation..." aria-label="Search">
-                    <div id="search-results" class="search-results"></div>
-                </form>
-
-            """
-        }
-
         // Module list
         html += """
 

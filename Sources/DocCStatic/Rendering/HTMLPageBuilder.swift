@@ -190,6 +190,18 @@ public extension HTMLPageBuilder {
 
         // Add footer
         html += buildFooter()
+
+        // Add search scripts if enabled
+        if configuration.includeSearch {
+            let lunrPath = String(repeating: "../", count: depth) + "js/lunr.min.js"
+            let jsPath = String(repeating: "../", count: depth) + "js/search.js"
+            html += """
+
+            <script src="\(lunrPath)" defer></script>
+            <script src="\(jsPath)" defer></script>
+            """
+        }
+
         html += appearanceSelectorScript
 
         html += """
@@ -367,6 +379,17 @@ public extension HTMLPageBuilder {
 
         // Add footer
         html += buildFooter()
+
+        // Add search scripts if enabled
+        if configuration.includeSearch {
+            let lunrPath = String(repeating: "../", count: depth) + "js/lunr.min.js"
+            let jsPath = String(repeating: "../", count: depth) + "js/search.js"
+            html += """
+
+            <script src="\(lunrPath)" defer></script>
+            <script src="\(jsPath)" defer></script>
+            """
+        }
 
         // Add appearance selector and dropdown scripts
         html += tutorialDropdownScript
