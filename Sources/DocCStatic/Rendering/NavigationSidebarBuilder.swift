@@ -90,6 +90,14 @@ private extension NavigationSidebarBuilder {
 
         for node in nodes {
             if node.isGroupMarker {
+                // Close previous section if open
+                if currentSection != nil {
+                    html += """
+
+                            </ul>
+                        </div>
+            """
+                }
                 // Start a new section
                 currentSection = node.title
                 html += """
@@ -103,6 +111,7 @@ private extension NavigationSidebarBuilder {
                 let isSelected = isPathSelected(node.path, currentPath: currentPath)
                 let isExpanded = shouldExpandNode(node, currentPath: currentPath)
 
+                // Items with children should always be expandable (like SwiftModelling, Tutorials)
                 if node.isExpandable {
                     html += buildExpandableItem(
                         node,
@@ -203,6 +212,12 @@ private extension NavigationSidebarBuilder {
     }
 
     /// Builds child items (nested within an expandable item).
+    ///
+    /// This method:
+    /// 1. Makes all group headers collapsible with disclosure triangles
+    /// 2. Groups are expanded by default, except for flattened redundant groups
+    /// 3. Detects and flattens redundant nesting patterns where a group marker
+    ///    is followed by a single expandable item with the same title
     mutating func buildChildItems(
         _ nodes: [NavigationNode],
         currentPath: String,
@@ -210,20 +225,64 @@ private extension NavigationSidebarBuilder {
         level: Int
     ) -> String {
         var html = ""
-        var currentSection: String? = nil
+        var i = 0
 
-        for node in nodes {
+        while i < nodes.count {
+            let node = nodes[i]
+
             if node.isGroupMarker {
-                // Close previous section if any
-                if currentSection != nil {
-                    // No explicit close needed for nested sections
-                }
-                currentSection = node.title
-                html += """
+                // Check if this is a redundant pattern: groupMarker followed by single
+                // expandable child with same title
+                let nextIndex = i + 1
+                if nextIndex < nodes.count {
+                    let nextNode = nodes[nextIndex]
+                    let isLastInGroup = (nextIndex + 1 >= nodes.count) ||
+                                        nodes[nextIndex + 1].isGroupMarker
 
-                                        <li class="nav-group-header">\(escapeHTML(node.title))</li>
-                """
+                    // Flatten if: next node has same title, is expandable, and is the only
+                    // non-groupMarker item before the next group (or end)
+                    if nextNode.title.lowercased() == node.title.lowercased() &&
+                       nextNode.isExpandable &&
+                       isLastInGroup {
+                        // Render flattened group header (collapsed by default unless
+                        // current path is within)
+                        html += buildCollapsibleGroupHeader(
+                            groupTitle: node.title,
+                            linkPath: nextNode.path,
+                            children: nextNode.children ?? [],
+                            currentPath: currentPath,
+                            depth: depth,
+                            level: level,
+                            defaultExpanded: false  // Flattened groups start collapsed
+                        )
+                        i += 2  // Skip both the groupMarker and the redundant expandable node
+                        continue
+                    }
+                }
+
+                // Normal group marker - collect all items until next group marker
+                var groupChildren: [NavigationNode] = []
+                var j = i + 1
+                while j < nodes.count && !nodes[j].isGroupMarker {
+                    groupChildren.append(nodes[j])
+                    j += 1
+                }
+
+                // Render collapsible group header with collected children
+                html += buildCollapsibleGroupHeader(
+                    groupTitle: node.title,
+                    linkPath: nil,
+                    children: groupChildren,
+                    currentPath: currentPath,
+                    depth: depth,
+                    level: level,
+                    defaultExpanded: true  // Normal groups start expanded
+                )
+
+                i = j  // Skip to next group marker or end
+                continue
             } else {
+                // Item not in a group (shouldn't happen normally, but handle it)
                 let isSelected = isPathSelected(node.path, currentPath: currentPath)
 
                 if node.isExpandable {
@@ -239,9 +298,96 @@ private extension NavigationSidebarBuilder {
                     html += buildNestedSimpleItem(node, depth: depth, isSelected: isSelected)
                 }
             }
+            i += 1
         }
 
         return html
+    }
+
+    /// Builds a collapsible group header with disclosure triangle.
+    ///
+    /// - Parameters:
+    ///   - groupTitle: The title of the group.
+    ///   - linkPath: Optional path for making the title a link (used for flattened groups).
+    ///   - children: The child nodes to render within the group.
+    ///   - currentPath: The current page path for selection highlighting.
+    ///   - depth: The depth for relative URL calculation.
+    ///   - level: The nesting level.
+    ///   - defaultExpanded: Whether the group should be expanded by default.
+    /// - Returns: The HTML string for the collapsible group.
+    mutating func buildCollapsibleGroupHeader(
+        groupTitle: String,
+        linkPath: String?,
+        children: [NavigationNode],
+        currentPath: String,
+        depth: Int,
+        level: Int,
+        defaultExpanded: Bool
+    ) -> String {
+        let checkboxId = "nav-\(checkboxCounter)"
+        checkboxCounter += 1
+
+        // Expand if default or if current path is within children
+        let isExpanded = defaultExpanded || childrenContainPath(children, currentPath: currentPath)
+        let checkedAttr = isExpanded ? " checked" : ""
+
+        var html = """
+
+                                        <li class="nav-group-header expandable">
+                                            <input type="checkbox" id="\(checkboxId)" class="disclosure-checkbox"\(checkedAttr)>
+                                            <label for="\(checkboxId)" class="disclosure-chevron" aria-label="Toggle \(escapeHTML(groupTitle))">
+                                                <svg viewBox="0 0 10 10" fill="currentColor">
+                                                    <path d="M3 1.5L7 5L3 8.5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                                                </svg>
+                                            </label>
+        """
+
+        // Add title as link or plain text
+        if let path = linkPath {
+            let relativeURL = makeRelativeURL(path, depth: depth)
+            html += """
+
+                                            <a href="\(escapeHTML(relativeURL))" class="nav-link group-link">\(escapeHTML(groupTitle))</a>
+            """
+        } else {
+            html += """
+
+                                            <span class="group-title">\(escapeHTML(groupTitle))</span>
+            """
+        }
+
+        // Render children - use buildChildItems to handle nested group markers
+        if !children.isEmpty {
+            html += """
+
+                                            <ul class="nav-children">
+            """
+            html += buildChildItems(children, currentPath: currentPath, depth: depth, level: level + 1)
+            html += """
+
+                                            </ul>
+            """
+        }
+
+        html += """
+
+                                        </li>
+        """
+
+        return html
+    }
+
+    /// Checks if any of the children (or their descendants) contain the current path.
+    func childrenContainPath(_ children: [NavigationNode], currentPath: String) -> Bool {
+        for child in children {
+            if isPathSelected(child.path, currentPath: currentPath) {
+                return true
+            }
+            if shouldExpandNode(child, currentPath: currentPath) {
+                return true
+            }
+        }
+        return false
     }
 
     /// Builds a simple (non-expandable) navigation item.

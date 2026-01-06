@@ -532,33 +532,75 @@ public struct StaticDocumentationGenerator: Sendable {
     }
 
     private func findDoccExecutable() async throws -> String {
-        // Try to find docc in common locations
-        let possiblePaths = [
-            "/usr/bin/docc",
-            "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/docc",
-            "/Library/Developer/Toolchains/swift-latest.xctoolchain/usr/bin/docc"
-        ]
         let fileManager = FileManager.default
 
-        for path in possiblePaths {
+#if os(macOS)
+        // On macOS, prefer Xcode's docc via xcrun for stable navigation ordering
+        // (The swift-latest toolchain's docc has a bug that reorders navigation items)
+        if fileManager.fileExists(atPath: "/usr/bin/xcrun") {
+            let result = try await run(
+                .path(FilePath("/usr/bin/xcrun")),
+                arguments: Arguments(["--find", "docc"]),
+                output: .string(limit: 4096)
+            )
+
+            if result.terminationStatus.isSuccess {
+                if let output = result.standardOutput {
+                    let path = output.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
+                    if !path.isEmpty && fileManager.fileExists(atPath: path) {
+                        return path
+                    }
+                }
+            }
+        }
+
+        // Fall back to common macOS locations
+        let macOSPaths = [
+            "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/docc",
+            "/Applications/Developer/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/docc",
+            "/Library/Developer/Toolchains/swift-latest.xctoolchain/usr/bin/docc"
+        ]
+
+        for path in macOSPaths {
             if fileManager.fileExists(atPath: path) {
                 return path
             }
         }
+#endif
 
-        // Try using xcrun
-        let result = try await run(
-            .path(FilePath("/usr/bin/xcrun")),
-            arguments: Arguments(["--find", "docc"]),
+        // Cross-platform: try 'which docc' to find docc in PATH
+        let whichResult = try await run(
+            .path(FilePath("/usr/bin/which")),
+            arguments: Arguments(["docc"]),
             output: .string(limit: 4096)
         )
 
-        if result.terminationStatus.isSuccess {
-            if let output = result.standardOutput {
+        if whichResult.terminationStatus.isSuccess {
+            if let output = whichResult.standardOutput {
                 let path = output.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
-                if !path.isEmpty {
+                if !path.isEmpty && fileManager.fileExists(atPath: path) {
                     return path
                 }
+            }
+        }
+
+        // Linux: check common Swift toolchain locations
+        let linuxPaths = [
+            "/usr/bin/docc",
+            "/usr/local/bin/docc"
+        ]
+
+        // Also check SWIFT_PATH environment variable
+        if let swiftPath = ProcessInfo.processInfo.environment["SWIFT_PATH"] {
+            let doccInSwift = (swiftPath as NSString).appendingPathComponent("docc")
+            if fileManager.fileExists(atPath: doccInSwift) {
+                return doccInSwift
+            }
+        }
+
+        for path in linuxPaths {
+            if fileManager.fileExists(atPath: path) {
+                return path
             }
         }
 
@@ -1809,6 +1851,69 @@ enum DocCStylesheet {
             list-style: none;
         }
 
+        /* Collapsible group headers with disclosure */
+        .nav-group-header.expandable {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.375rem 0 0.25rem;
+        }
+
+        .nav-group-header.expandable .disclosure-checkbox {
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .nav-group-header.expandable > .disclosure-chevron {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .nav-group-header.expandable > .disclosure-chevron svg {
+            width: 10px;
+            height: 10px;
+            transition: transform 0.15s ease;
+            transform-origin: center;
+        }
+
+        .nav-group-header.expandable > .disclosure-checkbox:checked + .disclosure-chevron svg {
+            transform: rotate(90deg);
+        }
+
+        .nav-group-header.expandable .group-title,
+        .nav-group-header.expandable .nav-link.group-link {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--docc-fg-secondary);
+            text-decoration: none;
+        }
+
+        .nav-group-header.expandable .nav-link.group-link:hover {
+            color: var(--docc-accent);
+        }
+
+        .nav-group-header.expandable .nav-children {
+            flex-basis: 100%;
+            max-height: 0;
+            overflow: hidden;
+            opacity: 0;
+            transition: max-height 0.2s ease, opacity 0.15s ease;
+            padding-left: 0.5rem;
+            margin-top: 0.25rem;
+        }
+
+        .nav-group-header.expandable .disclosure-checkbox:checked ~ .nav-children {
+            max-height: 2000px;
+            opacity: 1;
+        }
+
         /* Nested child items */
         .nav-child-item {
             display: flex;
@@ -1910,6 +2015,99 @@ enum DocCStylesheet {
             border: 1px solid var(--docc-border);
             border-radius: 6px;
             background: var(--docc-bg-secondary);
+        }
+
+        .filter-input:focus {
+            outline: none;
+            border-color: var(--docc-accent);
+            box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.15);
+        }
+
+        /* Filter hidden state for navigation items */
+        .filter-hidden {
+            display: none !important;
+        }
+
+        /* Highlight matching items during filter */
+        .filter-match > a,
+        .filter-match > .nav-link {
+            background: rgba(0, 102, 204, 0.1);
+            border-radius: 4px;
+        }
+
+        /* Search results sections in sidebar */
+        .search-results-sections {
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--docc-border);
+        }
+
+        .search-result-section {
+            margin-bottom: 0.75rem;
+        }
+
+        .search-result-heading {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--docc-fg-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin: 0 0 0.5rem 0;
+            padding: 0.5rem 0.75rem 0;
+        }
+
+        .search-result-subheading {
+            font-size: 0.6875rem;
+            font-weight: 600;
+            color: var(--docc-fg-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin: 0.5rem 0 0.25rem 0;
+            padding: 0 0.75rem;
+        }
+
+        .search-result-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .search-result-item {
+            padding: 0.375rem 0.75rem;
+            border-radius: 4px;
+            margin-bottom: 2px;
+        }
+
+        .search-result-item:hover {
+            background: var(--docc-bg-secondary);
+        }
+
+        .search-result-link {
+            display: block;
+            color: var(--docc-fg);
+            text-decoration: none;
+            font-size: 0.875rem;
+        }
+
+        .search-result-link:hover {
+            color: var(--docc-accent);
+        }
+
+        .search-result-title {
+            display: block;
+            font-weight: 500;
+        }
+
+        .search-result-summary {
+            margin: 0.25rem 0 0 0;
+            font-size: 0.75rem;
+            color: var(--docc-fg-secondary);
+            line-height: 1.4;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
         }
 
         /* Footer - accounts for fixed sidebar */
@@ -3540,15 +3738,15 @@ enum SearchScript {
         (function() {
             'use strict';
 
-            // Only initialise if the search form exists
-            const searchForm = document.getElementById('search-form');
-            if (!searchForm) return;
+            // Get sidebar elements
+            const filterInput = document.querySelector('.filter-input');
+            const sidebarContent = document.querySelector('.sidebar-content');
 
-            const searchInput = document.getElementById('search-input');
-            const searchResults = document.getElementById('search-results');
-
+            // Search state
             let searchIndex = null;
             let searchData = null;
+            let searchResultsContainer = null;
+            let originalExpandedStates = new Map();
 
             // Calculate the base path for relative URLs
             function getBasePath() {
@@ -3572,12 +3770,13 @@ enum SearchScript {
                         searchData[doc.id] = doc;
                     });
 
-                    // Build the Lunr.js index
+                    // Build the Lunr.js index with content field
                     searchIndex = lunr(function() {
                         this.ref('id');
                         this.field('title', { boost: 10 });
                         this.field('summary', { boost: 5 });
                         this.field('keywords', { boost: 3 });
+                        this.field('content', { boost: 1 });
                         this.field('module', { boost: 2 });
 
                         data.documents.forEach(doc => {
@@ -3586,6 +3785,7 @@ enum SearchScript {
                                 title: doc.title,
                                 summary: doc.summary,
                                 keywords: doc.keywords.join(' '),
+                                content: doc.content || '',
                                 module: doc.module || ''
                             });
                         });
@@ -3594,99 +3794,240 @@ enum SearchScript {
                     console.log('Search index loaded with ' + data.documents.length + ' documents');
                 } catch (error) {
                     console.warn('Search not available:', error.message);
-                    if (searchForm) {
-                        searchForm.innerHTML = '<p class="search-unavailable">Search requires JavaScript and a web server.</p>';
-                    }
                 }
             }
 
-            // Perform search
-            function performSearch(query) {
-                if (!searchResults) return;
+            // Save the current expanded states of disclosure checkboxes
+            function saveExpandedStates() {
+                if (originalExpandedStates.size > 0) return; // Already saved
+                const checkboxes = document.querySelectorAll('.disclosure-checkbox');
+                checkboxes.forEach(cb => {
+                    originalExpandedStates.set(cb.id, cb.checked);
+                });
+            }
+
+            // Restore the original expanded states
+            function restoreExpandedStates() {
+                originalExpandedStates.forEach((wasChecked, id) => {
+                    const cb = document.getElementById(id);
+                    if (cb) cb.checked = wasChecked;
+                });
+                originalExpandedStates.clear();
+            }
+
+            // Filter navigation items based on query (title-only filtering)
+            function filterNavigation(query) {
+                if (!sidebarContent) return;
+
+                const normalizedQuery = query.toLowerCase().trim();
+
+                // Get all navigation items
+                const allItems = sidebarContent.querySelectorAll('.sidebar-item, .nav-child-item');
+
+                if (!normalizedQuery) {
+                    // No query - show everything and restore original states
+                    allItems.forEach(item => {
+                        item.classList.remove('filter-hidden', 'filter-match');
+                    });
+                    restoreExpandedStates();
+                    return;
+                }
+
+                // Save current states before filtering
+                saveExpandedStates();
+
+                // First pass: mark items that match directly
+                const matchingItems = new Set();
+                allItems.forEach(item => {
+                    const link = item.querySelector('a, .nav-link');
+                    const text = link ? link.textContent.toLowerCase() : '';
+                    if (text.includes(normalizedQuery)) {
+                        matchingItems.add(item);
+                        item.classList.add('filter-match');
+                        item.classList.remove('filter-hidden');
+                    } else {
+                        item.classList.remove('filter-match');
+                    }
+                });
+
+                // Second pass: show parents of matching items and expand them
+                allItems.forEach(item => {
+                    if (matchingItems.has(item)) {
+                        // Show all ancestors
+                        let parent = item.parentElement;
+                        while (parent && parent !== sidebarContent) {
+                            // Show parent list items
+                            if (parent.classList.contains('sidebar-item') || parent.classList.contains('nav-child-item')) {
+                                parent.classList.remove('filter-hidden');
+                                matchingItems.add(parent);
+                            }
+                            // Expand disclosure checkboxes in the path
+                            const checkbox = parent.querySelector(':scope > .disclosure-checkbox');
+                            if (checkbox) {
+                                checkbox.checked = true;
+                            }
+                            parent = parent.parentElement;
+                        }
+                    }
+                });
+
+                // Third pass: hide non-matching items that aren't parents of matches
+                allItems.forEach(item => {
+                    if (!matchingItems.has(item)) {
+                        item.classList.add('filter-hidden');
+                    }
+                });
+            }
+
+            // Search content using Lunr.js and display results
+            function searchContent(query) {
+                removeSearchResults();
 
                 if (!searchIndex || !query.trim()) {
-                    searchResults.innerHTML = '';
-                    searchResults.style.display = 'none';
                     return;
                 }
 
+                let results;
                 try {
-                    const results = searchIndex.search(query + '*');
-                    displayResults(results.slice(0, 10));
+                    results = searchIndex.search(query + '*');
                 } catch (e) {
-                    // Handle Lunr query syntax errors gracefully
-                    const results = searchIndex.search(query);
-                    displayResults(results.slice(0, 10));
+                    try {
+                        results = searchIndex.search(query);
+                    } catch (e2) {
+                        return;
+                    }
                 }
-            }
 
-            // Display search results
-            function displayResults(results) {
                 if (results.length === 0) {
-                    searchResults.innerHTML = '<p class="no-results">No results found</p>';
-                    searchResults.style.display = 'block';
                     return;
                 }
 
-                const basePath = getBasePath();
-                let html = '<ul class="search-results-list">';
+                // Filter and group results by type
+                const grouped = {
+                    tutorial: [],
+                    article: [],
+                    symbol: []
+                };
 
                 results.forEach(result => {
                     const doc = searchData[result.ref];
                     if (doc) {
-                        const typeClass = 'result-type-' + doc.type;
-                        html += '<li class="search-result-item">';
-                        html += '<a href="' + basePath + doc.path + '" class="result-link">';
-                        html += '<span class="result-title">' + escapeHtml(doc.title) + '</span>';
-                        html += '<span class="result-type ' + typeClass + '">' + doc.type + '</span>';
-                        html += '</a>';
-                        if (doc.summary) {
-                            html += '<p class="result-summary">' + escapeHtml(doc.summary.substring(0, 150)) + '</p>';
+                        // Skip overview/index pages that aren't real content
+                        if (doc.title === 'Tutorials' && doc.type === 'article') return;
+                        if (doc.type === 'section') return;
+
+                        const type = doc.type || 'symbol';
+                        if (grouped[type]) {
+                            grouped[type].push(doc);
                         }
-                        html += '</li>';
                     }
                 });
 
-                html += '</ul>';
-                searchResults.innerHTML = html;
-                searchResults.style.display = 'block';
+                displaySearchResults(grouped);
             }
 
-            // Escape HTML entities
-            function escapeHtml(text) {
-                const div = document.createElement('div');
-                div.textContent = text;
-                return div.innerHTML;
+            // Display grouped search results in the sidebar
+            function displaySearchResults(grouped) {
+                if (!sidebarContent) return;
+
+                const basePath = getBasePath();
+
+                // Check if we have any results to show
+                const hasResults = Object.values(grouped).some(arr => arr.length > 0);
+                if (!hasResults) return;
+
+                searchResultsContainer = document.createElement('div');
+                searchResultsContainer.className = 'search-results-sections';
+
+                const headerDiv = document.createElement('div');
+                headerDiv.className = 'search-results-header';
+                headerDiv.innerHTML = '<h3 class="search-result-heading">Content Matches</h3>';
+                searchResultsContainer.appendChild(headerDiv);
+
+                const typeLabels = {
+                    tutorial: 'Tutorials',
+                    article: 'Articles',
+                    symbol: 'API'
+                };
+
+                const typeOrder = ['tutorial', 'article', 'symbol'];
+
+                typeOrder.forEach(type => {
+                    const docs = grouped[type];
+                    if (docs && docs.length > 0) {
+                        const section = document.createElement('div');
+                        section.className = 'search-result-section';
+
+                        const heading = document.createElement('h4');
+                        heading.className = 'search-result-subheading';
+                        heading.textContent = typeLabels[type] || type;
+                        section.appendChild(heading);
+
+                        const list = document.createElement('ul');
+                        list.className = 'search-result-list';
+
+                        docs.slice(0, 5).forEach(doc => {
+                            const item = document.createElement('li');
+                            item.className = 'search-result-item';
+
+                            const link = document.createElement('a');
+                            link.href = basePath + doc.path;
+                            link.className = 'search-result-link';
+                            link.textContent = doc.title;
+
+                            item.appendChild(link);
+                            list.appendChild(item);
+                        });
+
+                        section.appendChild(list);
+                        searchResultsContainer.appendChild(section);
+                    }
+                });
+
+                // Insert after existing navigation sections
+                sidebarContent.appendChild(searchResultsContainer);
             }
 
-            // Event listeners
-            let debounceTimer;
-            searchInput.addEventListener('input', (e) => {
-                clearTimeout(debounceTimer);
-                debounceTimer = setTimeout(() => {
-                    performSearch(e.target.value);
-                }, 150);
-            });
-
-            searchForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                performSearch(searchInput.value);
-            });
-
-            // Close results when clicking outside
-            document.addEventListener('click', (e) => {
-                if (!searchForm.contains(e.target)) {
-                    searchResults.style.display = 'none';
+            // Remove search results sections
+            function removeSearchResults() {
+                if (searchResultsContainer) {
+                    searchResultsContainer.remove();
+                    searchResultsContainer = null;
                 }
-            });
+            }
 
-            // Keyboard navigation
-            searchInput.addEventListener('keydown', (e) => {
-                if (e.key === 'Escape') {
-                    searchResults.style.display = 'none';
-                    searchInput.blur();
-                }
-            });
+            // Combined filter and search
+            function performFilterAndSearch(query) {
+                filterNavigation(query);
+                searchContent(query);
+            }
+
+            // Event listeners for filter input
+            if (filterInput) {
+                let debounceTimer;
+                filterInput.addEventListener('input', (e) => {
+                    clearTimeout(debounceTimer);
+                    debounceTimer = setTimeout(() => {
+                        performFilterAndSearch(e.target.value);
+                    }, 150);
+                });
+
+                filterInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape') {
+                        filterInput.value = '';
+                        performFilterAndSearch('');
+                        filterInput.blur();
+                    }
+                });
+
+                // Keyboard shortcut: "/" to focus filter
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === '/' && document.activeElement !== filterInput) {
+                        e.preventDefault();
+                        filterInput.focus();
+                    }
+                });
+            }
 
             // Initialise
             loadSearchIndex();

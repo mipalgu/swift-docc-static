@@ -36,6 +36,9 @@ public struct SearchIndexBuilder: Sendable {
         /// The parent module or package name.
         public let module: String?
 
+        /// Full text content extracted from the page.
+        public let content: String
+
         /// Creates a new search document.
         public init(
             id: String,
@@ -44,7 +47,8 @@ public struct SearchIndexBuilder: Sendable {
             path: String,
             summary: String,
             keywords: [String],
-            module: String?
+            module: String?,
+            content: String
         ) {
             self.id = id
             self.title = title
@@ -53,6 +57,7 @@ public struct SearchIndexBuilder: Sendable {
             self.summary = summary
             self.keywords = keywords
             self.module = module
+            self.content = content
         }
     }
 
@@ -71,7 +76,7 @@ public struct SearchIndexBuilder: Sendable {
         public init(version: String = "1.0", documents: [SearchDocument]) {
             self.version = version
             self.documents = documents
-            self.fields = ["title", "summary", "keywords", "module"]
+            self.fields = ["title", "summary", "keywords", "module", "content"]
         }
     }
 
@@ -133,6 +138,7 @@ private extension SearchIndexBuilder {
         let summary = extractSummary(from: renderNode)
         let keywords = extractKeywords(from: renderNode)
         let module = extractModule(from: renderNode)
+        let content = extractContent(from: renderNode)
 
         return SearchDocument(
             id: id,
@@ -141,7 +147,8 @@ private extension SearchIndexBuilder {
             path: path,
             summary: summary,
             keywords: keywords,
-            module: module
+            module: module,
+            content: content
         )
     }
 
@@ -179,6 +186,160 @@ private extension SearchIndexBuilder {
             text += extractText(from: content)
         }
         return text.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    /// Extracts all text content from a render node for full-text search.
+    func extractContent(from renderNode: RenderNode) -> String {
+        var parts: [String] = []
+
+        // Extract from abstract
+        if let abstract = renderNode.abstract {
+            for content in abstract {
+                let text = extractText(from: content)
+                if !text.isEmpty { parts.append(text) }
+            }
+        }
+
+        // Extract from primary content sections
+        for section in renderNode.primaryContentSections {
+            let sectionText = extractSectionText(from: section)
+            if !sectionText.isEmpty { parts.append(sectionText) }
+        }
+
+        // Extract from sections array (tutorials, articles)
+        for section in renderNode.sections {
+            let sectionText = extractSectionText(from: section)
+            if !sectionText.isEmpty { parts.append(sectionText) }
+        }
+
+        // Extract from topic sections
+        for section in renderNode.topicSections {
+            if let title = section.title {
+                parts.append(title)
+            }
+        }
+
+        // Limit content length to avoid huge search index
+        let joined = parts.joined(separator: " ")
+        if joined.count > 5000 {
+            return String(joined.prefix(5000))
+        }
+        return joined
+    }
+
+    /// Extracts text from a render section based on its kind.
+    func extractSectionText(from section: any RenderSection) -> String {
+        switch section.kind {
+        case .content, .discussion:
+            if let contentSection = section as? ContentRenderSection {
+                return contentSection.content.map { extractBlockText(from: $0) }.joined(separator: " ")
+            }
+        case .hero, .intro:
+            if let intro = section as? IntroRenderSection {
+                var text = intro.title
+                text += " " + intro.content.map { extractBlockText(from: $0) }.joined(separator: " ")
+                return text
+            }
+        case .tasks:
+            if let tutorialSection = section as? TutorialSectionsRenderSection {
+                var text = ""
+                for taskGroup in tutorialSection.tasks {
+                    text += taskGroup.title + " "
+                    for layout in taskGroup.contentSection {
+                        text += extractContentLayoutText(from: layout) + " "
+                    }
+                    for step in taskGroup.stepsSection {
+                        text += extractBlockText(from: step) + " "
+                    }
+                }
+                return text
+            }
+        case .volume:
+            if let volume = section as? VolumeRenderSection {
+                var text = volume.name ?? ""
+                for chapter in volume.chapters {
+                    if let name = chapter.name { text += " " + name }
+                    text += " " + chapter.content.map { extractBlockText(from: $0) }.joined(separator: " ")
+                }
+                return text
+            }
+        case .articleBody:
+            if let articleSection = section as? TutorialArticleSection {
+                return articleSection.content.map { extractContentLayoutText(from: $0) }.joined(separator: " ")
+            }
+        case .contentAndMedia:
+            if let camSection = section as? ContentAndMediaSection {
+                return camSection.content.map { extractBlockText(from: $0) }.joined(separator: " ")
+            }
+        case .resources:
+            if let resourcesSection = section as? ResourcesRenderSection {
+                var text = ""
+                for tile in resourcesSection.tiles {
+                    text += tile.title + " "
+                    text += tile.content.map { extractBlockText(from: $0) }.joined(separator: " ") + " "
+                }
+                return text
+            }
+        default:
+            break
+        }
+        return ""
+    }
+
+    /// Extracts text from a ContentLayout element.
+    func extractContentLayoutText(from layout: ContentLayout) -> String {
+        switch layout {
+        case .fullWidth(let content):
+            return content.map { extractBlockText(from: $0) }.joined(separator: " ")
+        case .contentAndMedia(let section):
+            return section.content.map { extractBlockText(from: $0) }.joined(separator: " ")
+        case .columns(let sections):
+            return sections.flatMap { $0.content.map { extractBlockText(from: $0) } }.joined(separator: " ")
+        }
+    }
+
+    /// Extracts text from a block content element.
+    func extractBlockText(from block: RenderBlockContent) -> String {
+        switch block {
+        case .paragraph(let p):
+            return p.inlineContent.map { extractText(from: $0) }.joined()
+        case .heading(let h):
+            return h.text
+        case .aside(let a):
+            return a.content.map { extractBlockText(from: $0) }.joined(separator: " ")
+        case .codeListing(let c):
+            return c.code.joined(separator: " ")
+        case .unorderedList(let l):
+            return l.items.flatMap { $0.content.map { extractBlockText(from: $0) } }.joined(separator: " ")
+        case .orderedList(let l):
+            return l.items.flatMap { $0.content.map { extractBlockText(from: $0) } }.joined(separator: " ")
+        case .step(let s):
+            return s.content.map { extractBlockText(from: $0) }.joined(separator: " ")
+        case .table(let t):
+            var text = ""
+            for row in t.rows {
+                for cell in row.cells {
+                    for content in cell {
+                        text += extractBlockText(from: content) + " "
+                    }
+                }
+            }
+            return text
+        case .termList(let t):
+            var text = ""
+            for item in t.items {
+                text += extractText(from: item.term.inlineContent) + " "
+                text += item.definition.content.map { extractBlockText(from: $0) }.joined(separator: " ") + " "
+            }
+            return text
+        default:
+            return ""
+        }
+    }
+
+    /// Extracts text from an array of inline content.
+    func extractText(from contents: [RenderInlineContent]) -> String {
+        contents.map { extractText(from: $0) }.joined()
     }
 
     func extractText(from content: RenderInlineContent) -> String {

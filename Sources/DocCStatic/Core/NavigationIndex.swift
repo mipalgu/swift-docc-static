@@ -52,6 +52,17 @@ public struct NavigationNode: Codable, Equatable, Hashable, Sendable, Identifiab
     /// Return whether this node is beta.
     public let isBeta: Bool?
 
+    /// Coding keys to match JSON property names.
+    enum CodingKeys: String, CodingKey {
+        case title
+        case path
+        case type
+        case children
+        case isDeprecated = "deprecated"
+        case isExternal = "external"
+        case isBeta = "beta"
+    }
+
     /// A unique identifier for this node.
     public var id: String {
         path ?? title
