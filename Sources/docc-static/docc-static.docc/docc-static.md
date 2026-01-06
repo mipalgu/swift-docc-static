@@ -59,7 +59,7 @@ docc-static generate [options]
 |----------------------------------|----------------------------------------------------|
 | `-p, --package-path`             | Path to the Swift package (default: `.`)           |
 | `-o, --output`                   | Output directory (default: `.build/documentation`) |
-| `--scratch-path`.                | Scratch path for Swift build operations            |
+| `--scratch-path`                 | Scratch path for Swift build operations            |
 | `--symbol-graph-dir`             | Pre-generated symbol graph directory               |
 | `-t, --target`                   | Specific targets to document (repeatable)          |
 | `-I, --include-all-dependencies` | Include all dependencies                           |
@@ -102,3 +102,19 @@ Start a local preview server:
 docc-static preview --output ./docs --port 8080
 ```
 
+## Topics
+
+### Essentials
+
+- <doc:GettingStarted>
+- <doc:LocalUsage>
+
+### Deployment
+
+- <doc:ServerDeployment>
+- <doc:CIIntegration>
+
+### Related
+
+- ``DocCStatic`` - The library for programmatic documentation generation
+- ``GenerateStaticDocumentation`` - The SPM plugin for integrated workflows

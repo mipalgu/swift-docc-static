@@ -1,16 +1,16 @@
 # Getting Started with DocCStatic
 
-Generate your first static documentation from a Swift package.
+Use the DocCStatic library to generate static documentation programmatically.
 
 ## Overview
 
-DocCStatic generates static HTML documentation from Swift packages. Unlike standard DocC output which requires a web server and JavaScript, DocCStatic produces pure HTML/CSS that works directly in a browser via file:// URLs.
+The DocCStatic library provides a Swift API for generating static HTML/CSS
+documentation from Swift packages. Use it when you need programmatic control
+over the documentation generation process, such as integrating into custom
+build systems or creating documentation tooling.
 
-This guide walks you through:
-1. Adding DocCStatic to your project
-2. Configuring the generator
-3. Generating documentation
-4. Viewing the output
+> Tip: For most use cases, consider using the **docc-static** command-line tool
+> or the **SPM plugin** instead. See the related documentation below.
 
 ## Adding DocCStatic to Your Project
 
@@ -25,8 +25,8 @@ dependencies: [
 For a command-line tool or script, add the product dependency:
 
 ```swift
-.target(
-    name: "MyTool",
+.executableTarget(
+    name: "MyDocTool",
     dependencies: [
         .product(name: "DocCStatic", package: "swift-docc-static"),
     ]
@@ -46,7 +46,7 @@ let configuration = Configuration(
 )
 ```
 
-### Optional Configuration
+### Configuration Options
 
 Customise the generation with additional options:
 
@@ -60,6 +60,8 @@ let configuration = Configuration(
     isVerbose: true                             // Verbose logging
 )
 ```
+
+See ``Configuration`` for all available options.
 
 ## Generating Documentation
 
@@ -77,17 +79,10 @@ do {
 }
 ```
 
-## Viewing the Output
+The generator returns a ``GenerationResult`` with statistics about the
+generated documentation.
 
-Open the generated `index.html` directly in a browser:
-
-```bash
-open /path/to/docs/index.html
-```
-
-The documentation works without a web server. All links use relative paths that function correctly with file:// URLs.
-
-### Output Structure
+## Output Structure
 
 The generator creates the following structure:
 
@@ -107,34 +102,45 @@ docs/
 └── search-index.json      # Search index (if enabled)
 ```
 
-## Using the Command-Line Tool
+## Rendering from Archives
 
-You can also use the `docc-static` command-line tool:
+If you have pre-generated DocC archives, render them directly:
 
-```bash
-# Basic usage
-docc-static generate --package-path /path/to/package --output /path/to/docs
-
-# With options
-docc-static generate \
-    --package-path . \
-    --output ./docs \
-    --target MyLib \
-    --verbose
+```swift
+let generator = StaticDocumentationGenerator(configuration: configuration)
+let result = try await generator.renderFromArchive(archiveURL)
 ```
 
-See the **docc-static** module documentation for a complete reference of all commands and options.
+## Error Handling
 
-## Using the SPM Plugin
+The generator throws ``GenerationError`` for recoverable errors:
 
-Add the plugin to your package and run:
-
-```bash
-swift package generate-static-documentation --output ./docs
+```swift
+do {
+    let result = try await generator.generate()
+} catch let error as GenerationError {
+    switch error {
+    case .packageNotFound:
+        print("Package.swift not found")
+    case .buildFailed(let message):
+        print("Build failed: \(message)")
+    case .archiveParsingFailed(let message):
+        print("Archive parsing failed: \(message)")
+    }
+} catch {
+    print("Unexpected error: \(error)")
+}
 ```
 
 ## Next Steps
 
-- <doc:Configuration> - Learn about all configuration options
-- <doc:CrossPackageLinking> - Understand how cross-package links work
+- <doc:Configuration> - Detailed configuration reference
+- <doc:CrossPackageLinking> - How cross-package links work
 - <doc:CustomThemes> - Customise the documentation appearance
+
+## Alternatives
+
+For simpler use cases, consider:
+
+- **docc-static CLI** - Command-line tool for direct usage
+- **SPM Plugin** - Integrated Swift Package Manager workflow

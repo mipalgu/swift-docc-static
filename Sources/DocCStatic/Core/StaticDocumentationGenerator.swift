@@ -1231,6 +1231,11 @@ public struct StaticDocumentationGenerator: Sendable {
         // Scan the output directory for module directories
         let docRoot = configuration.outputDirectory.appendingPathComponent("documentation")
         let fileManager = FileManager.default
+
+        // Track which normalized module names we've already added to avoid duplicates
+        // (e.g., docc_static and docc-static should only appear once)
+        var seenModules: Set<String> = []
+
         if fileManager.fileExists(atPath: docRoot.path),
            let contents = try? fileManager.contentsOfDirectory(
                at: docRoot,
@@ -1241,6 +1246,23 @@ public struct StaticDocumentationGenerator: Sendable {
                 if fileManager.fileExists(atPath: item.path, isDirectory: &isDirectory),
                    isDirectory.boolValue {
                     let modulePath = item.lastPathComponent
+
+                    // Normalize the module name for deduplication
+                    let normalizedName = normalizeModuleName(modulePath.lowercased())
+
+                    // Skip if we've already seen this module (handles docc-static vs docc_static)
+                    guard !seenModules.contains(normalizedName) else {
+                        continue
+                    }
+
+                    // Only include directories that have an index.html (actual module pages)
+                    let indexPath = item.appendingPathComponent("index.html")
+                    guard fileManager.fileExists(atPath: indexPath.path) else {
+                        continue
+                    }
+
+                    seenModules.insert(normalizedName)
+
                     // Extract the actual title from the generated HTML
                     let moduleInfo = extractModuleInfo(from: item)
                     modules.append(IndexPageBuilder.ModuleEntry(

@@ -74,3 +74,8 @@ print("Generated \(result.generatedPages) pages")
 - ``ThemeConfiguration``
 - ``Warning``
 - ``SourceLocation``
+
+### Related
+
+- ``docc_static`` - Command-line tool for direct usage
+- ``GenerateStaticDocumentation`` - SPM plugin for integrated workflows
