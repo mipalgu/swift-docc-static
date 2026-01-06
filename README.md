@@ -28,6 +28,15 @@ without requiring JavaScript for core functionality.
 
 ## Installation
 
+### Using Homebrew
+
+The easiest way to install on macOS or Linux:
+
+```bash
+brew tap mipalgu/tap
+brew install swift-docc-static
+```
+
 ### Building from Source
 
 ```bash
