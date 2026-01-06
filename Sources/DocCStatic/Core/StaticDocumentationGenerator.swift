@@ -3768,8 +3768,6 @@ enum SearchScript {
             async function loadSearchIndex() {
                 try {
                     const basePath = getBasePath();
-                    console.log('[Search] Base path:', basePath);
-                    console.log('[Search] Fetching:', basePath + 'search-index.json');
                     const response = await fetch(basePath + 'search-index.json');
                     if (!response.ok) throw new Error('Failed to load search index: ' + response.status);
 
@@ -3801,8 +3799,6 @@ enum SearchScript {
                             });
                         });
                     });
-
-                    console.log('Search index loaded with ' + data.documents.length + ' documents');
                 } catch (error) {
                     console.warn('Search not available:', error.message);
                 }
@@ -3892,11 +3888,9 @@ enum SearchScript {
 
             // Search content using Lunr.js and display results
             function searchContent(query) {
-                console.log('[Search] searchContent called with:', query);
                 removeSearchResults();
 
                 if (!searchIndex || !query.trim()) {
-                    console.log('[Search] No index or empty query, searchIndex:', !!searchIndex);
                     return;
                 }
 
@@ -3904,27 +3898,22 @@ enum SearchScript {
                 try {
                     // First try exact/stemmed search (uses Lunr's stemmer)
                     results = searchIndex.search(query);
-                    console.log('[Search] Stemmed search results:', results.length);
                 } catch (e) {
-                    console.log('[Search] Stemmed search error:', e.message);
+                    // Stemmed search failed, will try wildcard
                 }
 
                 // If no results, try wildcard search for partial matches
                 if (results.length === 0) {
                     try {
                         results = searchIndex.search(query + '*');
-                        console.log('[Search] Wildcard search results:', results.length);
                     } catch (e) {
-                        console.log('[Search] Wildcard search error:', e.message);
+                        // Wildcard search also failed
                     }
                 }
 
                 if (results.length === 0) {
-                    console.log('[Search] No results found');
                     return;
                 }
-
-                console.log('[Search] Found', results.length, 'results');
 
                 // Filter and group results by type
                 const grouped = {
