@@ -1688,7 +1688,28 @@ enum DocCStylesheet {
             border-radius: 12px;
             overflow-x: auto;
             line-height: 1.6;
-            margin: 1rem 0;
+            margin: 1rem 1.5rem;
+        }
+
+        table {
+            border-collapse: collapse;
+            margin: 1rem 1.5rem;
+            font-size: 0.9375rem;
+        }
+
+        th, td {
+            padding: 0.75rem 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--docc-border);
+        }
+
+        th {
+            font-weight: 600;
+            color: var(--docc-fg-secondary);
+        }
+
+        tr:last-child td {
+            border-bottom: none;
         }
 
         pre code {
