@@ -1,5 +1,11 @@
 # swift-docc-static
 
+[![CI](https://github.com/mipalgu/swift-docc-static/actions/workflows/ci.yml/badge.svg)](https://github.com/mipalgu/swift-docc-static/actions/workflows/ci.yml)
+[![Documentation](https://github.com/mipalgu/swift-docc-static/actions/workflows/documentation.yml/badge.svg)](https://github.com/mipalgu/swift-docc-static/actions/workflows/documentation.yml)
+[![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fmipalgu%2Fswift-docc-static%2Fbadge%3Ftype%3Dswift-versions)](https://swiftpackageindex.com/mipalgu/swift-docc-static)
+[![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fmipalgu%2Fswift-docc-static%2Fbadge%3Ftype%3Dplatforms)](https://swiftpackageindex.com/mipalgu/swift-docc-static)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+
 A tool and plugin to generate static HTML/CSS documentation for Swift packages
 that works without JavaScript.
 
@@ -143,6 +149,71 @@ Or with options:
 ```bash
 swift package --scratch-path /tmp/build generate-static-documentation
 ```
+
+### GitHub Pages Deployment
+
+You can automatically deploy documentation to GitHub Pages using GitHub Actions.
+Add the following workflow to `.github/workflows/documentation.yml`:
+
+```yaml
+name: Documentation
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: "26.2"
+
+      - name: Build docc-static
+        run: swift build -c release --product docc-static
+
+      - name: Generate documentation
+        run: |
+          .build/release/docc-static generate \
+            --package-path . \
+            --output .build/documentation \
+            --include-search
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: .build/documentation
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
+```
+
+Then configure GitHub Pages in your repository settings:
+1. Go to **Settings** → **Pages**
+2. Under **Build and deployment**, select **Source: GitHub Actions**
+
+Your documentation will be deployed to `https://<username>.github.io/<repository>/`.
 
 ## Output Structure
 

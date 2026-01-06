@@ -1,0 +1,99 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # macOS build using Xcode 26 (Swift 6.2)
+  build-macos:
+    name: macOS (Xcode ${{ matrix.xcode }})
+    runs-on: macos-15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - xcode: "26.2"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Select Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: ${{ matrix.xcode }}
+
+      - name: Swift version
+        run: swift --version
+
+      - name: Build
+        run: swift build --build-tests
+
+      - name: Run tests
+        run: swift test
+
+  # Linux builds using swift-actions/setup-swift
+  build-linux:
+    name: ${{ matrix.os }} (Swift ${{ matrix.swift }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-24.04
+            swift: "6.2"
+          - os: ubuntu-22.04
+            swift: "6.2"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Swift
+        uses: swift-actions/setup-swift@v2
+        with:
+          swift-version: ${{ matrix.swift }}
+
+      - name: Swift version
+        run: swift --version
+
+      - name: Build
+        run: swift build --build-tests
+
+      - name: Run tests
+        run: swift test
+
+  # Windows build using compnerd/gha-setup-swift
+  build-windows:
+    name: Windows (Swift ${{ matrix.swift }})
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - swift: "6.2"
+            swift-build: "6.2-RELEASE"
+            swift-tag: "swift-6.2-release"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Swift
+        uses: compnerd/gha-setup-swift@main
+        with:
+          branch: ${{ matrix.swift-tag }}
+          tag: ${{ matrix.swift-build }}
+
+      - name: Swift version
+        run: swift --version
+
+      - name: Build
+        run: swift build --build-tests
+
+      - name: Run tests
+        run: swift test
