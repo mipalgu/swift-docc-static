@@ -136,10 +136,6 @@ struct Generate: AsyncParsableCommand {
                     print("  \(warning)")
                 }
             }
-
-            if let searchPath = result.searchIndexPath {
-                print("\nSearch index: \(searchPath.path)")
-            }
         } catch {
             throw CleanExit.message("Error: \(error.localizedDescription)")
         }
