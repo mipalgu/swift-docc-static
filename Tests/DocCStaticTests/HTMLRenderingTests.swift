@@ -182,14 +182,15 @@ struct IndexPageBuilderTests {
         #expect(!html.contains("js/search.js"))
     }
 
-    @Test("Modules are sorted alphabetically")
-    func modulesSorted() {
+    @Test("Modules preserve provided order (Package.swift order)")
+    func modulesPreserveOrder() {
         let config = Configuration(
             packageDirectory: URL(fileURLWithPath: "/tmp"),
             outputDirectory: URL(fileURLWithPath: "/tmp/docs")
         )
         let builder = IndexPageBuilder(configuration: config)
 
+        // Modules provided in a specific order (simulating Package.swift order)
         let modules = [
             IndexPageBuilder.ModuleEntry(name: "Zebra", abstract: "", path: "", symbolCount: 0),
             IndexPageBuilder.ModuleEntry(name: "Apple", abstract: "", path: "", symbolCount: 0),
@@ -198,12 +199,12 @@ struct IndexPageBuilderTests {
 
         let html = builder.buildIndexPage(modules: modules)
 
-        // Check that Apple appears before Mango which appears before Zebra
+        // Check that order is preserved: Zebra, Apple, Mango (not sorted alphabetically)
+        let zebraIndex = html.range(of: "Zebra")!.lowerBound
         let appleIndex = html.range(of: "Apple")!.lowerBound
         let mangoIndex = html.range(of: "Mango")!.lowerBound
-        let zebraIndex = html.range(of: "Zebra")!.lowerBound
 
+        #expect(zebraIndex < appleIndex)
         #expect(appleIndex < mangoIndex)
-        #expect(mangoIndex < zebraIndex)
     }
 }
