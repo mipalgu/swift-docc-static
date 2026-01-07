@@ -1684,11 +1684,17 @@ enum DocCStylesheet {
             font-family: var(--typeface-mono);
             font-size: 0.8125rem;
             background: var(--docc-bg-secondary);
-            padding: 1rem 1.25rem;
+            padding: 1rem;
             border-radius: 12px;
             overflow-x: auto;
             line-height: 1.6;
             margin: 1rem 1.5rem;
+        }
+
+        pre code {
+            display: block;
+            position: relative;
+            left: -1.5rem;
         }
 
         table {
