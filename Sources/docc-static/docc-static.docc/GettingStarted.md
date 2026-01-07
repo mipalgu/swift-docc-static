@@ -96,9 +96,9 @@ docc-static render /path/to/MyLibrary.doccarchive --output ./docs
 
 ## Next Steps
 
-- <doc:LocalUsage> - Detailed local development workflows
-- <doc:ServerDeployment> - Deploy documentation to web servers
-- <doc:CIIntegration> - Automate with CI/CD pipelines
+- <doc:LocalUsage>
+- <doc:ServerDeployment>
+- <doc:CIIntegration>
 
 ## See Also
 

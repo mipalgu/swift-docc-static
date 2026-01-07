@@ -150,6 +150,6 @@ The plugin respects standard Swift environment variables:
 
 ## See Also
 
-- <doc:GettingStarted> - Basic setup and usage
-- <doc:XcodeIntegration> - Using with Xcode
+- <doc:GettingStarted>
+- <doc:XcodeIntegration>
 - ``GenerateStaticDocumentation``

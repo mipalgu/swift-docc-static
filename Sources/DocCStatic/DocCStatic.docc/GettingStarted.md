@@ -134,9 +134,9 @@ do {
 
 ## Next Steps
 
-- <doc:Configuration> - Detailed configuration reference
-- <doc:CrossPackageLinking> - How cross-package links work
-- <doc:CustomThemes> - Customise the documentation appearance
+- <doc:Configuration>
+- <doc:CrossPackageLinking>
+- <doc:CustomThemes>
 
 ## Alternatives
 

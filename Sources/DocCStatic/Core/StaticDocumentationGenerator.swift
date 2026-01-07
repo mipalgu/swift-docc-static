@@ -2679,6 +2679,8 @@ enum DocCStylesheet {
         .index-intro pre code {
             background: none;
             padding: 0;
+            position: static;
+            left: 0;
         }
 
         .index-intro a {

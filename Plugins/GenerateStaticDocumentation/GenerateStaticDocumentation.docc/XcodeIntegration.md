@@ -140,6 +140,6 @@ swift package generate-static-documentation
 
 ## See Also
 
-- <doc:GettingStarted> - Basic setup and usage
-- <doc:PluginOptions> - Available configuration options
-- ``docc_static`` - The standalone command-line tool
+- <doc:GettingStarted>
+- <doc:PluginOptions>
+- ``docc_static``

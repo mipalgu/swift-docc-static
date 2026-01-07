@@ -332,6 +332,6 @@ Documentation generation can be slow. Increase timeout limits:
 
 ## See Also
 
-- <doc:GettingStarted> - Installation and basic usage
-- <doc:ServerDeployment> - Deployment options
-- <doc:LocalUsage> - Local development workflows
+- <doc:GettingStarted>
+- <doc:ServerDeployment>
+- <doc:LocalUsage>

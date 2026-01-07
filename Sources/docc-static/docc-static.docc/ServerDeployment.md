@@ -197,6 +197,6 @@ preload headers at the server level for even faster loading.
 
 ## See Also
 
-- <doc:CIIntegration> - Automate deployment with CI/CD
-- <doc:GettingStarted> - Installation and basic usage
-- <doc:LocalUsage> - Local development workflows
+- <doc:CIIntegration>
+- <doc:GettingStarted>
+- <doc:LocalUsage>

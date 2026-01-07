@@ -166,6 +166,6 @@ This reduces output size and removes the Lunr.js dependency.
 
 ## See Also
 
-- <doc:GettingStarted> - Installation and basic usage
-- <doc:ServerDeployment> - Deploy to production servers
-- <doc:CIIntegration> - Automate documentation generation
+- <doc:GettingStarted>
+- <doc:ServerDeployment>
+- <doc:CIIntegration>

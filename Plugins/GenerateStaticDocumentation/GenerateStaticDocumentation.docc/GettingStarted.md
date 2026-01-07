@@ -79,11 +79,11 @@ The plugin approach has several advantages:
 
 ## Next Steps
 
-- <doc:PluginOptions> - Learn about all available options
-- <doc:XcodeIntegration> - Use with Xcode projects
+- <doc:PluginOptions>
+- <doc:XcodeIntegration>
 
 ## See Also
 
 - ``GenerateStaticDocumentation``
-- ``docc_static`` - The standalone command-line tool
-- ``DocCStatic`` - The underlying library
+- ``docc_static``
+- ``DocCStatic``
