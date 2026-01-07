@@ -30,7 +30,6 @@ without requiring JavaScript for core functionality.
 ## Requirements
 
 - Swift 6.2+
-- Linux or macOS 14+
 
 ## Installation
 
