@@ -1695,6 +1695,8 @@ enum DocCStylesheet {
             display: block;
             position: relative;
             left: -1.5rem;
+            background: none;
+            padding: 0;
         }
 
         table {
@@ -1716,11 +1718,6 @@ enum DocCStylesheet {
 
         tr:last-child td {
             border-bottom: none;
-        }
-
-        pre code {
-            background: none;
-            padding: 0;
         }
 
         /* Syntax highlighting */
