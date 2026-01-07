@@ -88,6 +88,7 @@ jobs:
         with:
           swift-version: ${{ matrix.swift-tag }}
           swift-build: ${{ matrix.swift-build }}
+          cache: true
 
       - name: Swift version
         run: swift --version
