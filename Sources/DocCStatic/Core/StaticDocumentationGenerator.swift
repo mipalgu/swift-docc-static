@@ -1699,6 +1699,17 @@ enum DocCStylesheet {
             padding: 0;
         }
 
+        /* Code blocks inside list items: no left offset since list provides indentation */
+        li pre {
+            margin-left: 0;
+            margin-right: 0;
+        }
+
+        li pre code {
+            position: static;
+            left: 0;
+        }
+
         table {
             border-collapse: collapse;
             margin: 1rem 1.5rem;
