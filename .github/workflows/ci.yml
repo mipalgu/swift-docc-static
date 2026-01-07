@@ -77,8 +77,6 @@ jobs:
       matrix:
         include:
           - swift: "6.2"
-            swift-build: "6.2-RELEASE"
-            swift-tag: "swift-6.2-release"
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -86,8 +84,7 @@ jobs:
       - name: Setup Swift
         uses: compnerd/gha-setup-swift@main
         with:
-          branch: ${{ matrix.swift-tag }}
-          tag: ${{ matrix.swift-build }}
+          swift-version: ${{ matrix.swift }}
 
       - name: Swift version
         run: swift --version
