@@ -2,24 +2,6 @@
 
 import PackageDescription
 
-var dependencies: [Package.Dependency] = [
-    // Core DocC functionality
-    .package(url: "https://github.com/swiftlang/swift-docc.git", branch: "main"),
-
-    // CLI argument parsing
-    .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.5.0"),
-
-    // Subprocess handling
-    .package(url: "https://github.com/swiftlang/swift-subprocess.git", from: "0.1.0"),
-
-    // System types (for Linux compatibility)
-    .package(url: "https://github.com/apple/swift-system.git", from: "1.4.0"),
-]
-
-#if !os(Windows)
-dependencies.append(.package(url: "https://github.com/swiftlang/swift-docc-plugin", from: "1.4.0"))
-#endif
-
 let package = Package(
     name: "swift-docc-static",
     platforms: [
@@ -42,7 +24,21 @@ let package = Package(
             targets: ["DocCStatic"]
         ),
     ],
-    dependencies: dependencies,
+    dependencies: [
+        // Core DocC functionality
+        .package(url: "https://github.com/swiftlang/swift-docc.git", branch: "main"),
+
+        // CLI argument parsing
+        .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.5.0"),
+
+        // Subprocess handling
+        .package(url: "https://github.com/swiftlang/swift-subprocess.git", from: "0.1.0"),
+
+        // System types (for Linux compatibility)
+        .package(url: "https://github.com/apple/swift-system.git", from: "1.4.0"),
+
+        .package(url: "https://github.com/swiftlang/swift-docc-plugin", from: "1.4.0"),
+    ],
     targets: [
         .executableTarget(
             name: "docc-static",
