@@ -122,13 +122,15 @@ struct Generate: AsyncParsableCommand {
         do {
             let result = try await generator.generate()
 
-            print("""
-                Documentation generated successfully!
-                  Output: \(result.outputDirectory.path)
-                  Pages: \(result.generatedPages)
-                  Modules: \(result.modulesDocumented)
-                  Symbols: \(result.symbolsDocumented)
-                """)
+            if isVerbose {
+                print("""
+                    Documentation generated successfully!
+                      Output: \(result.outputDirectory.path)
+                      Pages: \(result.generatedPages)
+                      Modules: \(result.modulesDocumented)
+                      Symbols: \(result.symbolsDocumented)
+                    """)
+            }
 
             if !result.warnings.isEmpty {
                 print("\nWarnings:")
@@ -190,11 +192,13 @@ struct Render: AsyncParsableCommand {
         do {
             let result = try await generator.renderFromArchive(archiveURL)
 
-            print("""
-                Documentation rendered successfully!
-                  Output: \(result.outputDirectory.path)
-                  Pages: \(result.generatedPages)
-                """)
+            if isVerbose {
+                print("""
+                    Documentation rendered successfully!
+                      Output: \(result.outputDirectory.path)
+                      Pages: \(result.generatedPages)
+                    """)
+            }
 
             if !result.warnings.isEmpty {
                 print("\nWarnings:")

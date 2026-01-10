@@ -415,17 +415,14 @@ public struct StaticDocumentationGenerator: Sendable {
 
         // Use streaming API to show output as it arrives
         // Note: swift-subprocess requires discarding stderr when streaming stdout
-        // docc diagnostics typically go to stdout anyway
-        let verbose = configuration.isVerbose
+        // docc convert only outputs warnings/errors, so always show them to stderr
         let result = try await run(
             .path(FilePath(doccPath)),
             arguments: Arguments(arguments)
         ) { execution, standardOutput in
-            // Stream stdout lines as they arrive
-            for try await line in standardOutput.lines(encoding: UTF8.self) {
-                if verbose {
-                    print(line)
-                }
+            // Stream stdout bytes directly to stderr - docc only outputs diagnostics
+            for try await chunk in standardOutput {
+                FileHandle.standardError.write(Data(buffer: chunk))
             }
         }
 
