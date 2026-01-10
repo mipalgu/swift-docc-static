@@ -16,21 +16,11 @@ jobs:
   homebrew-releaser:
     runs-on: ubuntu-latest
     name: Homebrew Releaser
-    permissions:
-      contents: read
-      pull-requests: write
     steps:
-      - name: Run Homebrew Releaser
-        uses: Homebrew/actions/homebrew-releaser@master
+      - name: Bump formula and create PR
+        uses: dawidd6/action-homebrew-bump-formula@v3
         with:
-          homebrew-tap: mipalgu/homebrew-tap
-          formula-folder: Formula
-          github-token: ${{ secrets.HOMEBREW_GITHUB_TOKEN }}
+          token: ${{ secrets.HOMEBREW_GITHUB_TOKEN }}
+          formula: swift-docc-static
+          tap: mipalgu/homebrew-tap
           tag: ${{ github.event.inputs.tag }}
-          commit-message: |
-            Update swift-docc-static to {{ version }}
-
-            Co-Authored-By: GitHub Actions <actions@github.com>
-          skip-commit: false
-          create-pull-request: true
-          delete-branch: false
