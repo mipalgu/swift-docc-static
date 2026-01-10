@@ -20,8 +20,6 @@ jobs:
       contents: read
       pull-requests: write
     steps:
-      - uses: Homebrew/actions/setup-brew@master
-
       - name: Run Homebrew Releaser
         uses: Homebrew/actions/homebrew-releaser@master
         with:
