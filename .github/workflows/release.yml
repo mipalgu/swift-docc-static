@@ -1,0 +1,32 @@
+name: Homebrew Release
+
+on:
+  release:
+    types: [published]
+
+env:
+  HOMEBREW_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+jobs:
+  homebrew-releaser:
+    runs-on: ubuntu-latest
+    name: Homebrew Releaser
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: Homebrew/actions/setup-brew@master
+
+      - name: Run Homebrew Releaser
+        uses: Homebrew/actions/homebrew-releaser@master
+        with:
+          homebrew-tap: mipalgu/homebrew-tap
+          formula-folder: Formula
+          github-token: ${{ secrets.HOMEBREW_GITHUB_TOKEN }}
+          commit-message: |
+            Update swift-docc-static to {{ version }}
+
+            Co-Authored-By: GitHub Actions <actions@github.com>
+          skip-commit: false
+          create-pull-request: true
+          delete-branch: false
