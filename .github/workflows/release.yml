@@ -45,9 +45,7 @@ jobs:
 
           git checkout -b "update-swift-docc-static-${TAG}"
           git add Formula/swift-docc-static.rb
-          git commit -m "Update swift-docc-static to ${TAG}
-
-Release includes pre-built bottles for macOS and Linux"
+          git commit -m "Update swift-docc-static to ${TAG}" -m "Release includes pre-built bottles for macOS and Linux"
           git push origin "update-swift-docc-static-${TAG}"
 
           gh pr create --title "Update swift-docc-static to ${TAG}" \
@@ -59,4 +57,6 @@ Release includes pre-built bottles for macOS and Linux"
   build-bottles:
     name: Build Bottles
     uses: ./.github/workflows/build-bottles.yml
+    with:
+      tag: ${{ github.event.inputs.tag || github.ref_name }}
     secrets: inherit
