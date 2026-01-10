@@ -3,6 +3,11 @@ name: Build Bottles
 on:
   release:
     types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag to build (e.g., v0.1.3)'
+        required: true
 
 jobs:
   build-macos:
@@ -31,14 +36,16 @@ jobs:
 
       - name: Create bottle tarball
         run: |
+          TAG="${{ github.event.inputs.tag || github.ref_name }}"
           mkdir -p bottle
           cp .build/release/docc-static bottle/
-          tar czf docc-static-${{ github.ref_name }}-macos-${{ env.ARCH }}.tar.gz -C bottle docc-static
+          tar czf docc-static-${TAG}-macos-${{ env.ARCH }}.tar.gz -C bottle docc-static
 
       - name: Upload to release
         uses: softprops/action-gh-release@v1
         with:
-          files: docc-static-${{ github.ref_name }}-macos-${{ env.ARCH }}.tar.gz
+          tag_name: ${{ github.event.inputs.tag || github.ref_name }}
+          files: docc-static-${{ github.event.inputs.tag || github.ref_name }}-macos-${{ env.ARCH }}.tar.gz
 
   build-linux:
     name: ${{ matrix.os }} (Swift ${{ matrix.swift }})
@@ -78,11 +85,13 @@ jobs:
 
       - name: Create bottle tarball
         run: |
+          TAG="${{ github.event.inputs.tag || github.ref_name }}"
           mkdir -p bottle
           cp .build/release/docc-static bottle/
-          tar czf docc-static-${{ github.ref_name }}-linux-${{ env.ARCH }}-${{ env.OS_VERSION }}.tar.gz -C bottle docc-static
+          tar czf docc-static-${TAG}-linux-${{ env.ARCH }}-${{ env.OS_VERSION }}.tar.gz -C bottle docc-static
 
       - name: Upload to release
         uses: softprops/action-gh-release@v1
         with:
-          files: docc-static-${{ github.ref_name }}-linux-${{ env.ARCH }}-${{ env.OS_VERSION }}.tar.gz
+          tag_name: ${{ github.event.inputs.tag || github.ref_name }}
+          files: docc-static-${{ github.event.inputs.tag || github.ref_name }}-linux-${{ env.ARCH }}-${{ env.OS_VERSION }}.tar.gz
