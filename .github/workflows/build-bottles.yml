@@ -10,6 +10,47 @@ on:
         required: true
 
 jobs:
+  build-windows:
+    name: Build Windows Bottle
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Swift
+        uses: compnerd/gha-setup-swift@main
+        with:
+          swift-version: "swift-6.2-release"
+          swift-build: "6.2-RELEASE"
+          cache: true
+
+      - name: Swift version
+        run: swift --version
+
+      - name: Build release
+        run: swift build -c release
+
+      - name: Determine architecture
+        shell: bash
+        run: |
+          ARCH=$(uname -m)
+          echo "ARCH=$ARCH" >> $GITHUB_ENV
+
+      - name: Create bottle archive
+        shell: bash
+        run: |
+          TAG="${{ github.event.inputs.tag || github.ref_name }}"
+          mkdir -p bottle
+          cp .build/release/docc-static.exe bottle/
+          tar czf docc-static-${TAG}-windows-${{ env.ARCH }}.tar.gz -C bottle docc-static.exe
+
+      - name: Upload to release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ github.event.inputs.tag || github.ref_name }}
+          files: docc-static-${{ github.event.inputs.tag || github.ref_name }}-windows-${{ env.ARCH }}.tar.gz
+
   build-macos:
     name: Build macOS Bottle
     runs-on: macos-15
