@@ -71,5 +71,5 @@ open .build/documentation/index.html
 
 ### Related
 
-- ``docc_static`` - The standalone command-line tool
-- ``DocCStatic`` - The underlying library for programmatic use
+- ``docc_static``
+- ``DocCStatic``

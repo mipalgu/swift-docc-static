@@ -77,5 +77,5 @@ print("Generated \(result.generatedPages) pages")
 
 ### Related
 
-- ``docc_static`` - Command-line tool for direct usage
-- ``GenerateStaticDocumentation`` - SPM plugin for integrated workflows
+- ``docc_static``
+- ``GenerateStaticDocumentation``

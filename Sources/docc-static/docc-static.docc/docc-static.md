@@ -69,6 +69,7 @@ docc-static generate [options]
 | `--disable-search`               | Disable client-side search                         |
 | `--footer`                       | Custom HTML for page footer                        |
 | `-v, --verbose`                  | Enable verbose output                              |
+| `-s, --summary`                  | Show summary statistics after generation           |
 
 **Examples:**
 
@@ -116,5 +117,5 @@ docc-static preview --output ./docs --port 8080
 
 ### Related
 
-- ``DocCStatic`` - The library for programmatic documentation generation
-- ``GenerateStaticDocumentation`` - The SPM plugin for integrated workflows
+- ``DocCStatic``
+- ``GenerateStaticDocumentation``
