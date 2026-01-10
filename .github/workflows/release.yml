@@ -33,6 +33,7 @@ jobs:
       - name: Update and push formula
         env:
           HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.HOMEBREW_GITHUB_TOKEN }}
           TAG: ${{ github.event.inputs.tag || github.ref_name }}
         run: |
           git clone https://x-access-token:${HOMEBREW_TAP_TOKEN}@github.com/mipalgu/homebrew-tap.git homebrew-tap
@@ -51,8 +52,6 @@ jobs:
           gh pr create --title "Update swift-docc-static to ${TAG}" \
             --body "Automated update of swift-docc-static formula for release ${TAG}" \
             --repo mipalgu/homebrew-tap
-        env:
-          GH_TOKEN: ${{ secrets.HOMEBREW_GITHUB_TOKEN }}
 
   build-bottles:
     name: Build Bottles
