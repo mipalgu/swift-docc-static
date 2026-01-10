@@ -42,10 +42,10 @@ struct Generate: AsyncParsableCommand {
     @Option(name: .shortAndLong, help: "Output directory for generated documentation.")
     var output: String = ".build/documentation"
 
-    @Option(name: .long, help: "Scratch path for Swift build operations.")
+    @Option(name: .long, help: "Scratch path for `swift build` operations.")
     var scratchPath: String?
 
-    @Option(name: .long, help: "Pre-generated symbol graph directory (skips build step).")
+    @Option(name: [.long, .customShort("S")], help: "Pre-generated symbol graph directory (skips build step).")
     var symbolGraphDir: String?
 
     @Option(name: .shortAndLong, help: "Specific targets to document (can be repeated).")
@@ -68,6 +68,9 @@ struct Generate: AsyncParsableCommand {
 
     @Flag(name: [.customShort("v"), .customLong("verbose")], help: "Enable verbose output.")
     var isVerbose: Bool = false
+
+    @Flag(name: [.short, .customLong("summary")], help: "Show summary statistics after generation.")
+    var showSummary: Bool = false
 
     @Option(name: .long, help: "Custom HTML for the page footer.")
     var footer: String?
@@ -122,7 +125,7 @@ struct Generate: AsyncParsableCommand {
         do {
             let result = try await generator.generate()
 
-            if isVerbose {
+            if isVerbose || showSummary {
                 print("""
                     Documentation generated successfully!
                       Output: \(result.outputDirectory.path)
@@ -163,6 +166,9 @@ struct Render: AsyncParsableCommand {
     @Flag(name: [.customShort("v"), .customLong("verbose")], help: "Enable verbose output.")
     var isVerbose: Bool = false
 
+    @Flag(name: [.short, .customLong("summary")], help: "Show summary statistics after rendering.")
+    var showSummary: Bool = false
+
     @Option(name: .long, help: "Custom HTML for the page footer.")
     var footer: String?
 
@@ -192,7 +198,7 @@ struct Render: AsyncParsableCommand {
         do {
             let result = try await generator.renderFromArchive(archiveURL)
 
-            if isVerbose {
+            if isVerbose || showSummary {
                 print("""
                     Documentation rendered successfully!
                       Output: \(result.outputDirectory.path)
