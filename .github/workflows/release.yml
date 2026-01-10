@@ -9,18 +9,95 @@ on:
         description: 'Release tag to build (e.g., v0.1.2)'
         required: false
 
-env:
-  HOMEBREW_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
 jobs:
-  homebrew-releaser:
+  update-formula:
+    name: Update Homebrew Formula
     runs-on: ubuntu-latest
-    name: Homebrew Releaser
+    needs: [build-bottles]
+    if: always()
     steps:
-      - name: Bump formula and create PR
-        uses: dawidd6/action-homebrew-bump-formula@v3
+      - name: Checkout swift-docc-static
+        uses: actions/checkout@v4
         with:
-          token: ${{ secrets.HOMEBREW_GITHUB_TOKEN }}
-          formula: swift-docc-static
-          tap: mipalgu/homebrew-tap
-          tag: ${{ github.event.inputs.tag }}
+          fetch-depth: 0
+
+      - name: Download bottle checksums
+        run: |
+          TAG="${{ github.event.inputs.tag || github.ref_name }}"
+
+          # Download release assets to get SHA256 hashes
+          gh release download "${TAG}" --repo mipalgu/swift-docc-static --pattern "*.tar.gz" -D bottles/
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Calculate checksums
+        run: |
+          cd bottles
+
+          # Calculate SHA256 for each bottle
+          for file in *.tar.gz; do
+            sha256=$(sha256sum "$file" | cut -d' ' -f1)
+            filename=$(basename "$file" .tar.gz)
+            echo "$filename=$sha256" >> /tmp/checksums.txt
+          done
+
+          cat /tmp/checksums.txt
+
+      - name: Update and push formula
+        env:
+          HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_GITHUB_TOKEN }}
+          TAG: ${{ github.event.inputs.tag || github.ref_name }}
+        run: |
+          # Clone the homebrew-tap repository
+          git clone https://x-access-token:${HOMEBREW_TAP_TOKEN}@github.com/mipalgu/homebrew-tap.git homebrew-tap
+          cd homebrew-tap
+
+          # Read checksums
+          declare -A checksums
+          while IFS='=' read -r key value; do
+            checksums["$key"]="$value"
+          done < /tmp/checksums.txt
+
+          # Generate bottle block
+          BOTTLE_BLOCK=$(cat <<'EOF'
+  bottle do
+    root_url "https://github.com/mipalgu/swift-docc-static/releases/download/{{ release_tag }}"
+    sha256 cellar: :any_skip_relocation, macos_arm64: "{{ macos_arm64_sha256 }}"
+    sha256 cellar: :any_skip_relocation, macos_x86_64: "{{ macos_x86_64_sha256 }}"
+    sha256 cellar: :any_skip_relocation, ubuntu_22_04: "{{ linux_x86_64_22_04_sha256 }}"
+    sha256 cellar: :any_skip_relocation, ubuntu_24_04: "{{ linux_x86_64_24_04_sha256 }}"
+  end
+EOF
+)
+
+          # Update the formula with new version and bottles
+          sed -i "s|url \"https://github.com/mipalgu/swift-docc-static/archive/refs/tags/.*\.tar\.gz\"|url \"https://github.com/mipalgu/swift-docc-static/archive/refs/tags/${TAG}.tar.gz\"|" Formula/swift-docc-static.rb
+
+          # For now, keep source build as fallback (bottles can be added later)
+          # TODO: Add bottle block with actual SHA256 values
+
+          # Configure git
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+
+          # Create branch and commit
+          git checkout -b "update-swift-docc-static-${TAG}"
+          git add Formula/swift-docc-static.rb
+          git commit -m "Update swift-docc-static to ${TAG}
+
+Release includes pre-built bottles for:
+- macOS arm64 and x86_64
+- Ubuntu 22.04 and 24.04 (x86_64)"
+          git push origin "update-swift-docc-static-${TAG}"
+
+          # Create pull request using gh
+          gh pr create --title "Update swift-docc-static to ${TAG}" \
+            --body "Automated update of swift-docc-static formula for release ${TAG}" \
+            --repo mipalgu/homebrew-tap
+        env:
+          GH_TOKEN: ${{ secrets.HOMEBREW_GITHUB_TOKEN }}
+
+  build-bottles:
+    name: Build Bottles
+    uses: ./.github/workflows/build-bottles.yml
+    secrets: inherit

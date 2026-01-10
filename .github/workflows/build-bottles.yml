@@ -1,0 +1,88 @@
+name: Build Bottles
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build-macos:
+    name: Build macOS Bottle
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Select Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: "26.1.1"
+
+      - name: Swift version
+        run: swift --version
+
+      - name: Build release
+        run: swift build -c release
+
+      - name: Determine architecture
+        run: |
+          ARCH=$(uname -m)
+          echo "ARCH=$ARCH" >> $GITHUB_ENV
+
+      - name: Create bottle tarball
+        run: |
+          mkdir -p bottle
+          cp .build/release/docc-static bottle/
+          tar czf docc-static-${{ github.ref_name }}-macos-${{ env.ARCH }}.tar.gz -C bottle docc-static
+
+      - name: Upload to release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: docc-static-${{ github.ref_name }}-macos-${{ env.ARCH }}.tar.gz
+
+  build-linux:
+    name: ${{ matrix.os }} (Swift ${{ matrix.swift }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-24.04
+            swift: "6.2"
+          - os: ubuntu-22.04
+            swift: "6.2"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Swift
+        uses: swift-actions/setup-swift@v2
+        with:
+          swift-version: ${{ matrix.swift }}
+
+      - name: Swift version
+        run: swift --version
+
+      - name: Build release
+        run: swift build -c release
+
+      - name: Determine architecture and OS
+        run: |
+          ARCH=$(uname -m)
+          OS_ID=$(lsb_release -si | tr '[:upper:]' '[:lower:]')
+          OS_VERSION=$(lsb_release -sr)
+          echo "ARCH=$ARCH" >> $GITHUB_ENV
+          echo "OS_ID=$OS_ID" >> $GITHUB_ENV
+          echo "OS_VERSION=$OS_VERSION" >> $GITHUB_ENV
+
+      - name: Create bottle tarball
+        run: |
+          mkdir -p bottle
+          cp .build/release/docc-static bottle/
+          tar czf docc-static-${{ github.ref_name }}-linux-${{ env.ARCH }}-${{ env.OS_VERSION }}.tar.gz -C bottle docc-static
+
+      - name: Upload to release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: docc-static-${{ github.ref_name }}-linux-${{ env.ARCH }}-${{ env.OS_VERSION }}.tar.gz
