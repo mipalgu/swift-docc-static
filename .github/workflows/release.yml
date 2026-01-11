@@ -141,10 +141,13 @@ jobs:
           GH_TOKEN: ${{ secrets.HOMEBREW_GITHUB_TOKEN }}
           TAG: ${{ github.event.inputs.tag || github.ref_name }}
         run: |
+          cd homebrew-tap
           gh pr create --title "Update swift-docc-static to ${TAG}" \
             --body "Automated update of swift-docc-static formula for release ${TAG}
 
           Includes pre-built bottles for:
           - macOS ARM64 (Sequoia)
           - Linux x86_64" \
+            --base master \
+            --head "update-swift-docc-static-${TAG}" \
             --repo mipalgu/homebrew-tap
