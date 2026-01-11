@@ -17,7 +17,7 @@ on:
 
 jobs:
   build-windows:
-    name: Build Windows Bottle
+    name: Build Windows Binary
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
@@ -43,7 +43,7 @@ jobs:
           ARCH=$(uname -m)
           echo "ARCH=$ARCH" >> $GITHUB_ENV
 
-      - name: Create bottle archive
+      - name: Create archive
         shell: bash
         run: |
           TAG="${{ inputs.tag || github.event.inputs.tag || github.ref_name }}"
@@ -76,35 +76,39 @@ jobs:
       - name: Build release
         run: swift build -c release
 
-      - name: Determine architecture
-        run: |
-          ARCH=$(uname -m)
-          echo "ARCH=$ARCH" >> $GITHUB_ENV
-
-      - name: Create bottle tarball
+      - name: Determine version and platform
         run: |
           TAG="${{ inputs.tag || github.event.inputs.tag || github.ref_name }}"
-          mkdir -p bottle
-          cp .build/release/docc-static bottle/
-          tar czf docc-static-${TAG}-macos-${{ env.ARCH }}.tar.gz -C bottle docc-static
+          # Strip 'v' prefix for Homebrew version (v0.1.3 -> 0.1.3)
+          VERSION="${TAG#v}"
+          ARCH=$(uname -m)
+          # Map architecture to Homebrew platform name
+          if [ "$ARCH" = "arm64" ]; then
+            PLATFORM="arm64_sequoia"
+          else
+            PLATFORM="sequoia"
+          fi
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "TAG=$TAG" >> $GITHUB_ENV
+          echo "PLATFORM=$PLATFORM" >> $GITHUB_ENV
+
+      - name: Create Homebrew bottle
+        run: |
+          # Create Homebrew bottle directory structure
+          mkdir -p swift-docc-static/${{ env.VERSION }}/bin
+          cp .build/release/docc-static swift-docc-static/${{ env.VERSION }}/bin/
+          # Create bottle tarball with Homebrew naming convention
+          tar czf swift-docc-static-${{ env.VERSION }}.${{ env.PLATFORM }}.bottle.tar.gz swift-docc-static
 
       - name: Upload to release
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: ${{ inputs.tag || github.event.inputs.tag || github.ref_name }}
-          files: docc-static-${{ inputs.tag || github.event.inputs.tag || github.ref_name }}-macos-${{ env.ARCH }}.tar.gz
+          tag_name: ${{ env.TAG }}
+          files: swift-docc-static-${{ env.VERSION }}.${{ env.PLATFORM }}.bottle.tar.gz
 
   build-linux:
-    name: ${{ matrix.os }} (Swift ${{ matrix.swift }})
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - os: ubuntu-24.04
-            swift: "6.2"
-          - os: ubuntu-22.04
-            swift: "6.2"
+    name: Build Linux Bottle
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
         with:
@@ -113,7 +117,7 @@ jobs:
       - name: Setup Swift
         uses: swift-actions/setup-swift@v2
         with:
-          swift-version: ${{ matrix.swift }}
+          swift-version: "6.2"
 
       - name: Swift version
         run: swift --version
@@ -121,24 +125,28 @@ jobs:
       - name: Build release
         run: swift build -c release
 
-      - name: Determine architecture and OS
-        run: |
-          ARCH=$(uname -m)
-          OS_ID=$(lsb_release -si | tr '[:upper:]' '[:lower:]')
-          OS_VERSION=$(lsb_release -sr)
-          echo "ARCH=$ARCH" >> $GITHUB_ENV
-          echo "OS_ID=$OS_ID" >> $GITHUB_ENV
-          echo "OS_VERSION=$OS_VERSION" >> $GITHUB_ENV
-
-      - name: Create bottle tarball
+      - name: Determine version and platform
         run: |
           TAG="${{ inputs.tag || github.event.inputs.tag || github.ref_name }}"
-          mkdir -p bottle
-          cp .build/release/docc-static bottle/
-          tar czf docc-static-${TAG}-linux-${{ env.ARCH }}-${{ env.OS_VERSION }}.tar.gz -C bottle docc-static
+          # Strip 'v' prefix for Homebrew version (v0.1.3 -> 0.1.3)
+          VERSION="${TAG#v}"
+          ARCH=$(uname -m)
+          # Map to Homebrew platform name
+          PLATFORM="${ARCH}_linux"
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "TAG=$TAG" >> $GITHUB_ENV
+          echo "PLATFORM=$PLATFORM" >> $GITHUB_ENV
+
+      - name: Create Homebrew bottle
+        run: |
+          # Create Homebrew bottle directory structure
+          mkdir -p swift-docc-static/${{ env.VERSION }}/bin
+          cp .build/release/docc-static swift-docc-static/${{ env.VERSION }}/bin/
+          # Create bottle tarball with Homebrew naming convention
+          tar czf swift-docc-static-${{ env.VERSION }}.${{ env.PLATFORM }}.bottle.tar.gz swift-docc-static
 
       - name: Upload to release
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: ${{ inputs.tag || github.event.inputs.tag || github.ref_name }}
-          files: docc-static-${{ inputs.tag || github.event.inputs.tag || github.ref_name }}-linux-${{ env.ARCH }}-${{ env.OS_VERSION }}.tar.gz
+          tag_name: ${{ env.TAG }}
+          files: swift-docc-static-${{ env.VERSION }}.${{ env.PLATFORM }}.bottle.tar.gz
