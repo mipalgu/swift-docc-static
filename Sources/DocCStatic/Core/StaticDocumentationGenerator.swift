@@ -10,9 +10,9 @@ import Subprocess
 import SwiftDocC
 
 #if canImport(System)
-import System
+    import System
 #else
-import SystemPackage
+    import SystemPackage
 #endif
 
 /// Errors that can occur during documentation generation.
@@ -31,7 +31,8 @@ public enum GenerationError: Error, LocalizedError {
         case .symbolGraphGenerationFailed(let message):
             return "Failed to generate symbol graphs: \(message)"
         case .doccNotFound:
-            return "Could not find the docc executable. Ensure Xcode or the Swift toolchain is installed."
+            return
+                "Could not find the docc executable. Ensure Xcode or the Swift toolchain is installed."
         case .archiveParsingFailed(let message):
             return "Failed to parse documentation archive: \(message)"
         }
@@ -219,7 +220,7 @@ public struct StaticDocumentationGenerator: Sendable {
             .name("swift"),
             arguments: Arguments([
                 "package", "dump-package",
-                "--package-path", configuration.packageDirectory.path
+                "--package-path", configuration.packageDirectory.path,
             ]),
             output: .string(limit: 10 * 1024 * 1024)  // 10MB limit
         )
@@ -235,9 +236,10 @@ public struct StaticDocumentationGenerator: Sendable {
 
         // Parse the JSON to extract target names (preserving Package.swift order)
         guard let outputString = result.standardOutput,
-              let data = outputString.data(using: .utf8),
-              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-              let targets = json["targets"] as? [[String: Any]] else {
+            let data = outputString.data(using: .utf8),
+            let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+            let targets = json["targets"] as? [[String: Any]]
+        else {
             return []
         }
 
@@ -322,7 +324,7 @@ public struct StaticDocumentationGenerator: Sendable {
             "--package-path", configuration.packageDirectory.path,
             "-Xswiftc", "-emit-symbol-graph",
             "-Xswiftc", "-emit-symbol-graph-dir",
-            "-Xswiftc", outputDir.path
+            "-Xswiftc", outputDir.path,
         ]
 
         // Add scratch path if specified
@@ -402,7 +404,7 @@ public struct StaticDocumentationGenerator: Sendable {
             "--output-path", outputDir.path,
             "--emit-digest",
             "--fallback-display-name", moduleName,
-            "--fallback-bundle-identifier", moduleName
+            "--fallback-bundle-identifier", moduleName,
         ]
 
         // Add catalog as the main input if provided
@@ -455,7 +457,8 @@ public struct StaticDocumentationGenerator: Sendable {
         var archives: [URL] = []
 
         // Find all DocC catalogs
-        let catalogs = findDoccCatalogs(in: configuration.packageDirectory, fileManager: fileManager)
+        let catalogs = findDoccCatalogs(
+            in: configuration.packageDirectory, fileManager: fileManager)
 
         // Track which symbol graphs have been processed
         var processedSymbolGraphs = Set<String>()
@@ -473,10 +476,12 @@ public struct StaticDocumentationGenerator: Sendable {
 
             // Create a temporary directory with just this symbol graph
             let catalogSymbolGraphsDir = tempDir.appendingPathComponent("sg-\(catalogName)")
-            try fileManager.createDirectory(at: catalogSymbolGraphsDir, withIntermediateDirectories: true)
+            try fileManager.createDirectory(
+                at: catalogSymbolGraphsDir, withIntermediateDirectories: true)
 
             if let symbolGraph = matchingSymbolGraph {
-                let destPath = catalogSymbolGraphsDir.appendingPathComponent(symbolGraph.lastPathComponent)
+                let destPath = catalogSymbolGraphsDir.appendingPathComponent(
+                    symbolGraph.lastPathComponent)
                 try fileManager.copyItem(at: symbolGraph, to: destPath)
                 processedSymbolGraphs.insert(symbolGraph.lastPathComponent)
             }
@@ -501,7 +506,8 @@ public struct StaticDocumentationGenerator: Sendable {
         if !remainingSymbolGraphs.isEmpty {
             // Create temp directory for remaining symbol graphs
             let remainingSymbolGraphsDir = tempDir.appendingPathComponent("sg-remaining")
-            try fileManager.createDirectory(at: remainingSymbolGraphsDir, withIntermediateDirectories: true)
+            try fileManager.createDirectory(
+                at: remainingSymbolGraphsDir, withIntermediateDirectories: true)
 
             for symbolGraph in remainingSymbolGraphs {
                 let sourcePath = symbolGraphsDir.appendingPathComponent(symbolGraph)
@@ -529,7 +535,8 @@ public struct StaticDocumentationGenerator: Sendable {
         in symbolGraphsDir: URL,
         fileManager: FileManager
     ) -> URL? {
-        guard let contents = try? fileManager.contentsOfDirectory(atPath: symbolGraphsDir.path) else {
+        guard let contents = try? fileManager.contentsOfDirectory(atPath: symbolGraphsDir.path)
+        else {
             return nil
         }
 
@@ -549,8 +556,9 @@ public struct StaticDocumentationGenerator: Sendable {
         let lowercaseName = catalogName.lowercased()
         for file in contents where file.hasSuffix(".symbols.json") {
             let baseName = String(file.dropLast(".symbols.json".count))
-            if baseName.lowercased() == lowercaseName ||
-               baseName.lowercased().replacingOccurrences(of: "_", with: "-") == lowercaseName {
+            if baseName.lowercased() == lowercaseName
+                || baseName.lowercased().replacingOccurrences(of: "_", with: "-") == lowercaseName
+            {
                 return symbolGraphsDir.appendingPathComponent(file)
             }
         }
@@ -561,39 +569,40 @@ public struct StaticDocumentationGenerator: Sendable {
     private func findDoccExecutable() async throws -> String {
         let fileManager = FileManager.default
 
-#if os(macOS)
-        // On macOS, prefer Xcode's docc via xcrun for stable navigation ordering
-        // (The swift-latest toolchain's docc has a bug that reorders navigation items)
-        if fileManager.fileExists(atPath: "/usr/bin/xcrun") {
-            let result = try await run(
-                .path(FilePath("/usr/bin/xcrun")),
-                arguments: Arguments(["--find", "docc"]),
-                output: .string(limit: 4096)
-            )
+        #if os(macOS)
+            // On macOS, prefer Xcode's docc via xcrun for stable navigation ordering
+            // (The swift-latest toolchain's docc has a bug that reorders navigation items)
+            if fileManager.fileExists(atPath: "/usr/bin/xcrun") {
+                let result = try await run(
+                    .path(FilePath("/usr/bin/xcrun")),
+                    arguments: Arguments(["--find", "docc"]),
+                    output: .string(limit: 4096)
+                )
 
-            if result.terminationStatus.isSuccess {
-                if let output = result.standardOutput {
-                    let path = output.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
-                    if !path.isEmpty && fileManager.fileExists(atPath: path) {
-                        return path
+                if result.terminationStatus.isSuccess {
+                    if let output = result.standardOutput {
+                        let path = output.trimmingCharacters(
+                            in: CharacterSet.whitespacesAndNewlines)
+                        if !path.isEmpty && fileManager.fileExists(atPath: path) {
+                            return path
+                        }
                     }
                 }
             }
-        }
 
-        // Fall back to common macOS locations
-        let macOSPaths = [
-            "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/docc",
-            "/Applications/Developer/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/docc",
-            "/Library/Developer/Toolchains/swift-latest.xctoolchain/usr/bin/docc"
-        ]
+            // Fall back to common macOS locations
+            let macOSPaths = [
+                "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/docc",
+                "/Applications/Developer/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/docc",
+                "/Library/Developer/Toolchains/swift-latest.xctoolchain/usr/bin/docc",
+            ]
 
-        for path in macOSPaths {
-            if fileManager.fileExists(atPath: path) {
-                return path
+            for path in macOSPaths {
+                if fileManager.fileExists(atPath: path) {
+                    return path
+                }
             }
-        }
-#endif
+        #endif
 
         // Cross-platform: try 'which docc' to find docc in PATH
         let whichResult = try await run(
@@ -614,7 +623,7 @@ public struct StaticDocumentationGenerator: Sendable {
         // Linux: check common Swift toolchain locations
         let linuxPaths = [
             "/usr/bin/docc",
-            "/usr/local/bin/docc"
+            "/usr/local/bin/docc",
         ]
 
         // Also check SWIFT_PATH environment variable
@@ -646,7 +655,7 @@ public struct StaticDocumentationGenerator: Sendable {
         // Search in both Sources and Plugins directories
         let searchDirs = [
             packageDirectory.appendingPathComponent("Sources"),
-            packageDirectory.appendingPathComponent("Plugins")
+            packageDirectory.appendingPathComponent("Plugins"),
         ]
 
         for searchDir in searchDirs {
@@ -656,11 +665,13 @@ public struct StaticDocumentationGenerator: Sendable {
             }
 
             // Enumerate all items in directory
-            guard let enumerator = fileManager.enumerator(
-                at: searchDir,
-                includingPropertiesForKeys: [.isDirectoryKey],
-                options: [.skipsHiddenFiles]
-            ) else {
+            guard
+                let enumerator = fileManager.enumerator(
+                    at: searchDir,
+                    includingPropertiesForKeys: [.isDirectoryKey],
+                    options: [.skipsHiddenFiles]
+                )
+            else {
                 continue
             }
 
@@ -669,7 +680,8 @@ public struct StaticDocumentationGenerator: Sendable {
                 if url.pathExtension == "docc" {
                     var isDirectory: ObjCBool = false
                     if fileManager.fileExists(atPath: url.path, isDirectory: &isDirectory),
-                       isDirectory.boolValue {
+                        isDirectory.boolValue
+                    {
                         catalogs.append(url)
                         // Don't descend into .docc directories
                         enumerator.skipDescendants()
@@ -693,7 +705,9 @@ public struct StaticDocumentationGenerator: Sendable {
     ///   - packageTargets: The set of target names from the current package.
     /// - Returns: A filtered navigation index containing only package targets.
     /// Filters and sorts a navigation index to only include package targets in their defined order.
-    private func filterNavigationIndex(_ index: NavigationIndex, packageTargets: [String]) -> NavigationIndex {
+    private func filterNavigationIndex(_ index: NavigationIndex, packageTargets: [String])
+        -> NavigationIndex
+    {
         var filteredLanguages: [String: [NavigationNode]] = [:]
 
         // Create ordered list of normalised target names for filtering and sorting
@@ -706,13 +720,15 @@ public struct StaticDocumentationGenerator: Sendable {
             // Filter nodes to only include package targets
             let filteredNodes = nodes.filter { node in
                 guard let path = node.path else { return false }
-                let pathComponents = path
+                let pathComponents =
+                    path
                     .trimmingCharacters(in: CharacterSet(charactersIn: "/"))
                     .lowercased()
                     .components(separatedBy: "/")
 
                 guard pathComponents.count >= 2,
-                      pathComponents[0] == "documentation" else {
+                    pathComponents[0] == "documentation"
+                else {
                     return false
                 }
 
@@ -740,13 +756,15 @@ public struct StaticDocumentationGenerator: Sendable {
     /// Returns the index of a navigation node in the target order list.
     private func targetOrderIndex(for node: NavigationNode, in targetOrder: [String]) -> Int {
         guard let path = node.path else { return Int.max }
-        let pathComponents = path
+        let pathComponents =
+            path
             .trimmingCharacters(in: CharacterSet(charactersIn: "/"))
             .lowercased()
             .components(separatedBy: "/")
 
         guard pathComponents.count >= 2,
-              pathComponents[0] == "documentation" else {
+            pathComponents[0] == "documentation"
+        else {
             return Int.max
         }
 
@@ -765,7 +783,8 @@ public struct StaticDocumentationGenerator: Sendable {
         var indices: [NavigationIndex] = []
 
         for archiveDir in archives {
-            let indexPath = archiveDir
+            let indexPath =
+                archiveDir
                 .appendingPathComponent("index")
                 .appendingPathComponent("index.json")
 
@@ -890,8 +909,8 @@ public struct StaticDocumentationGenerator: Sendable {
         )
 
         // Render from archive (include all modules since we don't know package targets)
-        var searchBuilder: SearchIndexBuilder? = configuration.includeSearch ?
-            SearchIndexBuilder(configuration: configuration) : nil
+        var searchBuilder: SearchIndexBuilder? =
+            configuration.includeSearch ? SearchIndexBuilder(configuration: configuration) : nil
         try await renderFromArchive(
             archiveURL,
             consumer: consumer,
@@ -960,21 +979,24 @@ public struct StaticDocumentationGenerator: Sendable {
         let tutorialsRoot = configuration.outputDirectory.appendingPathComponent("tutorials")
 
         guard fileManager.fileExists(atPath: tutorialsRoot.path) else {
-            return // No tutorials to generate overview for
+            return  // No tutorials to generate overview for
         }
 
         // Get all module directories under tutorials/
-        guard let moduleDirectories = try? fileManager.contentsOfDirectory(
-            at: tutorialsRoot,
-            includingPropertiesForKeys: [.isDirectoryKey]
-        ) else {
+        guard
+            let moduleDirectories = try? fileManager.contentsOfDirectory(
+                at: tutorialsRoot,
+                includingPropertiesForKeys: [.isDirectoryKey]
+            )
+        else {
             return
         }
 
         for moduleDir in moduleDirectories {
             var isDirectory: ObjCBool = false
             guard fileManager.fileExists(atPath: moduleDir.path, isDirectory: &isDirectory),
-                  isDirectory.boolValue else {
+                isDirectory.boolValue
+            else {
                 continue
             }
 
@@ -987,10 +1009,12 @@ public struct StaticDocumentationGenerator: Sendable {
             }
 
             // Collect all tutorials in this module
-            guard let tutorialDirs = try? fileManager.contentsOfDirectory(
-                at: moduleDir,
-                includingPropertiesForKeys: [.isDirectoryKey]
-            ) else {
+            guard
+                let tutorialDirs = try? fileManager.contentsOfDirectory(
+                    at: moduleDir,
+                    includingPropertiesForKeys: [.isDirectoryKey]
+                )
+            else {
                 continue
             }
 
@@ -1002,7 +1026,8 @@ public struct StaticDocumentationGenerator: Sendable {
             for tutorialDir in tutorialDirs {
                 var isTutorialDir: ObjCBool = false
                 guard fileManager.fileExists(atPath: tutorialDir.path, isDirectory: &isTutorialDir),
-                      isTutorialDir.boolValue else {
+                    isTutorialDir.boolValue
+                else {
                     continue
                 }
 
@@ -1013,7 +1038,9 @@ public struct StaticDocumentationGenerator: Sendable {
 
                 // Extract overview title
                 if let titleStart = html.range(of: "class=\"tutorial-nav-title\">"),
-                   let titleEnd = html.range(of: "</a>", range: titleStart.upperBound..<html.endIndex) {
+                    let titleEnd = html.range(
+                        of: "</a>", range: titleStart.upperBound..<html.endIndex)
+                {
                     overviewTitle = String(html[titleStart.upperBound..<titleEnd.lowerBound])
                 }
 
@@ -1045,16 +1072,18 @@ public struct StaticDocumentationGenerator: Sendable {
                 let tutorialDir = moduleDir.appendingPathComponent(tutorialPath)
                 let tutorialIndexPath = tutorialDir.appendingPathComponent("index.html")
 
-                guard let tutorialHTML = try? String(contentsOf: tutorialIndexPath, encoding: .utf8) else {
+                guard let tutorialHTML = try? String(contentsOf: tutorialIndexPath, encoding: .utf8)
+                else {
                     continue
                 }
 
                 let info = extractTutorialInfo(from: tutorialHTML, fallbackName: tutorialPath)
-                tutorials.append((
-                    title: info.title,
-                    abstract: info.abstract,
-                    path: "\(tutorialPath)/index.html"
-                ))
+                tutorials.append(
+                    (
+                        title: info.title,
+                        abstract: info.abstract,
+                        path: "\(tutorialPath)/index.html"
+                    ))
             }
 
             guard !tutorials.isEmpty else {
@@ -1070,7 +1099,8 @@ public struct StaticDocumentationGenerator: Sendable {
 
             // Create the tutorials/tutorials directory if needed (for the general landing)
             let tutorialsTutorialsDir = tutorialsRoot.appendingPathComponent("tutorials")
-            try fileManager.createDirectory(at: tutorialsTutorialsDir, withIntermediateDirectories: true)
+            try fileManager.createDirectory(
+                at: tutorialsTutorialsDir, withIntermediateDirectories: true)
 
             // Write to tutorials/tutorials/index.html (the general tutorials landing page)
             let generalOverviewPath = tutorialsTutorialsDir.appendingPathComponent("index.html")
@@ -1083,20 +1113,24 @@ public struct StaticDocumentationGenerator: Sendable {
     }
 
     /// Extracts title and abstract from tutorial HTML.
-    private func extractTutorialInfo(from html: String, fallbackName: String) -> (title: String, abstract: String) {
+    private func extractTutorialInfo(from html: String, fallbackName: String) -> (
+        title: String, abstract: String
+    ) {
         var title = fallbackName.replacingOccurrences(of: "-", with: " ").capitalized
 
         // Extract from <title> tag
         if let titleStart = html.range(of: "<title>"),
-           let titleEnd = html.range(of: "</title>", range: titleStart.upperBound..<html.endIndex) {
+            let titleEnd = html.range(of: "</title>", range: titleStart.upperBound..<html.endIndex)
+        {
             title = String(html[titleStart.upperBound..<titleEnd.lowerBound])
         }
 
         // Extract abstract from tutorial-abstract div
         var abstract = ""
         if let abstractStart = html.range(of: "<div class=\"tutorial-abstract\">"),
-           let pStart = html.range(of: "<p>", range: abstractStart.upperBound..<html.endIndex),
-           let pEnd = html.range(of: "</p>", range: pStart.upperBound..<html.endIndex) {
+            let pStart = html.range(of: "<p>", range: abstractStart.upperBound..<html.endIndex),
+            let pEnd = html.range(of: "</p>", range: pStart.upperBound..<html.endIndex)
+        {
             abstract = String(html[pStart.upperBound..<pEnd.lowerBound])
                 .replacingOccurrences(of: "<[^>]+>", with: "", options: .regularExpression)
         }
@@ -1114,94 +1148,94 @@ public struct StaticDocumentationGenerator: Sendable {
         for tutorial in tutorials {
             tutorialCards += """
 
-                    <a href="../\(moduleName)/\(escapeHTML(tutorial.path))" class="tutorial-card">
-                        <h3 class="tutorial-card-title">\(escapeHTML(tutorial.title))</h3>
-                        <p class="tutorial-card-abstract">\(escapeHTML(tutorial.abstract))</p>
-                    </a>
-            """
+                        <a href="../\(moduleName)/\(escapeHTML(tutorial.path))" class="tutorial-card">
+                            <h3 class="tutorial-card-title">\(escapeHTML(tutorial.title))</h3>
+                            <p class="tutorial-card-abstract">\(escapeHTML(tutorial.abstract))</p>
+                        </a>
+                """
         }
 
         let footerContent = configuration.footerHTML ?? Configuration.defaultFooter
 
         return """
-        <!DOCTYPE html>
-        <html lang="en">
-        <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>\(escapeHTML(title))</title>
-            <link rel="stylesheet" href="../../css/main.css">
-        </head>
-        <body class="tutorial-overview-page">
-            <main class="tutorial-overview-main">
-                <section class="overview-hero">
-                    <div class="overview-hero-content">
-                        <h1 class="overview-title">\(escapeHTML(title))</h1>
-                        <p>Learn through hands-on tutorials covering all aspects of the framework.</p>
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>\(escapeHTML(title))</title>
+                <link rel="stylesheet" href="../../css/main.css">
+            </head>
+            <body class="tutorial-overview-page">
+                <main class="tutorial-overview-main">
+                    <section class="overview-hero">
+                        <div class="overview-hero-content">
+                            <h1 class="overview-title">\(escapeHTML(title))</h1>
+                            <p>Learn through hands-on tutorials covering all aspects of the framework.</p>
+                        </div>
+                    </section>
+                    <section class="overview-tutorials">
+                        <div class="tutorial-grid">
+            \(tutorialCards)
+                        </div>
+                    </section>
+                </main>
+                <footer class="doc-footer">
+                    <div class="footer-content">\(footerContent)</div>
+                    <div class="appearance-selector" id="appearance-selector">
+                        <button type="button" class="appearance-btn" data-theme="light" aria-label="Light mode">Light</button>
+                        <button type="button" class="appearance-btn" data-theme="dark" aria-label="Dark mode">Dark</button>
+                        <button type="button" class="appearance-btn active" data-theme="auto" aria-label="Auto mode">Auto</button>
                     </div>
-                </section>
-                <section class="overview-tutorials">
-                    <div class="tutorial-grid">
-        \(tutorialCards)
-                    </div>
-                </section>
-            </main>
-            <footer class="doc-footer">
-                <div class="footer-content">\(footerContent)</div>
-                <div class="appearance-selector" id="appearance-selector">
-                    <button type="button" class="appearance-btn" data-theme="light" aria-label="Light mode">Light</button>
-                    <button type="button" class="appearance-btn" data-theme="dark" aria-label="Dark mode">Dark</button>
-                    <button type="button" class="appearance-btn active" data-theme="auto" aria-label="Auto mode">Auto</button>
-                </div>
-            </footer>
-            <script>
-            (function() {
-                const selector = document.getElementById('appearance-selector');
-                if (!selector) return;
+                </footer>
+                <script>
+                (function() {
+                    const selector = document.getElementById('appearance-selector');
+                    if (!selector) return;
 
-                // Show the selector (hidden by default for no-JS fallback)
-                selector.style.visibility = 'visible';
+                    // Show the selector (hidden by default for no-JS fallback)
+                    selector.style.visibility = 'visible';
 
-                const buttons = selector.querySelectorAll('.appearance-btn');
-                const html = document.documentElement;
+                    const buttons = selector.querySelectorAll('.appearance-btn');
+                    const html = document.documentElement;
 
-                // Load saved preference
-                const saved = localStorage.getItem('docc-theme') || 'auto';
-                applyTheme(saved);
-                updateButtons(saved);
+                    // Load saved preference
+                    const saved = localStorage.getItem('docc-theme') || 'auto';
+                    applyTheme(saved);
+                    updateButtons(saved);
 
-                // Add click handlers
-                buttons.forEach(btn => {
-                    btn.addEventListener('click', () => {
-                        const theme = btn.dataset.theme;
-                        localStorage.setItem('docc-theme', theme);
-                        applyTheme(theme);
-                        updateButtons(theme);
-                    });
-                });
-
-                function applyTheme(theme) {
-                    if (theme === 'auto') {
-                        html.removeAttribute('data-theme');
-                    } else {
-                        html.setAttribute('data-theme', theme);
-                    }
-                }
-
-                function updateButtons(theme) {
+                    // Add click handlers
                     buttons.forEach(btn => {
-                        btn.classList.toggle('active', btn.dataset.theme === theme);
+                        btn.addEventListener('click', () => {
+                            const theme = btn.dataset.theme;
+                            localStorage.setItem('docc-theme', theme);
+                            applyTheme(theme);
+                            updateButtons(theme);
+                        });
                     });
-                }
-            })();
-            </script>
-            \(configuration.includeSearch ? """
+
+                    function applyTheme(theme) {
+                        if (theme === 'auto') {
+                            html.removeAttribute('data-theme');
+                        } else {
+                            html.setAttribute('data-theme', theme);
+                        }
+                    }
+
+                    function updateButtons(theme) {
+                        buttons.forEach(btn => {
+                            btn.classList.toggle('active', btn.dataset.theme === theme);
+                        });
+                    }
+                })();
+                </script>
+                \(configuration.includeSearch ? """
             <script src="../../js/lunr.min.js" defer></script>
             <script src="../../js/search.js" defer></script>
             """ : "")
-        </body>
-        </html>
-        """
+            </body>
+            </html>
+            """
     }
 
     /// Escapes HTML special characters.
@@ -1234,14 +1268,16 @@ public struct StaticDocumentationGenerator: Sendable {
         var seenModules: Set<String> = []
 
         if fileManager.fileExists(atPath: docRoot.path),
-           let contents = try? fileManager.contentsOfDirectory(
-               at: docRoot,
-               includingPropertiesForKeys: [.isDirectoryKey]
-           ) {
+            let contents = try? fileManager.contentsOfDirectory(
+                at: docRoot,
+                includingPropertiesForKeys: [.isDirectoryKey]
+            )
+        {
             for item in contents {
                 var isDirectory: ObjCBool = false
                 if fileManager.fileExists(atPath: item.path, isDirectory: &isDirectory),
-                   isDirectory.boolValue {
+                    isDirectory.boolValue
+                {
                     let modulePath = item.lastPathComponent
 
                     // Normalize the module name for deduplication
@@ -1262,12 +1298,13 @@ public struct StaticDocumentationGenerator: Sendable {
 
                     // Extract the actual title from the generated HTML
                     let moduleInfo = extractModuleInfo(from: item)
-                    modules.append(IndexPageBuilder.ModuleEntry(
-                        name: moduleInfo.title,
-                        abstract: moduleInfo.abstract,
-                        path: "documentation/\(modulePath)/index.html",
-                        symbolCount: countSymbols(in: item)
-                    ))
+                    modules.append(
+                        IndexPageBuilder.ModuleEntry(
+                            name: moduleInfo.title,
+                            abstract: moduleInfo.abstract,
+                            path: "documentation/\(modulePath)/index.html",
+                            symbolCount: countSymbols(in: item)
+                        ))
                 }
             }
         }
@@ -1275,12 +1312,13 @@ public struct StaticDocumentationGenerator: Sendable {
         // If no modules found, create entries from configuration targets
         if modules.isEmpty {
             for target in configuration.targets {
-                modules.append(IndexPageBuilder.ModuleEntry(
-                    name: target,
-                    abstract: "Documentation for \(target)",
-                    path: "documentation/\(target.lowercased())/index.html",
-                    symbolCount: 0
-                ))
+                modules.append(
+                    IndexPageBuilder.ModuleEntry(
+                        name: target,
+                        abstract: "Documentation for \(target)",
+                        path: "documentation/\(target.lowercased())/index.html",
+                        symbolCount: 0
+                    ))
             }
         }
 
@@ -1302,7 +1340,8 @@ public struct StaticDocumentationGenerator: Sendable {
                     guard moduleName != "tutorials" else { continue }
                     var isDir: ObjCBool = false
                     guard fileManager.fileExists(atPath: moduleDir.path, isDirectory: &isDir),
-                          isDir.boolValue else { continue }
+                        isDir.boolValue
+                    else { continue }
 
                     // Count tutorials in this module
                     if let tutorialDirs = try? fileManager.contentsOfDirectory(
@@ -1311,24 +1350,29 @@ public struct StaticDocumentationGenerator: Sendable {
                     ) {
                         let tutorialCount = tutorialDirs.filter { dir in
                             var isDirCheck: ObjCBool = false
-                            return fileManager.fileExists(atPath: dir.path, isDirectory: &isDirCheck) && isDirCheck.boolValue
+                            return fileManager.fileExists(
+                                atPath: dir.path, isDirectory: &isDirCheck) && isDirCheck.boolValue
                         }.count
 
                         if tutorialCount > 0 {
                             // Extract title from overview page
-                            let overviewPath = tutorialsOverviewDir.appendingPathComponent("index.html")
+                            let overviewPath = tutorialsOverviewDir.appendingPathComponent(
+                                "index.html")
                             var title = moduleName.capitalized + " Tutorials"
                             if let html = try? String(contentsOf: overviewPath, encoding: .utf8),
-                               let titleStart = html.range(of: "<h1 class=\"overview-title\">"),
-                               let titleEnd = html.range(of: "</h1>", range: titleStart.upperBound..<html.endIndex) {
+                                let titleStart = html.range(of: "<h1 class=\"overview-title\">"),
+                                let titleEnd = html.range(
+                                    of: "</h1>", range: titleStart.upperBound..<html.endIndex)
+                            {
                                 title = String(html[titleStart.upperBound..<titleEnd.lowerBound])
                             }
 
-                            tutorials.append(IndexPageBuilder.TutorialEntry(
-                                title: title,
-                                path: "tutorials/tutorials/index.html",
-                                tutorialCount: tutorialCount
-                            ))
+                            tutorials.append(
+                                IndexPageBuilder.TutorialEntry(
+                                    title: title,
+                                    path: "tutorials/tutorials/index.html",
+                                    tutorialCount: tutorialCount
+                                ))
                         }
                     }
                 }
@@ -1340,7 +1384,9 @@ public struct StaticDocumentationGenerator: Sendable {
         if configuration.isVerbose {
             if let content = indexContent {
                 if content.title != nil {
-                    log("Loaded custom index from \(IndexPageBuilder.indexMarkdownFilename) with title")
+                    log(
+                        "Loaded custom index from \(IndexPageBuilder.indexMarkdownFilename) with title"
+                    )
                 } else {
                     log("Loaded custom index from \(IndexPageBuilder.indexMarkdownFilename)")
                 }
@@ -1373,17 +1419,21 @@ public struct StaticDocumentationGenerator: Sendable {
         // Extract title from <title> tag
         var title = modulePath.capitalized
         if let titleStart = html.range(of: "<title>"),
-           let titleEnd = html.range(of: "</title>", range: titleStart.upperBound..<html.endIndex) {
+            let titleEnd = html.range(of: "</title>", range: titleStart.upperBound..<html.endIndex)
+        {
             title = String(html[titleStart.upperBound..<titleEnd.lowerBound])
         }
 
         // Extract abstract from <p class="abstract">
         var abstract = "Documentation for \(title)"
         if let abstractStart = html.range(of: "<p class=\"abstract\">"),
-           let abstractEnd = html.range(of: "</p>", range: abstractStart.upperBound..<html.endIndex) {
+            let abstractEnd = html.range(
+                of: "</p>", range: abstractStart.upperBound..<html.endIndex)
+        {
             let rawAbstract = String(html[abstractStart.upperBound..<abstractEnd.lowerBound])
             // Strip HTML tags from abstract
-            abstract = rawAbstract.replacingOccurrences(of: "<[^>]+>", with: "", options: .regularExpression)
+            abstract = rawAbstract.replacingOccurrences(
+                of: "<[^>]+>", with: "", options: .regularExpression)
         }
 
         return (title: title, abstract: abstract)
@@ -1403,7 +1453,7 @@ public struct StaticDocumentationGenerator: Sendable {
                 }
             }
         }
-        return max(0, count - 1) // Subtract 1 for the module index itself
+        return max(0, count - 1)  // Subtract 1 for the module index itself
     }
 
     // MARK: - Private Methods
@@ -1494,7 +1544,8 @@ public struct StaticDocumentationGenerator: Sendable {
                 at: imagesSource,
                 includingPropertiesForKeys: [.isDirectoryKey]
             ) {
-                try fileManager.createDirectory(at: imagesDestination, withIntermediateDirectories: true)
+                try fileManager.createDirectory(
+                    at: imagesDestination, withIntermediateDirectories: true)
 
                 for item in contents {
                     let destItem = imagesDestination.appendingPathComponent(item.lastPathComponent)
@@ -1504,7 +1555,8 @@ public struct StaticDocumentationGenerator: Sendable {
                     if fileManager.fileExists(atPath: item.path, isDirectory: &isDirectory) {
                         if isDirectory.boolValue {
                             // Create destination directory and copy contents
-                            try fileManager.createDirectory(at: destItem, withIntermediateDirectories: true)
+                            try fileManager.createDirectory(
+                                at: destItem, withIntermediateDirectories: true)
                             try copyDirectoryContents(from: item, to: destItem)
                         } else {
                             // Copy file, overwriting if exists
@@ -1525,8 +1577,10 @@ public struct StaticDocumentationGenerator: Sendable {
         // Copy downloads directory if it exists
         let downloadsSource = archiveDir.appendingPathComponent("downloads")
         if fileManager.fileExists(atPath: downloadsSource.path) {
-            let downloadsDestination = configuration.outputDirectory.appendingPathComponent("downloads")
-            try fileManager.createDirectory(at: downloadsDestination, withIntermediateDirectories: true)
+            let downloadsDestination = configuration.outputDirectory.appendingPathComponent(
+                "downloads")
+            try fileManager.createDirectory(
+                at: downloadsDestination, withIntermediateDirectories: true)
             try copyDirectoryContents(from: downloadsSource, to: downloadsDestination)
 
             if configuration.isVerbose {
@@ -1538,7 +1592,8 @@ public struct StaticDocumentationGenerator: Sendable {
         let videosSource = archiveDir.appendingPathComponent("videos")
         if fileManager.fileExists(atPath: videosSource.path) {
             let videosDestination = configuration.outputDirectory.appendingPathComponent("videos")
-            try fileManager.createDirectory(at: videosDestination, withIntermediateDirectories: true)
+            try fileManager.createDirectory(
+                at: videosDestination, withIntermediateDirectories: true)
             try copyDirectoryContents(from: videosSource, to: videosDestination)
 
             if configuration.isVerbose {
@@ -1551,10 +1606,12 @@ public struct StaticDocumentationGenerator: Sendable {
     private func copyDirectoryContents(from source: URL, to destination: URL) throws {
         let fileManager = FileManager.default
 
-        guard let contents = try? fileManager.contentsOfDirectory(
-            at: source,
-            includingPropertiesForKeys: [.isDirectoryKey]
-        ) else { return }
+        guard
+            let contents = try? fileManager.contentsOfDirectory(
+                at: source,
+                includingPropertiesForKeys: [.isDirectoryKey]
+            )
+        else { return }
 
         for item in contents {
             let destItem = destination.appendingPathComponent(item.lastPathComponent)
@@ -1603,2489 +1660,2500 @@ enum DocCStylesheet {
     /// - Returns: The CSS content as a string.
     static func generate(theme: ThemeConfiguration) -> String {
         return """
-        /* swift-docc-static generated stylesheet - DocC-style layout */
-        :root {
-            --docc-bg: #ffffff;
-            --docc-bg-secondary: #f5f5f7;
-            --docc-fg: #1d1d1f;
-            --docc-fg-secondary: #6e6e73;
-            --docc-accent: \(theme.accentColour);
-            --docc-border: #d2d2d7;
-            --sidebar-width: 320px;
-            --header-height: 52px;
-
-            /* Typography */
-            --typeface-body: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif;
-            --typeface-mono: 'SF Mono', SFMono-Regular, ui-monospace, Menlo, monospace;
-            --typeface-headline: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
-
-            /* Swift syntax colours */
-            --swift-keyword: #ad3da4;
-            --swift-type: #703daa;
-            --swift-literal: #d12f1b;
-            --swift-comment: #707f8c;
-            --swift-string: #d12f1b;
-            --swift-number: #272ad8;
-
-            /* Symbol badge colours - monochrome like DocC */
-            --badge-bg: #f5f5f7;
-            --badge-fg: #6e6e73;
-            --badge-border: #d2d2d7;
-
-            /* Aside colours */
-            --aside-note-bg: #e3f2fd;
-            --aside-note-border: #2196f3;
-            --aside-warning-bg: #fff3e0;
-            --aside-warning-border: #ff9800;
-            --aside-important-bg: #fce4ec;
-            --aside-important-border: #e91e63;
-
-            /* Decorative colours */
-            --hero-decoration: #d2d2d7;
-        }
-
-        \(theme.includeDarkMode ? darkModeStyles : "")
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
-        body {
-            font-family: var(--typeface-body);
-            background: var(--docc-bg);
-            color: var(--docc-fg);
-            line-height: 1.5;
-            -webkit-font-smoothing: antialiased;
-        }
-
-        a {
-            color: var(--docc-accent);
-            text-decoration: none;
-        }
-
-        a:hover {
-            text-decoration: underline;
-        }
-
-        code {
-            font-family: var(--typeface-mono);
-            font-size: 0.875em;
-            background: var(--docc-bg-secondary);
-            padding: 0.125em 0.25em;
-            border-radius: 4px;
-        }
-
-        pre {
-            font-family: var(--typeface-mono);
-            font-size: 0.8125rem;
-            background: var(--docc-bg-secondary);
-            padding: 1rem;
-            border-radius: 12px;
-            overflow-x: auto;
-            line-height: 1.6;
-            margin: 1rem 1.5rem;
-        }
-
-        pre code {
-            display: block;
-            position: relative;
-            left: -1.5rem;
-            background: none;
-            padding: 0;
-        }
-
-        /* Code blocks inside list items: no left offset since list provides indentation */
-        li pre {
-            margin-left: 0;
-            margin-right: 0;
-        }
-
-        li pre code {
-            position: static;
-            left: 0;
-        }
-
-        table {
-            border-collapse: collapse;
-            margin: 1rem 1.5rem;
-            font-size: 0.9375rem;
-        }
-
-        th, td {
-            padding: 0.75rem 1rem;
-            text-align: left;
-            border-bottom: 1px solid var(--docc-border);
-        }
-
-        th {
-            font-weight: 600;
-            color: var(--docc-fg-secondary);
-        }
-
-        tr:last-child td {
-            border-bottom: none;
-        }
-
-        /* Syntax highlighting */
-        .syntax-keyword {
-            color: var(--swift-keyword);
-            font-weight: 500;
-        }
-
-        .syntax-string {
-            color: var(--swift-string);
-        }
-
-        .syntax-number {
-            color: var(--swift-number);
-        }
-
-        .syntax-comment {
-            color: var(--swift-comment);
-            font-style: italic;
-        }
-
-        .syntax-type {
-            color: var(--swift-type);
-        }
-
-        .syntax-attribute {
-            color: var(--swift-keyword);
-        }
-
-        h1, h2, h3, h4, h5, h6 {
-            font-family: var(--typeface-headline);
-            font-weight: 600;
-            margin-top: 1.5em;
-            margin-bottom: 0.5em;
-        }
-
-        h1 { font-size: 2.125rem; margin-top: 0; }
-        h2 { font-size: 1.5rem; border-bottom: 1px solid var(--docc-border); padding-bottom: 0.5rem; }
-        h3 { font-size: 1.1875rem; }
-
-        p { margin-bottom: 1em; }
-        ul, ol { margin-bottom: 1em; padding-left: 1.5em; }
-        li { margin-bottom: 0.5em; }
-
-        /* Syntax highlighting */
-        .keyword { color: var(--swift-keyword); font-weight: 500; }
-        .type { color: var(--swift-type); }
-        .identifier { color: #4b21b0; }
-        .param { color: #5d6c79; }
-        .literal { color: var(--swift-literal); }
-        .comment { color: var(--swift-comment); font-style: italic; }
-        .string { color: var(--swift-string); }
-        .number { color: var(--swift-number); }
-        .attribute { color: #947100; }
-        .label { color: var(--docc-fg); }
-
-        /* Header bar */
-        .doc-header {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: var(--header-height);
-            background: var(--docc-bg);
-            border-bottom: 1px solid var(--docc-border);
-            z-index: 100;
-        }
-
-        .header-content {
-            max-width: 100%;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 1.5rem;
-        }
-
-        .header-title {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-weight: 600;
-            font-size: 1rem;
-            color: var(--docc-fg);
-            text-decoration: none;
-        }
-
-        .header-title:hover {
-            text-decoration: none;
-        }
-
-        .header-icon {
-            display: flex;
-            align-items: center;
-        }
-
-        .header-icon svg {
-            width: 20px;
-            height: 20px;
-        }
-
-        .header-language {
-            font-size: 0.875rem;
-            color: var(--docc-fg-secondary);
-        }
-
-        /* Sidebar toggle (hidden checkbox) */
-        .sidebar-toggle-checkbox {
-            position: absolute;
-            opacity: 0;
-            pointer-events: none;
-        }
-
-        /* Toggle button (hamburger) */
-        .sidebar-toggle-button {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 36px;
-            height: 36px;
-            cursor: pointer;
-            border-radius: 6px;
-            transition: background-color 0.2s ease;
-        }
-
-        .sidebar-toggle-button:hover {
-            background: var(--docc-bg-secondary);
-        }
-
-        .toggle-icon {
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            width: 18px;
-            height: 14px;
-        }
-
-        .toggle-icon .bar {
-            display: block;
-            width: 100%;
-            height: 2px;
-            background: var(--docc-fg);
-            border-radius: 1px;
-            transition: transform 0.3s ease, opacity 0.3s ease;
-            transform-origin: center;
-        }
-
-        /* Hamburger to X animation when sidebar is collapsed */
-        .sidebar-toggle-checkbox:checked ~ .doc-header .toggle-icon .bar:nth-child(1) {
-            transform: translateY(6px) rotate(45deg);
-        }
-
-        .sidebar-toggle-checkbox:checked ~ .doc-header .toggle-icon .bar:nth-child(2) {
-            opacity: 0;
-        }
-
-        .sidebar-toggle-checkbox:checked ~ .doc-header .toggle-icon .bar:nth-child(3) {
-            transform: translateY(-6px) rotate(-45deg);
-        }
-
-        /* Two-column layout */
-        .doc-layout {
-            display: flex;
-            min-height: 100vh;
-            padding-top: var(--header-height);
-        }
-
-        /* Sidebar */
-        .doc-sidebar {
-            width: var(--sidebar-width);
-            flex-shrink: 0;
-            border-right: 1px solid var(--docc-border);
-            background: var(--docc-bg);
-            position: fixed;
-            top: var(--header-height);
-            left: 0;
-            bottom: 0;
-            display: flex;
-            flex-direction: column;
-            transition: transform 0.3s ease, width 0.3s ease;
-            will-change: transform;
-        }
-
-        /* Sidebar collapsed state */
-        .sidebar-toggle-checkbox:checked ~ .doc-layout .doc-sidebar {
-            transform: translateX(-100%);
-        }
-
-        .sidebar-content {
-            flex: 1;
-            overflow-y: auto;
-            padding: 1rem 0;
-        }
-
-        .sidebar-module {
-            font-weight: 600;
-            font-size: 1rem;
-            padding: 0.5rem 1.25rem;
-            margin: 0 0 0.5rem 0;
-            border: none;
-        }
-
-        .sidebar-section {
-            margin-bottom: 0.5rem;
-        }
-
-        /* Module section in multi-module sidebar */
-        .module-section {
-            position: relative;
-            padding-left: 0;
-        }
-
-        .module-section .module-header {
-            display: flex;
-            align-items: center;
-            padding: 0.5rem 1rem;
-        }
-
-        .module-section .module-header .disclosure-chevron {
-            position: static;
-            margin-right: 0.5rem;
-        }
-
-        .module-section .module-name {
-            font-size: 0.9375rem;
-            font-weight: 600;
-            color: var(--docc-fg);
-            margin: 0;
-            padding: 0;
-        }
-
-        .module-section .module-contents {
-            display: none;
-            padding-left: 1rem;
-            margin: 0;
-        }
-
-        .module-section > .disclosure-checkbox:checked ~ .module-contents {
-            display: block;
-        }
-
-        .module-section > .disclosure-checkbox:checked ~ .module-header .disclosure-chevron svg {
-            transform: rotate(90deg);
-        }
-
-        .sidebar-heading {
-            font-size: 0.8125rem;
-            font-weight: 600;
-            color: var(--docc-fg-secondary);
-            padding: 0.75rem 1.25rem 0.25rem;
-            margin: 0;
-            border: none;
-        }
-
-        .sidebar-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-
-        .sidebar-item {
-            display: flex;
-            align-items: center;
-            gap: 0.375rem;
-            padding: 0.1875rem 1rem 0.1875rem 0.75rem;
-            font-size: 0.8125rem;
-            line-height: 1.3;
-        }
-
-        .sidebar-item a {
-            color: var(--docc-fg);
-            text-decoration: none;
-        }
-
-        .sidebar-item:hover {
-            background: var(--docc-bg-secondary);
-        }
-
-        .sidebar-item a:hover {
-            text-decoration: none;
-        }
-
-        .sidebar-item.active,
-        .sidebar-item.selected {
-            background: rgba(0, 102, 204, 0.1);
-        }
-
-        .sidebar-item.selected > .nav-link {
-            font-weight: 500;
-        }
-
-        /* Sidebar module link */
-        .sidebar-module-link {
-            text-decoration: none;
-            color: inherit;
-        }
-
-        .sidebar-module-link:hover {
-            text-decoration: none;
-        }
-
-        /* Disclosure chevron for expandable items */
-        .disclosure-checkbox {
-            position: absolute;
-            opacity: 0;
-            pointer-events: none;
-        }
-
-        .disclosure-chevron {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 14px;
-            height: 14px;
-            cursor: pointer;
-            flex-shrink: 0;
-            color: var(--docc-fg-secondary);
-        }
-
-        .disclosure-chevron svg {
-            width: 8px;
-            height: 8px;
-            transform: rotate(0deg);
-            transition: transform 0.15s ease;
-        }
-
-        .disclosure-checkbox:checked + .disclosure-chevron svg {
-            transform: rotate(90deg);
-        }
-
-        .sidebar-item.expandable {
-            flex-wrap: wrap;
-        }
-
-        .sidebar-item.expandable > .nav-link {
-            flex: 1;
-        }
-
-        /* Nested children (collapsed by default with animation) */
-        .nav-children {
-            width: 100%;
-            list-style: none;
-            padding: 0;
-            margin: 0;
-            margin-left: 1.125rem;
-            max-height: 0;
-            overflow: hidden;
-            opacity: 0;
-            transition: max-height 0.2s ease, opacity 0.15s ease;
-        }
-
-        .disclosure-checkbox:checked ~ .nav-children {
-            max-height: 2000px;
-            opacity: 1;
-        }
-
-        /* Nested group headers */
-        .nav-group-header {
-            font-size: 0.75rem;
-            font-weight: 600;
-            color: var(--docc-fg-secondary);
-            padding: 0.5rem 0 0.25rem;
-            list-style: none;
-        }
-
-        /* Collapsible group headers with disclosure */
-        .nav-group-header.expandable {
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            gap: 0.25rem;
-            padding: 0.375rem 0 0.25rem;
-        }
-
-        .nav-group-header.expandable .disclosure-checkbox {
-            position: absolute;
-            opacity: 0;
-            pointer-events: none;
-        }
-
-        .nav-group-header.expandable > .disclosure-chevron {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 16px;
-            height: 16px;
-            cursor: pointer;
-            flex-shrink: 0;
-        }
-
-        .nav-group-header.expandable > .disclosure-chevron svg {
-            width: 10px;
-            height: 10px;
-            transition: transform 0.15s ease;
-            transform-origin: center;
-        }
-
-        .nav-group-header.expandable > .disclosure-checkbox:checked + .disclosure-chevron svg {
-            transform: rotate(90deg);
-        }
-
-        .nav-group-header.expandable .group-title,
-        .nav-group-header.expandable .nav-link.group-link {
-            font-size: 0.75rem;
-            font-weight: 600;
-            color: var(--docc-fg-secondary);
-            text-decoration: none;
-        }
-
-        .nav-group-header.expandable .nav-link.group-link:hover {
-            color: var(--docc-accent);
-        }
-
-        .nav-group-header.expandable .nav-children {
-            flex-basis: 100%;
-            max-height: 0;
-            overflow: hidden;
-            opacity: 0;
-            transition: max-height 0.2s ease, opacity 0.15s ease;
-            padding-left: 0.5rem;
-            margin-top: 0.25rem;
-        }
-
-        .nav-group-header.expandable .disclosure-checkbox:checked ~ .nav-children {
-            max-height: 2000px;
-            opacity: 1;
-        }
-
-        /* Nested child items */
-        .nav-child-item {
-            display: flex;
-            align-items: center;
-            gap: 0.375rem;
-            padding: 0.125rem 0;
-            font-size: 0.8125rem;
-            line-height: 1.3;
-        }
-
-        .nav-child-item a {
-            color: var(--docc-fg);
-            text-decoration: none;
-        }
-
-        .nav-child-item:hover a {
-            color: var(--docc-accent);
-        }
-
-        .nav-child-item.selected a {
-            font-weight: 500;
-            color: var(--docc-accent);
-        }
-
-        /* Symbol icon for articles/tutorials */
-        .symbol-icon {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 14px;
-            height: 14px;
-            flex-shrink: 0;
-            color: var(--docc-fg-secondary);
-        }
-
-        .symbol-icon svg {
-            width: 14px;
-            height: 14px;
-        }
-
-        /* Filter with shortcut indicator - hidden by default, shown via JS */
-        .sidebar-filter {
-            display: none;  /* JS sets to flex when available */
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.75rem 1rem;
-            border-top: 1px solid var(--docc-border);
-            background: var(--docc-bg);
-            flex-shrink: 0;
-        }
-
-        .filter-icon {
-            display: flex;
-            align-items: center;
-            color: var(--docc-fg-secondary);
-        }
-
-        .filter-shortcut {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 20px;
-            height: 20px;
-            font-size: 0.75rem;
-            font-weight: 500;
-            border: 1px solid var(--docc-border);
-            border-radius: 4px;
-            color: var(--docc-fg-secondary);
-        }
-
-        /* Symbol type badges - monochrome like DocC */
-        .symbol-badge {
-            width: 17px;
-            height: 17px;
-            border-radius: 3px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.6875rem;
-            font-weight: 600;
-            flex-shrink: 0;
-            background: var(--badge-bg);
-            color: var(--badge-fg);
-            border: 1px solid var(--badge-border);
-        }
-
-        .badge-article,
-        .badge-tutorial {
-            background: transparent;
-            border: none;
-            width: auto;
-            height: auto;
-        }
-
-        .filter-input {
-            flex: 1;
-            padding: 0.5rem 0.75rem;
-            font-size: 0.875rem;
-            border: 1px solid var(--docc-border);
-            border-radius: 6px;
-            background: var(--docc-bg-secondary);
-        }
-
-        .filter-input:focus {
-            outline: none;
-            border-color: var(--docc-accent);
-            box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.15);
-        }
-
-        /* Filter hidden state for navigation items */
-        .filter-hidden {
-            display: none !important;
-        }
-
-        /* Highlight matching items during filter */
-        .filter-match > a,
-        .filter-match > .nav-link {
-            background: rgba(0, 102, 204, 0.1);
-            border-radius: 4px;
-        }
-
-        /* Search results sections in sidebar */
-        .search-results-sections {
-            margin-bottom: 1rem;
-            padding-bottom: 1rem;
-            border-bottom: 1px solid var(--docc-border);
-        }
-
-        .search-result-section {
-            margin-bottom: 0.75rem;
-        }
-
-        .search-result-heading {
-            font-size: 0.75rem;
-            font-weight: 600;
-            color: var(--docc-fg-secondary);
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            margin: 0 0 0.5rem 0;
-            padding: 0.5rem 0.75rem 0;
-        }
-
-        .search-result-subheading {
-            font-size: 0.6875rem;
-            font-weight: 600;
-            color: var(--docc-fg-secondary);
-            text-transform: uppercase;
-            letter-spacing: 0.04em;
-            margin: 0.5rem 0 0.25rem 0;
-            padding: 0 0.75rem;
-        }
-
-        .search-result-list {
-            list-style: none;
-            margin: 0;
-            padding: 0;
-        }
-
-        .search-result-item {
-            padding: 0.375rem 0.75rem;
-            border-radius: 4px;
-            margin-bottom: 2px;
-        }
-
-        .search-result-item:hover {
-            background: var(--docc-bg-secondary);
-        }
-
-        .search-result-link {
-            display: block;
-            color: var(--docc-fg);
-            text-decoration: none;
-            font-size: 0.875rem;
-        }
-
-        .search-result-link:hover {
-            color: var(--docc-accent);
-        }
-
-        .search-result-title {
-            display: block;
-            font-weight: 500;
-        }
-
-        .search-result-summary {
-            margin: 0.25rem 0 0 0;
-            font-size: 0.75rem;
-            color: var(--docc-fg-secondary);
-            line-height: 1.4;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-        }
-
-        /* Footer - accounts for fixed sidebar */
-        .doc-footer {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 1rem 1.5rem;
-            margin-left: var(--sidebar-width);
-            border-top: 1px solid var(--docc-border);
-            background: var(--docc-bg);
-            font-size: 0.8125rem;
-            color: var(--docc-fg-secondary);
-            transition: margin-left 0.3s ease;
-        }
-
-        /* Footer expands when sidebar is collapsed */
-        .sidebar-toggle-checkbox:checked ~ .doc-footer {
-            margin-left: 0;
-        }
-
-        .footer-content {
-            flex: 1;
-        }
-
-        .footer-content a {
-            color: var(--docc-accent);
-        }
-
-        /* Appearance selector */
-        .appearance-selector {
-            display: inline-flex;
-            border: 1px solid var(--docc-accent);
-            border-radius: 6px;
-            overflow: hidden;
-        }
-
-        .appearance-btn {
-            padding: 0.25rem 0.75rem;
-            font-size: 0.75rem;
-            font-weight: 500;
-            border: none;
-            background: transparent;
-            color: var(--docc-accent);
-            cursor: pointer;
-            transition: background-color 0.15s ease, color 0.15s ease;
-        }
-
-        .appearance-btn:not(:last-child) {
-            border-right: 1px solid var(--docc-accent);
-        }
-
-        .appearance-btn:hover {
-            background: rgba(0, 102, 204, 0.1);
-        }
-
-        .appearance-btn.active {
-            background: var(--docc-accent);
-            color: white;
-        }
-
-        /* Hide appearance selector until JS runs (shows noscript fallback) */
-        .appearance-selector {
-            visibility: hidden;
-        }
-
-        /* Main content */
-        .doc-main {
-            flex: 1;
-            margin-left: var(--sidebar-width);
-            padding: 0;
-            max-width: calc(100% - var(--sidebar-width));
-            transition: margin-left 0.3s ease, max-width 0.3s ease;
-        }
-
-        /* Main content expanded when sidebar is collapsed */
-        .sidebar-toggle-checkbox:checked ~ .doc-layout .doc-main {
-            margin-left: 0;
-            max-width: 100%;
-        }
-
-        /* Breadcrumbs */
-        .breadcrumbs {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-size: 0.8125rem;
-            color: var(--docc-fg-secondary);
-            padding: 1rem 3rem;
-            border-bottom: 1px solid var(--docc-border);
-        }
-
-        .breadcrumbs a {
-            color: var(--docc-accent);
-            text-decoration: none;
-        }
-
-        .breadcrumbs a:hover {
-            text-decoration: underline;
-        }
-
-        .breadcrumbs .separator {
-            color: var(--docc-fg-secondary);
-        }
-
-        /* Hero section */
-        .hero-section {
-            display: flex;
-            align-items: flex-start;
-            justify-content: space-between;
-            background: var(--docc-bg-secondary);
-            padding: 2rem 3rem 2.5rem;
-            margin-bottom: 2rem;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .hero-content {
-            flex: 1;
-            max-width: 70%;
-        }
-
-        .hero-decoration {
-            flex-shrink: 0;
-            width: 200px;
-            height: 200px;
-            color: var(--hero-decoration);
-            opacity: 0.6;
-            margin-left: 2rem;
-        }
-
-        .hero-decoration svg {
-            width: 100%;
-            height: 100%;
-        }
-
-        .eyebrow {
-            font-size: 0.8125rem;
-            color: var(--docc-fg-secondary);
-            margin-bottom: 0.25rem;
-            text-transform: capitalize;
-        }
-
-        .hero-section h1 {
-            margin-top: 0;
-            margin-bottom: 0.5rem;
-        }
-
-        .hero-section .abstract {
-            font-size: 1.1875rem;
-            color: var(--docc-fg-secondary);
-            margin-bottom: 0;
-        }
-
-        .abstract {
-            font-size: 1.1875rem;
-            color: var(--docc-fg-secondary);
-            margin-bottom: 1.5rem;
-        }
-
-        /* Content sections within main */
-        .doc-main section,
-        .doc-main .declaration,
-        .doc-main > p,
-        .doc-main > ul,
-        .doc-main > ol,
-        .doc-main > pre,
-        .doc-main > h2,
-        .doc-main > h3 {
-            padding-left: 3rem;
-            padding-right: 3rem;
-        }
-
-        .topics,
-        .relationships,
-        .see-also,
-        .discussion,
-        .parameters {
-            padding-top: 1rem;
-            padding-bottom: 1rem;
-        }
-
-        /* Legacy single-column layout (for index page) */
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 2rem;
-        }
-
-        .declaration {
-            background: var(--docc-bg-secondary);
-            padding: 1rem 1.25rem;
-            border-radius: 12px;
-            margin-bottom: 1.5rem;
-        }
-
-        nav.breadcrumbs {
-            font-size: 0.8125rem;
-            color: var(--docc-fg-secondary);
-            margin-bottom: 1rem;
-        }
-
-        nav.breadcrumbs a {
-            color: var(--docc-fg-secondary);
-        }
-
-        /* Symbol cards in Topics section */
-        .symbol-list {
-            display: flex;
-            flex-direction: column;
-            gap: 0;
-        }
-
-        .symbol-card {
-            display: flex;
-            align-items: flex-start;
-            gap: 0.75rem;
-            padding: 0.75rem 0;
-        }
-
-        .symbol-card .symbol-badge {
-            margin-top: 0.125rem;
-        }
-
-        .symbol-info {
-            flex: 1;
-            min-width: 0;
-        }
-
-        .symbol-name {
-            font-family: var(--typeface-body);
-            font-weight: 400;
-            display: block;
-            margin-bottom: 0.25rem;
-        }
-
-        .symbol-summary {
-            color: var(--docc-fg-secondary);
-            font-size: 0.875rem;
-            margin: 0;
-            line-height: 1.4;
-        }
-
-        /* Aside boxes */
-        .aside {
-            padding: 1rem;
-            border-radius: 8px;
-            margin: 1rem 0;
-        }
-
-        .aside.note {
-            background: var(--aside-note-bg);
-            border-left: 3px solid var(--aside-note-border);
-        }
-
-        .aside.warning {
-            background: var(--aside-warning-bg);
-            border-left: 3px solid var(--aside-warning-border);
-        }
-
-        .aside.important {
-            background: var(--aside-important-bg);
-            border-left: 3px solid var(--aside-important-border);
-        }
-
-        .aside .label {
-            font-weight: 600;
-            margin-bottom: 0.5rem;
-        }
-
-        /* Index page styles */
-        .index-header {
-            text-align: center;
-            margin-bottom: 2rem;
-            padding-bottom: 1rem;
-            border-bottom: 1px solid var(--docc-border);
-        }
-
-        .index-header .subtitle {
-            color: var(--docc-fg-secondary);
-            font-size: 1.1rem;
-        }
-
-        .index-intro {
-            max-width: 800px;
-            margin: 0 auto 2rem;
-            padding: 1rem 0;
-            line-height: 1.6;
-        }
-
-        .index-intro p {
-            margin-bottom: 1rem;
-        }
-
-        .index-intro h2 {
-            font-size: 1.5rem;
-            margin: 1.5rem 0 1rem;
-            color: var(--docc-fg);
-            border-bottom: none;
-            padding-bottom: 0;
-        }
-
-        .index-intro h3 {
-            font-size: 1.25rem;
-            margin: 1.25rem 0 0.75rem;
-            color: var(--docc-fg);
-        }
-
-        .index-intro ul, .index-intro ol {
-            margin: 1rem 0;
-            padding-left: 1.5rem;
-        }
-
-        .index-intro li {
-            margin-bottom: 0.5rem;
-        }
-
-        .index-intro code {
-            background: var(--docc-bg-secondary);
-            padding: 0.15rem 0.4rem;
-            border-radius: 4px;
-            font-family: var(--typeface-mono);
-            font-size: 0.9em;
-        }
-
-        .index-intro pre {
-            background: var(--docc-bg-secondary);
-            padding: 1rem 1.25rem;
-            border-radius: 12px;
-            overflow-x: auto;
-            margin: 1rem 0;
-            font-family: var(--typeface-mono);
-            font-size: 0.8125rem;
-            line-height: 1.6;
-        }
-
-        .index-intro pre code {
-            background: none;
-            padding: 0;
-            position: static;
-            left: 0;
-        }
-
-        .index-intro a {
-            color: var(--docc-link);
-        }
-
-        .index-intro a:hover {
-            text-decoration: underline;
-        }
-
-        .search-form {
-            max-width: 500px;
-            margin: 0 auto 2rem;
-        }
-
-        .search-form input {
-            width: 100%;
-            padding: 0.75rem 1rem;
-            font-size: 1rem;
-            border: 1px solid var(--docc-border);
-            border-radius: 8px;
-            background: var(--docc-bg);
-            color: var(--docc-fg);
-        }
-
-        .search-results {
-            margin-top: 1rem;
-            background: var(--docc-bg);
-            border: 1px solid var(--docc-border);
-            border-radius: 8px;
-            max-height: 400px;
-            overflow-y: auto;
-            display: none;
-        }
-
-        .search-results-list {
-            list-style: none;
-            margin: 0;
-            padding: 0;
-        }
-
-        .search-result-item {
-            padding: 0.75rem 1rem;
-            border-bottom: 1px solid var(--docc-border);
-        }
-
-        .search-result-item:last-child {
-            border-bottom: none;
-        }
-
-        .search-result-item:hover {
-            background: var(--docc-bg-secondary);
-        }
-
-        .result-link {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .result-title {
-            font-weight: 500;
-        }
-
-        .result-type {
-            font-size: 0.75rem;
-            padding: 0.1rem 0.4rem;
-            border-radius: 4px;
-            background: var(--docc-bg-secondary);
-            color: var(--docc-fg-secondary);
-        }
-
-        .result-type-symbol {
-            background: #e3f2fd;
-            color: #1565c0;
-        }
-
-        .result-type-article {
-            background: #e8f5e9;
-            color: #2e7d32;
-        }
-
-        .result-type-tutorial {
-            background: #fff3e0;
-            color: #ef6c00;
-        }
-
-        .result-summary {
-            font-size: 0.875rem;
-            color: var(--docc-fg-secondary);
-            margin-top: 0.25rem;
-        }
-
-        .no-results {
-            padding: 1rem;
-            color: var(--docc-fg-secondary);
-            text-align: center;
-        }
-
-        .search-unavailable {
-            color: var(--docc-fg-secondary);
-            font-size: 0.875rem;
-        }
-
-        .module-list {
-            display: grid;
-            gap: 1rem;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-        }
-
-        .module-card {
-            padding: 1.25rem;
-            border: 1px solid var(--docc-border);
-            border-radius: 12px;
-            background: var(--docc-bg);
-            transition: box-shadow 0.2s, border-color 0.2s;
-        }
-
-        .module-card:hover {
-            border-color: var(--docc-accent);
-            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-        }
-
-        .module-name {
-            font-family: var(--typeface-mono);
-            font-size: 1.1rem;
-            font-weight: 600;
-            display: block;
-            margin-bottom: 0.5rem;
-        }
-
-        .module-abstract {
-            color: var(--docc-fg-secondary);
-            font-size: 0.9rem;
-            margin-bottom: 0.5rem;
-        }
-
-        .module-stats {
-            color: var(--docc-fg-secondary);
-            font-size: 0.8rem;
-        }
-
-        /* Tutorials section on index page */
-        .tutorials-section {
-            margin-top: 2.5rem;
-            padding-top: 2rem;
-            border-top: 1px solid var(--docc-border);
-        }
-
-        .tutorials-section h2 {
-            font-size: 1.5rem;
-            margin-bottom: 1.5rem;
-            border-bottom: none;
-            padding-bottom: 0;
-        }
-
-        .tutorial-list {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 1rem;
-        }
-
-        .tutorial-collection-card {
-            padding: 1.25rem;
-            border: 1px solid var(--docc-border);
-            border-radius: 12px;
-            background: var(--docc-bg);
-            transition: box-shadow 0.2s, border-color 0.2s;
-        }
-
-        .tutorial-collection-card:hover {
-            border-color: var(--docc-accent);
-            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-        }
-
-        .tutorial-collection-name {
-            font-size: 1.0625rem;
-            font-weight: 600;
-            display: block;
-            margin-bottom: 0.5rem;
-        }
-
-        .tutorial-collection-stats {
-            color: var(--docc-fg-secondary);
-            font-size: 0.8rem;
-        }
-
-        /* ========================================
-           Tutorial Page Styles
-           Based on swift-docc-render structure
-           ======================================== */
-
-        /* Tutorial pages have no sidebar */
-        body.tutorial-page {
-            --sidebar-width: 0px;
-        }
-
-        body.tutorial-page .doc-sidebar {
-            display: none;
-        }
-
-        body.tutorial-page .doc-main {
-            margin-left: 0;
-            max-width: 100%;
-            padding: 0;
-        }
-
-        body.tutorial-page .doc-footer,
-        body.tutorial-overview-page .doc-footer,
-        body.index-page .doc-footer {
-            margin-left: 0;
-        }
-
-        body.tutorial-page .doc-layout {
-            padding-top: var(--header-height);
-        }
-
-        /* Tutorial Navigation Bar */
-        .tutorial-nav {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: var(--header-height);
-            background: var(--docc-bg);
-            border-bottom: 1px solid var(--docc-border);
-            z-index: 100;
-            display: flex;
-            align-items: center;
-        }
-
-        .tutorial-nav-content {
-            display: flex;
-            align-items: center;
-            width: 100%;
-            padding: 0 1.5rem;
-            gap: 1rem;
-        }
-
-        .tutorial-nav-title {
-            font-size: 0.9375rem;
-            font-weight: 600;
-            color: var(--docc-fg);
-            text-decoration: none;
-            white-space: nowrap;
-        }
-
-        .tutorial-nav-title:hover {
-            color: var(--docc-accent);
-            text-decoration: none;
-        }
-
-        .nav-separator {
-            color: var(--docc-fg-secondary);
-            font-size: 0.875rem;
-        }
-
-        .tutorial-nav-dropdowns {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            margin-left: auto;
-        }
-
-        /* Tutorial dropdowns - pure CSS using details/summary */
-        details.tutorial-dropdown {
-            position: relative;
-        }
-
-        /* Hide the default disclosure triangle */
-        details.tutorial-dropdown > summary {
-            list-style: none;
-        }
-        details.tutorial-dropdown > summary::-webkit-details-marker {
-            display: none;
-        }
-        details.tutorial-dropdown > summary::marker {
-            display: none;
-        }
-
-        .tutorial-dropdown-toggle {
-            background: var(--docc-bg);
-            border: 1px solid var(--docc-border);
-            border-radius: 6px;
-            padding: 0.5rem 0.75rem;
-            font-size: 0.8125rem;
-            font-weight: 500;
-            color: var(--docc-fg);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            min-width: 180px;
-            max-width: 280px;
-        }
-
-        .tutorial-dropdown-toggle:hover {
-            background: var(--docc-bg-secondary);
-        }
-
-        .dropdown-label {
-            flex: 1;
-            text-align: left;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-
-        .dropdown-chevron {
-            flex-shrink: 0;
-            transition: transform 0.2s ease;
-        }
-
-        details.tutorial-dropdown[open] .dropdown-chevron {
-            transform: rotate(180deg);
-        }
-
-        .tutorial-dropdown-menu {
-            position: absolute;
-            top: calc(100% + 4px);
-            left: 0;
-            min-width: 100%;
-            max-width: 320px;
-            background: var(--docc-bg);
-            border: 1px solid var(--docc-border);
-            border-radius: 8px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-            padding: 0.5rem 0;
-            z-index: 200;
-            max-height: 400px;
-            overflow-y: auto;
-        }
-
-        .dropdown-item {
-            display: block;
-            padding: 0.625rem 1rem;
-            font-size: 0.8125rem;
-            color: var(--docc-fg);
-            text-decoration: none;
-        }
-
-        .dropdown-item:hover {
-            background: var(--docc-bg-secondary);
-            text-decoration: none;
-        }
-
-        .dropdown-item.selected {
-            font-weight: 600;
-            color: var(--docc-accent);
-        }
-
-        /* Dropdown chapter grouping */
-        .dropdown-chapter {
-            padding: 0.25rem 0;
-        }
-
-        .dropdown-chapter:not(:first-child) {
-            border-top: 1px solid var(--docc-border);
-            margin-top: 0.5rem;
-            padding-top: 0.75rem;
-        }
-
-        .dropdown-chapter-title {
-            display: block;
-            padding: 0.375rem 1rem;
-            font-size: 0.6875rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            color: var(--docc-fg-secondary);
-        }
-
-        .dropdown-chapter .dropdown-item {
-            padding-left: 1.25rem;
-        }
-
-        /* ========================================
-           Tutorial Hero Section
-           Large dark section with left-aligned content
-           ======================================== */
-        .tutorial-hero {
-            background: #1d1d1f;
-            color: #ffffff;
-            min-height: 420px;
-            padding: 3rem 2rem;
-            position: relative;
-            display: flex;
-            align-items: center;
-        }
-
-        .tutorial-hero-content {
-            position: relative;
-            z-index: 2;
-            max-width: 600px;
-            padding-left: 2rem;
-        }
-
-        .tutorial-chapter {
-            font-size: 1.0625rem;
-            font-weight: 400;
-            color: rgba(255, 255, 255, 0.9);
-            margin: 0 0 0.5rem 0;
-            padding-top: 0.5rem;
-        }
-
-        .tutorial-hero h1,
-        .tutorial-hero .tutorial-title {
-            font-size: 2.5rem;
-            font-weight: 700;
-            line-height: 1.1;
-            margin: 0 0 1.25rem 0;
-            color: #ffffff;
-        }
-
-        .tutorial-hero .tutorial-abstract {
-            font-size: 1.0625rem;
-            line-height: 1.5;
-            color: rgba(255, 255, 255, 0.85);
-            margin-bottom: 2rem;
-        }
-
-        .tutorial-hero .tutorial-time {
-            display: flex;
-            flex-direction: column;
-            gap: 0.125rem;
-        }
-
-        .tutorial-hero .time-value {
-            font-size: 1.5rem;
-            font-weight: 600;
-        }
-
-        .tutorial-hero .time-label {
-            font-size: 0.8125rem;
-            color: rgba(255, 255, 255, 0.7);
-        }
-
-        .tutorial-hero-background {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            z-index: 1;
-            overflow: hidden;
-        }
-
-        .tutorial-hero-background picture {
-            display: block;
-            width: 100%;
-            height: 100%;
-        }
-
-        .tutorial-hero-background img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            object-position: right center;
-            opacity: 0.5;
-        }
-
-        /* ========================================
-           Tutorial Intro Section
-           ======================================== */
-        .tutorial-intro-section {
-            padding: 3rem 4rem;
-            max-width: 900px;
-        }
-
-        .tutorial-intro-section p {
-            font-size: 1.0625rem;
-            line-height: 1.6;
-            margin-bottom: 1rem;
-        }
-
-        .intro-media {
-            margin-top: 2rem;
-        }
-
-        .intro-media img {
-            max-width: 100%;
-            height: auto;
-            border-radius: 8px;
-        }
-
-        /* ========================================
-           Tutorial Section with Steps
-           Two-column layout: steps left, sticky asset right
-           ======================================== */
-        .tutorial-section {
-            border-top: 1px solid var(--docc-border);
-            padding: 0;
-        }
-
-        .section-header {
-            padding: 3rem 4rem 2rem;
-            max-width: 900px;
-        }
-
-        .section-number {
-            font-size: 0.9375rem;
-            font-weight: 400;
-            color: var(--docc-fg-secondary);
-            margin-bottom: 0.5rem;
-        }
-
-        .section-title {
-            font-size: 1.75rem;
-            font-weight: 600;
-            margin: 0;
-            border-bottom: none;
-            padding-bottom: 0;
-        }
-
-        /* Section intro content row */
-        .section-content-row {
-            display: flex;
-            gap: 3rem;
-            padding: 0 4rem 2rem;
-            align-items: flex-start;
-        }
-
-        .section-text {
-            flex: 0 0 auto;
-            width: 40%;
-            min-width: 300px;
-            max-width: 450px;
-        }
-
-        .section-text p {
-            font-size: 1rem;
-            line-height: 1.6;
-        }
-
-        .section-media {
-            flex: 1 1 auto;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 12px;
-            min-height: 250px;
-        }
-
-        .section-media picture {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 100%;
-            height: 100%;
-        }
-
-        .section-media img {
-            width: 100%;
-            height: auto;
-            max-height: 400px;
-            object-fit: contain;
-        }
-
-        /* ========================================
-           Steps Layout (Two-Column with Sticky Asset)
-           ======================================== */
-        .tutorial-steps-wrapper {
-            display: flex;
-            position: relative;
-        }
-
-        .steps-content {
-            flex: 0 0 45%;
-            max-width: 500px;
-            padding: 0 2rem 0 4rem;
-        }
-
-        .steps-asset-container {
-            flex: 1;
-            position: sticky;
-            top: calc(var(--header-height) + 1rem);
-            height: calc(100vh - var(--header-height) - 2rem);
-            display: flex;
-            align-items: flex-start;
-            justify-content: center;
-            padding: 0 2rem;
-        }
-
-        /* Individual Step */
-        .tutorial-step {
-            padding: 1.5rem 0;
-            border-left: 3px solid transparent;
-            padding-left: 1.5rem;
-            margin-left: -1.5rem;
-        }
-
-        .tutorial-step.active {
-            border-left-color: var(--docc-accent);
-        }
-
-        .step-label {
-            font-size: 0.875rem;
-            font-weight: 600;
-            color: var(--docc-accent);
-            margin-bottom: 0.75rem;
-        }
-
-        .step-content {
-            font-size: 1rem;
-            line-height: 1.6;
-        }
-
-        .step-content p {
-            margin: 0 0 1rem 0;
-        }
-
-        .step-content p:last-child {
-            margin-bottom: 0;
-        }
-
-        .step-caption {
-            margin-top: 1.25rem;
-            padding-top: 1.25rem;
-            border-top: 1px solid var(--docc-border);
-            font-size: 0.9375rem;
-            color: var(--docc-fg-secondary);
-        }
-
-        /* ========================================
-           Code Preview Panel (Right Side)
-           ======================================== */
-        .code-preview {
-            background: #1d1d1f;
-            border-radius: 12px;
-            overflow: hidden;
-            width: 100%;
-            max-width: 600px;
-            display: flex;
-            flex-direction: column;
-            max-height: calc(100vh - var(--header-height) - 4rem);
-        }
-
-        .code-preview-header {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.875rem 1rem;
-            background: #2d2d2f;
-            border-bottom: 1px solid #3d3d3f;
-        }
-
-        .file-icon {
-            color: #8e8e93;
-        }
-
-        .file-icon svg {
-            width: 16px;
-            height: 16px;
-            display: block;
-        }
-
-        .file-name {
-            font-family: var(--typeface-mono);
-            font-size: 0.8125rem;
-            font-weight: 500;
-            color: #ffffff;
-        }
-
-        .code-preview-content {
-            flex: 1;
-            overflow: auto;
-            padding: 1rem 0;
-        }
-
-        .code-preview-content pre {
-            margin: 0;
-            padding: 0;
-            background: transparent;
-            font-size: 0.8125rem;
-            line-height: 1.7;
-        }
-
-        .code-preview-content code {
-            display: block;
-            background: transparent;
-            padding: 0;
-            color: #ffffff;
-        }
-
-        .code-line {
-            display: flex;
-            padding: 0 1rem;
-        }
-
-        .code-line:hover {
-            background: rgba(255, 255, 255, 0.05);
-        }
-
-        .line-number {
-            flex-shrink: 0;
-            width: 3rem;
-            text-align: right;
-            padding-right: 1rem;
-            color: #5d5d5f;
-            user-select: none;
-        }
-
-        .line-content {
-            flex: 1;
-            white-space: pre;
-        }
-
-        /* Code syntax highlighting for dark theme */
-        .code-preview .syntax-keyword { color: #ff7ab2; }
-        .code-preview .syntax-type { color: #dabaff; }
-        .code-preview .syntax-string { color: #ff8170; }
-        .code-preview .syntax-number { color: #d9c97c; }
-        .code-preview .syntax-comment { color: #7f8c8d; }
-
-        /* ========================================
-           Media Preview Panel
-           ======================================== */
-        .media-preview {
-            background: var(--docc-bg-secondary);
-            border-radius: 12px;
-            overflow: hidden;
-            width: 100%;
-            max-width: 600px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 2rem;
-        }
-
-        .media-preview img,
-        .media-preview video {
-            max-width: 100%;
-            max-height: calc(100vh - var(--header-height) - 8rem);
-            height: auto;
-            border-radius: 8px;
-        }
-
-        /* ========================================
-           Fallback: Simple Step Row Layout
-           Used when steps don't have associated media
-           ======================================== */
-        .tutorial-steps-container {
-            padding: 0 4rem 2rem;
-        }
-
-        .tutorial-step-row {
-            display: flex;
-            gap: 3rem;
-            margin-bottom: 2rem;
-            align-items: flex-start;
-        }
-
-        .step-card {
-            flex: 0 0 auto;
-            width: 40%;
-            min-width: 300px;
-            max-width: 450px;
-        }
-
-        .step-code-panel {
-            flex: 1;
-            background: var(--docc-bg-secondary);
-            border-radius: 12px;
-            overflow: hidden;
-            max-height: 500px;
-            display: flex;
-            flex-direction: column;
-            border: 1px solid var(--docc-border);
-        }
-
-        .code-panel-header {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.875rem 1rem;
-            background: var(--docc-bg);
-            border-bottom: 1px solid var(--docc-border);
-        }
-
-        .code-panel-header .file-icon {
-            color: var(--docc-fg-secondary);
-        }
-
-        .code-panel-header .file-name {
-            font-family: var(--typeface-mono);
-            font-size: 0.8125rem;
-            font-weight: 500;
-            color: var(--docc-fg);
-        }
-
-        .code-panel-content {
-            flex: 1;
-            overflow: auto;
-            padding: 1rem 0;
-        }
-
-        .code-panel-content pre {
-            margin: 0;
-            padding: 0;
-            background: transparent;
-            font-size: 0.8125rem;
-            line-height: 1.4;
-        }
-
-        .code-panel-content code {
-            display: block;
-            background: transparent;
-            padding: 0;
-            color: var(--docc-fg);
-        }
-
-        .code-panel-content .line {
-            display: flex;
-            padding: 0 1rem;
-            margin: 0;
-            line-height: 1.4;
-        }
-
-        .code-panel-content .line:hover {
-            background: var(--docc-bg);
-        }
-
-        .code-panel-content .line-number {
-            flex-shrink: 0;
-            width: 3rem;
-            text-align: right;
-            padding-right: 1rem;
-            color: var(--docc-fg-secondary);
-            user-select: none;
-        }
-
-        .code-panel-content .line-content {
-            flex: 1;
-            white-space: pre;
-        }
-
-        /* Step media panel */
-        .step-media-panel {
-            flex: 1;
-            background: var(--docc-bg-secondary);
-            border-radius: 12px;
-            overflow: hidden;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 2rem;
-            max-height: 500px;
-        }
-
-        .step-media-panel img {
-            max-width: 100%;
-            max-height: 100%;
-            height: auto;
-            object-fit: contain;
-        }
-
-        /* ========================================
-           Tutorial Assessments
-           ======================================== */
-        .tutorial-assessments {
-            padding: 3rem 4rem;
-            max-width: 900px;
-        }
-
-        .tutorial-assessments h3 {
-            font-size: 1.5rem;
-            margin: 0 0 2rem 0;
-        }
-
-        .assessment {
-            background: var(--docc-bg-secondary);
-            border-radius: 12px;
-            padding: 2rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .question-number {
-            font-size: 0.875rem;
-            color: var(--docc-fg-secondary);
-            margin-bottom: 1rem;
-        }
-
-        .question {
-            font-size: 1.0625rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .choices {
-            border: none;
-            padding: 0;
-            margin: 0;
-        }
-
-        .choice {
-            display: flex;
-            align-items: flex-start;
-            padding: 1rem 1rem 1rem 3rem;
-            border: 2px solid var(--docc-border);
-            border-radius: 8px;
-            margin-bottom: 0.75rem;
-            cursor: pointer;
-            transition: border-color 0.15s ease, background-color 0.15s ease;
-            position: relative;
-        }
-
-        .choice:hover {
-            border-color: var(--docc-accent);
-            background: rgba(0, 102, 204, 0.05);
-        }
-
-        /* Hide the radio input but keep it accessible */
-        .choice-input {
-            position: absolute;
-            opacity: 0;
-            width: 100%;
-            height: 100%;
-            left: 0;
-            top: 0;
-            cursor: pointer;
-            margin: 0;
-            z-index: 1;
-        }
-
-        /* Choice indicator (circle/checkmark area) */
-        .choice-indicator {
-            position: absolute;
-            left: 1rem;
-            top: 1.25rem;
-            width: 18px;
-            height: 18px;
-            border: 2px solid var(--docc-border);
-            border-radius: 50%;
-            background: var(--docc-bg);
-            transition: all 0.15s ease;
-        }
-
-        .choice-indicator::after {
-            content: '';
-            position: absolute;
-            display: none;
-        }
-
-        .choice-content {
-            flex: 1;
-        }
-
-        .choice-content p {
-            margin: 0;
-        }
-
-        /* Hide justification by default */
-        .choice-justification {
-            display: none;
-            margin-top: 0.75rem;
-            padding-top: 0.75rem;
-            border-top: 1px solid currentColor;
-            opacity: 0.9;
-            font-size: 0.9rem;
-        }
-
-        /* Correct answer styling when selected */
-        .choice.correct-answer:has(.choice-input:checked) {
-            border-color: #34c759;
-            background: rgba(52, 199, 89, 0.1);
-        }
-
-        .choice.correct-answer:has(.choice-input:checked) .choice-indicator {
-            border-color: #34c759;
-            background: #34c759;
-        }
-
-        .choice.correct-answer:has(.choice-input:checked) .choice-indicator::after {
-            display: block;
-            left: 5px;
-            top: 2px;
-            width: 4px;
-            height: 8px;
-            border: solid white;
-            border-width: 0 2px 2px 0;
-            transform: rotate(45deg);
-        }
-
-        .choice.correct-answer:has(.choice-input:checked) .choice-justification {
-            display: block;
-            border-color: rgba(52, 199, 89, 0.3);
-        }
-
-        /* Incorrect answer styling when selected */
-        .choice.incorrect-answer:has(.choice-input:checked) {
-            border-color: #ff3b30;
-            background: rgba(255, 59, 48, 0.1);
-        }
-
-        .choice.incorrect-answer:has(.choice-input:checked) .choice-indicator {
-            border-color: #ff3b30;
-            background: #ff3b30;
-        }
-
-        .choice.incorrect-answer:has(.choice-input:checked) .choice-indicator::after {
-            display: block;
-            left: 3px;
-            top: 3px;
-            width: 8px;
-            height: 8px;
-            background: white;
-            clip-path: polygon(20% 0%, 0% 20%, 30% 50%, 0% 80%, 20% 100%, 50% 70%, 80% 100%, 100% 80%, 70% 50%, 100% 20%, 80% 0%, 50% 30%);
-        }
-
-        .choice.incorrect-answer:has(.choice-input:checked) .choice-justification {
-            display: block;
-            border-color: rgba(255, 59, 48, 0.3);
-        }
-
-        /* Disable pointer events on other choices once one is selected */
-        .choices:has(.choice-input:checked) .choice:not(:has(.choice-input:checked)) {
-            pointer-events: none;
-            opacity: 0.6;
-        }
-
-        /* ========================================
-           Tutorial Call-to-Action (Next Tutorial)
-           ======================================== */
-        .tutorial-cta {
-            padding: 3rem 4rem 4rem;
-            border-top: 1px solid var(--docc-border);
-            max-width: 900px;
-        }
-
-        .tutorial-cta h3 {
-            font-size: 1.5rem;
-            font-weight: 600;
-            margin: 0 0 0.75rem 0;
-        }
-
-        .tutorial-cta .cta-abstract {
-            font-size: 1rem;
-            line-height: 1.5;
-            color: var(--docc-fg-secondary);
-            margin: 0 0 1.5rem 0;
-        }
-
-        .tutorial-cta .cta-action a {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-size: 1rem;
-            font-weight: 500;
-            color: var(--docc-accent);
-            text-decoration: none;
-        }
-
-        .tutorial-cta .cta-action a:hover {
-            text-decoration: underline;
-        }
-
-        .tutorial-cta .cta-action a::after {
-            content: '→';
-        }
-
-        /* ========================================
-           Tutorial Overview Page
-           ======================================== */
-        .tutorial-overview-page {
-            background: var(--docc-bg);
-            color: var(--docc-fg);
-            min-height: 100vh;
-        }
-
-        .tutorial-overview-main {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 2rem;
-        }
-
-        .overview-hero {
-            text-align: center;
-            padding: 4rem 2rem;
-            border-bottom: 1px solid var(--docc-border);
-        }
-
-        .overview-hero-content {
-            max-width: 800px;
-            margin: 0 auto;
-        }
-
-        .overview-title {
-            font-size: 2.5rem;
-            font-weight: 700;
-            margin: 0 0 1.5rem 0;
-            color: var(--docc-fg);
-        }
-
-        .overview-hero p {
-            font-size: 1.125rem;
-            line-height: 1.6;
-            color: var(--docc-fg-secondary);
-            margin-bottom: 1rem;
-        }
-
-        .overview-volume {
-            padding: 3rem 0;
-        }
-
-        .overview-chapter {
-            margin-bottom: 3rem;
-        }
-
-        .chapter-title {
-            font-size: 1.5rem;
-            font-weight: 600;
-            margin: 0 0 1rem 0;
-            padding-bottom: 0.5rem;
-            border-bottom: 2px solid var(--docc-accent);
-        }
-
-        .chapter-description {
-            color: var(--docc-fg-secondary);
-            margin-bottom: 1.5rem;
-        }
-
-        .chapter-tutorials,
-        .tutorial-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 1.5rem;
-        }
-
-        .overview-tutorials {
-            padding: 3rem 4rem;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        .tutorial-card {
-            display: flex;
-            flex-direction: column;
-            padding: 1.5rem;
-            background: var(--docc-bg-secondary);
-            border-radius: 12px;
-            text-decoration: none;
-            transition: transform 0.15s ease, box-shadow 0.15s ease;
-        }
-
-        .tutorial-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        }
-
-        .tutorial-card-title {
-            font-size: 1.0625rem;
-            font-weight: 600;
-            color: var(--docc-fg);
-            margin-bottom: 0.5rem;
-        }
-
-        .tutorial-card-abstract {
-            font-size: 0.875rem;
-            color: var(--docc-fg-secondary);
-            line-height: 1.5;
-        }
-
-        /* ========================================
-           Responsive Adjustments
-           ======================================== */
-        @media (max-width: 1024px) {
-            .tutorial-hero-content {
-                max-width: 500px;
+            /* swift-docc-static generated stylesheet - DocC-style layout */
+            :root {
+                --docc-bg: #ffffff;
+                --docc-bg-secondary: #f5f5f7;
+                --docc-fg: #1d1d1f;
+                --docc-fg-secondary: #6e6e73;
+                --docc-accent: \(theme.accentColour);
+                --docc-border: #d2d2d7;
+                --sidebar-width: 320px;
+                --header-height: 52px;
+
+                /* Typography */
+                --typeface-body: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif;
+                --typeface-mono: 'SF Mono', SFMono-Regular, ui-monospace, Menlo, monospace;
+                --typeface-headline: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
+
+                /* Swift syntax colours */
+                --swift-keyword: #ad3da4;
+                --swift-type: #703daa;
+                --swift-literal: #d12f1b;
+                --swift-comment: #707f8c;
+                --swift-string: #d12f1b;
+                --swift-number: #272ad8;
+
+                /* Symbol badge colours - monochrome like DocC */
+                --badge-bg: #f5f5f7;
+                --badge-fg: #6e6e73;
+                --badge-border: #d2d2d7;
+
+                /* Aside colours */
+                --aside-note-bg: #e3f2fd;
+                --aside-note-border: #2196f3;
+                --aside-warning-bg: #fff3e0;
+                --aside-warning-border: #ff9800;
+                --aside-important-bg: #fce4ec;
+                --aside-important-border: #e91e63;
+
+                /* Decorative colours */
+                --hero-decoration: #d2d2d7;
             }
 
-            .tutorial-hero-background {
-                opacity: 0.3;
+            \(theme.includeDarkMode ? darkModeStyles : "")
+
+            * {
+                box-sizing: border-box;
+                margin: 0;
+                padding: 0;
             }
 
-            .section-content-row {
-                flex-direction: column;
-                padding: 0 2rem 2rem;
+            body {
+                font-family: var(--typeface-body);
+                background: var(--docc-bg);
+                color: var(--docc-fg);
+                line-height: 1.5;
+                -webkit-font-smoothing: antialiased;
             }
 
-            .section-text {
-                flex: none;
-                min-width: auto;
-                max-width: none;
-                margin-bottom: 2rem;
+            a {
+                color: var(--docc-accent);
+                text-decoration: none;
             }
 
-            .section-media {
-                width: 100%;
+            a:hover {
+                text-decoration: underline;
             }
 
-            .tutorial-steps-wrapper {
-                flex-direction: column;
+            code {
+                font-family: var(--typeface-mono);
+                font-size: 0.875em;
+                background: var(--docc-bg-secondary);
+                padding: 0.125em 0.25em;
+                border-radius: 4px;
             }
 
-            .steps-content {
-                flex: none;
-                max-width: none;
-                padding: 0 2rem;
+            pre {
+                font-family: var(--typeface-mono);
+                font-size: 0.8125rem;
+                background: var(--docc-bg-secondary);
+                padding: 1rem;
+                border-radius: 12px;
+                overflow-x: auto;
+                line-height: 1.6;
+                margin: 1rem 1.5rem;
             }
 
-            .steps-asset-container {
+            pre code {
+                display: block;
                 position: relative;
-                top: auto;
+                left: -1.5rem;
+                background: none;
+                padding: 0;
+            }
+
+            /* Code blocks inside list items: no left offset since list provides indentation */
+            li pre {
+                margin-left: 0;
+                margin-right: 0;
+            }
+
+            li pre code {
+                position: static;
+                left: 0;
+            }
+
+            /* Code blocks inside declarations: no left offset to prevent truncation */
+            .declaration pre {
+                margin-left: 0;
+                margin-right: 0;
+            }
+
+            .declaration pre code {
+                position: static;
+                left: 0;
+            }
+
+            table {
+                border-collapse: collapse;
+                margin: 1rem 1.5rem;
+                font-size: 0.9375rem;
+            }
+
+            th, td {
+                padding: 0.75rem 1rem;
+                text-align: left;
+                border-bottom: 1px solid var(--docc-border);
+            }
+
+            th {
+                font-weight: 600;
+                color: var(--docc-fg-secondary);
+            }
+
+            tr:last-child td {
+                border-bottom: none;
+            }
+
+            /* Syntax highlighting */
+            .syntax-keyword {
+                color: var(--swift-keyword);
+                font-weight: 500;
+            }
+
+            .syntax-string {
+                color: var(--swift-string);
+            }
+
+            .syntax-number {
+                color: var(--swift-number);
+            }
+
+            .syntax-comment {
+                color: var(--swift-comment);
+                font-style: italic;
+            }
+
+            .syntax-type {
+                color: var(--swift-type);
+            }
+
+            .syntax-attribute {
+                color: var(--swift-keyword);
+            }
+
+            h1, h2, h3, h4, h5, h6 {
+                font-family: var(--typeface-headline);
+                font-weight: 600;
+                margin-top: 1.5em;
+                margin-bottom: 0.5em;
+            }
+
+            h1 { font-size: 2.125rem; margin-top: 0; }
+            h2 { font-size: 1.5rem; border-bottom: 1px solid var(--docc-border); padding-bottom: 0.5rem; }
+            h3 { font-size: 1.1875rem; }
+
+            p { margin-bottom: 1em; }
+            ul, ol { margin-bottom: 1em; padding-left: 1.5em; }
+            li { margin-bottom: 0.5em; }
+
+            /* Syntax highlighting */
+            .keyword { color: var(--swift-keyword); font-weight: 500; }
+            .type { color: var(--swift-type); }
+            .identifier { color: #4b21b0; }
+            .param { color: #5d6c79; }
+            .literal { color: var(--swift-literal); }
+            .comment { color: var(--swift-comment); font-style: italic; }
+            .string { color: var(--swift-string); }
+            .number { color: var(--swift-number); }
+            .attribute { color: #947100; }
+            .label { color: var(--docc-fg); }
+
+            /* Header bar */
+            .doc-header {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                height: var(--header-height);
+                background: var(--docc-bg);
+                border-bottom: 1px solid var(--docc-border);
+                z-index: 100;
+            }
+
+            .header-content {
+                max-width: 100%;
+                height: 100%;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 0 1.5rem;
+            }
+
+            .header-title {
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+                font-weight: 600;
+                font-size: 1rem;
+                color: var(--docc-fg);
+                text-decoration: none;
+            }
+
+            .header-title:hover {
+                text-decoration: none;
+            }
+
+            .header-icon {
+                display: flex;
+                align-items: center;
+            }
+
+            .header-icon svg {
+                width: 20px;
+                height: 20px;
+            }
+
+            .header-language {
+                font-size: 0.875rem;
+                color: var(--docc-fg-secondary);
+            }
+
+            /* Sidebar toggle (hidden checkbox) */
+            .sidebar-toggle-checkbox {
+                position: absolute;
+                opacity: 0;
+                pointer-events: none;
+            }
+
+            /* Toggle button (hamburger) */
+            .sidebar-toggle-button {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 36px;
+                height: 36px;
+                cursor: pointer;
+                border-radius: 6px;
+                transition: background-color 0.2s ease;
+            }
+
+            .sidebar-toggle-button:hover {
+                background: var(--docc-bg-secondary);
+            }
+
+            .toggle-icon {
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+                width: 18px;
+                height: 14px;
+            }
+
+            .toggle-icon .bar {
+                display: block;
+                width: 100%;
+                height: 2px;
+                background: var(--docc-fg);
+                border-radius: 1px;
+                transition: transform 0.3s ease, opacity 0.3s ease;
+                transform-origin: center;
+            }
+
+            /* Hamburger to X animation when sidebar is collapsed */
+            .sidebar-toggle-checkbox:checked ~ .doc-header .toggle-icon .bar:nth-child(1) {
+                transform: translateY(6px) rotate(45deg);
+            }
+
+            .sidebar-toggle-checkbox:checked ~ .doc-header .toggle-icon .bar:nth-child(2) {
+                opacity: 0;
+            }
+
+            .sidebar-toggle-checkbox:checked ~ .doc-header .toggle-icon .bar:nth-child(3) {
+                transform: translateY(-6px) rotate(-45deg);
+            }
+
+            /* Two-column layout */
+            .doc-layout {
+                display: flex;
+                min-height: 100vh;
+                padding-top: var(--header-height);
+            }
+
+            /* Sidebar */
+            .doc-sidebar {
+                width: var(--sidebar-width);
+                flex-shrink: 0;
+                border-right: 1px solid var(--docc-border);
+                background: var(--docc-bg);
+                position: fixed;
+                top: var(--header-height);
+                left: 0;
+                bottom: 0;
+                display: flex;
+                flex-direction: column;
+                transition: transform 0.3s ease, width 0.3s ease;
+                will-change: transform;
+            }
+
+            /* Sidebar collapsed state */
+            .sidebar-toggle-checkbox:checked ~ .doc-layout .doc-sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar-content {
+                flex: 1;
+                overflow-y: auto;
+                padding: 1rem 0;
+            }
+
+            .sidebar-module {
+                font-weight: 600;
+                font-size: 1rem;
+                padding: 0.5rem 1.25rem;
+                margin: 0 0 0.5rem 0;
+                border: none;
+            }
+
+            .sidebar-section {
+                margin-bottom: 0.5rem;
+            }
+
+            /* Module section in multi-module sidebar */
+            .module-section {
+                position: relative;
+                padding-left: 0;
+            }
+
+            .module-section .module-header {
+                display: flex;
+                align-items: center;
+                padding: 0.5rem 1rem;
+            }
+
+            .module-section .module-header .disclosure-chevron {
+                position: static;
+                margin-right: 0.5rem;
+            }
+
+            .module-section .module-name {
+                font-size: 0.9375rem;
+                font-weight: 600;
+                color: var(--docc-fg);
+                margin: 0;
+                padding: 0;
+            }
+
+            .module-section .module-contents {
+                display: none;
+                padding-left: 1rem;
+                margin: 0;
+            }
+
+            .module-section > .disclosure-checkbox:checked ~ .module-contents {
+                display: block;
+            }
+
+            .module-section > .disclosure-checkbox:checked ~ .module-header .disclosure-chevron svg {
+                transform: rotate(90deg);
+            }
+
+            .sidebar-heading {
+                font-size: 0.8125rem;
+                font-weight: 600;
+                color: var(--docc-fg-secondary);
+                padding: 0.75rem 1.25rem 0.25rem;
+                margin: 0;
+                border: none;
+            }
+
+            .sidebar-list {
+                list-style: none;
+                padding: 0;
+                margin: 0;
+            }
+
+            .sidebar-item {
+                display: flex;
+                align-items: center;
+                gap: 0.375rem;
+                padding: 0.1875rem 1rem 0.1875rem 0.75rem;
+                font-size: 0.8125rem;
+                line-height: 1.3;
+            }
+
+            .sidebar-item a {
+                color: var(--docc-fg);
+                text-decoration: none;
+            }
+
+            .sidebar-item:hover {
+                background: var(--docc-bg-secondary);
+            }
+
+            .sidebar-item a:hover {
+                text-decoration: none;
+            }
+
+            .sidebar-item.active,
+            .sidebar-item.selected {
+                background: rgba(0, 102, 204, 0.1);
+            }
+
+            .sidebar-item.selected > .nav-link {
+                font-weight: 500;
+            }
+
+            /* Sidebar module link */
+            .sidebar-module-link {
+                text-decoration: none;
+                color: inherit;
+            }
+
+            .sidebar-module-link:hover {
+                text-decoration: none;
+            }
+
+            /* Disclosure chevron for expandable items */
+            .disclosure-checkbox {
+                position: absolute;
+                opacity: 0;
+                pointer-events: none;
+            }
+
+            .disclosure-chevron {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 14px;
+                height: 14px;
+                cursor: pointer;
+                flex-shrink: 0;
+                color: var(--docc-fg-secondary);
+            }
+
+            .disclosure-chevron svg {
+                width: 8px;
+                height: 8px;
+                transform: rotate(0deg);
+                transition: transform 0.15s ease;
+            }
+
+            .disclosure-checkbox:checked + .disclosure-chevron svg {
+                transform: rotate(90deg);
+            }
+
+            .sidebar-item.expandable {
+                flex-wrap: wrap;
+            }
+
+            .sidebar-item.expandable > .nav-link {
+                flex: 1;
+            }
+
+            /* Nested children (collapsed by default with animation) */
+            .nav-children {
+                width: 100%;
+                list-style: none;
+                padding: 0;
+                margin: 0;
+                margin-left: 1.125rem;
+                max-height: 0;
+                overflow: hidden;
+                opacity: 0;
+                transition: max-height 0.2s ease, opacity 0.15s ease;
+            }
+
+            .disclosure-checkbox:checked ~ .nav-children {
+                max-height: 2000px;
+                opacity: 1;
+            }
+
+            /* Nested group headers */
+            .nav-group-header {
+                font-size: 0.75rem;
+                font-weight: 600;
+                color: var(--docc-fg-secondary);
+                padding: 0.5rem 0 0.25rem;
+                list-style: none;
+            }
+
+            /* Collapsible group headers with disclosure */
+            .nav-group-header.expandable {
+                display: flex;
+                flex-wrap: wrap;
+                align-items: center;
+                gap: 0.25rem;
+                padding: 0.375rem 0 0.25rem;
+            }
+
+            .nav-group-header.expandable .disclosure-checkbox {
+                position: absolute;
+                opacity: 0;
+                pointer-events: none;
+            }
+
+            .nav-group-header.expandable > .disclosure-chevron {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 16px;
+                height: 16px;
+                cursor: pointer;
+                flex-shrink: 0;
+            }
+
+            .nav-group-header.expandable > .disclosure-chevron svg {
+                width: 10px;
+                height: 10px;
+                transition: transform 0.15s ease;
+                transform-origin: center;
+            }
+
+            .nav-group-header.expandable > .disclosure-checkbox:checked + .disclosure-chevron svg {
+                transform: rotate(90deg);
+            }
+
+            .nav-group-header.expandable .group-title,
+            .nav-group-header.expandable .nav-link.group-link {
+                font-size: 0.75rem;
+                font-weight: 600;
+                color: var(--docc-fg-secondary);
+                text-decoration: none;
+            }
+
+            .nav-group-header.expandable .nav-link.group-link:hover {
+                color: var(--docc-accent);
+            }
+
+            .nav-group-header.expandable .nav-children {
+                flex-basis: 100%;
+                max-height: 0;
+                overflow: hidden;
+                opacity: 0;
+                transition: max-height 0.2s ease, opacity 0.15s ease;
+                padding-left: 0.5rem;
+                margin-top: 0.25rem;
+            }
+
+            .nav-group-header.expandable .disclosure-checkbox:checked ~ .nav-children {
+                max-height: 2000px;
+                opacity: 1;
+            }
+
+            /* Nested child items */
+            .nav-child-item {
+                display: flex;
+                align-items: center;
+                gap: 0.375rem;
+                padding: 0.125rem 0;
+                font-size: 0.8125rem;
+                line-height: 1.3;
+            }
+
+            .nav-child-item a {
+                color: var(--docc-fg);
+                text-decoration: none;
+            }
+
+            .nav-child-item:hover a {
+                color: var(--docc-accent);
+            }
+
+            .nav-child-item.selected a {
+                font-weight: 500;
+                color: var(--docc-accent);
+            }
+
+            /* Symbol icon for articles/tutorials */
+            .symbol-icon {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 14px;
+                height: 14px;
+                flex-shrink: 0;
+                color: var(--docc-fg-secondary);
+            }
+
+            .symbol-icon svg {
+                width: 14px;
+                height: 14px;
+            }
+
+            /* Filter with shortcut indicator - hidden by default, shown via JS */
+            .sidebar-filter {
+                display: none;  /* JS sets to flex when available */
+                align-items: center;
+                gap: 0.5rem;
+                padding: 0.75rem 1rem;
+                border-top: 1px solid var(--docc-border);
+                background: var(--docc-bg);
+                flex-shrink: 0;
+            }
+
+            .filter-icon {
+                display: flex;
+                align-items: center;
+                color: var(--docc-fg-secondary);
+            }
+
+            .filter-shortcut {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 20px;
+                height: 20px;
+                font-size: 0.75rem;
+                font-weight: 500;
+                border: 1px solid var(--docc-border);
+                border-radius: 4px;
+                color: var(--docc-fg-secondary);
+            }
+
+            /* Symbol type badges - monochrome like DocC */
+            .symbol-badge {
+                width: 17px;
+                height: 17px;
+                border-radius: 3px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 0.6875rem;
+                font-weight: 600;
+                flex-shrink: 0;
+                background: var(--badge-bg);
+                color: var(--badge-fg);
+                border: 1px solid var(--badge-border);
+            }
+
+            .badge-article,
+            .badge-tutorial {
+                background: transparent;
+                border: none;
+                width: auto;
                 height: auto;
+            }
+
+            .filter-input {
+                flex: 1;
+                padding: 0.5rem 0.75rem;
+                font-size: 0.875rem;
+                border: 1px solid var(--docc-border);
+                border-radius: 6px;
+                background: var(--docc-bg-secondary);
+            }
+
+            .filter-input:focus {
+                outline: none;
+                border-color: var(--docc-accent);
+                box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.15);
+            }
+
+            /* Filter hidden state for navigation items */
+            .filter-hidden {
+                display: none !important;
+            }
+
+            /* Highlight matching items during filter */
+            .filter-match > a,
+            .filter-match > .nav-link {
+                background: rgba(0, 102, 204, 0.1);
+                border-radius: 4px;
+            }
+
+            /* Search results sections in sidebar */
+            .search-results-sections {
+                margin-bottom: 1rem;
+                padding-bottom: 1rem;
+                border-bottom: 1px solid var(--docc-border);
+            }
+
+            .search-result-section {
+                margin-bottom: 0.75rem;
+            }
+
+            .search-result-heading {
+                font-size: 0.75rem;
+                font-weight: 600;
+                color: var(--docc-fg-secondary);
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
+                margin: 0 0 0.5rem 0;
+                padding: 0.5rem 0.75rem 0;
+            }
+
+            .search-result-subheading {
+                font-size: 0.6875rem;
+                font-weight: 600;
+                color: var(--docc-fg-secondary);
+                text-transform: uppercase;
+                letter-spacing: 0.04em;
+                margin: 0.5rem 0 0.25rem 0;
+                padding: 0 0.75rem;
+            }
+
+            .search-result-list {
+                list-style: none;
+                margin: 0;
+                padding: 0;
+            }
+
+            .search-result-item {
+                padding: 0.375rem 0.75rem;
+                border-radius: 4px;
+                margin-bottom: 2px;
+            }
+
+            .search-result-item:hover {
+                background: var(--docc-bg-secondary);
+            }
+
+            .search-result-link {
+                display: block;
+                color: var(--docc-fg);
+                text-decoration: none;
+                font-size: 0.875rem;
+            }
+
+            .search-result-link:hover {
+                color: var(--docc-accent);
+            }
+
+            .search-result-title {
+                display: block;
+                font-weight: 500;
+            }
+
+            .search-result-summary {
+                margin: 0.25rem 0 0 0;
+                font-size: 0.75rem;
+                color: var(--docc-fg-secondary);
+                line-height: 1.4;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                display: -webkit-box;
+                -webkit-line-clamp: 2;
+                -webkit-box-orient: vertical;
+            }
+
+            /* Footer - accounts for fixed sidebar */
+            .doc-footer {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 1rem 1.5rem;
+                margin-left: var(--sidebar-width);
+                border-top: 1px solid var(--docc-border);
+                background: var(--docc-bg);
+                font-size: 0.8125rem;
+                color: var(--docc-fg-secondary);
+                transition: margin-left 0.3s ease;
+            }
+
+            /* Footer expands when sidebar is collapsed */
+            .sidebar-toggle-checkbox:checked ~ .doc-footer {
+                margin-left: 0;
+            }
+
+            .footer-content {
+                flex: 1;
+            }
+
+            .footer-content a {
+                color: var(--docc-accent);
+            }
+
+            /* Appearance selector */
+            .appearance-selector {
+                display: inline-flex;
+                border: 1px solid var(--docc-accent);
+                border-radius: 6px;
+                overflow: hidden;
+            }
+
+            .appearance-btn {
+                padding: 0.25rem 0.75rem;
+                font-size: 0.75rem;
+                font-weight: 500;
+                border: none;
+                background: transparent;
+                color: var(--docc-accent);
+                cursor: pointer;
+                transition: background-color 0.15s ease, color 0.15s ease;
+            }
+
+            .appearance-btn:not(:last-child) {
+                border-right: 1px solid var(--docc-accent);
+            }
+
+            .appearance-btn:hover {
+                background: rgba(0, 102, 204, 0.1);
+            }
+
+            .appearance-btn.active {
+                background: var(--docc-accent);
+                color: white;
+            }
+
+            /* Hide appearance selector until JS runs (shows noscript fallback) */
+            .appearance-selector {
+                visibility: hidden;
+            }
+
+            /* Main content */
+            .doc-main {
+                flex: 1;
+                margin-left: var(--sidebar-width);
+                padding: 0;
+                max-width: calc(100% - var(--sidebar-width));
+                transition: margin-left 0.3s ease, max-width 0.3s ease;
+            }
+
+            /* Main content expanded when sidebar is collapsed */
+            .sidebar-toggle-checkbox:checked ~ .doc-layout .doc-main {
+                margin-left: 0;
+                max-width: 100%;
+            }
+
+            /* Breadcrumbs */
+            .breadcrumbs {
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+                font-size: 0.8125rem;
+                color: var(--docc-fg-secondary);
+                padding: 1rem 3rem;
+                border-bottom: 1px solid var(--docc-border);
+            }
+
+            .breadcrumbs a {
+                color: var(--docc-accent);
+                text-decoration: none;
+            }
+
+            .breadcrumbs a:hover {
+                text-decoration: underline;
+            }
+
+            .breadcrumbs .separator {
+                color: var(--docc-fg-secondary);
+            }
+
+            /* Hero section */
+            .hero-section {
+                display: flex;
+                align-items: flex-start;
+                justify-content: space-between;
+                background: var(--docc-bg-secondary);
+                padding: 2rem 3rem 2.5rem;
+                margin-bottom: 2rem;
+                position: relative;
+                overflow: hidden;
+            }
+
+            .hero-content {
+                flex: 1;
+                max-width: 70%;
+            }
+
+            .hero-decoration {
+                flex-shrink: 0;
+                width: 200px;
+                height: 200px;
+                color: var(--hero-decoration);
+                opacity: 0.6;
+                margin-left: 2rem;
+            }
+
+            .hero-decoration svg {
+                width: 100%;
+                height: 100%;
+            }
+
+            .eyebrow {
+                font-size: 0.8125rem;
+                color: var(--docc-fg-secondary);
+                margin-bottom: 0.25rem;
+                text-transform: capitalize;
+            }
+
+            .hero-section h1 {
+                margin-top: 0;
+                margin-bottom: 0.5rem;
+            }
+
+            .hero-section .abstract {
+                font-size: 1.1875rem;
+                color: var(--docc-fg-secondary);
+                margin-bottom: 0;
+            }
+
+            .abstract {
+                font-size: 1.1875rem;
+                color: var(--docc-fg-secondary);
+                margin-bottom: 1.5rem;
+            }
+
+            /* Content sections within main */
+            .doc-main section,
+            .doc-main .declaration,
+            .doc-main > p,
+            .doc-main > ul,
+            .doc-main > ol,
+            .doc-main > pre,
+            .doc-main > h2,
+            .doc-main > h3 {
+                padding-left: 3rem;
+                padding-right: 3rem;
+            }
+
+            .topics,
+            .relationships,
+            .see-also,
+            .discussion,
+            .parameters {
+                padding-top: 1rem;
+                padding-bottom: 1rem;
+            }
+
+            /* Legacy single-column layout (for index page) */
+            .container {
+                max-width: 1200px;
+                margin: 0 auto;
                 padding: 2rem;
             }
 
-            .tutorial-step-row {
+            .declaration {
+                background: var(--docc-bg-secondary);
+                padding: 1rem 1.25rem;
+                border-radius: 12px;
+                margin-bottom: 1.5rem;
+            }
+
+            nav.breadcrumbs {
+                font-size: 0.8125rem;
+                color: var(--docc-fg-secondary);
+                margin-bottom: 1rem;
+            }
+
+            nav.breadcrumbs a {
+                color: var(--docc-fg-secondary);
+            }
+
+            /* Symbol cards in Topics section */
+            .symbol-list {
+                display: flex;
                 flex-direction: column;
+                gap: 0;
             }
 
-            .step-card {
-                flex: none;
-                max-width: none;
+            .symbol-card {
+                display: flex;
+                align-items: flex-start;
+                gap: 0.75rem;
+                padding: 0.75rem 0;
             }
 
-            .step-code-panel,
-            .step-media-panel {
+            .symbol-card .symbol-badge {
+                margin-top: 0.125rem;
+            }
+
+            .symbol-info {
+                flex: 1;
+                min-width: 0;
+            }
+
+            .symbol-name {
+                font-family: var(--typeface-body);
+                font-weight: 400;
+                display: block;
+                margin-bottom: 0.25rem;
+            }
+
+            .symbol-summary {
+                color: var(--docc-fg-secondary);
+                font-size: 0.875rem;
+                margin: 0;
+                line-height: 1.4;
+            }
+
+            /* Aside boxes */
+            .aside {
+                padding: 1rem;
+                border-radius: 8px;
+                margin: 1rem 0;
+            }
+
+            .aside.note {
+                background: var(--aside-note-bg);
+                border-left: 3px solid var(--aside-note-border);
+            }
+
+            .aside.warning {
+                background: var(--aside-warning-bg);
+                border-left: 3px solid var(--aside-warning-border);
+            }
+
+            .aside.important {
+                background: var(--aside-important-bg);
+                border-left: 3px solid var(--aside-important-border);
+            }
+
+            .aside .label {
+                font-weight: 600;
+                margin-bottom: 0.5rem;
+            }
+
+            /* Index page styles */
+            .index-header {
+                text-align: center;
+                margin-bottom: 2rem;
+                padding-bottom: 1rem;
+                border-bottom: 1px solid var(--docc-border);
+            }
+
+            .index-header .subtitle {
+                color: var(--docc-fg-secondary);
+                font-size: 1.1rem;
+            }
+
+            .index-intro {
+                max-width: 800px;
+                margin: 0 auto 2rem;
+                padding: 1rem 0;
+                line-height: 1.6;
+            }
+
+            .index-intro p {
+                margin-bottom: 1rem;
+            }
+
+            .index-intro h2 {
+                font-size: 1.5rem;
+                margin: 1.5rem 0 1rem;
+                color: var(--docc-fg);
+                border-bottom: none;
+                padding-bottom: 0;
+            }
+
+            .index-intro h3 {
+                font-size: 1.25rem;
+                margin: 1.25rem 0 0.75rem;
+                color: var(--docc-fg);
+            }
+
+            .index-intro ul, .index-intro ol {
+                margin: 1rem 0;
+                padding-left: 1.5rem;
+            }
+
+            .index-intro li {
+                margin-bottom: 0.5rem;
+            }
+
+            .index-intro code {
+                background: var(--docc-bg-secondary);
+                padding: 0.15rem 0.4rem;
+                border-radius: 4px;
+                font-family: var(--typeface-mono);
+                font-size: 0.9em;
+            }
+
+            .index-intro pre {
+                background: var(--docc-bg-secondary);
+                padding: 1rem 1.25rem;
+                border-radius: 12px;
+                overflow-x: auto;
+                margin: 1rem 0;
+                font-family: var(--typeface-mono);
+                font-size: 0.8125rem;
+                line-height: 1.6;
+            }
+
+            .index-intro pre code {
+                background: none;
+                padding: 0;
+                position: static;
+                left: 0;
+            }
+
+            .index-intro a {
+                color: var(--docc-link);
+            }
+
+            .index-intro a:hover {
+                text-decoration: underline;
+            }
+
+            .search-form {
+                max-width: 500px;
+                margin: 0 auto 2rem;
+            }
+
+            .search-form input {
+                width: 100%;
+                padding: 0.75rem 1rem;
+                font-size: 1rem;
+                border: 1px solid var(--docc-border);
+                border-radius: 8px;
+                background: var(--docc-bg);
+                color: var(--docc-fg);
+            }
+
+            .search-results {
+                margin-top: 1rem;
+                background: var(--docc-bg);
+                border: 1px solid var(--docc-border);
+                border-radius: 8px;
                 max-height: 400px;
+                overflow-y: auto;
+                display: none;
             }
-        }
 
-        @media (max-width: 768px) {
+            .search-results-list {
+                list-style: none;
+                margin: 0;
+                padding: 0;
+            }
+
+            .search-result-item {
+                padding: 0.75rem 1rem;
+                border-bottom: 1px solid var(--docc-border);
+            }
+
+            .search-result-item:last-child {
+                border-bottom: none;
+            }
+
+            .search-result-item:hover {
+                background: var(--docc-bg-secondary);
+            }
+
+            .result-link {
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+            }
+
+            .result-title {
+                font-weight: 500;
+            }
+
+            .result-type {
+                font-size: 0.75rem;
+                padding: 0.1rem 0.4rem;
+                border-radius: 4px;
+                background: var(--docc-bg-secondary);
+                color: var(--docc-fg-secondary);
+            }
+
+            .result-type-symbol {
+                background: #e3f2fd;
+                color: #1565c0;
+            }
+
+            .result-type-article {
+                background: #e8f5e9;
+                color: #2e7d32;
+            }
+
+            .result-type-tutorial {
+                background: #fff3e0;
+                color: #ef6c00;
+            }
+
+            .result-summary {
+                font-size: 0.875rem;
+                color: var(--docc-fg-secondary);
+                margin-top: 0.25rem;
+            }
+
+            .no-results {
+                padding: 1rem;
+                color: var(--docc-fg-secondary);
+                text-align: center;
+            }
+
+            .search-unavailable {
+                color: var(--docc-fg-secondary);
+                font-size: 0.875rem;
+            }
+
+            .module-list {
+                display: grid;
+                gap: 1rem;
+                grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            }
+
+            .module-card {
+                padding: 1.25rem;
+                border: 1px solid var(--docc-border);
+                border-radius: 12px;
+                background: var(--docc-bg);
+                transition: box-shadow 0.2s, border-color 0.2s;
+            }
+
+            .module-card:hover {
+                border-color: var(--docc-accent);
+                box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+            }
+
+            .module-name {
+                font-family: var(--typeface-mono);
+                font-size: 1.1rem;
+                font-weight: 600;
+                display: block;
+                margin-bottom: 0.5rem;
+            }
+
+            .module-abstract {
+                color: var(--docc-fg-secondary);
+                font-size: 0.9rem;
+                margin-bottom: 0.5rem;
+            }
+
+            .module-stats {
+                color: var(--docc-fg-secondary);
+                font-size: 0.8rem;
+            }
+
+            /* Tutorials section on index page */
+            .tutorials-section {
+                margin-top: 2.5rem;
+                padding-top: 2rem;
+                border-top: 1px solid var(--docc-border);
+            }
+
+            .tutorials-section h2 {
+                font-size: 1.5rem;
+                margin-bottom: 1.5rem;
+                border-bottom: none;
+                padding-bottom: 0;
+            }
+
+            .tutorial-list {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+                gap: 1rem;
+            }
+
+            .tutorial-collection-card {
+                padding: 1.25rem;
+                border: 1px solid var(--docc-border);
+                border-radius: 12px;
+                background: var(--docc-bg);
+                transition: box-shadow 0.2s, border-color 0.2s;
+            }
+
+            .tutorial-collection-card:hover {
+                border-color: var(--docc-accent);
+                box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+            }
+
+            .tutorial-collection-name {
+                font-size: 1.0625rem;
+                font-weight: 600;
+                display: block;
+                margin-bottom: 0.5rem;
+            }
+
+            .tutorial-collection-stats {
+                color: var(--docc-fg-secondary);
+                font-size: 0.8rem;
+            }
+
+            /* ========================================
+               Tutorial Page Styles
+               Based on swift-docc-render structure
+               ======================================== */
+
+            /* Tutorial pages have no sidebar */
+            body.tutorial-page {
+                --sidebar-width: 0px;
+            }
+
+            body.tutorial-page .doc-sidebar {
+                display: none;
+            }
+
+            body.tutorial-page .doc-main {
+                margin-left: 0;
+                max-width: 100%;
+                padding: 0;
+            }
+
+            body.tutorial-page .doc-footer,
+            body.tutorial-overview-page .doc-footer,
+            body.index-page .doc-footer {
+                margin-left: 0;
+            }
+
+            body.tutorial-page .doc-layout {
+                padding-top: var(--header-height);
+            }
+
+            /* Tutorial Navigation Bar */
+            .tutorial-nav {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                height: var(--header-height);
+                background: var(--docc-bg);
+                border-bottom: 1px solid var(--docc-border);
+                z-index: 100;
+                display: flex;
+                align-items: center;
+            }
+
             .tutorial-nav-content {
-                padding: 0 1rem;
+                display: flex;
+                align-items: center;
+                width: 100%;
+                padding: 0 1.5rem;
+                gap: 1rem;
             }
 
             .tutorial-nav-title {
-                font-size: 0.8125rem;
+                font-size: 0.9375rem;
+                font-weight: 600;
+                color: var(--docc-fg);
+                text-decoration: none;
+                white-space: nowrap;
+            }
+
+            .tutorial-nav-title:hover {
+                color: var(--docc-accent);
+                text-decoration: none;
+            }
+
+            .nav-separator {
+                color: var(--docc-fg-secondary);
+                font-size: 0.875rem;
+            }
+
+            .tutorial-nav-dropdowns {
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+                margin-left: auto;
+            }
+
+            /* Tutorial dropdowns - pure CSS using details/summary */
+            details.tutorial-dropdown {
+                position: relative;
+            }
+
+            /* Hide the default disclosure triangle */
+            details.tutorial-dropdown > summary {
+                list-style: none;
+            }
+            details.tutorial-dropdown > summary::-webkit-details-marker {
+                display: none;
+            }
+            details.tutorial-dropdown > summary::marker {
+                display: none;
             }
 
             .tutorial-dropdown-toggle {
-                min-width: 120px;
-                padding: 0.375rem 0.5rem;
-                font-size: 0.75rem;
+                background: var(--docc-bg);
+                border: 1px solid var(--docc-border);
+                border-radius: 6px;
+                padding: 0.5rem 0.75rem;
+                font-size: 0.8125rem;
+                font-weight: 500;
+                color: var(--docc-fg);
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+                min-width: 180px;
+                max-width: 280px;
             }
 
+            .tutorial-dropdown-toggle:hover {
+                background: var(--docc-bg-secondary);
+            }
+
+            .dropdown-label {
+                flex: 1;
+                text-align: left;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+
+            .dropdown-chevron {
+                flex-shrink: 0;
+                transition: transform 0.2s ease;
+            }
+
+            details.tutorial-dropdown[open] .dropdown-chevron {
+                transform: rotate(180deg);
+            }
+
+            .tutorial-dropdown-menu {
+                position: absolute;
+                top: calc(100% + 4px);
+                left: 0;
+                min-width: 100%;
+                max-width: 320px;
+                background: var(--docc-bg);
+                border: 1px solid var(--docc-border);
+                border-radius: 8px;
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+                padding: 0.5rem 0;
+                z-index: 200;
+                max-height: 400px;
+                overflow-y: auto;
+            }
+
+            .dropdown-item {
+                display: block;
+                padding: 0.625rem 1rem;
+                font-size: 0.8125rem;
+                color: var(--docc-fg);
+                text-decoration: none;
+            }
+
+            .dropdown-item:hover {
+                background: var(--docc-bg-secondary);
+                text-decoration: none;
+            }
+
+            .dropdown-item.selected {
+                font-weight: 600;
+                color: var(--docc-accent);
+            }
+
+            /* Dropdown chapter grouping */
+            .dropdown-chapter {
+                padding: 0.25rem 0;
+            }
+
+            .dropdown-chapter:not(:first-child) {
+                border-top: 1px solid var(--docc-border);
+                margin-top: 0.5rem;
+                padding-top: 0.75rem;
+            }
+
+            .dropdown-chapter-title {
+                display: block;
+                padding: 0.375rem 1rem;
+                font-size: 0.6875rem;
+                font-weight: 600;
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
+                color: var(--docc-fg-secondary);
+            }
+
+            .dropdown-chapter .dropdown-item {
+                padding-left: 1.25rem;
+            }
+
+            /* ========================================
+               Tutorial Hero Section
+               Large dark section with left-aligned content
+               ======================================== */
             .tutorial-hero {
-                min-height: 320px;
-                padding: 2rem 1rem;
+                background: #1d1d1f;
+                color: #ffffff;
+                min-height: 420px;
+                padding: 3rem 2rem;
+                position: relative;
+                display: flex;
+                align-items: center;
             }
 
             .tutorial-hero-content {
-                padding-left: 1rem;
-                max-width: 100%;
+                position: relative;
+                z-index: 2;
+                max-width: 600px;
+                padding-left: 2rem;
+            }
+
+            .tutorial-chapter {
+                font-size: 1.0625rem;
+                font-weight: 400;
+                color: rgba(255, 255, 255, 0.9);
+                margin: 0 0 0.5rem 0;
+                padding-top: 0.5rem;
             }
 
             .tutorial-hero h1,
             .tutorial-hero .tutorial-title {
-                font-size: 1.75rem;
+                font-size: 2.5rem;
+                font-weight: 700;
+                line-height: 1.1;
+                margin: 0 0 1.25rem 0;
+                color: #ffffff;
+            }
+
+            .tutorial-hero .tutorial-abstract {
+                font-size: 1.0625rem;
+                line-height: 1.5;
+                color: rgba(255, 255, 255, 0.85);
+                margin-bottom: 2rem;
+            }
+
+            .tutorial-hero .tutorial-time {
+                display: flex;
+                flex-direction: column;
+                gap: 0.125rem;
+            }
+
+            .tutorial-hero .time-value {
+                font-size: 1.5rem;
+                font-weight: 600;
+            }
+
+            .tutorial-hero .time-label {
+                font-size: 0.8125rem;
+                color: rgba(255, 255, 255, 0.7);
             }
 
             .tutorial-hero-background {
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                z-index: 1;
+                overflow: hidden;
+            }
+
+            .tutorial-hero-background picture {
+                display: block;
+                width: 100%;
+                height: 100%;
+            }
+
+            .tutorial-hero-background img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+                object-position: right center;
+                opacity: 0.5;
+            }
+
+            /* ========================================
+               Tutorial Intro Section
+               ======================================== */
+            .tutorial-intro-section {
+                padding: 3rem 4rem;
+                max-width: 900px;
+            }
+
+            .tutorial-intro-section p {
+                font-size: 1.0625rem;
+                line-height: 1.6;
+                margin-bottom: 1rem;
+            }
+
+            .intro-media {
+                margin-top: 2rem;
+            }
+
+            .intro-media img {
+                max-width: 100%;
+                height: auto;
+                border-radius: 8px;
+            }
+
+            /* ========================================
+               Tutorial Section with Steps
+               Two-column layout: steps left, sticky asset right
+               ======================================== */
+            .tutorial-section {
+                border-top: 1px solid var(--docc-border);
+                padding: 0;
+            }
+
+            .section-header {
+                padding: 3rem 4rem 2rem;
+                max-width: 900px;
+            }
+
+            .section-number {
+                font-size: 0.9375rem;
+                font-weight: 400;
+                color: var(--docc-fg-secondary);
+                margin-bottom: 0.5rem;
+            }
+
+            .section-title {
+                font-size: 1.75rem;
+                font-weight: 600;
+                margin: 0;
+                border-bottom: none;
+                padding-bottom: 0;
+            }
+
+            /* Section intro content row */
+            .section-content-row {
+                display: flex;
+                gap: 3rem;
+                padding: 0 4rem 2rem;
+                align-items: flex-start;
+            }
+
+            .section-text {
+                flex: 0 0 auto;
+                width: 40%;
+                min-width: 300px;
+                max-width: 450px;
+            }
+
+            .section-text p {
+                font-size: 1rem;
+                line-height: 1.6;
+            }
+
+            .section-media {
+                flex: 1 1 auto;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: 12px;
+                min-height: 250px;
+            }
+
+            .section-media picture {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 100%;
+                height: 100%;
+            }
+
+            .section-media img {
+                width: 100%;
+                height: auto;
+                max-height: 400px;
+                object-fit: contain;
+            }
+
+            /* ========================================
+               Steps Layout (Two-Column with Sticky Asset)
+               ======================================== */
+            .tutorial-steps-wrapper {
+                display: flex;
+                position: relative;
+            }
+
+            .steps-content {
+                flex: 0 0 45%;
+                max-width: 500px;
+                padding: 0 2rem 0 4rem;
+            }
+
+            .steps-asset-container {
+                flex: 1;
+                position: sticky;
+                top: calc(var(--header-height) + 1rem);
+                height: calc(100vh - var(--header-height) - 2rem);
+                display: flex;
+                align-items: flex-start;
+                justify-content: center;
+                padding: 0 2rem;
+            }
+
+            /* Individual Step */
+            .tutorial-step {
+                padding: 1.5rem 0;
+                border-left: 3px solid transparent;
+                padding-left: 1.5rem;
+                margin-left: -1.5rem;
+            }
+
+            .tutorial-step.active {
+                border-left-color: var(--docc-accent);
+            }
+
+            .step-label {
+                font-size: 0.875rem;
+                font-weight: 600;
+                color: var(--docc-accent);
+                margin-bottom: 0.75rem;
+            }
+
+            .step-content {
+                font-size: 1rem;
+                line-height: 1.6;
+            }
+
+            .step-content p {
+                margin: 0 0 1rem 0;
+            }
+
+            .step-content p:last-child {
+                margin-bottom: 0;
+            }
+
+            .step-caption {
+                margin-top: 1.25rem;
+                padding-top: 1.25rem;
+                border-top: 1px solid var(--docc-border);
+                font-size: 0.9375rem;
+                color: var(--docc-fg-secondary);
+            }
+
+            /* ========================================
+               Code Preview Panel (Right Side)
+               ======================================== */
+            .code-preview {
+                background: #1d1d1f;
+                border-radius: 12px;
+                overflow: hidden;
+                width: 100%;
+                max-width: 600px;
+                display: flex;
+                flex-direction: column;
+                max-height: calc(100vh - var(--header-height) - 4rem);
+            }
+
+            .code-preview-header {
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+                padding: 0.875rem 1rem;
+                background: #2d2d2f;
+                border-bottom: 1px solid #3d3d3f;
+            }
+
+            .file-icon {
+                color: #8e8e93;
+            }
+
+            .file-icon svg {
+                width: 16px;
+                height: 16px;
+                display: block;
+            }
+
+            .file-name {
+                font-family: var(--typeface-mono);
+                font-size: 0.8125rem;
+                font-weight: 500;
+                color: #ffffff;
+            }
+
+            .code-preview-content {
+                flex: 1;
+                overflow: auto;
+                padding: 1rem 0;
+            }
+
+            .code-preview-content pre {
+                margin: 0;
+                padding: 0;
+                background: transparent;
+                font-size: 0.8125rem;
+                line-height: 1.7;
+            }
+
+            .code-preview-content code {
+                display: block;
+                background: transparent;
+                padding: 0;
+                color: #ffffff;
+            }
+
+            .code-line {
+                display: flex;
+                padding: 0 1rem;
+            }
+
+            .code-line:hover {
+                background: rgba(255, 255, 255, 0.05);
+            }
+
+            .line-number {
+                flex-shrink: 0;
+                width: 3rem;
+                text-align: right;
+                padding-right: 1rem;
+                color: #5d5d5f;
+                user-select: none;
+            }
+
+            .line-content {
+                flex: 1;
+                white-space: pre;
+            }
+
+            /* Code syntax highlighting for dark theme */
+            .code-preview .syntax-keyword { color: #ff7ab2; }
+            .code-preview .syntax-type { color: #dabaff; }
+            .code-preview .syntax-string { color: #ff8170; }
+            .code-preview .syntax-number { color: #d9c97c; }
+            .code-preview .syntax-comment { color: #7f8c8d; }
+
+            /* ========================================
+               Media Preview Panel
+               ======================================== */
+            .media-preview {
+                background: var(--docc-bg-secondary);
+                border-radius: 12px;
+                overflow: hidden;
+                width: 100%;
+                max-width: 600px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 2rem;
+            }
+
+            .media-preview img,
+            .media-preview video {
+                max-width: 100%;
+                max-height: calc(100vh - var(--header-height) - 8rem);
+                height: auto;
+                border-radius: 8px;
+            }
+
+            /* ========================================
+               Fallback: Simple Step Row Layout
+               Used when steps don't have associated media
+               ======================================== */
+            .tutorial-steps-container {
+                padding: 0 4rem 2rem;
+            }
+
+            .tutorial-step-row {
+                display: flex;
+                gap: 3rem;
+                margin-bottom: 2rem;
+                align-items: flex-start;
+            }
+
+            .step-card {
+                flex: 0 0 auto;
+                width: 40%;
+                min-width: 300px;
+                max-width: 450px;
+            }
+
+            .step-code-panel {
+                flex: 1;
+                background: var(--docc-bg-secondary);
+                border-radius: 12px;
+                overflow: hidden;
+                max-height: 500px;
+                display: flex;
+                flex-direction: column;
+                border: 1px solid var(--docc-border);
+            }
+
+            .code-panel-header {
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+                padding: 0.875rem 1rem;
+                background: var(--docc-bg);
+                border-bottom: 1px solid var(--docc-border);
+            }
+
+            .code-panel-header .file-icon {
+                color: var(--docc-fg-secondary);
+            }
+
+            .code-panel-header .file-name {
+                font-family: var(--typeface-mono);
+                font-size: 0.8125rem;
+                font-weight: 500;
+                color: var(--docc-fg);
+            }
+
+            .code-panel-content {
+                flex: 1;
+                overflow: auto;
+                padding: 1rem 0;
+            }
+
+            .code-panel-content pre {
+                margin: 0;
+                padding: 0;
+                background: transparent;
+                font-size: 0.8125rem;
+                line-height: 1.4;
+            }
+
+            .code-panel-content code {
+                display: block;
+                background: transparent;
+                padding: 0;
+                color: var(--docc-fg);
+            }
+
+            .code-panel-content .line {
+                display: flex;
+                padding: 0 1rem;
+                margin: 0;
+                line-height: 1.4;
+            }
+
+            .code-panel-content .line:hover {
+                background: var(--docc-bg);
+            }
+
+            .code-panel-content .line-number {
+                flex-shrink: 0;
+                width: 3rem;
+                text-align: right;
+                padding-right: 1rem;
+                color: var(--docc-fg-secondary);
+                user-select: none;
+            }
+
+            .code-panel-content .line-content {
+                flex: 1;
+                white-space: pre;
+            }
+
+            /* Step media panel */
+            .step-media-panel {
+                flex: 1;
+                background: var(--docc-bg-secondary);
+                border-radius: 12px;
+                overflow: hidden;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 2rem;
+                max-height: 500px;
+            }
+
+            .step-media-panel img {
+                max-width: 100%;
+                max-height: 100%;
+                height: auto;
+                object-fit: contain;
+            }
+
+            /* ========================================
+               Tutorial Assessments
+               ======================================== */
+            .tutorial-assessments {
+                padding: 3rem 4rem;
+                max-width: 900px;
+            }
+
+            .tutorial-assessments h3 {
+                font-size: 1.5rem;
+                margin: 0 0 2rem 0;
+            }
+
+            .assessment {
+                background: var(--docc-bg-secondary);
+                border-radius: 12px;
+                padding: 2rem;
+                margin-bottom: 1.5rem;
+            }
+
+            .question-number {
+                font-size: 0.875rem;
+                color: var(--docc-fg-secondary);
+                margin-bottom: 1rem;
+            }
+
+            .question {
+                font-size: 1.0625rem;
+                margin-bottom: 1.5rem;
+            }
+
+            .choices {
+                border: none;
+                padding: 0;
+                margin: 0;
+            }
+
+            .choice {
+                display: flex;
+                align-items: flex-start;
+                padding: 1rem 1rem 1rem 3rem;
+                border: 2px solid var(--docc-border);
+                border-radius: 8px;
+                margin-bottom: 0.75rem;
+                cursor: pointer;
+                transition: border-color 0.15s ease, background-color 0.15s ease;
+                position: relative;
+            }
+
+            .choice:hover {
+                border-color: var(--docc-accent);
+                background: rgba(0, 102, 204, 0.05);
+            }
+
+            /* Hide the radio input but keep it accessible */
+            .choice-input {
+                position: absolute;
+                opacity: 0;
+                width: 100%;
+                height: 100%;
+                left: 0;
+                top: 0;
+                cursor: pointer;
+                margin: 0;
+                z-index: 1;
+            }
+
+            /* Choice indicator (circle/checkmark area) */
+            .choice-indicator {
+                position: absolute;
+                left: 1rem;
+                top: 1.25rem;
+                width: 18px;
+                height: 18px;
+                border: 2px solid var(--docc-border);
+                border-radius: 50%;
+                background: var(--docc-bg);
+                transition: all 0.15s ease;
+            }
+
+            .choice-indicator::after {
+                content: '';
+                position: absolute;
                 display: none;
             }
 
-            .tutorial-intro-section,
-            .section-header,
-            .tutorial-steps-container,
-            .tutorial-assessments,
-            .tutorial-cta {
-                padding-left: 1.5rem;
-                padding-right: 1.5rem;
+            .choice-content {
+                flex: 1;
             }
-        }
 
-        /* Spotlight search overlay */
-        .search-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.5);
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-            padding-top: 15vh;
-            z-index: 10000;
-            opacity: 0;
-            visibility: hidden;
-            transition: opacity 0.15s, visibility 0.15s;
-        }
+            .choice-content p {
+                margin: 0;
+            }
 
-        .search-overlay.active {
-            opacity: 1;
-            visibility: visible;
-        }
+            /* Hide justification by default */
+            .choice-justification {
+                display: none;
+                margin-top: 0.75rem;
+                padding-top: 0.75rem;
+                border-top: 1px solid currentColor;
+                opacity: 0.9;
+                font-size: 0.9rem;
+            }
 
-        .search-overlay-container {
-            width: 90%;
-            max-width: 600px;
-            background: var(--docc-bg);
-            border-radius: 12px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-            overflow: hidden;
-            transform: translateY(-20px);
-            transition: transform 0.15s;
-        }
+            /* Correct answer styling when selected */
+            .choice.correct-answer:has(.choice-input:checked) {
+                border-color: #34c759;
+                background: rgba(52, 199, 89, 0.1);
+            }
 
-        .search-overlay.active .search-overlay-container {
-            transform: translateY(0);
-        }
+            .choice.correct-answer:has(.choice-input:checked) .choice-indicator {
+                border-color: #34c759;
+                background: #34c759;
+            }
 
-        .search-overlay-input-wrapper {
-            padding: 1rem;
-            border-bottom: 1px solid var(--docc-border);
-        }
+            .choice.correct-answer:has(.choice-input:checked) .choice-indicator::after {
+                display: block;
+                left: 5px;
+                top: 2px;
+                width: 4px;
+                height: 8px;
+                border: solid white;
+                border-width: 0 2px 2px 0;
+                transform: rotate(45deg);
+            }
 
-        .search-overlay-input {
-            width: 100%;
-            padding: 0.75rem 1rem;
-            font-size: 1.125rem;
-            border: 1px solid var(--docc-border);
-            border-radius: 8px;
-            background: var(--docc-bg-secondary);
-            color: var(--docc-fg);
-            outline: none;
-        }
+            .choice.correct-answer:has(.choice-input:checked) .choice-justification {
+                display: block;
+                border-color: rgba(52, 199, 89, 0.3);
+            }
 
-        .search-overlay-input:focus {
-            border-color: var(--docc-accent);
-        }
+            /* Incorrect answer styling when selected */
+            .choice.incorrect-answer:has(.choice-input:checked) {
+                border-color: #ff3b30;
+                background: rgba(255, 59, 48, 0.1);
+            }
 
-        .search-overlay-input::placeholder {
-            color: var(--docc-fg-secondary);
-        }
+            .choice.incorrect-answer:has(.choice-input:checked) .choice-indicator {
+                border-color: #ff3b30;
+                background: #ff3b30;
+            }
 
-        .search-overlay-results {
-            max-height: 60vh;
-            overflow-y: auto;
-        }
+            .choice.incorrect-answer:has(.choice-input:checked) .choice-indicator::after {
+                display: block;
+                left: 3px;
+                top: 3px;
+                width: 8px;
+                height: 8px;
+                background: white;
+                clip-path: polygon(20% 0%, 0% 20%, 30% 50%, 0% 80%, 20% 100%, 50% 70%, 80% 100%, 100% 80%, 70% 50%, 100% 20%, 80% 0%, 50% 30%);
+            }
 
-        .search-overlay-empty {
-            padding: 2rem;
-            text-align: center;
-            color: var(--docc-fg-secondary);
-        }
+            .choice.incorrect-answer:has(.choice-input:checked) .choice-justification {
+                display: block;
+                border-color: rgba(255, 59, 48, 0.3);
+            }
 
-        .search-overlay-section {
-            padding: 0.5rem 0;
-        }
+            /* Disable pointer events on other choices once one is selected */
+            .choices:has(.choice-input:checked) .choice:not(:has(.choice-input:checked)) {
+                pointer-events: none;
+                opacity: 0.6;
+            }
 
-        .search-overlay-section-title {
-            padding: 0.5rem 1rem;
-            font-size: 0.75rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            color: var(--docc-fg-secondary);
-        }
+            /* ========================================
+               Tutorial Call-to-Action (Next Tutorial)
+               ======================================== */
+            .tutorial-cta {
+                padding: 3rem 4rem 4rem;
+                border-top: 1px solid var(--docc-border);
+                max-width: 900px;
+            }
 
-        .search-overlay-item {
-            display: block;
-            padding: 0.75rem 1rem;
-            text-decoration: none;
-            color: var(--docc-fg);
-            cursor: pointer;
-        }
+            .tutorial-cta h3 {
+                font-size: 1.5rem;
+                font-weight: 600;
+                margin: 0 0 0.75rem 0;
+            }
 
-        .search-overlay-item:hover,
-        .search-overlay-item.selected {
-            background: var(--docc-bg-secondary);
-        }
+            .tutorial-cta .cta-abstract {
+                font-size: 1rem;
+                line-height: 1.5;
+                color: var(--docc-fg-secondary);
+                margin: 0 0 1.5rem 0;
+            }
 
-        .search-overlay-item-title {
-            display: block;
-            font-weight: 500;
-        }
+            .tutorial-cta .cta-action a {
+                display: inline-flex;
+                align-items: center;
+                gap: 0.5rem;
+                font-size: 1rem;
+                font-weight: 500;
+                color: var(--docc-accent);
+                text-decoration: none;
+            }
 
-        .search-overlay-item-path {
-            display: block;
-            font-size: 0.8rem;
-            color: var(--docc-fg-secondary);
-            margin-top: 0.25rem;
-        }
+            .tutorial-cta .cta-action a:hover {
+                text-decoration: underline;
+            }
 
-        .search-overlay-hint {
-            padding: 0.75rem 1rem;
-            border-top: 1px solid var(--docc-border);
-            font-size: 0.75rem;
-            color: var(--docc-fg-secondary);
-            display: flex;
-            gap: 1rem;
-        }
+            .tutorial-cta .cta-action a::after {
+                content: '→';
+            }
 
-        .search-overlay-hint kbd {
-            display: inline-block;
-            padding: 0.125rem 0.375rem;
-            background: var(--docc-bg-secondary);
-            border: 1px solid var(--docc-border);
-            border-radius: 4px;
-            font-family: var(--typeface-mono);
-            font-size: 0.7rem;
-        }
+            /* ========================================
+               Tutorial Overview Page
+               ======================================== */
+            .tutorial-overview-page {
+                background: var(--docc-bg);
+                color: var(--docc-fg);
+                min-height: 100vh;
+            }
 
-        \(theme.customCSS ?? "")
-        """
+            .tutorial-overview-main {
+                max-width: 1200px;
+                margin: 0 auto;
+                padding: 0 2rem;
+            }
+
+            .overview-hero {
+                text-align: center;
+                padding: 4rem 2rem;
+                border-bottom: 1px solid var(--docc-border);
+            }
+
+            .overview-hero-content {
+                max-width: 800px;
+                margin: 0 auto;
+            }
+
+            .overview-title {
+                font-size: 2.5rem;
+                font-weight: 700;
+                margin: 0 0 1.5rem 0;
+                color: var(--docc-fg);
+            }
+
+            .overview-hero p {
+                font-size: 1.125rem;
+                line-height: 1.6;
+                color: var(--docc-fg-secondary);
+                margin-bottom: 1rem;
+            }
+
+            .overview-volume {
+                padding: 3rem 0;
+            }
+
+            .overview-chapter {
+                margin-bottom: 3rem;
+            }
+
+            .chapter-title {
+                font-size: 1.5rem;
+                font-weight: 600;
+                margin: 0 0 1rem 0;
+                padding-bottom: 0.5rem;
+                border-bottom: 2px solid var(--docc-accent);
+            }
+
+            .chapter-description {
+                color: var(--docc-fg-secondary);
+                margin-bottom: 1.5rem;
+            }
+
+            .chapter-tutorials,
+            .tutorial-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+                gap: 1.5rem;
+            }
+
+            .overview-tutorials {
+                padding: 3rem 4rem;
+                max-width: 1200px;
+                margin: 0 auto;
+            }
+
+            .tutorial-card {
+                display: flex;
+                flex-direction: column;
+                padding: 1.5rem;
+                background: var(--docc-bg-secondary);
+                border-radius: 12px;
+                text-decoration: none;
+                transition: transform 0.15s ease, box-shadow 0.15s ease;
+            }
+
+            .tutorial-card:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            }
+
+            .tutorial-card-title {
+                font-size: 1.0625rem;
+                font-weight: 600;
+                color: var(--docc-fg);
+                margin-bottom: 0.5rem;
+            }
+
+            .tutorial-card-abstract {
+                font-size: 0.875rem;
+                color: var(--docc-fg-secondary);
+                line-height: 1.5;
+            }
+
+            /* ========================================
+               Responsive Adjustments
+               ======================================== */
+            @media (max-width: 1024px) {
+                .tutorial-hero-content {
+                    max-width: 500px;
+                }
+
+                .tutorial-hero-background {
+                    opacity: 0.3;
+                }
+
+                .section-content-row {
+                    flex-direction: column;
+                    padding: 0 2rem 2rem;
+                }
+
+                .section-text {
+                    flex: none;
+                    min-width: auto;
+                    max-width: none;
+                    margin-bottom: 2rem;
+                }
+
+                .section-media {
+                    width: 100%;
+                }
+
+                .tutorial-steps-wrapper {
+                    flex-direction: column;
+                }
+
+                .steps-content {
+                    flex: none;
+                    max-width: none;
+                    padding: 0 2rem;
+                }
+
+                .steps-asset-container {
+                    position: relative;
+                    top: auto;
+                    height: auto;
+                    padding: 2rem;
+                }
+
+                .tutorial-step-row {
+                    flex-direction: column;
+                }
+
+                .step-card {
+                    flex: none;
+                    max-width: none;
+                }
+
+                .step-code-panel,
+                .step-media-panel {
+                    max-height: 400px;
+                }
+            }
+
+            @media (max-width: 768px) {
+                .tutorial-nav-content {
+                    padding: 0 1rem;
+                }
+
+                .tutorial-nav-title {
+                    font-size: 0.8125rem;
+                }
+
+                .tutorial-dropdown-toggle {
+                    min-width: 120px;
+                    padding: 0.375rem 0.5rem;
+                    font-size: 0.75rem;
+                }
+
+                .tutorial-hero {
+                    min-height: 320px;
+                    padding: 2rem 1rem;
+                }
+
+                .tutorial-hero-content {
+                    padding-left: 1rem;
+                    max-width: 100%;
+                }
+
+                .tutorial-hero h1,
+                .tutorial-hero .tutorial-title {
+                    font-size: 1.75rem;
+                }
+
+                .tutorial-hero-background {
+                    display: none;
+                }
+
+                .tutorial-intro-section,
+                .section-header,
+                .tutorial-steps-container,
+                .tutorial-assessments,
+                .tutorial-cta {
+                    padding-left: 1.5rem;
+                    padding-right: 1.5rem;
+                }
+            }
+
+            /* Spotlight search overlay */
+            .search-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0, 0, 0, 0.5);
+                display: flex;
+                justify-content: center;
+                align-items: flex-start;
+                padding-top: 15vh;
+                z-index: 10000;
+                opacity: 0;
+                visibility: hidden;
+                transition: opacity 0.15s, visibility 0.15s;
+            }
+
+            .search-overlay.active {
+                opacity: 1;
+                visibility: visible;
+            }
+
+            .search-overlay-container {
+                width: 90%;
+                max-width: 600px;
+                background: var(--docc-bg);
+                border-radius: 12px;
+                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+                overflow: hidden;
+                transform: translateY(-20px);
+                transition: transform 0.15s;
+            }
+
+            .search-overlay.active .search-overlay-container {
+                transform: translateY(0);
+            }
+
+            .search-overlay-input-wrapper {
+                padding: 1rem;
+                border-bottom: 1px solid var(--docc-border);
+            }
+
+            .search-overlay-input {
+                width: 100%;
+                padding: 0.75rem 1rem;
+                font-size: 1.125rem;
+                border: 1px solid var(--docc-border);
+                border-radius: 8px;
+                background: var(--docc-bg-secondary);
+                color: var(--docc-fg);
+                outline: none;
+            }
+
+            .search-overlay-input:focus {
+                border-color: var(--docc-accent);
+            }
+
+            .search-overlay-input::placeholder {
+                color: var(--docc-fg-secondary);
+            }
+
+            .search-overlay-results {
+                max-height: 60vh;
+                overflow-y: auto;
+            }
+
+            .search-overlay-empty {
+                padding: 2rem;
+                text-align: center;
+                color: var(--docc-fg-secondary);
+            }
+
+            .search-overlay-section {
+                padding: 0.5rem 0;
+            }
+
+            .search-overlay-section-title {
+                padding: 0.5rem 1rem;
+                font-size: 0.75rem;
+                font-weight: 600;
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
+                color: var(--docc-fg-secondary);
+            }
+
+            .search-overlay-item {
+                display: block;
+                padding: 0.75rem 1rem;
+                text-decoration: none;
+                color: var(--docc-fg);
+                cursor: pointer;
+            }
+
+            .search-overlay-item:hover,
+            .search-overlay-item.selected {
+                background: var(--docc-bg-secondary);
+            }
+
+            .search-overlay-item-title {
+                display: block;
+                font-weight: 500;
+            }
+
+            .search-overlay-item-path {
+                display: block;
+                font-size: 0.8rem;
+                color: var(--docc-fg-secondary);
+                margin-top: 0.25rem;
+            }
+
+            .search-overlay-hint {
+                padding: 0.75rem 1rem;
+                border-top: 1px solid var(--docc-border);
+                font-size: 0.75rem;
+                color: var(--docc-fg-secondary);
+                display: flex;
+                gap: 1rem;
+            }
+
+            .search-overlay-hint kbd {
+                display: inline-block;
+                padding: 0.125rem 0.375rem;
+                background: var(--docc-bg-secondary);
+                border: 1px solid var(--docc-border);
+                border-radius: 4px;
+                font-family: var(--typeface-mono);
+                font-size: 0.7rem;
+            }
+
+            \(theme.customCSS ?? "")
+            """
     }
 
     private static var darkModeStyles: String {
