@@ -5,9 +5,21 @@
 //  Created by Rene Hexel on 3/01/2026.
 //  Copyright © 2026 Rene Hexel. All rights reserved.
 //
-import Foundation
 import ArgumentParser
 import DocCStatic
+import Foundation
+
+#if canImport(Darwin)
+    import Darwin
+#elseif canImport(Glibc)
+    import Glibc
+#elseif canImport(ucrt)
+    import ucrt
+#endif
+
+#if !os(Windows)
+    import DocCStaticServer
+#endif
 
 @main
 struct DocCStaticCommand: AsyncParsableCommand {
@@ -45,7 +57,9 @@ struct Generate: AsyncParsableCommand {
     @Option(name: .long, help: "Scratch path for `swift build` operations.")
     var scratchPath: String?
 
-    @Option(name: [.long, .customShort("S")], help: "Pre-generated symbol graph directory (skips build step).")
+    @Option(
+        name: [.long, .customShort("S")],
+        help: "Pre-generated symbol graph directory (skips build step).")
     var symbolGraphDir: String?
 
     @Option(name: .shortAndLong, help: "Specific targets to document (can be repeated).")
@@ -54,22 +68,30 @@ struct Generate: AsyncParsableCommand {
     @Flag(name: [.customShort("I"), .long], help: "Include documentation for all dependencies.")
     var includeAllDependencies: Bool = false
 
-    @Option(name: [.customShort("i"), .long], help: "Include a specific dependency (can be repeated).")
+    @Option(
+        name: [.customShort("i"), .long], help: "Include a specific dependency (can be repeated).")
     var includeDependency: [String] = []
 
-    @Option(name: [.customShort("x"), .customLong("exclude-dependency")], help: "Exclude a specific dependency (can be repeated). Only used with -I.")
+    @Option(
+        name: [.customShort("x"), .customLong("exclude-dependency")],
+        help: "Exclude a specific dependency (can be repeated). Only used with -I.")
     var excludeDependency: [String] = []
 
-    @Option(name: .shortAndLong, help: "External documentation URL for a dependency (format: PackageName=URL).")
+    @Option(
+        name: .shortAndLong,
+        help: "External documentation URL for a dependency (format: PackageName=URL).")
     var externalDocs: [String] = []
 
-    @Flag(name: [.customShort("D"), .customLong("disable-search")], help: "Disable client-side search functionality.")
+    @Flag(
+        name: [.customShort("D"), .customLong("disable-search")],
+        help: "Disable client-side search functionality.")
     var disableSearch: Bool = false
 
     @Flag(name: [.customShort("v"), .customLong("verbose")], help: "Enable verbose output.")
     var isVerbose: Bool = false
 
-    @Flag(name: [.short, .customLong("summary")], help: "Show summary statistics after generation.")
+    @Flag(
+        name: [.short, .customLong("summary")], help: "Show summary statistics after generation.")
     var showSummary: Bool = false
 
     @Option(name: .long, help: "Custom HTML for the page footer.")
@@ -84,7 +106,8 @@ struct Generate: AsyncParsableCommand {
         for mapping in externalDocs {
             let parts = mapping.split(separator: "=", maxSplits: 1)
             guard parts.count == 2, let url = URL(string: String(parts[1])) else {
-                throw ValidationError("Invalid external-docs format: \(mapping). Expected: PackageName=URL")
+                throw ValidationError(
+                    "Invalid external-docs format: \(mapping). Expected: PackageName=URL")
             }
             externalURLs[String(parts[0])] = url
         }
@@ -126,7 +149,8 @@ struct Generate: AsyncParsableCommand {
             let result = try await generator.generate()
 
             if isVerbose || showSummary {
-                print("""
+                print(
+                    """
                     Documentation generated successfully!
                       Output: \(result.outputDirectory.path)
                       Pages: \(result.generatedPages)
@@ -160,7 +184,9 @@ struct Render: AsyncParsableCommand {
     @Option(name: .shortAndLong, help: "Output directory for generated documentation.")
     var output: String = ".build/documentation"
 
-    @Flag(name: [.customShort("D"), .customLong("disable-search")], help: "Disable client-side search functionality.")
+    @Flag(
+        name: [.customShort("D"), .customLong("disable-search")],
+        help: "Disable client-side search functionality.")
     var disableSearch: Bool = false
 
     @Flag(name: [.customShort("v"), .customLong("verbose")], help: "Enable verbose output.")
@@ -199,7 +225,8 @@ struct Render: AsyncParsableCommand {
             let result = try await generator.renderFromArchive(archiveURL)
 
             if isVerbose || showSummary {
-                print("""
+                print(
+                    """
                     Documentation rendered successfully!
                       Output: \(result.outputDirectory.path)
                       Pages: \(result.generatedPages)
@@ -222,36 +249,180 @@ struct Render: AsyncParsableCommand {
 
 struct Preview: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
-        abstract: "Start a local preview server for generated documentation."
+        abstract: "Start a local preview server for generated documentation.",
+        discussion: """
+            If the documentation directory does not exist, it will be generated automatically
+            using the provided options (same as the 'generate' command).
+            """
     )
 
+    // Server options
     @Option(name: .shortAndLong, help: "Directory containing generated documentation.")
     var output: String = ".build/documentation"
 
     @Option(name: .shortAndLong, help: "Port to run the preview server on.")
     var port: Int = 8080
 
-    mutating func run() async throws {
-        let docDirectory = URL(fileURLWithPath: output).standardizedFileURL
+    @Flag(
+        name: [.customLong("open"), .customShort("O")],
+        help: "Open the documentation in the default browser.")
+    var shouldOpenBrowser: Bool = false
 
-        guard FileManager.default.fileExists(atPath: docDirectory.path) else {
-            throw ValidationError("Documentation directory does not exist: \(docDirectory.path)")
+    // Generation options (same as Generate command)
+    @Option(name: [.customLong("package-path")], help: "Path to the package directory.")
+    var packagePath: String = "."
+
+    @Option(name: .long, help: "Scratch path for `swift build` operations.")
+    var scratchPath: String?
+
+    @Option(
+        name: [.long, .customShort("S")],
+        help: "Pre-generated symbol graph directory (skips build step).")
+    var symbolGraphDir: String?
+
+    @Option(name: .shortAndLong, help: "Specific targets to document (can be repeated).")
+    var target: [String] = []
+
+    @Flag(name: [.customShort("I"), .long], help: "Include documentation for all dependencies.")
+    var includeAllDependencies: Bool = false
+
+    @Option(
+        name: [.customShort("i"), .long], help: "Include a specific dependency (can be repeated).")
+    var includeDependency: [String] = []
+
+    @Option(
+        name: [.customShort("x"), .customLong("exclude-dependency")],
+        help: "Exclude a specific dependency (can be repeated). Only used with -I.")
+    var excludeDependency: [String] = []
+
+    @Option(
+        name: .shortAndLong,
+        help: "External documentation URL for a dependency (format: PackageName=URL).")
+    var externalDocs: [String] = []
+
+    @Flag(
+        name: [.customShort("D"), .customLong("disable-search")],
+        help: "Disable client-side search functionality.")
+    var disableSearch: Bool = false
+
+    @Flag(name: [.customShort("v"), .customLong("verbose")], help: "Enable verbose output.")
+    var isVerbose: Bool = false
+
+    @Option(name: .long, help: "Custom HTML for the page footer.")
+    var footer: String?
+
+    mutating func run() async throws {
+        #if os(Windows)
+            throw ValidationError(
+                "The preview command is not available on Windows due to dependency limitations. "
+                    + "Please use the 'generate' command to create documentation, then view it with a web browser."
+            )
+        #else
+            let docDirectory = URL(fileURLWithPath: output).standardizedFileURL
+
+            // Generate documentation if it doesn't exist
+            if !FileManager.default.fileExists(atPath: docDirectory.path) {
+                print("Documentation directory does not exist. Generating...")
+
+                try await generateDocumentation()
+
+                print("Documentation generated successfully.\n")
+            }
+
+            let url = "http://localhost:\(port)/"
+
+            print(
+                """
+                Starting preview server...
+                  Directory: \(docDirectory.path)
+                  URL: \(url)
+
+                Press Ctrl+C to stop.
+                """)
+
+            // Open browser if requested
+            if shouldOpenBrowser {
+                openBrowser(url: url)
+            }
+
+            // Start the server
+            let server = PreviewServer(rootDirectory: docDirectory, port: port)
+            try await server.run()
+        #endif
+    }
+
+    /// Generates documentation using the same logic as the Generate command.
+    private func generateDocumentation() async throws {
+        let packageDirectory = URL(fileURLWithPath: packagePath).standardizedFileURL
+        let outputDirectory = URL(fileURLWithPath: output).standardizedFileURL
+
+        // Parse external documentation URLs
+        var externalURLs: [String: URL] = [:]
+        for mapping in externalDocs {
+            let parts = mapping.split(separator: "=", maxSplits: 1)
+            guard parts.count == 2, let url = URL(string: String(parts[1])) else {
+                throw ValidationError(
+                    "Invalid external-docs format: \(mapping). Expected: PackageName=URL")
+            }
+            externalURLs[String(parts[0])] = url
         }
 
-        print("""
-            Starting preview server...
-              Directory: \(docDirectory.path)
-              URL: http://localhost:\(port)/
+        // Determine dependency policy
+        let dependencyPolicy: DependencyInclusionPolicy
+        if includeAllDependencies {
+            if !excludeDependency.isEmpty {
+                dependencyPolicy = .exclude(excludeDependency)
+            } else {
+                dependencyPolicy = .all
+            }
+        } else if !includeDependency.isEmpty {
+            dependencyPolicy = .includeOnly(includeDependency)
+        } else {
+            dependencyPolicy = .none
+        }
 
-            Press Ctrl+C to stop.
-            """)
+        let configuration = Configuration(
+            packageDirectory: packageDirectory,
+            outputDirectory: outputDirectory,
+            targets: target,
+            dependencyPolicy: dependencyPolicy,
+            externalDocumentationURLs: externalURLs,
+            includeSearch: !disableSearch,
+            isVerbose: isVerbose,
+            scratchPath: scratchPath.map { URL(fileURLWithPath: $0).standardizedFileURL },
+            symbolGraphDir: symbolGraphDir.map { URL(fileURLWithPath: $0).standardizedFileURL },
+            footerHTML: footer
+        )
 
-        // TODO: Implement simple HTTP server using SwiftNIO
-        // For now, suggest using Python's built-in server
-        print("""
+        let generator = StaticDocumentationGenerator(configuration: configuration)
+        let _ = try await generator.generate()
+    }
 
-            Tip: You can also use Python's built-in server:
-              cd \(docDirectory.path) && python3 -m http.server \(port)
-            """)
+    /// Opens the specified URL in the system's default browser.
+    ///
+    /// This function works cross-platform on macOS, Linux, and Windows.
+    ///
+    /// - Parameter url: The URL to open.
+    private func openBrowser(url: String) {
+        #if os(macOS)
+            let command = "open"
+        #elseif os(Linux)
+            let command = "xdg-open"
+        #elseif os(Windows)
+            let command = "start"
+        #else
+            print("Note: Unable to open browser automatically on this platform.")
+            return
+        #endif
+
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
+        process.arguments = [command, url]
+
+        do {
+            try process.run()
+        } catch {
+            print("Note: Unable to open browser: \(error.localizedDescription)")
+        }
     }
 }

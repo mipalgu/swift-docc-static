@@ -2,10 +2,59 @@
 
 import PackageDescription
 
+#if os(Windows)
+    let serverTargets: [PackageDescription.Target] = []
+    let serverProducts: [PackageDescription.Product] = []
+    let serverTestTargets: [PackageDescription.Target] = []
+    let nioDependencies: [PackageDescription.Package.Dependency] = []
+    let asyncHTTPClientDependencies: [PackageDescription.Package.Dependency] = []
+    let executableServerDependencies: [PackageDescription.Target.Dependency] = []
+#else
+    let serverTargets: [PackageDescription.Target] = [
+        .target(
+            name: "DocCStaticServer",
+            dependencies: [
+                .product(name: "NIOCore", package: "swift-nio"),
+                .product(name: "NIOPosix", package: "swift-nio"),
+                .product(name: "NIOHTTP1", package: "swift-nio"),
+            ],
+            path: "Sources/DocCStaticServer"
+        )
+    ]
+    let serverProducts: [PackageDescription.Product] = [
+        // Preview server library
+        .library(
+            name: "DocCStaticServer",
+            targets: ["DocCStaticServer"]
+        )
+    ]
+    let serverTestTargets: [PackageDescription.Target] = [
+        .testTarget(
+            name: "DocCStaticServerTests",
+            dependencies: [
+                "DocCStaticServer",
+                .product(name: "AsyncHTTPClient", package: "async-http-client"),
+            ],
+            path: "Tests/DocCStaticServerTests"
+        )
+    ]
+    let nioDependencies: [PackageDescription.Package.Dependency] = [
+        // HTTP server for preview
+        .package(url: "https://github.com/apple/swift-nio.git", from: "2.79.0")
+    ]
+    let asyncHTTPClientDependencies: [PackageDescription.Package.Dependency] = [
+        // HTTP client for testing (test-only)
+        .package(url: "https://github.com/swift-server/async-http-client.git", from: "1.9.0")
+    ]
+    let executableServerDependencies: [PackageDescription.Target.Dependency] = [
+        "DocCStaticServer"
+    ]
+#endif
+
 let package = Package(
     name: "swift-docc-static",
     platforms: [
-        .macOS(.v14),
+        .macOS(.v14)
     ],
     products: [
         // Command-line tool
@@ -23,7 +72,7 @@ let package = Package(
             name: "DocCStatic",
             targets: ["DocCStatic"]
         ),
-    ],
+    ] + serverProducts,
     dependencies: [
         // Core DocC functionality
         .package(url: "https://github.com/swiftlang/swift-docc.git", branch: "main"),
@@ -38,14 +87,14 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-system.git", from: "1.4.0"),
 
         .package(url: "https://github.com/swiftlang/swift-docc-plugin", from: "1.4.0"),
-    ],
+    ] + nioDependencies + asyncHTTPClientDependencies,
     targets: [
         .executableTarget(
             name: "docc-static",
             dependencies: [
                 "DocCStatic",
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
-            ],
+            ] + executableServerDependencies,
             path: "Sources/docc-static"
         ),
         .plugin(
@@ -57,7 +106,7 @@ let package = Package(
                 )
             ),
             dependencies: [
-                "docc-static",
+                "docc-static"
             ],
             path: "Plugins/GenerateStaticDocumentation"
         ),
@@ -74,9 +123,9 @@ let package = Package(
             name: "DocCStaticTests",
             dependencies: ["DocCStatic"],
             path: "Tests/DocCStaticTests"
-//            resources: [
-//                .copy("Fixtures"),
-//            ]
+                //            resources: [
+                //                .copy("Fixtures"),
+                //            ]
         ),
-    ]
+    ] + serverTargets + serverTestTargets
 )
