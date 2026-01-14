@@ -308,6 +308,10 @@ struct Preview: AsyncParsableCommand {
     @Flag(name: [.customShort("v"), .customLong("verbose")], help: "Enable verbose output.")
     var isVerbose: Bool = false
 
+    @Flag(
+        name: [.short, .customLong("summary")], help: "Show summary statistics after generation.")
+    var showSummary: Bool = false
+
     @Option(name: .long, help: "Custom HTML for the page footer.")
     var footer: String?
 
@@ -395,7 +399,25 @@ struct Preview: AsyncParsableCommand {
         )
 
         let generator = StaticDocumentationGenerator(configuration: configuration)
-        let _ = try await generator.generate()
+        let result = try await generator.generate()
+
+        if isVerbose || showSummary {
+            print(
+                """
+                Documentation generated successfully!
+                  Output: \(result.outputDirectory.path)
+                  Pages: \(result.generatedPages)
+                  Modules: \(result.modulesDocumented)
+                  Symbols: \(result.symbolsDocumented)
+                """)
+        }
+
+        if !result.warnings.isEmpty {
+            print("\nWarnings:")
+            for warning in result.warnings {
+                print("  \(warning)")
+            }
+        }
     }
 
     /// Opens the specified URL in the system's default browser.
