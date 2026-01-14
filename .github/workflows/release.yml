@@ -127,27 +127,11 @@ jobs:
           echo "Generated formula:"
           cat Formula/swift-docc-static.rb
 
-          # Commit and push
+          # Commit and push directly to master
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
 
-          git checkout -b "update-swift-docc-static-${TAG}"
+          git checkout master
           git add Formula/swift-docc-static.rb
           git commit -m "Update swift-docc-static to ${TAG}" -m "Release includes pre-built bottles for macOS and Linux"
-          git push origin "update-swift-docc-static-${TAG}"
-
-      - name: Create PR
-        env:
-          GH_TOKEN: ${{ secrets.HOMEBREW_GITHUB_TOKEN }}
-          TAG: ${{ github.event.inputs.tag || github.ref_name }}
-        run: |
-          cd homebrew-tap
-          gh pr create --title "Update swift-docc-static to ${TAG}" \
-            --body "Automated update of swift-docc-static formula for release ${TAG}
-
-          Includes pre-built bottles for:
-          - macOS ARM64 (Sequoia)
-          - Linux x86_64" \
-            --base master \
-            --head "update-swift-docc-static-${TAG}" \
-            --repo mipalgu/homebrew-tap
+          git push origin master
