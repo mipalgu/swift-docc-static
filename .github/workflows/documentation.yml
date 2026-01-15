@@ -40,6 +40,8 @@ jobs:
           .build/release/docc-static generate \
             --package-path . \
             --output .build/documentation \
+            -e 'SwiftDocC=https://swiftpackageindex.com/swiftlang/swift-docc' \
+            -e 'com.apple.documentation=https://developer.apple.com' \
             --verbose
 
       - name: Setup Pages

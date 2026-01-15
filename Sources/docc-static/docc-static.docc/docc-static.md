@@ -12,6 +12,9 @@ The `docc-static` command-line tool generates pure HTML/CSS documentation from S
 The output works locally as `file://` URLs and can be hosted on any static web server
 without requiring JavaScript (on the server or in the browser) for basic navigation.
 
+For programmatic access, see the <doc://DocCStatic/documentation/DocCStatic> library.
+For an integrated SPM workflow, use the <doc://GenerateStaticDocumentation/documentation/GenerateStaticDocumentation> plugin.
+
 ### Installation
 
 Install using Homebrew:
@@ -84,7 +87,7 @@ docc-static generate -t MyLib -t MyOtherLib
 docc-static generate -I -x ExcludedPackage
 
 # Link to external documentation
-docc-static generate -e Foundation=https://developer.apple.com/documentation/foundation
+docc-static generate -e com.apple.documentation=https://developer.apple.com
 ```
 
 ### render
@@ -114,8 +117,3 @@ docc-static preview --output ./docs --port 8080
 
 - <doc:ServerDeployment>
 - <doc:CIIntegration>
-
-### Related
-
-- ``DocCStatic``
-- ``GenerateStaticDocumentation``

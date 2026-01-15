@@ -91,7 +91,7 @@ docc-static render /path/to/MyLibrary.doccarchive --output ./docs
 | `-p, --package-path` | Path to the Swift package (default: current directory) |
 | `-o, --output` | Output directory for generated documentation |
 | `-t, --target` | Document specific targets only (can be repeated) |
-| `-v, --verbose` | Show detailed progress information |
+| `-v, --verbose` | Show detailled progress information |
 | `--disable-search` | Disable client-side search functionality |
 
 ## Next Steps

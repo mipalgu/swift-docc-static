@@ -106,7 +106,7 @@ For dependencies you don't want to build locally, link to their online documenta
 
 ```bash
 docc-static generate \
-    -e ArgumentParser=https://swiftpackageindex.com/apple/swift-argument-parser/documentation/argumentparser \
+    -e ArgumentParser=https://swiftpackageindex.com/apple/swift-argument-parser \
     --output ./docs
 ```
 

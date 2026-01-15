@@ -124,6 +124,13 @@ public struct Configuration: Sendable {
     /// all the way down. Set to `nil` to use the default footer.
     public var footerHTML: String?
 
+    /// Paths to documentation archives to use as dependencies for resolving external links.
+    ///
+    /// These archives must have been built with external link support enabled.
+    /// Use `doc://ModuleName/path` syntax in documentation to reference symbols
+    /// in these dependency archives.
+    public var dependencyArchives: [URL]
+
     /// The default footer HTML.
     public static let defaultFooter = """
         <a href="https://github.com/mipalgu/swift-docc-static">swift-docc-static</a> \
@@ -144,6 +151,7 @@ public struct Configuration: Sendable {
     ///   - scratchPath: Custom scratch path for builds, or nil for default.
     ///   - symbolGraphDir: Pre-generated symbol graphs, or nil to generate.
     ///   - footerHTML: Custom footer HTML, or nil for the default.
+    ///   - dependencyArchives: Documentation archives to resolve external links against.
     public init(
         packageDirectory: URL,
         outputDirectory: URL,
@@ -155,7 +163,8 @@ public struct Configuration: Sendable {
         isVerbose: Bool = false,
         scratchPath: URL? = nil,
         symbolGraphDir: URL? = nil,
-        footerHTML: String? = nil
+        footerHTML: String? = nil,
+        dependencyArchives: [URL] = []
     ) {
         self.packageDirectory = packageDirectory
         self.outputDirectory = outputDirectory
@@ -168,6 +177,7 @@ public struct Configuration: Sendable {
         self.scratchPath = scratchPath
         self.symbolGraphDir = symbolGraphDir
         self.footerHTML = footerHTML
+        self.dependencyArchives = dependencyArchives
     }
 }
 

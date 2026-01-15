@@ -82,6 +82,11 @@ struct Generate: AsyncParsableCommand {
         help: "External documentation URL for a dependency (format: PackageName=URL).")
     var externalDocs: [String] = []
 
+    @Option(
+        name: [.customShort("d"), .customLong("dependency")],
+        help: "Path to a documentation archive to resolve external links against (can be repeated).")
+    var dependency: [String] = []
+
     @Flag(
         name: [.customShort("D"), .customLong("disable-search")],
         help: "Disable client-side search functionality.")
@@ -140,7 +145,8 @@ struct Generate: AsyncParsableCommand {
             isVerbose: isVerbose,
             scratchPath: scratchPath.map { URL(fileURLWithPath: $0).standardizedFileURL },
             symbolGraphDir: symbolGraphDir.map { URL(fileURLWithPath: $0).standardizedFileURL },
-            footerHTML: footer
+            footerHTML: footer,
+            dependencyArchives: dependency.map { URL(fileURLWithPath: $0).standardizedFileURL }
         )
 
         let generator = StaticDocumentationGenerator(configuration: configuration)
@@ -300,6 +306,11 @@ struct Preview: AsyncParsableCommand {
         help: "External documentation URL for a dependency (format: PackageName=URL).")
     var externalDocs: [String] = []
 
+    @Option(
+        name: [.customShort("d"), .customLong("dependency")],
+        help: "Path to a documentation archive to resolve external links against (can be repeated).")
+    var dependency: [String] = []
+
     @Flag(
         name: [.customShort("D"), .customLong("disable-search")],
         help: "Disable client-side search functionality.")
@@ -395,7 +406,8 @@ struct Preview: AsyncParsableCommand {
             isVerbose: isVerbose,
             scratchPath: scratchPath.map { URL(fileURLWithPath: $0).standardizedFileURL },
             symbolGraphDir: symbolGraphDir.map { URL(fileURLWithPath: $0).standardizedFileURL },
-            footerHTML: footer
+            footerHTML: footer,
+            dependencyArchives: dependency.map { URL(fileURLWithPath: $0).standardizedFileURL }
         )
 
         let generator = StaticDocumentationGenerator(configuration: configuration)

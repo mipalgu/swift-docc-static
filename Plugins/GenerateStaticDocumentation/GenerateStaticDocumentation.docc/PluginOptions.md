@@ -60,7 +60,7 @@ Link to external documentation for packages you're not documenting locally:
 
 ```bash
 swift package generate-static-documentation \
-    --external-docs ArgumentParser=https://swiftpackageindex.com/apple/swift-argument-parser/documentation/argumentparser
+    --external-docs ArgumentParser=https://swiftpackageindex.com/apple/swift-argument-parser
 ```
 
 ### Search Functionality
@@ -81,7 +81,7 @@ swift package generate-static-documentation --footer "<p>Copyright 2024 My Compa
 
 ### Verbose Output
 
-Show detailed progress information:
+Show detailled progress information:
 
 ```bash
 swift package generate-static-documentation --verbose
@@ -120,7 +120,7 @@ Ready for hosting:
 ```bash
 swift package generate-static-documentation \
     --output ./public \
-    --external-docs Foundation=https://developer.apple.com/documentation/foundation
+    --external-docs com.apple.documentation=https://developer.apple.com
 ```
 
 ## Using with swift package Options

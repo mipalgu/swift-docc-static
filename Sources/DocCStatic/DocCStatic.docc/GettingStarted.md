@@ -111,6 +111,9 @@ let generator = StaticDocumentationGenerator(configuration: configuration)
 let result = try await generator.renderFromArchive(archiveURL)
 ```
 
+DocCStatic processes <doc://SwiftDocC/documentation/SwiftDocC/RenderNode> instances
+from the DocC archive and converts them to static HTML.
+
 ## Error Handling
 
 The generator throws ``GenerationError`` for recoverable errors:

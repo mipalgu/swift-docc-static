@@ -83,7 +83,7 @@ let configuration = Configuration(
     outputDirectory: outputURL,
     dependencyPolicy: .exclude(["SwiftNIO"]),
     externalDocumentationURLs: [
-        "SwiftNIO": URL(string: "https://swiftpackageindex.com/apple/swift-nio/documentation")!
+        "SwiftNIO": URL(string: "https://swiftpackageindex.com/apple/swift-nio")!
     ]
 )
 ```
@@ -162,7 +162,7 @@ let configuration = Configuration(
 
 ## Verbose Output
 
-Enable detailed logging during generation:
+Enable detailled logging during generation:
 
 ```swift
 let configuration = Configuration(
@@ -189,7 +189,7 @@ let configuration = Configuration(
     targets: ["MyLibrary"],
     dependencyPolicy: .exclude(["TestSupport"]),
     externalDocumentationURLs: [
-        "Foundation": URL(string: "https://developer.apple.com/documentation/foundation")!
+        "com.apple.documentation": URL(string: "https://developer.apple.com")!
     ],
     includeSearch: true,
     theme: ThemeConfiguration(

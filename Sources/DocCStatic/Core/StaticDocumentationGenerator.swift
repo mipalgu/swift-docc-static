@@ -200,6 +200,9 @@ public struct StaticDocumentationGenerator: Sendable {
         // Generate combined index page
         try generateIndexPage(consumer: consumer)
 
+        // Post-process HTML files to resolve doc:// links
+        try await postProcessDocLinks(navigationIndex: mergedNavigationIndex)
+
         // Write search index if enabled
         if configuration.includeSearch, let builder = searchIndexBuilder {
             try writeSearchIndex(builder)
@@ -405,7 +408,15 @@ public struct StaticDocumentationGenerator: Sendable {
             "--emit-digest",
             "--fallback-display-name", moduleName,
             "--fallback-bundle-identifier", moduleName,
+            // Always enable external link support so generated docs can be used as dependencies
+            "--enable-experimental-external-link-support",
         ]
+
+        // Add dependency archives for resolving external links
+        for archive in configuration.dependencyArchives {
+            arguments.append("--dependency")
+            arguments.append(archive.path)
+        }
 
         // Add catalog as the main input if provided
         if let catalogURL = catalog {
@@ -1045,13 +1056,11 @@ public struct StaticDocumentationGenerator: Sendable {
                 }
 
                 // Extract tutorial order from dropdown - all href links in dropdown-chapter or dropdown-item
-                let pattern = "href=\"[^\"]*\(moduleName)/([^/\"]+)/index\\.html\""
-                if let regex = try? NSRegularExpression(pattern: pattern, options: []) {
-                    let range = NSRange(html.startIndex..<html.endIndex, in: html)
-                    let matches = regex.matches(in: html, options: [], range: range)
-                    for match in matches {
-                        if let pathRange = Range(match.range(at: 1), in: html) {
-                            let path = String(html[pathRange])
+                let pattern = #"href="[^"]*"# + moduleName + #"/([^/"]+)/index\.html""#
+                if let regex = try? Regex(pattern) {
+                    for match in html.matches(of: regex) {
+                        if let pathCapture = match.output[1].substring {
+                            let path = String(pathCapture)
                             if !orderedTutorialPaths.contains(path) {
                                 orderedTutorialPaths.append(path)
                             }
@@ -1236,15 +1245,6 @@ public struct StaticDocumentationGenerator: Sendable {
             </body>
             </html>
             """
-    }
-
-    /// Escapes HTML special characters.
-    private func escapeHTML(_ string: String) -> String {
-        string
-            .replacingOccurrences(of: "&", with: "&amp;")
-            .replacingOccurrences(of: "<", with: "&lt;")
-            .replacingOccurrences(of: ">", with: "&gt;")
-            .replacingOccurrences(of: "\"", with: "&quot;")
     }
 
     // MARK: - Index Page Generation
@@ -1454,6 +1454,94 @@ public struct StaticDocumentationGenerator: Sendable {
             }
         }
         return max(0, count - 1)  // Subtract 1 for the module index itself
+    }
+
+    // MARK: - Doc Link Post-Processing
+
+    /// Post-processes all generated HTML files to resolve `doc://` URLs.
+    ///
+    /// This scans all HTML files in the output directory and replaces any unresolved
+    /// `doc://BUNDLE_ID/path` URLs with proper `<a href="...">` links.
+    ///
+    /// - Parameter navigationIndex: The merged navigation index containing module information.
+    private func postProcessDocLinks(navigationIndex: NavigationIndex?) async throws {
+        let fileManager = FileManager.default
+
+        // Build map of documented modules (module name -> bundle ID)
+        // For simplicity, we use module name as bundle ID since DocC typically uses module names
+        var documentedModules: [String: String] = [:]
+        if let navIndex = navigationIndex {
+            for module in navIndex.allModules() {
+                // Use the module title as both name and bundle ID
+                // The post-processor will match case-insensitively
+                documentedModules[module.title] = module.title
+            }
+            // Also add any included archive identifiers
+            if let archiveIDs = navIndex.includedArchiveIdentifiers {
+                for id in archiveIDs {
+                    documentedModules[id] = id
+                }
+            }
+        }
+
+        // Create the post-processor
+        let postProcessor = DocLinkPostProcessor(
+            documentedModules: documentedModules,
+            externalURLs: configuration.externalDocumentationURLs
+        )
+
+        // Find all HTML files in the output directory
+        guard let enumerator = fileManager.enumerator(
+            at: configuration.outputDirectory,
+            includingPropertiesForKeys: [.isRegularFileKey],
+            options: [.skipsHiddenFiles]
+        ) else {
+            return
+        }
+
+        // Collect all HTML files with their depths
+        var htmlFiles: [(url: URL, depth: Int)] = []
+        while let fileURL = enumerator.nextObject() as? URL {
+            guard fileURL.pathExtension == "html" else { continue }
+
+            // Calculate depth from output directory
+            let relativePath = fileURL.path.replacingOccurrences(
+                of: configuration.outputDirectory.path + "/",
+                with: ""
+            )
+            let depth = relativePath.components(separatedBy: "/").count - 1
+            htmlFiles.append((fileURL, depth))
+        }
+
+        // Process files in parallel
+        let isVerbose = configuration.isVerbose
+        let processedCount = try await withThrowingTaskGroup(of: Bool.self) { group in
+            for (fileURL, depth) in htmlFiles {
+                group.addTask {
+                    let content = try String(contentsOf: fileURL, encoding: .utf8)
+                    let processed = postProcessor.process(content, currentDepth: depth)
+
+                    // Only write if content changed
+                    if processed != content {
+                        try processed.write(to: fileURL, atomically: true, encoding: .utf8)
+                        return true
+                    }
+                    return false
+                }
+            }
+
+            var count = 0
+            for try await wasModified in group {
+                if wasModified {
+                    count += 1
+                }
+            }
+            return count
+        }
+
+        if isVerbose && processedCount > 0 {
+            log("Post-processed \(processedCount) HTML files for doc:// links")
+        }
     }
 
     // MARK: - Private Methods
@@ -1833,6 +1921,9 @@ enum DocCStylesheet {
             h1 { font-size: 2.125rem; margin-top: 0; }
             h2 { font-size: 1.5rem; border-bottom: 1px solid var(--docc-border); padding-bottom: 0.5rem; }
             h3 { font-size: 1.1875rem; }
+            h4 { font-size: 1.0625rem; }
+            h5 { font-size: 1rem; }
+            h6 { font-size: 0.9375rem; }
 
             p { margin-bottom: 1em; }
             ul, ol { margin-bottom: 1em; padding-left: 1.5em; }
@@ -2584,7 +2675,11 @@ enum DocCStylesheet {
             .doc-main > ol,
             .doc-main > pre,
             .doc-main > h2,
-            .doc-main > h3 {
+            .doc-main > h3,
+            .doc-main > h4,
+            .doc-main > h5,
+            .doc-main > h6,
+            .doc-main > .aside {
                 padding-left: 3rem;
                 padding-right: 3rem;
             }
@@ -2663,7 +2758,7 @@ enum DocCStylesheet {
             .aside {
                 padding: 1rem;
                 border-radius: 8px;
-                margin: 1rem 0;
+                margin: 1rem 1.5rem;
             }
 
             .aside.note {
@@ -2760,7 +2855,7 @@ enum DocCStylesheet {
             }
 
             .index-intro a {
-                color: var(--docc-link);
+                color: var(--docc-accent);
             }
 
             .index-intro a:hover {
