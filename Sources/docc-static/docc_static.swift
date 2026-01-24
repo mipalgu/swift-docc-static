@@ -104,13 +104,8 @@ struct Generate: AsyncParsableCommand {
 
     @Option(
         name: .long,
-        help: "Built-in theme name (e.g., 'classic'). Use --theme-settings for custom themes.")
+        help: "Theme name or path to theme-settings.json file (e.g., 'default', 'classic', or '/path/to/custom.json').")
     var theme: String?
-
-    @Option(
-        name: .long,
-        help: "Path to a theme-settings.json file for custom theming.")
-    var themeSettings: String?
 
     @Flag(
         name: .long,
@@ -197,43 +192,14 @@ struct Generate: AsyncParsableCommand {
 
     /// Parses the theme configuration from command line options.
     private func parseThemeConfiguration() throws -> ThemeConfiguration {
-        let includeDarkMode = !disableDarkMode
-
-        // Handle theme-settings.json file
-        if let themeSettingsPath = themeSettings {
-            let url = URL(fileURLWithPath: themeSettingsPath).standardizedFileURL
-            guard FileManager.default.fileExists(atPath: url.path) else {
-                throw ValidationError("Theme settings file not found: \(url.path)")
-            }
-            do {
-                let settings = try ThemeSettingsParser.parse(contentsOf: url)
-                return ThemeConfiguration(
-                    themeSettings: settings,
-                    includeDarkMode: includeDarkMode
-                )
-            } catch {
-                throw ValidationError("Failed to parse theme settings: \(error.localizedDescription)")
-            }
-        }
-
-        // Handle built-in theme name
-        if let themeName = theme {
-            guard let builtIn = ThemeSettings.BuiltInTheme(rawValue: themeName) else {
-                let available = ThemeSettings.BuiltInTheme.allCases.map(\.rawValue).joined(separator: ", ")
-                throw ValidationError(
-                    "Unknown theme '\(themeName)'. Available themes: \(available)")
-            }
-            return ThemeConfiguration(
-                builtInTheme: builtIn,
-                includeDarkMode: includeDarkMode
+        do {
+            return try ThemeConfiguration.resolveTheme(
+                theme,
+                includeDarkMode: !disableDarkMode
             )
+        } catch let error as ThemeResolutionError {
+            throw ValidationError(error.description)
         }
-
-        // Default theme
-        return ThemeConfiguration(
-            builtInTheme: .default,
-            includeDarkMode: includeDarkMode
-        )
     }
 }
 
@@ -388,13 +354,8 @@ struct Preview: AsyncParsableCommand {
 
     @Option(
         name: .long,
-        help: "Built-in theme name (e.g., 'classic'). Use --theme-settings for custom themes.")
+        help: "Theme name or path to theme-settings.json file (e.g., 'default', 'classic', or '/path/to/custom.json').")
     var theme: String?
-
-    @Option(
-        name: .long,
-        help: "Path to a theme-settings.json file for custom theming.")
-    var themeSettings: String?
 
     @Flag(
         name: .long,
@@ -513,43 +474,14 @@ struct Preview: AsyncParsableCommand {
 
     /// Parses the theme configuration from command line options.
     private func parseThemeConfiguration() throws -> ThemeConfiguration {
-        let includeDarkMode = !disableDarkMode
-
-        // Handle theme-settings.json file
-        if let themeSettingsPath = themeSettings {
-            let url = URL(fileURLWithPath: themeSettingsPath).standardizedFileURL
-            guard FileManager.default.fileExists(atPath: url.path) else {
-                throw ValidationError("Theme settings file not found: \(url.path)")
-            }
-            do {
-                let settings = try ThemeSettingsParser.parse(contentsOf: url)
-                return ThemeConfiguration(
-                    themeSettings: settings,
-                    includeDarkMode: includeDarkMode
-                )
-            } catch {
-                throw ValidationError("Failed to parse theme settings: \(error.localizedDescription)")
-            }
-        }
-
-        // Handle built-in theme name
-        if let themeName = theme {
-            guard let builtIn = ThemeSettings.BuiltInTheme(rawValue: themeName) else {
-                let available = ThemeSettings.BuiltInTheme.allCases.map(\.rawValue).joined(separator: ", ")
-                throw ValidationError(
-                    "Unknown theme '\(themeName)'. Available themes: \(available)")
-            }
-            return ThemeConfiguration(
-                builtInTheme: builtIn,
-                includeDarkMode: includeDarkMode
+        do {
+            return try ThemeConfiguration.resolveTheme(
+                theme,
+                includeDarkMode: !disableDarkMode
             )
+        } catch let error as ThemeResolutionError {
+            throw ValidationError(error.description)
         }
-
-        // Default theme
-        return ThemeConfiguration(
-            builtInTheme: .default,
-            includeDarkMode: includeDarkMode
-        )
     }
 
     /// Opens the specified URL in the system's default browser.

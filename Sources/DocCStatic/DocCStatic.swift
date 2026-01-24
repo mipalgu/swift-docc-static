@@ -290,4 +290,113 @@ public struct ThemeConfiguration: Sendable, Equatable {
         self.customCSS = customCSS
         self.themeSettings = themeSettings
     }
+
+    /// Resolves a theme string to a theme configuration.
+    ///
+    /// This method provides smart theme resolution with the following logic:
+    /// 1. If `themeString` is `nil`, returns the default theme
+    /// 2. If the string is a path to an existing file, loads it as a custom theme
+    /// 3. If the string matches a built-in theme name exactly, uses that theme
+    /// 4. If the string fuzzy-matches a built-in theme name, uses that theme
+    /// 5. Otherwise, throws an error
+    ///
+    /// Fuzzy matching allows shortcuts like "classic" to match "docc-static-classic".
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// // Default theme
+    /// let theme1 = try ThemeConfiguration.resolveTheme(nil)
+    ///
+    /// // Custom theme file
+    /// let theme2 = try ThemeConfiguration.resolveTheme("/path/to/custom.json")
+    ///
+    /// // Exact match
+    /// let theme3 = try ThemeConfiguration.resolveTheme("default")
+    ///
+    /// // Fuzzy match
+    /// let theme4 = try ThemeConfiguration.resolveTheme("classic") // matches "docc-static-classic"
+    /// ```
+    ///
+    /// - Parameters:
+    ///   - themeString: The theme string to resolve (file path or theme name).
+    ///   - includeDarkMode: Whether to include dark mode styles.
+    ///   - customCSS: Optional custom CSS to append.
+    /// - Returns: A theme configuration for the resolved theme.
+    /// - Throws: `ThemeResolutionError` if the theme cannot be resolved.
+    public static func resolveTheme(
+        _ themeString: String?,
+        includeDarkMode: Bool = true,
+        customCSS: String? = nil
+    ) throws -> ThemeConfiguration {
+        // 1. No theme specified - use default
+        guard let themeString = themeString else {
+            return ThemeConfiguration(
+                builtInTheme: .default,
+                includeDarkMode: includeDarkMode,
+                customCSS: customCSS
+            )
+        }
+
+        // 2. Check if it's a file path that exists
+        let fileManager = FileManager.default
+        if fileManager.fileExists(atPath: themeString) {
+            let url = URL(fileURLWithPath: themeString).standardizedFileURL
+            do {
+                let settings = try ThemeSettingsParser.parse(contentsOf: url)
+                return ThemeConfiguration(
+                    themeSettings: settings,
+                    includeDarkMode: includeDarkMode,
+                    customCSS: customCSS
+                )
+            } catch {
+                throw ThemeResolutionError.invalidThemeFile(themeString, error.localizedDescription)
+            }
+        }
+
+        // 3. Try exact match with built-in themes
+        if let builtIn = ThemeSettings.BuiltInTheme(rawValue: themeString) {
+            return ThemeConfiguration(
+                builtInTheme: builtIn,
+                includeDarkMode: includeDarkMode,
+                customCSS: customCSS
+            )
+        }
+
+        // 4. Try fuzzy/containment match
+        let allThemes = ThemeSettings.BuiltInTheme.allCases
+        if let fuzzyMatch = allThemes.first(where: {
+            $0.rawValue.contains(themeString) || themeString.contains($0.rawValue)
+        }) {
+            return ThemeConfiguration(
+                builtInTheme: fuzzyMatch,
+                includeDarkMode: includeDarkMode,
+                customCSS: customCSS
+            )
+        }
+
+        // 5. Not found - throw error
+        let available = allThemes.map(\.rawValue).joined(separator: ", ")
+        throw ThemeResolutionError.themeNotFound(themeString, available)
+    }
+}
+
+// MARK: - Theme Resolution Errors
+
+/// Errors that can occur during theme resolution.
+public enum ThemeResolutionError: Error, CustomStringConvertible {
+    /// The specified theme was not found.
+    case themeNotFound(String, String)
+
+    /// The theme file exists but could not be parsed.
+    case invalidThemeFile(String, String)
+
+    public var description: String {
+        switch self {
+        case .themeNotFound(let name, let available):
+            return "Theme '\(name)' not found. Available themes: \(available)"
+        case .invalidThemeFile(let path, let reason):
+            return "Failed to parse theme file '\(path)': \(reason)"
+        }
+    }
 }
