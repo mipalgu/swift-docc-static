@@ -1811,6 +1811,9 @@ enum DocCStylesheet {
                 line-height: var(--spacing-body-line-height, 25px);
                 font-weight: var(--spacing-body-font-weight, 400);
                 -webkit-font-smoothing: antialiased;
+
+                /* Default padding for code blocks (matches swift-docc-render) */
+                --code-block-style-elements-padding: 8px 14px;
             }
 
             a {
@@ -1837,7 +1840,8 @@ enum DocCStylesheet {
                 background: var(--color-pre-background, var(--color-fill-secondary));
                 border: var(--spacing-pre-border, 1px solid var(--color-fill-gray));
                 border-radius: var(--spacing-pre-border-radius, 4px);
-                padding: var(--spacing-pre-padding, 8px 14px);
+                /* Use swift-docc-render variable name, fallback to legacy for classic theme */
+                padding: var(--code-block-style-elements-padding, var(--spacing-pre-padding, 8px 14px));
                 overflow-x: auto;
                 margin: var(--spacing-pre-margin, 27px 0 0);
                 max-width: 100%;
