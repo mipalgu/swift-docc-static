@@ -1,0 +1,12 @@
+{
+  "theme": {
+    "color": {
+      "syntax-keywords": { "light": "#9333ea", "dark": "#c084fc" },
+      "syntax-other-type-names": { "light": "#0891b2", "dark": "#22d3ee" },
+      "syntax-strings": { "light": "#059669", "dark": "#34d399" },
+      "syntax-numbers": { "light": "#0284c7", "dark": "#38bdf8" },
+      "syntax-comments": { "light": "#64748b", "dark": "#94a3b8" },
+      "link": "#6366f1"
+    }
+  }
+}

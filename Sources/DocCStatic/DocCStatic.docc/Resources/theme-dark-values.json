@@ -1,0 +1,10 @@
+{
+  "theme": {
+    "color": {
+      "fill": { "light": "#ffffff", "dark": "#0d0d0d" },
+      "fill-secondary": { "light": "#f5f5f7", "dark": "#1a1a1c" },
+      "figure-gray": { "light": "#1d1d1f", "dark": "#f5f5f7" },
+      "link": { "light": "#6366f1", "dark": "#818cf8" }
+    }
+  }
+}

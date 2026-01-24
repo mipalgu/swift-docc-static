@@ -1,0 +1,12 @@
+{
+  "theme": {
+    "color": {
+      "fill": { "light": "#fafafa", "dark": "#0d0d0d" },
+      "fill-secondary": { "light": "#f0f0f2", "dark": "#1a1a1c" },
+      "fill-tertiary": { "light": "#e5e5e7", "dark": "#262628" },
+      "figure-gray": { "light": "#1d1d1f", "dark": "#f5f5f7" },
+      "figure-gray-secondary": { "light": "#6e6e73", "dark": "#a1a1a6" },
+      "link": "#6366f1"
+    }
+  }
+}

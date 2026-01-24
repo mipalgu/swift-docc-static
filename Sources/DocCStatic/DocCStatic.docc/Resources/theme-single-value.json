@@ -1,0 +1,8 @@
+{
+  "theme": {
+    "color": {
+      "fill": { "light": "#ffffff", "dark": "#0d0d0d" },
+      "link": "#6366f1"
+    }
+  }
+}

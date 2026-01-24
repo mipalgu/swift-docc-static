@@ -89,6 +89,7 @@ let package = Package(
         .package(url: "https://github.com/swiftlang/swift-docc-plugin", from: "1.4.0"),
     ] + nioDependencies + asyncHTTPClientDependencies,
     targets: [
+        // Main command-line tool
         .executableTarget(
             name: "docc-static",
             dependencies: [
@@ -97,6 +98,16 @@ let package = Package(
             ] + executableServerDependencies,
             path: "Sources/docc-static"
         ),
+        // Theme code generator (build tool)
+        .executableTarget(
+            name: "theme-codegen",
+            dependencies: [
+                "DocCStaticThemes",
+                .product(name: "ArgumentParser", package: "swift-argument-parser"),
+            ],
+            path: "Sources/theme-codegen"
+        ),
+        // SPM plugin for documentation generation
         .plugin(
             name: "GenerateStaticDocumentation",
             capability: .command(
@@ -110,6 +121,19 @@ let package = Package(
             ],
             path: "Plugins/GenerateStaticDocumentation"
         ),
+        // Build tool plugin for theme code generation
+        .plugin(
+            name: "GenerateThemeCode",
+            capability: .buildTool(),
+            dependencies: ["theme-codegen"],
+            path: "Plugins/GenerateThemeCode"
+        ),
+        // Theme parsing and code generation library
+        .target(
+            name: "DocCStaticThemes",
+            path: "Sources/DocCStaticThemes"
+        ),
+        // Core documentation generation library
         .target(
             name: "DocCStatic",
             dependencies: [
@@ -117,15 +141,20 @@ let package = Package(
                 .product(name: "Subprocess", package: "swift-subprocess"),
                 .product(name: "SystemPackage", package: "swift-system"),
             ],
-            path: "Sources/DocCStatic"
+            path: "Sources/DocCStatic",
+            plugins: ["GenerateThemeCode"]
         ),
+        // Theme library tests
+        .testTarget(
+            name: "DocCStaticThemesTests",
+            dependencies: ["DocCStaticThemes"],
+            path: "Tests/DocCStaticThemesTests"
+        ),
+        // Core library tests
         .testTarget(
             name: "DocCStaticTests",
             dependencies: ["DocCStatic"],
             path: "Tests/DocCStaticTests"
-                //            resources: [
-                //                .copy("Fixtures"),
-                //            ]
         ),
     ] + serverTargets + serverTestTargets
 )

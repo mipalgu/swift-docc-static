@@ -1195,12 +1195,12 @@ public struct StaticDocumentationGenerator: Sendable {
                         </div>
                     </section>
                 </main>
-                <footer class="doc-footer">
+                <footer class="documentation-footer">
                     <div class="footer-content">\(footerContent)</div>
                     <div class="appearance-selector" id="appearance-selector">
-                        <button type="button" class="appearance-btn" data-theme="light" aria-label="Light mode">Light</button>
-                        <button type="button" class="appearance-btn" data-theme="dark" aria-label="Dark mode">Dark</button>
-                        <button type="button" class="appearance-btn active" data-theme="auto" aria-label="Auto mode">Auto</button>
+                        <button type="button" class="appearance-btn" data-color-scheme="light" aria-label="Light mode">Light</button>
+                        <button type="button" class="appearance-btn" data-color-scheme="dark" aria-label="Dark mode">Dark</button>
+                        <button type="button" class="appearance-btn active" data-color-scheme="auto" aria-label="Auto mode">Auto</button>
                     </div>
                 </footer>
                 <script>
@@ -1212,34 +1212,34 @@ public struct StaticDocumentationGenerator: Sendable {
                     selector.style.visibility = 'visible';
 
                     const buttons = selector.querySelectorAll('.appearance-btn');
-                    const html = document.documentElement;
+                    const body = document.body;
 
                     // Load saved preference
-                    const saved = localStorage.getItem('docc-theme') || 'auto';
+                    const saved = localStorage.getItem('docc-color-scheme') || 'auto';
                     applyTheme(saved);
                     updateButtons(saved);
 
                     // Add click handlers
                     buttons.forEach(btn => {
                         btn.addEventListener('click', () => {
-                            const theme = btn.dataset.theme;
-                            localStorage.setItem('docc-theme', theme);
-                            applyTheme(theme);
-                            updateButtons(theme);
+                            const scheme = btn.dataset.colorScheme;
+                            localStorage.setItem('docc-color-scheme', scheme);
+                            applyTheme(scheme);
+                            updateButtons(scheme);
                         });
                     });
 
-                    function applyTheme(theme) {
-                        if (theme === 'auto') {
-                            html.removeAttribute('data-theme');
+                    function applyTheme(scheme) {
+                        if (scheme === 'auto') {
+                            body.removeAttribute('data-color-scheme');
                         } else {
-                            html.setAttribute('data-theme', theme);
+                            body.setAttribute('data-color-scheme', scheme);
                         }
                     }
 
-                    function updateButtons(theme) {
+                    function updateButtons(scheme) {
                         buttons.forEach(btn => {
-                            btn.classList.toggle('active', btn.dataset.theme === theme);
+                            btn.classList.toggle('active', btn.dataset.colorScheme === scheme);
                         });
                     }
                 })();
@@ -1756,43 +1756,43 @@ enum DocCStylesheet {
         return """
             /* swift-docc-static generated stylesheet - DocC-style layout */
             :root {
-                --docc-bg: #ffffff;
-                --docc-bg-secondary: #f5f5f7;
-                --docc-fg: #1d1d1f;
-                --docc-fg-secondary: #6e6e73;
-                --docc-accent: \(theme.accentColour);
-                --docc-border: #d2d2d7;
+                --color-fill: #fff;
+                --color-fill-secondary: #f7f7f7;
+                --color-fill-tertiary: #f0f0f0;
+                --color-figure-gray: #000;
+                --color-figure-gray-secondary: #666;
+                --color-link: \(theme.accentColour);
+                --color-fill-gray: #ccc;
+                --color-fill-gray-secondary: #f5f5f5;
                 --sidebar-width: 320px;
                 --header-height: 52px;
 
                 /* Typography */
-                --typeface-body: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif;
-                --typeface-mono: 'SF Mono', SFMono-Regular, ui-monospace, Menlo, monospace;
-                --typeface-headline: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
+                --typography-html-font: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+                --typography-html-font-mono: 'SF Mono', Menlo, monospace;
 
-                /* Swift syntax colours */
-                --swift-keyword: #ad3da4;
-                --swift-type: #703daa;
-                --swift-literal: #d12f1b;
-                --swift-comment: #707f8c;
-                --swift-string: #d12f1b;
-                --swift-number: #272ad8;
+                /* Syntax highlighting colours */
+                --color-syntax-keywords: #ad3da4;
+                --color-syntax-other-type-names: #703daa;
+                --color-syntax-strings: #d12f1b;
+                --color-syntax-comments: #707f8c;
+                --color-syntax-numbers: #272ad8;
 
-                /* Symbol badge colours - monochrome like DocC */
-                --badge-bg: #f5f5f7;
-                --badge-fg: #6e6e73;
-                --badge-border: #d2d2d7;
+                /* Symbol badge colours */
+                --color-badge-default: #f5f5f5;
+                --color-badge-text: #666;
+                --color-badge-border: #ccc;
 
                 /* Aside colours */
-                --aside-note-bg: #e3f2fd;
-                --aside-note-border: #2196f3;
-                --aside-warning-bg: #fff3e0;
-                --aside-warning-border: #ff9800;
-                --aside-important-bg: #fce4ec;
-                --aside-important-border: #e91e63;
+                --color-aside-note-background: #e3f2fd;
+                --color-aside-note-border: #2196f3;
+                --color-aside-warning-background: #fff3e0;
+                --color-aside-warning-border: #ff9800;
+                --color-aside-important-background: #fce4ec;
+                --color-aside-important-border: #e91e63;
 
                 /* Decorative colours */
-                --hero-decoration: #d2d2d7;
+                --color-documentation-intro-fill: #f0f0f0;
             }
 
             \(theme.includeDarkMode ? darkModeStyles : "")
@@ -1804,15 +1804,17 @@ enum DocCStylesheet {
             }
 
             body {
-                font-family: var(--typeface-body);
-                background: var(--docc-bg);
-                color: var(--docc-fg);
-                line-height: 1.5;
+                font-family: var(--typography-html-font, 'Helvetica Neue', Helvetica, Arial, sans-serif);
+                font-size: var(--spacing-body-font-size, 17px);
+                background: var(--color-fill);
+                color: var(--color-figure-gray);
+                line-height: var(--spacing-body-line-height, 25px);
+                font-weight: var(--spacing-body-font-weight, 400);
                 -webkit-font-smoothing: antialiased;
             }
 
             a {
-                color: var(--docc-accent);
+                color: var(--color-link);
                 text-decoration: none;
             }
 
@@ -1821,69 +1823,52 @@ enum DocCStylesheet {
             }
 
             code {
-                font-family: var(--typeface-mono);
-                font-size: 0.875em;
-                background: var(--docc-bg-secondary);
-                padding: 0.125em 0.25em;
-                border-radius: 4px;
+                font-family: var(--typography-html-font-mono);
+                font-size: var(--spacing-code-font-size, 0.875em);
+                background: var(--color-fill-secondary);
+                padding: var(--spacing-code-padding, 0.125em 0.25em);
+                border-radius: var(--spacing-code-border-radius, 4px);
             }
 
             pre {
-                font-family: var(--typeface-mono);
-                font-size: 0.8125rem;
-                background: var(--docc-bg-secondary);
-                padding: 1rem;
-                border-radius: 12px;
+                font-family: var(--typography-html-font-mono);
+                font-size: var(--spacing-pre-font-size, 15px);
+                line-height: var(--spacing-pre-line-height, 25px);
+                background: var(--color-pre-background, var(--color-fill-secondary));
+                border: var(--spacing-pre-border, 1px solid var(--color-fill-gray));
+                border-radius: var(--spacing-pre-border-radius, 4px);
+                padding: var(--spacing-pre-padding, 8px 14px);
                 overflow-x: auto;
-                line-height: 1.6;
-                margin: 1rem 1.5rem;
+                margin: var(--spacing-pre-margin, 27px 0 0);
+                max-width: 100%;
+                box-sizing: border-box;
+                position: var(--spacing-pre-code-position, static);
             }
 
             pre code {
                 display: block;
-                position: relative;
-                left: -1.5rem;
                 background: none;
-                padding: 0;
-            }
-
-            /* Code blocks inside list items: no left offset since list provides indentation */
-            li pre {
-                margin-left: 0;
-                margin-right: 0;
-            }
-
-            li pre code {
-                position: static;
-                left: 0;
-            }
-
-            /* Code blocks inside declarations: no left offset to prevent truncation */
-            .declaration pre {
-                margin-left: 0;
-                margin-right: 0;
-            }
-
-            .declaration pre code {
-                position: static;
-                left: 0;
+                padding: var(--spacing-pre-code-padding, 0);
+                position: var(--spacing-pre-code-position, static);
+                left: var(--spacing-pre-code-left, 0);
             }
 
             table {
                 border-collapse: collapse;
-                margin: 1rem 1.5rem;
-                font-size: 0.9375rem;
+                margin: var(--spacing-table-margin, 1rem 0);
+                font-size: var(--spacing-table-font-size, 17px);
+                line-height: var(--spacing-table-line-height, 25px);
             }
 
             th, td {
-                padding: 0.75rem 1rem;
+                padding: var(--spacing-table-cell-padding, 0.75rem 1rem);
                 text-align: left;
-                border-bottom: 1px solid var(--docc-border);
+                border-bottom: 1px solid var(--color-fill-gray);
             }
 
             th {
-                font-weight: 600;
-                color: var(--docc-fg-secondary);
+                font-weight: var(--spacing-table-header-font-weight, 600);
+                color: var(--color-figure-gray-secondary);
             }
 
             tr:last-child td {
@@ -1892,70 +1877,108 @@ enum DocCStylesheet {
 
             /* Syntax highlighting */
             .syntax-keyword {
-                color: var(--swift-keyword);
+                color: var(--color-syntax-keywords);
                 font-weight: 500;
             }
 
             .syntax-string {
-                color: var(--swift-string);
+                color: var(--color-syntax-strings);
             }
 
             .syntax-number {
-                color: var(--swift-number);
+                color: var(--color-syntax-numbers);
             }
 
             .syntax-comment {
-                color: var(--swift-comment);
+                color: var(--color-syntax-comments);
                 font-style: italic;
             }
 
             .syntax-type {
-                color: var(--swift-type);
+                color: var(--color-syntax-other-type-names);
             }
 
             .syntax-attribute {
-                color: var(--swift-keyword);
+                color: var(--color-syntax-keywords);
             }
 
             h1, h2, h3, h4, h5, h6 {
-                font-family: var(--typeface-headline);
-                font-weight: 600;
-                margin-top: 1.5em;
-                margin-bottom: 0.5em;
+                font-family: var(--typography-html-font, 'Helvetica Neue', Helvetica, Arial, sans-serif);
+                margin-top: var(--spacing-heading-margin-top, 1.5em);
+                margin-bottom: var(--spacing-heading-margin-bottom, 0.5em);
             }
 
-            h1 { font-size: 2.125rem; margin-top: 0; }
-            h2 { font-size: 1.5rem; border-bottom: 1px solid var(--docc-border); padding-bottom: 0.5rem; }
-            h3 { font-size: 1.1875rem; }
-            h4 { font-size: 1.0625rem; }
-            h5 { font-size: 1rem; }
-            h6 { font-size: 0.9375rem; }
+            h1 {
+                font-size: var(--spacing-h1-font-size, 32px);
+                line-height: var(--spacing-h1-line-height, 36px);
+                font-weight: var(--spacing-h1-font-weight, 400);
+                margin-top: 0;
+                margin-bottom: var(--spacing-h1-margin-bottom, 0);
+            }
+            h2 {
+                font-size: var(--spacing-h2-font-size, 21px);
+                line-height: var(--spacing-h2-line-height, 25px);
+                font-weight: var(--spacing-h2-font-weight, 600);
+                border-bottom: var(--spacing-h2-border-bottom, none);
+                padding-bottom: var(--spacing-h2-padding-bottom, 0);
+            }
+            h3 {
+                font-size: var(--spacing-h3-font-size, 28px);
+                line-height: var(--spacing-h3-line-height, 32px);
+                font-weight: var(--spacing-h3-font-weight, 400);
+            }
+            h4 {
+                font-size: var(--spacing-h4-font-size, 24px);
+                line-height: var(--spacing-h4-line-height, 28px);
+                font-weight: var(--spacing-h4-font-weight, 600);
+            }
+            h5 {
+                font-size: var(--spacing-h5-font-size, 22px);
+                line-height: var(--spacing-h5-line-height, 26px);
+                font-weight: var(--spacing-h5-font-weight, 600);
+            }
+            h6 {
+                font-size: var(--spacing-h6-font-size, 17px);
+                line-height: var(--spacing-h6-line-height, 25px);
+                font-weight: var(--spacing-h6-font-weight, 600);
+            }
+
+            /* Heading anchor links - configurable via --color-heading-link variable */
+            h1 a, h2 a, h3 a, h4 a, h5 a, h6 a {
+                color: var(--color-heading-link, inherit);
+                text-decoration: none;
+            }
+            h1 a:hover, h2 a:hover, h3 a:hover, h4 a:hover, h5 a:hover, h6 a:hover {
+                color: var(--color-heading-link, inherit);
+                text-decoration: underline;
+            }
 
             p { margin-bottom: 1em; }
             ul, ol { margin-bottom: 1em; padding-left: 1.5em; }
             li { margin-bottom: 0.5em; }
 
-            /* Syntax highlighting */
-            .keyword { color: var(--swift-keyword); font-weight: 500; }
-            .type { color: var(--swift-type); }
-            .identifier { color: #4b21b0; }
-            .param { color: #5d6c79; }
-            .literal { color: var(--swift-literal); }
-            .comment { color: var(--swift-comment); font-style: italic; }
-            .string { color: var(--swift-string); }
-            .number { color: var(--swift-number); }
-            .attribute { color: #947100; }
-            .label { color: var(--docc-fg); }
+            /* Syntax highlighting - token-* classes match swift-docc-render */
+            .token-keyword { color: var(--color-syntax-keywords); font-weight: 500; }
+            .token-type { color: var(--color-syntax-other-type-names); }
+            .token-identifier { color: var(--color-figure-gray); }
+            .token-param { color: var(--color-figure-gray-secondary); }
+            .token-string { color: var(--color-syntax-strings); }
+            .token-number { color: var(--color-syntax-numbers); }
+            .token-attribute { color: var(--color-syntax-keywords); }
+            .token-label { color: var(--color-figure-gray); }
+            /* Legacy class names for backward compatibility */
+            .keyword { color: var(--color-syntax-keywords); font-weight: 500; }
+            .comment { color: var(--color-syntax-comments); font-style: italic; }
 
             /* Header bar */
-            .doc-header {
+            .documentation-nav {
                 position: fixed;
                 top: 0;
                 left: 0;
                 right: 0;
                 height: var(--header-height);
-                background: var(--docc-bg);
-                border-bottom: 1px solid var(--docc-border);
+                background: var(--color-fill);
+                border-bottom: 1px solid var(--color-fill-gray);
                 z-index: 100;
             }
 
@@ -1964,17 +1987,46 @@ enum DocCStylesheet {
                 height: 100%;
                 display: flex;
                 align-items: center;
-                justify-content: space-between;
                 padding: 0 1.5rem;
+                gap: 0.5rem;
+            }
+
+            .sidenav-toggle {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+                color: var(--color-figure-gray);
+                margin: 0 -5px;
+                border-radius: 4px;
+            }
+
+            .sidenav-icon-wrapper {
+                padding: 5px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: 4px;
+            }
+
+            .sidenav-toggle:hover .sidenav-icon-wrapper {
+                background: var(--color-fill-gray-tertiary);
+            }
+
+            .sidenav-icon {
+                display: flex;
+                width: 19px;
+                height: 19px;
             }
 
             .header-title {
                 display: flex;
                 align-items: center;
                 gap: 0.5rem;
-                font-weight: 600;
-                font-size: 1rem;
-                color: var(--docc-fg);
+                font-weight: var(--spacing-header-title-font-weight, 600);
+                font-size: var(--spacing-header-title-font-size, 17px);
+                line-height: var(--spacing-header-title-line-height, 25px);
+                color: var(--color-figure-gray);
                 text-decoration: none;
             }
 
@@ -1983,18 +2035,13 @@ enum DocCStylesheet {
             }
 
             .header-icon {
-                display: flex;
-                align-items: center;
-            }
-
-            .header-icon svg {
-                width: 20px;
-                height: 20px;
+                display: none;
             }
 
             .header-language {
+                margin-left: auto;
                 font-size: 0.875rem;
-                color: var(--docc-fg-secondary);
+                color: var(--color-figure-gray-secondary);
             }
 
             /* Sidebar toggle (hidden checkbox) */
@@ -2004,66 +2051,19 @@ enum DocCStylesheet {
                 pointer-events: none;
             }
 
-            /* Toggle button (hamburger) */
-            .sidebar-toggle-button {
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                width: 36px;
-                height: 36px;
-                cursor: pointer;
-                border-radius: 6px;
-                transition: background-color 0.2s ease;
-            }
-
-            .sidebar-toggle-button:hover {
-                background: var(--docc-bg-secondary);
-            }
-
-            .toggle-icon {
-                display: flex;
-                flex-direction: column;
-                justify-content: space-between;
-                width: 18px;
-                height: 14px;
-            }
-
-            .toggle-icon .bar {
-                display: block;
-                width: 100%;
-                height: 2px;
-                background: var(--docc-fg);
-                border-radius: 1px;
-                transition: transform 0.3s ease, opacity 0.3s ease;
-                transform-origin: center;
-            }
-
-            /* Hamburger to X animation when sidebar is collapsed */
-            .sidebar-toggle-checkbox:checked ~ .doc-header .toggle-icon .bar:nth-child(1) {
-                transform: translateY(6px) rotate(45deg);
-            }
-
-            .sidebar-toggle-checkbox:checked ~ .doc-header .toggle-icon .bar:nth-child(2) {
-                opacity: 0;
-            }
-
-            .sidebar-toggle-checkbox:checked ~ .doc-header .toggle-icon .bar:nth-child(3) {
-                transform: translateY(-6px) rotate(-45deg);
-            }
-
             /* Two-column layout */
-            .doc-layout {
+            .documentation-layout {
                 display: flex;
                 min-height: 100vh;
                 padding-top: var(--header-height);
             }
 
             /* Sidebar */
-            .doc-sidebar {
+            .sidebar {
                 width: var(--sidebar-width);
                 flex-shrink: 0;
-                border-right: 1px solid var(--docc-border);
-                background: var(--docc-bg);
+                border-right: 1px solid var(--color-fill-gray);
+                background: var(--color-fill);
                 position: fixed;
                 top: var(--header-height);
                 left: 0;
@@ -2075,7 +2075,7 @@ enum DocCStylesheet {
             }
 
             /* Sidebar collapsed state */
-            .sidebar-toggle-checkbox:checked ~ .doc-layout .doc-sidebar {
+            .sidebar-toggle-checkbox:checked ~ .documentation-layout .sidebar {
                 transform: translateX(-100%);
             }
 
@@ -2085,12 +2085,15 @@ enum DocCStylesheet {
                 padding: 1rem 0;
             }
 
-            .sidebar-module {
-                font-weight: 600;
-                font-size: 1rem;
-                padding: 0.5rem 1.25rem;
-                margin: 0 0 0.5rem 0;
+            /* Module title inside technology-title link */
+            .card-link {
+                font-weight: var(--spacing-card-link-font-weight, 600);
+                font-size: var(--spacing-card-link-font-size, 19px);
+                line-height: var(--spacing-card-link-line-height, 23px);
+                padding: var(--spacing-card-link-padding, 0);
+                margin: var(--spacing-card-link-margin, 0);
                 border: none;
+                color: var(--color-card-link, var(--color-figure-gray));
             }
 
             .sidebar-section {
@@ -2104,22 +2107,17 @@ enum DocCStylesheet {
             }
 
             .module-section .module-header {
-                display: flex;
-                align-items: center;
-                padding: 0.5rem 1rem;
-            }
-
-            .module-section .module-header .disclosure-chevron {
-                position: static;
-                margin-right: 0.5rem;
+                position: relative;
             }
 
             .module-section .module-name {
-                font-size: 0.9375rem;
-                font-weight: 600;
-                color: var(--docc-fg);
+                font-size: var(--spacing-module-name-font-size, 17px);
+                line-height: var(--spacing-module-name-line-height, 25px);
+                font-weight: var(--spacing-module-name-font-weight, 600);
+                color: var(--color-figure-gray);
                 margin: 0;
                 padding: 0;
+                text-transform: none;
             }
 
             .module-section .module-contents {
@@ -2136,13 +2134,17 @@ enum DocCStylesheet {
                 transform: rotate(90deg);
             }
 
-            .sidebar-heading {
-                font-size: 0.8125rem;
-                font-weight: 600;
-                color: var(--docc-fg-secondary);
-                padding: 0.75rem 1.25rem 0.25rem;
-                margin: 0;
+            /* Section headings and article links (matches swift-docc .leaf-link) */
+            .leaf-link {
+                font-size: var(--spacing-leaf-link-font-size, 17px);
+                line-height: var(--spacing-leaf-link-line-height, 25px);
+                font-weight: var(--spacing-leaf-link-font-weight, 600);
+                color: var(--color-leaf-link, var(--color-figure-gray-secondary));
+                padding: var(--spacing-leaf-link-padding, 0);
+                margin: var(--spacing-leaf-link-margin, 0);
                 border: none;
+                text-transform: var(--spacing-leaf-link-text-transform, none);
+                letter-spacing: var(--spacing-leaf-link-letter-spacing, normal);
             }
 
             .sidebar-list {
@@ -2151,45 +2153,62 @@ enum DocCStylesheet {
                 margin: 0;
             }
 
-            .sidebar-item {
+            .navigator-card {
                 display: flex;
                 align-items: center;
                 gap: 0.375rem;
-                padding: 0.1875rem 1rem 0.1875rem 0.75rem;
-                font-size: 0.8125rem;
-                line-height: 1.3;
+                padding: var(--spacing-navigator-card-padding, 5px 20px);
+                font-size: var(--spacing-navigator-card-font-size, 17px);
+                line-height: var(--spacing-navigator-card-line-height, 25px);
+                min-height: var(--spacing-navigator-card-min-height, 32px);
+                box-sizing: border-box;
             }
 
-            .sidebar-item a {
-                color: var(--docc-fg);
+            .navigator-card a {
+                color: var(--color-figure-gray);
                 text-decoration: none;
             }
 
-            .sidebar-item:hover {
-                background: var(--docc-bg-secondary);
+            .navigator-card:hover {
+                background: var(--color-fill-secondary);
             }
 
-            .sidebar-item a:hover {
+            .navigator-card a:hover {
                 text-decoration: none;
             }
 
-            .sidebar-item.active,
-            .sidebar-item.selected {
+            .navigator-card.active,
+            .navigator-card.selected {
                 background: rgba(0, 102, 204, 0.1);
             }
 
-            .sidebar-item.selected > .nav-link {
+            .navigator-card.selected > .nav-link {
                 font-weight: 500;
             }
 
-            /* Sidebar module link */
-            .sidebar-module-link {
+            /* Module link (matches swift-docc .technology-title) */
+            .technology-title {
+                display: var(--spacing-technology-title-display, flex);
+                justify-content: var(--spacing-technology-title-justify-content, space-between);
+                align-items: var(--spacing-technology-title-align-items, center);
                 text-decoration: none;
-                color: inherit;
+                color: var(--color-technology-title, var(--color-link));
+                background: var(--color-technology-title-background, var(--color-fill-secondary));
+                padding: var(--spacing-technology-title-padding, 8px 10px 8px 20px);
+                margin: var(--spacing-technology-title-margin, 0 20px);
+                border-radius: var(--spacing-technology-title-border-radius, 4px);
             }
 
-            .sidebar-module-link:hover {
+            .technology-title:hover {
                 text-decoration: none;
+                background: var(--color-technology-title-background-hover, var(--color-fill-gray));
+            }
+
+            /* Chevron inside .technology-title */
+            .technology-title .disclosure-chevron {
+                order: var(--spacing-disclosure-chevron-order, 2);
+                margin-left: var(--spacing-disclosure-chevron-margin-left, 0.5rem);
+                margin-right: var(--spacing-disclosure-chevron-margin-right, 0);
             }
 
             /* Disclosure chevron for expandable items */
@@ -2207,7 +2226,7 @@ enum DocCStylesheet {
                 height: 14px;
                 cursor: pointer;
                 flex-shrink: 0;
-                color: var(--docc-fg-secondary);
+                color: var(--color-figure-gray-secondary);
             }
 
             .disclosure-chevron svg {
@@ -2221,11 +2240,11 @@ enum DocCStylesheet {
                 transform: rotate(90deg);
             }
 
-            .sidebar-item.expandable {
+            .navigator-card.expandable {
                 flex-wrap: wrap;
             }
 
-            .sidebar-item.expandable > .nav-link {
+            .navigator-card.expandable > .nav-link {
                 flex: 1;
             }
 
@@ -2251,7 +2270,7 @@ enum DocCStylesheet {
             .nav-group-header {
                 font-size: 0.75rem;
                 font-weight: 600;
-                color: var(--docc-fg-secondary);
+                color: var(--color-figure-gray-secondary);
                 padding: 0.5rem 0 0.25rem;
                 list-style: none;
             }
@@ -2296,12 +2315,12 @@ enum DocCStylesheet {
             .nav-group-header.expandable .nav-link.group-link {
                 font-size: 0.75rem;
                 font-weight: 600;
-                color: var(--docc-fg-secondary);
+                color: var(--color-figure-gray-secondary);
                 text-decoration: none;
             }
 
             .nav-group-header.expandable .nav-link.group-link:hover {
-                color: var(--docc-accent);
+                color: var(--color-link);
             }
 
             .nav-group-header.expandable .nav-children {
@@ -2330,17 +2349,17 @@ enum DocCStylesheet {
             }
 
             .nav-child-item a {
-                color: var(--docc-fg);
+                color: var(--color-figure-gray);
                 text-decoration: none;
             }
 
             .nav-child-item:hover a {
-                color: var(--docc-accent);
+                color: var(--color-link);
             }
 
             .nav-child-item.selected a {
                 font-weight: 500;
-                color: var(--docc-accent);
+                color: var(--color-link);
             }
 
             /* Symbol icon for articles/tutorials */
@@ -2351,7 +2370,7 @@ enum DocCStylesheet {
                 width: 14px;
                 height: 14px;
                 flex-shrink: 0;
-                color: var(--docc-fg-secondary);
+                color: var(--color-figure-gray-secondary);
             }
 
             .symbol-icon svg {
@@ -2365,15 +2384,15 @@ enum DocCStylesheet {
                 align-items: center;
                 gap: 0.5rem;
                 padding: 0.75rem 1rem;
-                border-top: 1px solid var(--docc-border);
-                background: var(--docc-bg);
+                border-top: 1px solid var(--color-fill-gray);
+                background: var(--color-fill);
                 flex-shrink: 0;
             }
 
             .filter-icon {
                 display: flex;
                 align-items: center;
-                color: var(--docc-fg-secondary);
+                color: var(--color-figure-gray-secondary);
             }
 
             .filter-shortcut {
@@ -2384,13 +2403,13 @@ enum DocCStylesheet {
                 height: 20px;
                 font-size: 0.75rem;
                 font-weight: 500;
-                border: 1px solid var(--docc-border);
+                border: 1px solid var(--color-fill-gray);
                 border-radius: 4px;
-                color: var(--docc-fg-secondary);
+                color: var(--color-figure-gray-secondary);
             }
 
             /* Symbol type badges - monochrome like DocC */
-            .symbol-badge {
+            .badge {
                 width: 17px;
                 height: 17px;
                 border-radius: 3px;
@@ -2400,9 +2419,9 @@ enum DocCStylesheet {
                 font-size: 0.6875rem;
                 font-weight: 600;
                 flex-shrink: 0;
-                background: var(--badge-bg);
-                color: var(--badge-fg);
-                border: 1px solid var(--badge-border);
+                background: var(--color-badge-default);
+                color: var(--color-badge-text);
+                border: 1px solid var(--color-badge-border);
             }
 
             .badge-article,
@@ -2417,14 +2436,14 @@ enum DocCStylesheet {
                 flex: 1;
                 padding: 0.5rem 0.75rem;
                 font-size: 0.875rem;
-                border: 1px solid var(--docc-border);
+                border: 1px solid var(--color-fill-gray);
                 border-radius: 6px;
-                background: var(--docc-bg-secondary);
+                background: var(--color-fill-secondary);
             }
 
             .filter-input:focus {
                 outline: none;
-                border-color: var(--docc-accent);
+                border-color: var(--color-link);
                 box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.15);
             }
 
@@ -2444,7 +2463,7 @@ enum DocCStylesheet {
             .search-results-sections {
                 margin-bottom: 1rem;
                 padding-bottom: 1rem;
-                border-bottom: 1px solid var(--docc-border);
+                border-bottom: 1px solid var(--color-fill-gray);
             }
 
             .search-result-section {
@@ -2454,7 +2473,7 @@ enum DocCStylesheet {
             .search-result-heading {
                 font-size: 0.75rem;
                 font-weight: 600;
-                color: var(--docc-fg-secondary);
+                color: var(--color-figure-gray-secondary);
                 text-transform: uppercase;
                 letter-spacing: 0.05em;
                 margin: 0 0 0.5rem 0;
@@ -2464,7 +2483,7 @@ enum DocCStylesheet {
             .search-result-subheading {
                 font-size: 0.6875rem;
                 font-weight: 600;
-                color: var(--docc-fg-secondary);
+                color: var(--color-figure-gray-secondary);
                 text-transform: uppercase;
                 letter-spacing: 0.04em;
                 margin: 0.5rem 0 0.25rem 0;
@@ -2484,18 +2503,18 @@ enum DocCStylesheet {
             }
 
             .search-result-item:hover {
-                background: var(--docc-bg-secondary);
+                background: var(--color-fill-secondary);
             }
 
             .search-result-link {
                 display: block;
-                color: var(--docc-fg);
+                color: var(--color-figure-gray);
                 text-decoration: none;
                 font-size: 0.875rem;
             }
 
             .search-result-link:hover {
-                color: var(--docc-accent);
+                color: var(--color-link);
             }
 
             .search-result-title {
@@ -2506,7 +2525,7 @@ enum DocCStylesheet {
             .search-result-summary {
                 margin: 0.25rem 0 0 0;
                 font-size: 0.75rem;
-                color: var(--docc-fg-secondary);
+                color: var(--color-figure-gray-secondary);
                 line-height: 1.4;
                 overflow: hidden;
                 text-overflow: ellipsis;
@@ -2516,21 +2535,21 @@ enum DocCStylesheet {
             }
 
             /* Footer - accounts for fixed sidebar */
-            .doc-footer {
+            .documentation-footer {
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
                 padding: 1rem 1.5rem;
                 margin-left: var(--sidebar-width);
-                border-top: 1px solid var(--docc-border);
-                background: var(--docc-bg);
+                border-top: 1px solid var(--color-fill-gray);
+                background: var(--color-fill);
                 font-size: 0.8125rem;
-                color: var(--docc-fg-secondary);
+                color: var(--color-figure-gray-secondary);
                 transition: margin-left 0.3s ease;
             }
 
             /* Footer expands when sidebar is collapsed */
-            .sidebar-toggle-checkbox:checked ~ .doc-footer {
+            .sidebar-toggle-checkbox:checked ~ .documentation-footer {
                 margin-left: 0;
             }
 
@@ -2539,13 +2558,13 @@ enum DocCStylesheet {
             }
 
             .footer-content a {
-                color: var(--docc-accent);
+                color: var(--color-link);
             }
 
             /* Appearance selector */
             .appearance-selector {
                 display: inline-flex;
-                border: 1px solid var(--docc-accent);
+                border: 1px solid var(--color-link);
                 border-radius: 6px;
                 overflow: hidden;
             }
@@ -2556,13 +2575,13 @@ enum DocCStylesheet {
                 font-weight: 500;
                 border: none;
                 background: transparent;
-                color: var(--docc-accent);
+                color: var(--color-link);
                 cursor: pointer;
                 transition: background-color 0.15s ease, color 0.15s ease;
             }
 
             .appearance-btn:not(:last-child) {
-                border-right: 1px solid var(--docc-accent);
+                border-right: 1px solid var(--color-link);
             }
 
             .appearance-btn:hover {
@@ -2570,7 +2589,7 @@ enum DocCStylesheet {
             }
 
             .appearance-btn.active {
-                background: var(--docc-accent);
+                background: var(--color-link);
                 color: white;
             }
 
@@ -2580,7 +2599,7 @@ enum DocCStylesheet {
             }
 
             /* Main content */
-            .doc-main {
+            .doc-topic {
                 flex: 1;
                 margin-left: var(--sidebar-width);
                 padding: 0;
@@ -2589,57 +2608,70 @@ enum DocCStylesheet {
             }
 
             /* Main content expanded when sidebar is collapsed */
-            .sidebar-toggle-checkbox:checked ~ .doc-layout .doc-main {
+            .sidebar-toggle-checkbox:checked ~ .documentation-layout .doc-topic {
                 margin-left: 0;
                 max-width: 100%;
             }
 
             /* Breadcrumbs */
-            .breadcrumbs {
+            .hierarchy {
                 display: flex;
                 align-items: center;
                 gap: 0.5rem;
                 font-size: 0.8125rem;
-                color: var(--docc-fg-secondary);
+                color: var(--color-figure-gray-secondary);
                 padding: 1rem 3rem;
-                border-bottom: 1px solid var(--docc-border);
+                border-bottom: 1px solid var(--color-fill-gray);
             }
 
-            .breadcrumbs a {
-                color: var(--docc-accent);
+            .hierarchy a {
+                color: var(--color-link);
                 text-decoration: none;
             }
 
-            .breadcrumbs a:hover {
+            .hierarchy a:hover {
                 text-decoration: underline;
             }
 
-            .breadcrumbs .separator {
-                color: var(--docc-fg-secondary);
+            .hierarchy .separator {
+                color: var(--color-figure-gray-secondary);
             }
 
             /* Hero section */
-            .hero-section {
-                display: flex;
-                align-items: flex-start;
-                justify-content: space-between;
-                background: var(--docc-bg-secondary);
-                padding: 2rem 3rem 2.5rem;
-                margin-bottom: 2rem;
-                position: relative;
+            .documentation-hero {
+                color: var(--color-figure-gray);
                 overflow: hidden;
+                text-align: left;
+                position: relative;
+                padding-right: 0;
             }
 
-            .hero-content {
-                flex: 1;
-                max-width: 70%;
+            .documentation-hero::before {
+                content: "";
+                background: var(--color-documentation-intro-fill, var(--color-fill-secondary));
+                position: absolute;
+                width: 100%;
+                height: 100%;
+            }
+
+            .documentation-hero__content {
+                padding-top: var(--spacing-hero-padding-top, 40px);
+                padding-bottom: var(--spacing-hero-padding-bottom, 40px);
+                position: relative;
+                z-index: 1;
+                max-width: var(--spacing-hero-max-width, 820px);
+                margin-left: var(--spacing-hero-margin-left, auto);
+                margin-right: var(--spacing-hero-margin-right, auto);
+                padding-left: var(--spacing-hero-padding-left, 0);
+                padding-right: var(--spacing-hero-padding-right, 0);
+                box-sizing: border-box;
             }
 
             .hero-decoration {
                 flex-shrink: 0;
                 width: 200px;
                 height: 200px;
-                color: var(--hero-decoration);
+                color: var(--color-documentation-intro-fill);
                 opacity: 0.6;
                 margin-left: 2rem;
             }
@@ -2649,43 +2681,83 @@ enum DocCStylesheet {
                 height: 100%;
             }
 
+            /* Technology icon for modules - background decoration */
+            .documentation-hero .icon {
+                position: absolute;
+                margin-top: 10px;
+                margin-right: 25px;
+                right: 0;
+                width: 250px;
+                height: calc(100% - 20px);
+                box-sizing: border-box;
+            }
+
+            .background-icon {
+                color: var(--color-figure-gray-secondary);
+                display: block;
+                width: 250px;
+                height: auto;
+                opacity: 0.15;
+                mix-blend-mode: normal;
+                position: absolute;
+                top: 50%;
+                left: 0;
+                transform: translateY(-50%);
+                max-height: 100%;
+            }
+
+            .background-icon img,
+            .background-icon svg {
+                width: 100%;
+                height: 100%;
+            }
+
+            @media only screen and (max-width: 735px) {
+                .documentation-hero .icon {
+                    display: none;
+                }
+            }
+
             .eyebrow {
-                font-size: 0.8125rem;
-                color: var(--docc-fg-secondary);
-                margin-bottom: 0.25rem;
+                font-size: var(--spacing-eyebrow-font-size, 21px);
+                line-height: var(--spacing-eyebrow-line-height, 25px);
+                color: var(--color-figure-gray-secondary);
+                margin-bottom: var(--spacing-eyebrow-margin-bottom, 15px);
                 text-transform: capitalize;
             }
 
-            .hero-section h1 {
+            .documentation-hero h1 {
                 margin-top: 0;
                 margin-bottom: 0.5rem;
             }
 
-            .hero-section .abstract {
-                font-size: 1.1875rem;
-                color: var(--docc-fg-secondary);
+            .documentation-hero .abstract {
+                font-size: var(--spacing-abstract-font-size, 21px);
+                line-height: var(--spacing-abstract-line-height, 29px);
+                color: var(--color-figure-gray-secondary);
                 margin-bottom: 0;
             }
 
             .abstract {
-                font-size: 1.1875rem;
-                color: var(--docc-fg-secondary);
-                margin-bottom: 1.5rem;
+                font-size: var(--spacing-abstract-font-size, 21px);
+                line-height: var(--spacing-abstract-line-height, 29px);
+                color: var(--color-figure-gray-secondary);
+                margin-bottom: var(--spacing-abstract-margin-bottom, 1.5rem);
             }
 
             /* Content sections within main */
-            .doc-main section,
-            .doc-main .declaration,
-            .doc-main > p,
-            .doc-main > ul,
-            .doc-main > ol,
-            .doc-main > pre,
-            .doc-main > h2,
-            .doc-main > h3,
-            .doc-main > h4,
-            .doc-main > h5,
-            .doc-main > h6,
-            .doc-main > .aside {
+            .doc-topic section,
+            .doc-topic .declaration,
+            .doc-topic > p,
+            .doc-topic > ul,
+            .doc-topic > ol,
+            .doc-topic > pre,
+            .doc-topic > h2,
+            .doc-topic > h3,
+            .doc-topic > h4,
+            .doc-topic > h5,
+            .doc-topic > h6,
+            .doc-topic > .aside {
                 padding-left: 3rem;
                 padding-right: 3rem;
             }
@@ -2693,6 +2765,7 @@ enum DocCStylesheet {
             .topics,
             .relationships,
             .see-also,
+            .mentioned-in,
             .discussion,
             .parameters {
                 padding-top: 1rem;
@@ -2706,21 +2779,32 @@ enum DocCStylesheet {
                 padding: 2rem;
             }
 
+            /* Declaration section - matches swift-docc-render structure */
             .declaration {
-                background: var(--docc-bg-secondary);
-                padding: 1rem 1.25rem;
-                border-radius: 12px;
-                margin-bottom: 1.5rem;
+                margin: var(--spacing-declaration-margin, 30px 0 0 0);
+            }
+            .declaration .source {
+                background: var(--color-code-background, var(--color-fill-secondary));
+                border: var(--spacing-declaration-border, 1px solid var(--color-grid, var(--color-fill-gray)));
+                padding: var(--spacing-declaration-padding, 8px 14px);
+                border-radius: var(--spacing-declaration-border-radius, 4px);
+                font-size: var(--spacing-declaration-font-size, 15px);
+                line-height: var(--spacing-declaration-line-height, 25px);
+                margin: var(--spacing-declaration-source-margin, 0);
+                overflow-x: auto;
+            }
+            .declaration .source code {
+                white-space: pre;
             }
 
-            nav.breadcrumbs {
+            nav.hierarchy {
                 font-size: 0.8125rem;
-                color: var(--docc-fg-secondary);
+                color: var(--color-figure-gray-secondary);
                 margin-bottom: 1rem;
             }
 
-            nav.breadcrumbs a {
-                color: var(--docc-fg-secondary);
+            nav.hierarchy a {
+                color: var(--color-figure-gray-secondary);
             }
 
             /* Symbol cards in Topics section */
@@ -2730,14 +2814,14 @@ enum DocCStylesheet {
                 gap: 0;
             }
 
-            .symbol-card {
+            .topic-link-container {
                 display: flex;
                 align-items: flex-start;
                 gap: 0.75rem;
                 padding: 0.75rem 0;
             }
 
-            .symbol-card .symbol-badge {
+            .topic-link-container .badge {
                 margin-top: 0.125rem;
             }
 
@@ -2747,14 +2831,14 @@ enum DocCStylesheet {
             }
 
             .symbol-name {
-                font-family: var(--typeface-body);
+                font-family: var(--typography-html-font);
                 font-weight: 400;
                 display: block;
                 margin-bottom: 0.25rem;
             }
 
             .symbol-summary {
-                color: var(--docc-fg-secondary);
+                color: var(--color-figure-gray-secondary);
                 font-size: 0.875rem;
                 margin: 0;
                 line-height: 1.4;
@@ -2768,18 +2852,18 @@ enum DocCStylesheet {
             }
 
             .aside.note {
-                background: var(--aside-note-bg);
-                border-left: 3px solid var(--aside-note-border);
+                background: var(--color-aside-note-background);
+                border-left: 3px solid var(--color-aside-note-border);
             }
 
             .aside.warning {
-                background: var(--aside-warning-bg);
-                border-left: 3px solid var(--aside-warning-border);
+                background: var(--color-aside-warning-background);
+                border-left: 3px solid var(--color-aside-warning-border);
             }
 
             .aside.important {
-                background: var(--aside-important-bg);
-                border-left: 3px solid var(--aside-important-border);
+                background: var(--color-aside-important-background);
+                border-left: 3px solid var(--color-aside-important-border);
             }
 
             .aside .label {
@@ -2792,11 +2876,11 @@ enum DocCStylesheet {
                 text-align: center;
                 margin-bottom: 2rem;
                 padding-bottom: 1rem;
-                border-bottom: 1px solid var(--docc-border);
+                border-bottom: 1px solid var(--color-fill-gray);
             }
 
             .index-header .subtitle {
-                color: var(--docc-fg-secondary);
+                color: var(--color-figure-gray-secondary);
                 font-size: 1.1rem;
             }
 
@@ -2814,7 +2898,7 @@ enum DocCStylesheet {
             .index-intro h2 {
                 font-size: 1.5rem;
                 margin: 1.5rem 0 1rem;
-                color: var(--docc-fg);
+                color: var(--color-figure-gray);
                 border-bottom: none;
                 padding-bottom: 0;
             }
@@ -2822,7 +2906,7 @@ enum DocCStylesheet {
             .index-intro h3 {
                 font-size: 1.25rem;
                 margin: 1.25rem 0 0.75rem;
-                color: var(--docc-fg);
+                color: var(--color-figure-gray);
             }
 
             .index-intro ul, .index-intro ol {
@@ -2835,20 +2919,20 @@ enum DocCStylesheet {
             }
 
             .index-intro code {
-                background: var(--docc-bg-secondary);
+                background: var(--color-fill-secondary);
                 padding: 0.15rem 0.4rem;
                 border-radius: 4px;
-                font-family: var(--typeface-mono);
+                font-family: var(--typography-html-font-mono);
                 font-size: 0.9em;
             }
 
             .index-intro pre {
-                background: var(--docc-bg-secondary);
+                background: var(--color-fill-secondary);
                 padding: 1rem 1.25rem;
                 border-radius: 12px;
                 overflow-x: auto;
                 margin: 1rem 0;
-                font-family: var(--typeface-mono);
+                font-family: var(--typography-html-font-mono);
                 font-size: 0.8125rem;
                 line-height: 1.6;
             }
@@ -2861,7 +2945,7 @@ enum DocCStylesheet {
             }
 
             .index-intro a {
-                color: var(--docc-accent);
+                color: var(--color-link);
             }
 
             .index-intro a:hover {
@@ -2877,16 +2961,16 @@ enum DocCStylesheet {
                 width: 100%;
                 padding: 0.75rem 1rem;
                 font-size: 1rem;
-                border: 1px solid var(--docc-border);
+                border: 1px solid var(--color-fill-gray);
                 border-radius: 8px;
-                background: var(--docc-bg);
-                color: var(--docc-fg);
+                background: var(--color-fill);
+                color: var(--color-figure-gray);
             }
 
             .search-results {
                 margin-top: 1rem;
-                background: var(--docc-bg);
-                border: 1px solid var(--docc-border);
+                background: var(--color-fill);
+                border: 1px solid var(--color-fill-gray);
                 border-radius: 8px;
                 max-height: 400px;
                 overflow-y: auto;
@@ -2901,7 +2985,7 @@ enum DocCStylesheet {
 
             .search-result-item {
                 padding: 0.75rem 1rem;
-                border-bottom: 1px solid var(--docc-border);
+                border-bottom: 1px solid var(--color-fill-gray);
             }
 
             .search-result-item:last-child {
@@ -2909,7 +2993,7 @@ enum DocCStylesheet {
             }
 
             .search-result-item:hover {
-                background: var(--docc-bg-secondary);
+                background: var(--color-fill-secondary);
             }
 
             .result-link {
@@ -2926,8 +3010,8 @@ enum DocCStylesheet {
                 font-size: 0.75rem;
                 padding: 0.1rem 0.4rem;
                 border-radius: 4px;
-                background: var(--docc-bg-secondary);
-                color: var(--docc-fg-secondary);
+                background: var(--color-fill-secondary);
+                color: var(--color-figure-gray-secondary);
             }
 
             .result-type-symbol {
@@ -2947,18 +3031,18 @@ enum DocCStylesheet {
 
             .result-summary {
                 font-size: 0.875rem;
-                color: var(--docc-fg-secondary);
+                color: var(--color-figure-gray-secondary);
                 margin-top: 0.25rem;
             }
 
             .no-results {
                 padding: 1rem;
-                color: var(--docc-fg-secondary);
+                color: var(--color-figure-gray-secondary);
                 text-align: center;
             }
 
             .search-unavailable {
-                color: var(--docc-fg-secondary);
+                color: var(--color-figure-gray-secondary);
                 font-size: 0.875rem;
             }
 
@@ -2970,19 +3054,19 @@ enum DocCStylesheet {
 
             .module-card {
                 padding: 1.25rem;
-                border: 1px solid var(--docc-border);
+                border: 1px solid var(--color-fill-gray);
                 border-radius: 12px;
-                background: var(--docc-bg);
+                background: var(--color-fill);
                 transition: box-shadow 0.2s, border-color 0.2s;
             }
 
             .module-card:hover {
-                border-color: var(--docc-accent);
+                border-color: var(--color-link);
                 box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
             }
 
             .module-name {
-                font-family: var(--typeface-mono);
+                font-family: var(--typography-html-font-mono);
                 font-size: 1.1rem;
                 font-weight: 600;
                 display: block;
@@ -2990,13 +3074,13 @@ enum DocCStylesheet {
             }
 
             .module-abstract {
-                color: var(--docc-fg-secondary);
+                color: var(--color-figure-gray-secondary);
                 font-size: 0.9rem;
                 margin-bottom: 0.5rem;
             }
 
             .module-stats {
-                color: var(--docc-fg-secondary);
+                color: var(--color-figure-gray-secondary);
                 font-size: 0.8rem;
             }
 
@@ -3004,7 +3088,7 @@ enum DocCStylesheet {
             .tutorials-section {
                 margin-top: 2.5rem;
                 padding-top: 2rem;
-                border-top: 1px solid var(--docc-border);
+                border-top: 1px solid var(--color-fill-gray);
             }
 
             .tutorials-section h2 {
@@ -3022,14 +3106,14 @@ enum DocCStylesheet {
 
             .tutorial-collection-card {
                 padding: 1.25rem;
-                border: 1px solid var(--docc-border);
+                border: 1px solid var(--color-fill-gray);
                 border-radius: 12px;
-                background: var(--docc-bg);
+                background: var(--color-fill);
                 transition: box-shadow 0.2s, border-color 0.2s;
             }
 
             .tutorial-collection-card:hover {
-                border-color: var(--docc-accent);
+                border-color: var(--color-link);
                 box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
             }
 
@@ -3041,7 +3125,7 @@ enum DocCStylesheet {
             }
 
             .tutorial-collection-stats {
-                color: var(--docc-fg-secondary);
+                color: var(--color-figure-gray-secondary);
                 font-size: 0.8rem;
             }
 
@@ -3055,23 +3139,23 @@ enum DocCStylesheet {
                 --sidebar-width: 0px;
             }
 
-            body.tutorial-page .doc-sidebar {
+            body.tutorial-page .sidebar {
                 display: none;
             }
 
-            body.tutorial-page .doc-main {
+            body.tutorial-page .doc-topic {
                 margin-left: 0;
                 max-width: 100%;
                 padding: 0;
             }
 
-            body.tutorial-page .doc-footer,
-            body.tutorial-overview-page .doc-footer,
-            body.index-page .doc-footer {
+            body.tutorial-page .documentation-footer,
+            body.tutorial-overview-page .documentation-footer,
+            body.index-page .documentation-footer {
                 margin-left: 0;
             }
 
-            body.tutorial-page .doc-layout {
+            body.tutorial-page .documentation-layout {
                 padding-top: var(--header-height);
             }
 
@@ -3082,8 +3166,8 @@ enum DocCStylesheet {
                 left: 0;
                 right: 0;
                 height: var(--header-height);
-                background: var(--docc-bg);
-                border-bottom: 1px solid var(--docc-border);
+                background: var(--color-fill);
+                border-bottom: 1px solid var(--color-fill-gray);
                 z-index: 100;
                 display: flex;
                 align-items: center;
@@ -3100,18 +3184,18 @@ enum DocCStylesheet {
             .tutorial-nav-title {
                 font-size: 0.9375rem;
                 font-weight: 600;
-                color: var(--docc-fg);
+                color: var(--color-figure-gray);
                 text-decoration: none;
                 white-space: nowrap;
             }
 
             .tutorial-nav-title:hover {
-                color: var(--docc-accent);
+                color: var(--color-link);
                 text-decoration: none;
             }
 
             .nav-separator {
-                color: var(--docc-fg-secondary);
+                color: var(--color-figure-gray-secondary);
                 font-size: 0.875rem;
             }
 
@@ -3139,13 +3223,13 @@ enum DocCStylesheet {
             }
 
             .tutorial-dropdown-toggle {
-                background: var(--docc-bg);
-                border: 1px solid var(--docc-border);
+                background: var(--color-fill);
+                border: 1px solid var(--color-fill-gray);
                 border-radius: 6px;
                 padding: 0.5rem 0.75rem;
                 font-size: 0.8125rem;
                 font-weight: 500;
-                color: var(--docc-fg);
+                color: var(--color-figure-gray);
                 cursor: pointer;
                 display: flex;
                 align-items: center;
@@ -3155,7 +3239,7 @@ enum DocCStylesheet {
             }
 
             .tutorial-dropdown-toggle:hover {
-                background: var(--docc-bg-secondary);
+                background: var(--color-fill-secondary);
             }
 
             .dropdown-label {
@@ -3181,8 +3265,8 @@ enum DocCStylesheet {
                 left: 0;
                 min-width: 100%;
                 max-width: 320px;
-                background: var(--docc-bg);
-                border: 1px solid var(--docc-border);
+                background: var(--color-fill);
+                border: 1px solid var(--color-fill-gray);
                 border-radius: 8px;
                 box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
                 padding: 0.5rem 0;
@@ -3195,18 +3279,18 @@ enum DocCStylesheet {
                 display: block;
                 padding: 0.625rem 1rem;
                 font-size: 0.8125rem;
-                color: var(--docc-fg);
+                color: var(--color-figure-gray);
                 text-decoration: none;
             }
 
             .dropdown-item:hover {
-                background: var(--docc-bg-secondary);
+                background: var(--color-fill-secondary);
                 text-decoration: none;
             }
 
             .dropdown-item.selected {
                 font-weight: 600;
-                color: var(--docc-accent);
+                color: var(--color-link);
             }
 
             /* Dropdown chapter grouping */
@@ -3215,7 +3299,7 @@ enum DocCStylesheet {
             }
 
             .dropdown-chapter:not(:first-child) {
-                border-top: 1px solid var(--docc-border);
+                border-top: 1px solid var(--color-fill-gray);
                 margin-top: 0.5rem;
                 padding-top: 0.75rem;
             }
@@ -3227,7 +3311,7 @@ enum DocCStylesheet {
                 font-weight: 600;
                 text-transform: uppercase;
                 letter-spacing: 0.05em;
-                color: var(--docc-fg-secondary);
+                color: var(--color-figure-gray-secondary);
             }
 
             .dropdown-chapter .dropdown-item {
@@ -3348,7 +3432,7 @@ enum DocCStylesheet {
                Two-column layout: steps left, sticky asset right
                ======================================== */
             .tutorial-section {
-                border-top: 1px solid var(--docc-border);
+                border-top: 1px solid var(--color-fill-gray);
                 padding: 0;
             }
 
@@ -3360,7 +3444,7 @@ enum DocCStylesheet {
             .section-number {
                 font-size: 0.9375rem;
                 font-weight: 400;
-                color: var(--docc-fg-secondary);
+                color: var(--color-figure-gray-secondary);
                 margin-bottom: 0.5rem;
             }
 
@@ -3450,13 +3534,13 @@ enum DocCStylesheet {
             }
 
             .tutorial-step.active {
-                border-left-color: var(--docc-accent);
+                border-left-color: var(--color-link);
             }
 
             .step-label {
                 font-size: 0.875rem;
                 font-weight: 600;
-                color: var(--docc-accent);
+                color: var(--color-link);
                 margin-bottom: 0.75rem;
             }
 
@@ -3476,9 +3560,9 @@ enum DocCStylesheet {
             .step-caption {
                 margin-top: 1.25rem;
                 padding-top: 1.25rem;
-                border-top: 1px solid var(--docc-border);
+                border-top: 1px solid var(--color-fill-gray);
                 font-size: 0.9375rem;
-                color: var(--docc-fg-secondary);
+                color: var(--color-figure-gray-secondary);
             }
 
             /* ========================================
@@ -3515,7 +3599,7 @@ enum DocCStylesheet {
             }
 
             .file-name {
-                font-family: var(--typeface-mono);
+                font-family: var(--typography-html-font-mono);
                 font-size: 0.8125rem;
                 font-weight: 500;
                 color: #ffffff;
@@ -3576,7 +3660,7 @@ enum DocCStylesheet {
                Media Preview Panel
                ======================================== */
             .media-preview {
-                background: var(--docc-bg-secondary);
+                background: var(--color-fill-secondary);
                 border-radius: 12px;
                 overflow: hidden;
                 width: 100%;
@@ -3619,13 +3703,13 @@ enum DocCStylesheet {
 
             .step-code-panel {
                 flex: 1;
-                background: var(--docc-bg-secondary);
+                background: var(--color-fill-secondary);
                 border-radius: 12px;
                 overflow: hidden;
                 max-height: 500px;
                 display: flex;
                 flex-direction: column;
-                border: 1px solid var(--docc-border);
+                border: 1px solid var(--color-fill-gray);
             }
 
             .code-panel-header {
@@ -3633,19 +3717,19 @@ enum DocCStylesheet {
                 align-items: center;
                 gap: 0.5rem;
                 padding: 0.875rem 1rem;
-                background: var(--docc-bg);
-                border-bottom: 1px solid var(--docc-border);
+                background: var(--color-fill);
+                border-bottom: 1px solid var(--color-fill-gray);
             }
 
             .code-panel-header .file-icon {
-                color: var(--docc-fg-secondary);
+                color: var(--color-figure-gray-secondary);
             }
 
             .code-panel-header .file-name {
-                font-family: var(--typeface-mono);
+                font-family: var(--typography-html-font-mono);
                 font-size: 0.8125rem;
                 font-weight: 500;
-                color: var(--docc-fg);
+                color: var(--color-figure-gray);
             }
 
             .code-panel-content {
@@ -3666,7 +3750,7 @@ enum DocCStylesheet {
                 display: block;
                 background: transparent;
                 padding: 0;
-                color: var(--docc-fg);
+                color: var(--color-figure-gray);
             }
 
             .code-panel-content .line {
@@ -3677,7 +3761,7 @@ enum DocCStylesheet {
             }
 
             .code-panel-content .line:hover {
-                background: var(--docc-bg);
+                background: var(--color-fill);
             }
 
             .code-panel-content .line-number {
@@ -3685,7 +3769,7 @@ enum DocCStylesheet {
                 width: 3rem;
                 text-align: right;
                 padding-right: 1rem;
-                color: var(--docc-fg-secondary);
+                color: var(--color-figure-gray-secondary);
                 user-select: none;
             }
 
@@ -3697,7 +3781,7 @@ enum DocCStylesheet {
             /* Step media panel */
             .step-media-panel {
                 flex: 1;
-                background: var(--docc-bg-secondary);
+                background: var(--color-fill-secondary);
                 border-radius: 12px;
                 overflow: hidden;
                 display: flex;
@@ -3728,7 +3812,7 @@ enum DocCStylesheet {
             }
 
             .assessment {
-                background: var(--docc-bg-secondary);
+                background: var(--color-fill-secondary);
                 border-radius: 12px;
                 padding: 2rem;
                 margin-bottom: 1.5rem;
@@ -3736,7 +3820,7 @@ enum DocCStylesheet {
 
             .question-number {
                 font-size: 0.875rem;
-                color: var(--docc-fg-secondary);
+                color: var(--color-figure-gray-secondary);
                 margin-bottom: 1rem;
             }
 
@@ -3755,7 +3839,7 @@ enum DocCStylesheet {
                 display: flex;
                 align-items: flex-start;
                 padding: 1rem 1rem 1rem 3rem;
-                border: 2px solid var(--docc-border);
+                border: 2px solid var(--color-fill-gray);
                 border-radius: 8px;
                 margin-bottom: 0.75rem;
                 cursor: pointer;
@@ -3764,7 +3848,7 @@ enum DocCStylesheet {
             }
 
             .choice:hover {
-                border-color: var(--docc-accent);
+                border-color: var(--color-link);
                 background: rgba(0, 102, 204, 0.05);
             }
 
@@ -3788,9 +3872,9 @@ enum DocCStylesheet {
                 top: 1.25rem;
                 width: 18px;
                 height: 18px;
-                border: 2px solid var(--docc-border);
+                border: 2px solid var(--color-fill-gray);
                 border-radius: 50%;
-                background: var(--docc-bg);
+                background: var(--color-fill);
                 transition: all 0.15s ease;
             }
 
@@ -3882,7 +3966,7 @@ enum DocCStylesheet {
                ======================================== */
             .tutorial-cta {
                 padding: 3rem 4rem 4rem;
-                border-top: 1px solid var(--docc-border);
+                border-top: 1px solid var(--color-fill-gray);
                 max-width: 900px;
             }
 
@@ -3895,7 +3979,7 @@ enum DocCStylesheet {
             .tutorial-cta .cta-abstract {
                 font-size: 1rem;
                 line-height: 1.5;
-                color: var(--docc-fg-secondary);
+                color: var(--color-figure-gray-secondary);
                 margin: 0 0 1.5rem 0;
             }
 
@@ -3905,7 +3989,7 @@ enum DocCStylesheet {
                 gap: 0.5rem;
                 font-size: 1rem;
                 font-weight: 500;
-                color: var(--docc-accent);
+                color: var(--color-link);
                 text-decoration: none;
             }
 
@@ -3921,8 +4005,8 @@ enum DocCStylesheet {
                Tutorial Overview Page
                ======================================== */
             .tutorial-overview-page {
-                background: var(--docc-bg);
-                color: var(--docc-fg);
+                background: var(--color-fill);
+                color: var(--color-figure-gray);
                 min-height: 100vh;
             }
 
@@ -3935,7 +4019,7 @@ enum DocCStylesheet {
             .overview-hero {
                 text-align: center;
                 padding: 4rem 2rem;
-                border-bottom: 1px solid var(--docc-border);
+                border-bottom: 1px solid var(--color-fill-gray);
             }
 
             .overview-hero-content {
@@ -3947,13 +4031,13 @@ enum DocCStylesheet {
                 font-size: 2.5rem;
                 font-weight: 700;
                 margin: 0 0 1.5rem 0;
-                color: var(--docc-fg);
+                color: var(--color-figure-gray);
             }
 
             .overview-hero p {
                 font-size: 1.125rem;
                 line-height: 1.6;
-                color: var(--docc-fg-secondary);
+                color: var(--color-figure-gray-secondary);
                 margin-bottom: 1rem;
             }
 
@@ -3970,11 +4054,11 @@ enum DocCStylesheet {
                 font-weight: 600;
                 margin: 0 0 1rem 0;
                 padding-bottom: 0.5rem;
-                border-bottom: 2px solid var(--docc-accent);
+                border-bottom: 2px solid var(--color-link);
             }
 
             .chapter-description {
-                color: var(--docc-fg-secondary);
+                color: var(--color-figure-gray-secondary);
                 margin-bottom: 1.5rem;
             }
 
@@ -3995,7 +4079,7 @@ enum DocCStylesheet {
                 display: flex;
                 flex-direction: column;
                 padding: 1.5rem;
-                background: var(--docc-bg-secondary);
+                background: var(--color-fill-secondary);
                 border-radius: 12px;
                 text-decoration: none;
                 transition: transform 0.15s ease, box-shadow 0.15s ease;
@@ -4009,13 +4093,13 @@ enum DocCStylesheet {
             .tutorial-card-title {
                 font-size: 1.0625rem;
                 font-weight: 600;
-                color: var(--docc-fg);
+                color: var(--color-figure-gray);
                 margin-bottom: 0.5rem;
             }
 
             .tutorial-card-abstract {
                 font-size: 0.875rem;
-                color: var(--docc-fg-secondary);
+                color: var(--color-figure-gray-secondary);
                 line-height: 1.5;
             }
 
@@ -4149,7 +4233,7 @@ enum DocCStylesheet {
             .search-overlay-container {
                 width: 90%;
                 max-width: 600px;
-                background: var(--docc-bg);
+                background: var(--color-fill);
                 border-radius: 12px;
                 box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
                 overflow: hidden;
@@ -4163,26 +4247,26 @@ enum DocCStylesheet {
 
             .search-overlay-input-wrapper {
                 padding: 1rem;
-                border-bottom: 1px solid var(--docc-border);
+                border-bottom: 1px solid var(--color-fill-gray);
             }
 
             .search-overlay-input {
                 width: 100%;
                 padding: 0.75rem 1rem;
                 font-size: 1.125rem;
-                border: 1px solid var(--docc-border);
+                border: 1px solid var(--color-fill-gray);
                 border-radius: 8px;
-                background: var(--docc-bg-secondary);
-                color: var(--docc-fg);
+                background: var(--color-fill-secondary);
+                color: var(--color-figure-gray);
                 outline: none;
             }
 
             .search-overlay-input:focus {
-                border-color: var(--docc-accent);
+                border-color: var(--color-link);
             }
 
             .search-overlay-input::placeholder {
-                color: var(--docc-fg-secondary);
+                color: var(--color-figure-gray-secondary);
             }
 
             .search-overlay-results {
@@ -4193,7 +4277,7 @@ enum DocCStylesheet {
             .search-overlay-empty {
                 padding: 2rem;
                 text-align: center;
-                color: var(--docc-fg-secondary);
+                color: var(--color-figure-gray-secondary);
             }
 
             .search-overlay-section {
@@ -4206,20 +4290,20 @@ enum DocCStylesheet {
                 font-weight: 600;
                 text-transform: uppercase;
                 letter-spacing: 0.05em;
-                color: var(--docc-fg-secondary);
+                color: var(--color-figure-gray-secondary);
             }
 
             .search-overlay-item {
                 display: block;
                 padding: 0.75rem 1rem;
                 text-decoration: none;
-                color: var(--docc-fg);
+                color: var(--color-figure-gray);
                 cursor: pointer;
             }
 
             .search-overlay-item:hover,
             .search-overlay-item.selected {
-                background: var(--docc-bg-secondary);
+                background: var(--color-fill-secondary);
             }
 
             .search-overlay-item-title {
@@ -4230,15 +4314,15 @@ enum DocCStylesheet {
             .search-overlay-item-path {
                 display: block;
                 font-size: 0.8rem;
-                color: var(--docc-fg-secondary);
+                color: var(--color-figure-gray-secondary);
                 margin-top: 0.25rem;
             }
 
             .search-overlay-hint {
                 padding: 0.75rem 1rem;
-                border-top: 1px solid var(--docc-border);
+                border-top: 1px solid var(--color-fill-gray);
                 font-size: 0.75rem;
-                color: var(--docc-fg-secondary);
+                color: var(--color-figure-gray-secondary);
                 display: flex;
                 gap: 1rem;
             }
@@ -4246,15 +4330,24 @@ enum DocCStylesheet {
             .search-overlay-hint kbd {
                 display: inline-block;
                 padding: 0.125rem 0.375rem;
-                background: var(--docc-bg-secondary);
-                border: 1px solid var(--docc-border);
+                background: var(--color-fill-secondary);
+                border: 1px solid var(--color-fill-gray);
                 border-radius: 4px;
-                font-family: var(--typeface-mono);
+                font-family: var(--typography-html-font-mono);
                 font-size: 0.7rem;
             }
 
+            \(themeSettingsCSS(theme))
             \(theme.customCSS ?? "")
             """
+    }
+
+    /// Generates CSS overrides from theme settings.
+    private static func themeSettingsCSS(_ theme: ThemeConfiguration) -> String {
+        guard let settings = theme.themeSettings else {
+            return ""
+        }
+        return ThemeSettingsParser.generateCSS(from: settings, includeDarkMode: theme.includeDarkMode)
     }
 
     private static var darkModeStyles: String {
@@ -4262,73 +4355,72 @@ enum DocCStylesheet {
 
         @media (prefers-color-scheme: dark) {
             :root {
-                --docc-bg: #1d1d1f;
-                --docc-bg-secondary: #2c2c2e;
-                --docc-fg: #f5f5f7;
-                --docc-fg-secondary: #a1a1a6;
-                --docc-border: #424245;
+                --color-fill: #1d1d1f;
+                --color-fill-secondary: #2c2c2e;
+                --color-figure-gray: #f5f5f7;
+                --color-figure-gray-secondary: #a1a1a6;
+                --color-fill-gray: #424245;
 
-                /* Swift syntax colours - dark mode */
-                --swift-keyword: #ff7ab2;
-                --swift-type: #dabaff;
-                --swift-literal: #ff8170;
-                --swift-comment: #7f8c8d;
-                --swift-string: #ff8170;
-                --swift-number: #d9c97c;
+                /* Syntax highlighting colours - dark mode */
+                --color-syntax-keywords: #ff7ab2;
+                --color-syntax-other-type-names: #dabaff;
+                --color-syntax-strings: #ff8170;
+                --color-syntax-comments: #7f8c8d;
+                --color-syntax-numbers: #d9c97c;
 
                 /* Symbol badge colours - dark mode (monochrome) */
-                --badge-bg: #2c2c2e;
-                --badge-fg: #a1a1a6;
-                --badge-border: #424245;
+                --color-badge-default: #2c2c2e;
+                --color-badge-text: #a1a1a6;
+                --color-badge-border: #424245;
 
                 /* Aside colours - dark mode */
-                --aside-note-bg: rgba(59, 130, 246, 0.15);
-                --aside-note-border: #3b82f6;
-                --aside-warning-bg: rgba(245, 158, 11, 0.15);
-                --aside-warning-border: #f59e0b;
-                --aside-important-bg: rgba(239, 68, 68, 0.15);
-                --aside-important-border: #ef4444;
+                --color-aside-note-background: rgba(59, 130, 246, 0.15);
+                --color-aside-note-border: #3b82f6;
+                --color-aside-warning-background: rgba(245, 158, 11, 0.15);
+                --color-aside-warning-border: #f59e0b;
+                --color-aside-important-background: rgba(239, 68, 68, 0.15);
+                --color-aside-important-border: #ef4444;
 
                 /* Decorative colours - dark mode */
-                --hero-decoration: #4a4a4a;
+                --color-documentation-intro-fill: #4a4a4a;
             }
         }
 
-        /* Explicit theme selection via data-theme attribute */
-        html[data-theme="light"] {
-            --docc-bg: #ffffff;
-            --docc-bg-secondary: #f5f5f7;
-            --docc-fg: #1d1d1f;
-            --docc-fg-secondary: #6e6e73;
-            --docc-border: #d2d2d7;
-            --swift-keyword: #ad3da4;
-            --swift-type: #703daa;
-            --swift-literal: #d12f1b;
-            --swift-comment: #707f8c;
-            --swift-string: #d12f1b;
-            --swift-number: #272ad8;
-            --badge-bg: #f5f5f7;
-            --badge-fg: #6e6e73;
-            --badge-border: #d2d2d7;
-            --hero-decoration: #d2d2d7;
+        /* Explicit theme selection via data-color-scheme attribute */
+        body[data-color-scheme="light"] {
+            --color-fill: #fff;
+            --color-fill-secondary: #f7f7f7;
+            --color-fill-tertiary: #f0f0f0;
+            --color-figure-gray: #000;
+            --color-figure-gray-secondary: #666;
+            --color-fill-gray: #ccc;
+            --color-fill-gray-secondary: #f5f5f5;
+            --color-syntax-keywords: #ad3da4;
+            --color-syntax-other-type-names: #703daa;
+            --color-syntax-strings: #d12f1b;
+            --color-syntax-comments: #707f8c;
+            --color-syntax-numbers: #272ad8;
+            --color-badge-default: #f5f5f5;
+            --color-badge-text: #666;
+            --color-badge-border: #ccc;
+            --color-documentation-intro-fill: #f0f0f0;
         }
 
-        html[data-theme="dark"] {
-            --docc-bg: #1d1d1f;
-            --docc-bg-secondary: #2c2c2e;
-            --docc-fg: #f5f5f7;
-            --docc-fg-secondary: #a1a1a6;
-            --docc-border: #424245;
-            --swift-keyword: #ff7ab2;
-            --swift-type: #dabaff;
-            --swift-literal: #ff8170;
-            --swift-comment: #7f8c8d;
-            --swift-string: #ff8170;
-            --swift-number: #d9c97c;
-            --badge-bg: #2c2c2e;
-            --badge-fg: #a1a1a6;
-            --badge-border: #424245;
-            --hero-decoration: #4a4a4a;
+        body[data-color-scheme="dark"] {
+            --color-fill: #1d1d1f;
+            --color-fill-secondary: #2c2c2e;
+            --color-figure-gray: #f5f5f7;
+            --color-figure-gray-secondary: #a1a1a6;
+            --color-fill-gray: #424245;
+            --color-syntax-keywords: #ff7ab2;
+            --color-syntax-other-type-names: #dabaff;
+            --color-syntax-strings: #ff8170;
+            --color-syntax-comments: #7f8c8d;
+            --color-syntax-numbers: #d9c97c;
+            --color-badge-default: #2c2c2e;
+            --color-badge-text: #a1a1a6;
+            --color-badge-border: #424245;
+            --color-documentation-intro-fill: #4a4a4a;
         }
         """
     }
@@ -4436,7 +4528,7 @@ enum SearchScript {
                 const normalizedQuery = query.toLowerCase().trim();
 
                 // Get all navigation items
-                const allItems = sidebarContent.querySelectorAll('.sidebar-item, .nav-child-item');
+                const allItems = sidebarContent.querySelectorAll('.navigator-card, .nav-child-item');
 
                 if (!normalizedQuery) {
                     // No query - show everything and restore original states
@@ -4471,7 +4563,7 @@ enum SearchScript {
                         let parent = item.parentElement;
                         while (parent && parent !== sidebarContent) {
                             // Show parent list items
-                            if (parent.classList.contains('sidebar-item') || parent.classList.contains('nav-child-item')) {
+                            if (parent.classList.contains('navigator-card') || parent.classList.contains('nav-child-item')) {
                                 parent.classList.remove('filter-hidden');
                                 matchingItems.add(parent);
                             }

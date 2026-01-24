@@ -1,0 +1,10 @@
+{
+  "theme": {
+    "color": {
+      "link": "#6366f1"
+    },
+    "typography": {
+      "html-font": "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+    }
+  }
+}

@@ -91,7 +91,7 @@ public extension HTMLPageBuilder {
 
         html += """
 
-            <div class="doc-layout">
+            <div class="documentation-layout">
         """
 
         // Add sidebar navigation
@@ -100,7 +100,7 @@ public extension HTMLPageBuilder {
         // Add main content area
         html += """
 
-                <main class="doc-main">
+                <main class="doc-topic">
         """
 
         // Add breadcrumb navigation
@@ -413,24 +413,18 @@ private extension HTMLPageBuilder {
         let homeURL = String(repeating: "../", count: depth) + "index.html"
         return """
 
-            <header class="doc-header">
+            <header class="documentation-nav">
                 <div class="header-content">
-                    <label for="sidebar-toggle" class="sidebar-toggle-button" aria-label="Toggle sidebar">
-                        <span class="toggle-icon">
-                            <span class="bar"></span>
-                            <span class="bar"></span>
-                            <span class="bar"></span>
-                        </span>
-                    </label>
-                    <a href="\(homeURL)" class="header-title">
-                        <span class="header-icon">
-                            <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
-                                <rect x="2" y="3" width="6" height="14" rx="1"/>
-                                <rect x="10" y="3" width="6" height="14" rx="1"/>
+                    <label for="sidebar-toggle" class="sidenav-toggle" aria-label="Toggle sidebar">
+                        <span class="sidenav-icon-wrapper">
+                            <svg class="sidenav-icon" viewBox="0 0 14 14" width="19" height="19" fill="currentColor">
+                                <path d="M6.533 1.867h-6.533v10.267h14v-10.267zM0.933 11.2v-8.4h4.667v8.4zM13.067 11.2h-6.533v-8.4h6.533z"></path>
+                                <path d="M1.867 5.133h2.8v0.933h-2.8z"></path>
+                                <path d="M1.867 7.933h2.8v0.933h-2.8z"></path>
                             </svg>
                         </span>
-                        Documentation
-                    </a>
+                    </label>
+                    <a href="\(homeURL)" class="header-title">Documentation</a>
                     <span class="header-language">Language: Swift</span>
                 </div>
             </header>
@@ -457,7 +451,7 @@ private extension HTMLPageBuilder {
         // Fallback to building sidebar from current page's topic sections
         var html = """
 
-                <nav class="doc-sidebar">
+                <nav class="sidebar">
                     <div class="sidebar-content">
                         <h2 class="sidebar-module">\(escapeHTML(moduleName))</h2>
         """
@@ -504,8 +498,8 @@ private extension HTMLPageBuilder {
 
                     html += """
 
-                                <li class="sidebar-item">
-                                    <span class="symbol-badge \(badgeClass)">\(badge)</span>
+                                <li class="navigator-card">
+                                    <span class="badge \(badgeClass)">\(badge)</span>
                                     <a href="\(escapeHTML(relativeURL))">\(escapeHTML(title))</a>
                                 </li>
                     """
@@ -530,6 +524,37 @@ private extension HTMLPageBuilder {
     /// Returns the CSS class for a symbol badge.
     func symbolBadgeClass(for reference: TopicRenderReference) -> String {
         reference.symbolKind?.badgeClass ?? "badge-other"
+    }
+
+    /// Returns the topic icon SVG for the reference type.
+    ///
+    /// The icons match swift-docc's icons. Themes can override the appearance via CSS.
+    /// For custom SVG icons, themes should provide their own CSS rules for `.topic-icon`.
+    func topicIcon(for reference: TopicRenderReference) -> String {
+        // For articles, use the article icon
+        if reference.symbolKind == nil || reference.symbolKind?.id == "article" {
+            return """
+<svg aria-hidden="true" class="svg-icon article-icon topic-icon" viewBox="0 0 14 14">
+<path d="M8.033 1l3.967 4.015v7.985h-10v-12zM7.615 2h-4.615v10h8v-6.574z"></path>
+<path d="M7 1h1v4h-1z"></path>
+<path d="M7 5h5v1h-5z"></path>
+</svg>
+"""
+        }
+
+        // For tutorials, use tutorial icon
+        if reference.symbolKind?.id == "tutorial" {
+            return """
+<svg aria-hidden="true" class="svg-icon tutorial-icon topic-icon" viewBox="0 0 14 14">
+<path d="M2 2h10v10h-10z"></path>
+<path d="M6 5l4 2-4 2z" fill="currentColor"></path>
+</svg>
+"""
+        }
+
+        // For symbols (struct, enum, class, etc.), swift-docc doesn't show icons in Topics section
+        // The icon type is indicated by the symbol kind badge instead
+        return ""
     }
 
     /// Extracts the module name from the render node.
@@ -599,7 +624,7 @@ private extension HTMLPageBuilder {
 
         var html = """
 
-                <nav class="breadcrumbs" aria-label="Breadcrumbs">
+                <nav class="hierarchy" aria-label="Breadcrumbs">
         """
 
         // Build breadcrumb trail from hierarchy
@@ -682,8 +707,28 @@ private extension HTMLPageBuilder {
 
         html += """
 
-                    <div class="hero-section">
-                        <div class="hero-content">
+                    <div class="documentation-hero">
+        """
+
+        // Add technology icon for modules/frameworks
+        if renderNode.kind == .symbol,
+           let symbolKind = renderNode.metadata.symbolKind,
+           symbolKind == "module" {
+            html += """
+
+                        <div class="icon">
+                            <div class="background-icon">
+                                <svg viewBox="0 0 14 14" class="technology-icon">
+                                    <path d="M3.39,9l3.16,1.84.47.28.47-.28L10.61,9l.45.26,1.08.63L7,12.91l-5.16-3,1.08-.64L3.39,9M7,0,0,4.1,2.47,5.55,0,7,2.47,8.44,0,9.9,7,14l7-4.1L11.53,8.45,14,7,11.53,5.56,14,4.1ZM7,7.12,5.87,6.45l-1.54-.9L3.39,5,1.85,4.1,7,1.08l5.17,3L10.6,5l-.93.55-1.54.91ZM7,10,3.39,7.9,1.85,7,3.4,6.09,4.94,7,7,8.2,9.06,7,10.6,6.1,12.15,7l-1.55.9Z" fill="currentColor"/>
+                                </svg>
+                            </div>
+                        </div>
+        """
+        }
+
+        html += """
+
+                        <div class="documentation-hero__content">
                             <p class="eyebrow">\(escapeHTML(roleLabel))</p>
                             <h1>\(escapeHTML(title))</h1>
         """
@@ -878,13 +923,22 @@ private extension HTMLPageBuilder {
     }
 
     func buildDeclarationsSection(_ section: DeclarationsRenderSection, references: [String: any RenderReference], depth: Int) -> String {
+        // Match swift-docc-render structure:
+        // section.declaration > div.declaration-list > div.declaration-pill > div.declaration-group-wrapper > div.declaration-group > pre.source > code
         var html = """
 
-                <div class="declaration">
+                <section class="declaration">
+                    <div class="declaration-list">
         """
 
         for declaration in section.declarations {
-            html += "\n                <pre><code>"
+            html += """
+
+                        <div class="declaration-pill selected-declaration">
+                            <div class="declaration-group-wrapper">
+                                <div class="declaration-group">
+                                    <pre class="source"><code>
+            """
 
             for token in declaration.tokens {
                 let tokenClass = tokenCSSClass(for: token.kind)
@@ -905,41 +959,43 @@ private extension HTMLPageBuilder {
                 }
             }
 
-            html += "</code></pre>"
+            html += "</code></pre>\n                                </div>\n                            </div>\n                        </div>"
         }
 
         html += """
 
-                </div>
+                    </div>
+                </section>
         """
 
         return html
     }
 
     func tokenCSSClass(for kind: DeclarationRenderSection.Token.Kind) -> String? {
+        // Class names match swift-docc-render's token-* naming convention
         switch kind {
         case .keyword:
-            return "keyword"
+            return "token-keyword"
         case .typeIdentifier:
-            return "type"
+            return "token-type"
         case .genericParameter:
-            return "type"
+            return "token-type"
         case .text:
             return nil
         case .internalParam:
-            return "param"
+            return "token-param"
         case .externalParam:
-            return "param"
+            return "token-param"
         case .identifier:
-            return "identifier"
+            return "token-identifier"
         case .label:
-            return "label"
+            return "token-label"
         case .number:
-            return "number"
+            return "token-number"
         case .string:
-            return "string"
+            return "token-string"
         case .attribute:
-            return "attribute"
+            return "token-attribute"
         @unknown default:
             return nil
         }
@@ -1005,6 +1061,10 @@ private extension HTMLPageBuilder {
             if let resourcesSection = section as? ResourcesRenderSection {
                 return buildResourcesSection(resourcesSection, references: references, depth: depth)
             }
+        case .mentions:
+            if let mentionsSection = section as? MentionsRenderSection {
+                return buildMentionsSection(mentionsSection, references: references, depth: depth)
+            }
         default:
             break
         }
@@ -1062,18 +1122,23 @@ private extension HTMLPageBuilder {
         references: [String: any RenderReference],
         depth: Int
     ) -> String {
-        var html = ""
+        var html = """
+
+                        <div class="contenttable-section">
+        """
 
         if let title = taskGroup.title {
             html += """
 
-                        <h3>\(escapeHTML(title))</h3>
+                            <div class="section-title">
+                                <h3 class="contenttable-title">\(escapeHTML(title))</h3>
+                            </div>
             """
         }
 
         html += """
 
-                        <div class="symbol-list">
+                            <div class="section-content">
         """
 
         for identifier in taskGroup.identifiers {
@@ -1084,6 +1149,7 @@ private extension HTMLPageBuilder {
 
         html += """
 
+                            </div>
                         </div>
         """
 
@@ -1094,18 +1160,23 @@ private extension HTMLPageBuilder {
         let relativeURL = makeRelativeURL(reference.url, depth: depth)
         let title = reference.title
         let abstract = contentRenderer.renderInlineContent(reference.abstract, references: [:], depth: 0).plainText
-        let badge = symbolBadge(for: reference)
-        let badgeClass = symbolBadgeClass(for: reference)
+
+        // Get icon SVG for the reference type
+        let iconSVG = topicIcon(for: reference)
 
         return """
 
-                            <div class="symbol-card">
-                                <span class="symbol-badge \(badgeClass)">\(badge)</span>
-                                <div class="symbol-info">
-                                    <a href="\(escapeHTML(relativeURL))" class="symbol-name">\(escapeHTML(title))</a>
-                                    <p class="symbol-summary">\(escapeHTML(abstract))</p>
+                                <div class="link-block topic">
+                                    <a href="\(escapeHTML(relativeURL))" class="link has-adjacent-elements">
+                                        <div class="topic-icon-wrapper">
+                                            \(iconSVG)
+                                        </div>
+                                        <span>\(escapeHTML(title))</span>
+                                    </a>
+                                    <div class="abstract">
+                                        <p>\(escapeHTML(abstract))</p>
+                                    </div>
                                 </div>
-                            </div>
         """
     }
 
@@ -1615,17 +1686,61 @@ private extension HTMLPageBuilder {
         return html
     }
 
+    func buildMentionsSection(
+        _ section: MentionsRenderSection,
+        references: [String: any RenderReference],
+        depth: Int
+    ) -> String {
+        guard !section.mentions.isEmpty else {
+            return ""
+        }
+
+        var html = """
+
+                <section class="mentioned-in">
+                    <h2 id="mentioned-in"><a href="#mentioned-in">Mentioned In</a></h2>
+                    <div class="symbol-list">
+        """
+
+        // Limit to top 5 mentions (matching swift-docc-render behavior)
+        for mentionURL in section.mentions.prefix(5) {
+            let urlString = mentionURL.absoluteString
+            // Look up the reference to get the title
+            if let reference = references[urlString] as? TopicRenderReference {
+                let relativeURL = makeRelativeURL(reference.url, depth: depth)
+                let title = reference.title
+                html += """
+
+                        <div class="topic-link-container">
+                            <span class="symbol-icon"><svg viewBox="0 0 14 14" fill="none"><path d="M3 1.5A.5.5 0 013.5 1h5.793a.5.5 0 01.353.146l2.208 2.208a.5.5 0 01.146.353V12.5a.5.5 0 01-.5.5h-8a.5.5 0 01-.5-.5v-11z" stroke="currentColor" stroke-width="1"/><path d="M9 1v3h3" stroke="currentColor" stroke-width="1"/></svg></span>
+                            <div class="symbol-info">
+                                <a href="\(escapeHTML(relativeURL))" class="symbol-name">\(escapeHTML(title))</a>
+                            </div>
+                        </div>
+                """
+            }
+        }
+
+        html += """
+
+                    </div>
+                </section>
+        """
+
+        return html
+    }
+
     /// Builds the page footer with configurable content and appearance selector.
     func buildFooter() -> String {
         let footerContent = configuration.footerHTML ?? Configuration.defaultFooter
         return """
 
-            <footer class="doc-footer">
+            <footer class="documentation-footer">
                 <div class="footer-content">\(footerContent)</div>
                 <div class="appearance-selector" id="appearance-selector">
-                    <button type="button" class="appearance-btn" data-theme="light" aria-label="Light mode">Light</button>
-                    <button type="button" class="appearance-btn" data-theme="dark" aria-label="Dark mode">Dark</button>
-                    <button type="button" class="appearance-btn active" data-theme="auto" aria-label="Auto mode">Auto</button>
+                    <button type="button" class="appearance-btn" data-color-scheme="light" aria-label="Light mode">Light</button>
+                    <button type="button" class="appearance-btn" data-color-scheme="dark" aria-label="Dark mode">Dark</button>
+                    <button type="button" class="appearance-btn active" data-color-scheme="auto" aria-label="Auto mode">Auto</button>
                 </div>
             </footer>
         """
@@ -1644,34 +1759,34 @@ private extension HTMLPageBuilder {
                     selector.style.visibility = 'visible';
 
                     const buttons = selector.querySelectorAll('.appearance-btn');
-                    const html = document.documentElement;
+                    const body = document.body;
 
                     // Load saved preference
-                    const saved = localStorage.getItem('docc-theme') || 'auto';
-                    applyTheme(saved);
+                    const saved = localStorage.getItem('docc-color-scheme') || 'auto';
+                    applyColorScheme(saved);
                     updateButtons(saved);
 
                     // Add click handlers
                     buttons.forEach(btn => {
                         btn.addEventListener('click', () => {
-                            const theme = btn.dataset.theme;
-                            localStorage.setItem('docc-theme', theme);
-                            applyTheme(theme);
-                            updateButtons(theme);
+                            const scheme = btn.dataset.colorScheme;
+                            localStorage.setItem('docc-color-scheme', scheme);
+                            applyColorScheme(scheme);
+                            updateButtons(scheme);
                         });
                     });
 
-                    function applyTheme(theme) {
-                        if (theme === 'auto') {
-                            html.removeAttribute('data-theme');
+                    function applyColorScheme(scheme) {
+                        if (scheme === 'auto') {
+                            body.removeAttribute('data-color-scheme');
                         } else {
-                            html.setAttribute('data-theme', theme);
+                            body.setAttribute('data-color-scheme', scheme);
                         }
                     }
 
-                    function updateButtons(theme) {
+                    function updateButtons(scheme) {
                         buttons.forEach(btn => {
-                            btn.classList.toggle('active', btn.dataset.theme === theme);
+                            btn.classList.toggle('active', btn.dataset.colorScheme === scheme);
                         });
                     }
                 }
@@ -1683,7 +1798,7 @@ private extension HTMLPageBuilder {
                     sidebarFilter.style.display = 'flex';
 
                     const filterInput = sidebarFilter.querySelector('.filter-input');
-                    const sidebarItems = document.querySelectorAll('.sidebar-item, .nav-link');
+                    const sidebarItems = document.querySelectorAll('.navigator-card, .nav-link');
 
                     // Filter functionality
                     if (filterInput) {

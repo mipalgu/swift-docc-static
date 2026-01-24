@@ -1,0 +1,239 @@
+@Tutorial(time: 15) {
+    @Intro(title: "Customising Your Documentation Theme") {
+        Learn how to customise the appearance of your DocCStatic-generated documentation using built-in themes, custom theme files, and CSS overrides.
+
+        @Image(source: "theme-hero.png", alt: "Documentation with custom theme")
+    }
+
+    @Section(title: "Using Built-in Themes") {
+        @ContentAndMedia {
+            DocCStatic includes two built-in themes: the default theme that matches swift-docc-render, and the classic theme with SF Pro fonts.
+
+            @Image(source: "theme-comparison.png", alt: "Comparison of default and classic themes")
+        }
+
+        @Steps {
+            @Step {
+                Generate documentation with the default theme (no flags needed).
+
+                @Code(name: "Terminal", file: "theme-default.sh")
+            }
+
+            @Step {
+                Generate documentation with the classic theme using the `--theme` flag.
+
+                @Code(name: "Terminal", file: "theme-classic.sh")
+            }
+
+            @Step {
+                Using the SPM plugin, specify the theme with the same flag.
+
+                @Code(name: "Terminal", file: "theme-plugin.sh")
+            }
+        }
+    }
+
+    @Section(title: "Creating a Custom Theme File") {
+        @ContentAndMedia {
+            Custom themes use the swift-docc-render `theme-settings.json` format. This allows themes to work with both swift-docc and DocCStatic.
+
+            @Image(source: "theme-json.png", alt: "Theme settings JSON structure")
+        }
+
+        @Steps {
+            @Step {
+                Start by copying an existing theme file as a template.
+
+                @Code(name: "Terminal", file: "theme-copy.sh")
+            }
+
+            @Step {
+                Open the theme file and examine its structure. The theme contains colour and typography settings.
+
+                @Code(name: "my-theme.theme-settings.json", file: "theme-structure.json")
+            }
+
+            @Step {
+                Modify the accent colour. Change the `link` value to your desired colour.
+
+                @Code(name: "my-theme.theme-settings.json", file: "theme-accent.json")
+            }
+
+            @Step {
+                Add custom colours with separate light and dark mode values.
+
+                @Code(name: "my-theme.theme-settings.json", file: "theme-light-dark.json")
+            }
+
+            @Step {
+                Generate documentation with your custom theme using `--theme-settings`.
+
+                @Code(name: "Terminal", file: "theme-custom-generate.sh")
+            }
+        }
+    }
+
+    @Section(title: "Customising Colours") {
+        @ContentAndMedia {
+            Theme colours control the overall appearance of your documentation, from backgrounds to syntax highlighting.
+
+            @Image(source: "theme-colours.png", alt: "Colour customisation options")
+        }
+
+        @Steps {
+            @Step {
+                Set the primary background and text colours for better contrast.
+
+                @Code(name: "my-theme.theme-settings.json", file: "theme-background.json")
+            }
+
+            @Step {
+                Customise syntax highlighting colours to match your brand or improve readability.
+
+                @Code(name: "my-theme.theme-settings.json", file: "theme-syntax.json")
+            }
+
+            @Step {
+                Configure aside colours for notes, warnings, and other callouts.
+
+                @Code(name: "my-theme.theme-settings.json", file: "theme-asides.json")
+            }
+        }
+    }
+
+    @Section(title: "Customising Typography") {
+        @ContentAndMedia {
+            Typography settings let you specify custom fonts for body text and code blocks.
+
+            @Image(source: "theme-typography.png", alt: "Typography customisation")
+        }
+
+        @Steps {
+            @Step {
+                Set a custom body font using the `html-font` typography variable.
+
+                @Code(name: "my-theme.theme-settings.json", file: "theme-font.json")
+            }
+
+            @Step {
+                Set a custom monospace font for code blocks using `html-font-mono`.
+
+                @Code(name: "my-theme.theme-settings.json", file: "theme-mono-font.json")
+            }
+        }
+    }
+
+    @Section(title: "Adding Custom CSS") {
+        @ContentAndMedia {
+            For advanced customisation, you can add custom CSS that gets appended to the generated stylesheet.
+
+            @Image(source: "theme-css.png", alt: "Custom CSS styling")
+        }
+
+        @Steps {
+            @Step {
+                Create a ThemeConfiguration with custom CSS using the Swift API.
+
+                @Code(name: "Theme.swift", file: "theme-custom-css.swift")
+            }
+
+            @Step {
+                Override CSS variables to change colours not exposed in the theme settings.
+
+                @Code(name: "Theme.swift", file: "theme-css-variables.swift")
+            }
+
+            @Step {
+                Style specific elements like declaration blocks and topic cards.
+
+                @Code(name: "Theme.swift", file: "theme-element-styling.swift")
+            }
+        }
+    }
+
+    @Section(title: "Dark Mode Support") {
+        @ContentAndMedia {
+            DocCStatic supports automatic dark mode based on the user's system preference. Learn how to provide separate light and dark colour values.
+
+            @Image(source: "theme-dark-mode.png", alt: "Light and dark mode comparison")
+        }
+
+        @Steps {
+            @Step {
+                Define colours with separate light and dark values in your theme file.
+
+                @Code(name: "my-theme.theme-settings.json", file: "theme-dark-values.json")
+            }
+
+            @Step {
+                For colours that should be the same in both modes, use a single string value.
+
+                @Code(name: "my-theme.theme-settings.json", file: "theme-single-value.json")
+            }
+
+            @Step {
+                Disable dark mode if your theme doesn't support it.
+
+                @Code(name: "Theme.swift", file: "theme-no-dark.swift")
+            }
+        }
+    }
+
+    @Assessments {
+        @MultipleChoice {
+            What format do DocCStatic custom theme files use?
+
+            @Choice(isCorrect: false) {
+                CSS stylesheets
+
+                @Justification(reaction: "Try again!") {
+                    While you can add custom CSS, the main theme configuration uses a JSON format.
+                }
+            }
+
+            @Choice(isCorrect: true) {
+                JSON theme-settings format (compatible with swift-docc-render)
+
+                @Justification(reaction: "Correct!") {
+                    DocCStatic uses the same `theme-settings.json` format as swift-docc-render, allowing themes to be shared between the two tools.
+                }
+            }
+
+            @Choice(isCorrect: false) {
+                YAML configuration files
+
+                @Justification(reaction: "That's not right.") {
+                    DocCStatic doesn't use YAML for theming. Theme files use the JSON format.
+                }
+            }
+        }
+
+        @MultipleChoice {
+            How do you specify different colours for light and dark mode?
+
+            @Choice(isCorrect: false) {
+                Create separate theme files for each mode
+
+                @Justification(reaction: "Not quite!") {
+                    You can specify both light and dark values in a single theme file.
+                }
+            }
+
+            @Choice(isCorrect: true) {
+                Use an object with "light" and "dark" keys instead of a single string value
+
+                @Justification(reaction: "That's right!") {
+                    Colour values can be either a single string (same for both modes) or an object with "light" and "dark" keys for mode-specific values.
+                }
+            }
+
+            @Choice(isCorrect: false) {
+                Use the @media (prefers-color-scheme) query in custom CSS
+
+                @Justification(reaction: "Close, but not the primary method!") {
+                    While you can use media queries in custom CSS, the theme file itself supports light/dark values directly.
+                }
+            }
+        }
+    }
+}

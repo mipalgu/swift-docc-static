@@ -16,9 +16,9 @@ struct StylesheetTests {
     func cssCustomProperties() {
         let css = DocCStylesheet.generate(theme: .default)
 
-        #expect(css.contains("--docc-bg:"))
-        #expect(css.contains("--docc-fg:"))
-        #expect(css.contains("--docc-accent:"))
+        #expect(css.contains("--color-fill:"))
+        #expect(css.contains("--color-figure-gray:"))
+        #expect(css.contains("--color-link:"))
     }
 
     @Test("Stylesheet uses theme accent colour")
@@ -61,19 +61,18 @@ struct StylesheetTests {
     func syntaxColours() {
         let css = DocCStylesheet.generate(theme: .default)
 
-        #expect(css.contains("--swift-keyword:"))
-        #expect(css.contains("--swift-type:"))
-        #expect(css.contains("--swift-string:"))
-        #expect(css.contains("--swift-comment:"))
+        #expect(css.contains("--color-syntax-keywords:"))
+        #expect(css.contains("--color-syntax-other-type-names:"))
+        #expect(css.contains("--color-syntax-strings:"))
+        #expect(css.contains("--color-syntax-comments:"))
     }
 
     @Test("Stylesheet includes typography variables")
     func typography() {
         let css = DocCStylesheet.generate(theme: .default)
 
-        #expect(css.contains("--typeface-body:"))
-        #expect(css.contains("--typeface-mono:"))
-        #expect(css.contains("--typeface-headline:"))
+        #expect(css.contains("--typography-html-font:"))
+        #expect(css.contains("--typography-html-font-mono:"))
     }
 
     @Test("Stylesheet includes search result styles")

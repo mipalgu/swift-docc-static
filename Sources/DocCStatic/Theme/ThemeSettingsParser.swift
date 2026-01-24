@@ -1,0 +1,239 @@
+//
+// ThemeSettingsParser.swift
+// DocCStatic
+//
+//  Created by Claude on 21/01/2026.
+//  Copyright © 2026 Rene Hexel. All rights reserved.
+//
+
+import Foundation
+
+/// Parses theme-settings.json files and generates CSS variable overrides.
+///
+/// This parser implements the same logic as swift-docc-render's `objectToCustomProperties()`
+/// function, converting nested JSON objects into CSS custom properties.
+///
+/// ## Example
+///
+/// Given a theme-settings.json:
+///
+/// ```json
+/// {
+///   "theme": {
+///     "color": {
+///       "fill": { "light": "#ffffff", "dark": "#1d1d1f" }
+///     }
+///   }
+/// }
+/// ```
+///
+/// The parser generates:
+///
+/// ```css
+/// :root {
+///     --color-fill: #ffffff;
+/// }
+/// body[data-color-scheme="dark"] {
+///     --color-fill: #1d1d1f;
+/// }
+/// ```
+public enum ThemeSettingsParser {
+    /// The color scheme for CSS variable generation.
+    public enum ColorScheme: Sendable {
+        case light
+        case dark
+        case auto
+    }
+
+    // MARK: - Parsing
+
+    /// Parses theme settings from JSON data.
+    ///
+    /// - Parameter data: The JSON data to parse.
+    /// - Returns: The parsed theme settings.
+    /// - Throws: An error if the JSON is invalid.
+    public static func parse(_ data: Data) throws -> ThemeSettings.Root {
+        let decoder = JSONDecoder()
+        return try decoder.decode(ThemeSettings.Root.self, from: data)
+    }
+
+    /// Parses theme settings from a file URL.
+    ///
+    /// - Parameter url: The URL of the theme-settings.json file.
+    /// - Returns: The parsed theme settings.
+    /// - Throws: An error if the file cannot be read or parsed.
+    public static func parse(contentsOf url: URL) throws -> ThemeSettings.Root {
+        let data = try Data(contentsOf: url)
+        return try parse(data)
+    }
+
+    // MARK: - CSS Generation
+
+    /// Generates CSS variables from theme settings.
+    ///
+    /// This method generates CSS custom properties for both light and dark modes,
+    /// following the swift-docc-render naming convention.
+    ///
+    /// - Parameters:
+    ///   - settings: The theme settings to convert.
+    ///   - includeDarkMode: Whether to include dark mode styles.
+    /// - Returns: A CSS string with the custom properties.
+    public static func generateCSS(from settings: ThemeSettings.Root, includeDarkMode: Bool = true)
+        -> String
+    {
+        var css = ""
+
+        // Generate light mode (root) variables
+        css += generateLightModeCSS(from: settings)
+
+        // Generate dark mode variables if enabled
+        if includeDarkMode {
+            css += generateDarkModeCSS(from: settings)
+        }
+
+        return css
+    }
+
+    /// Generates light mode CSS variables.
+    ///
+    /// - Parameter settings: The theme settings.
+    /// - Returns: CSS for light mode variables.
+    public static func generateLightModeCSS(from settings: ThemeSettings.Root) -> String {
+        var variables: [String] = []
+
+        // Color variables
+        if let colors = settings.theme.color {
+            for (key, value) in colors.sorted(by: { $0.key < $1.key }) {
+                let variableName = "--color-\(key)"
+                variables.append("    \(variableName): \(value.light);")
+            }
+        }
+
+        // Typography variables
+        if let typography = settings.theme.typography {
+            for (key, value) in typography.sorted(by: { $0.key < $1.key }) {
+                let variableName = "--typography-\(key)"
+                variables.append("    \(variableName): \(value);")
+            }
+        }
+
+        // Spacing variables (docc-static extension)
+        if let spacing = settings.theme.spacing {
+            for (key, value) in spacing.sorted(by: { $0.key < $1.key }) {
+                let variableName = "--spacing-\(key)"
+                variables.append("    \(variableName): \(value);")
+            }
+        }
+
+        guard !variables.isEmpty else { return "" }
+
+        return """
+
+            /* Theme settings overrides - light mode */
+            :root {
+            \(variables.joined(separator: "\n"))
+            }
+
+            """
+    }
+
+    /// Generates dark mode CSS variables.
+    ///
+    /// - Parameter settings: The theme settings.
+    /// - Returns: CSS for dark mode variables.
+    public static func generateDarkModeCSS(from settings: ThemeSettings.Root) -> String {
+        var variables: [String] = []
+
+        // Color variables - only include those with different dark values
+        if let colors = settings.theme.color {
+            for (key, value) in colors.sorted(by: { $0.key < $1.key }) {
+                // Only include if dark value differs from light value
+                if case .lightDark(let light, let dark) = value, light != dark {
+                    let variableName = "--color-\(key)"
+                    variables.append("        \(variableName): \(dark);")
+                }
+            }
+        }
+
+        guard !variables.isEmpty else { return "" }
+
+        return """
+
+            /* Theme settings overrides - dark mode */
+            @media (prefers-color-scheme: dark) {
+                :root {
+            \(variables.joined(separator: "\n"))
+                }
+            }
+
+            body[data-color-scheme="dark"] {
+            \(variables.joined(separator: "\n"))
+            }
+
+            """
+    }
+
+    /// Generates CSS variables for a specific color scheme.
+    ///
+    /// - Parameters:
+    ///   - settings: The theme settings.
+    ///   - colorScheme: The color scheme to generate for.
+    /// - Returns: CSS for the specified color scheme.
+    public static func generateCSS(
+        from settings: ThemeSettings.Root, colorScheme: ColorScheme
+    ) -> String {
+        switch colorScheme {
+        case .light:
+            return generateLightModeCSS(from: settings)
+        case .dark:
+            return generateDarkModeCSS(from: settings)
+        case .auto:
+            return generateCSS(from: settings, includeDarkMode: true)
+        }
+    }
+
+    // MARK: - Variable Extraction
+
+    /// Extracts all CSS variable definitions from theme settings.
+    ///
+    /// - Parameters:
+    ///   - settings: The theme settings.
+    ///   - colorScheme: The color scheme to extract variables for.
+    /// - Returns: A dictionary mapping variable names to values.
+    public static func extractVariables(
+        from settings: ThemeSettings.Root, colorScheme: ColorScheme
+    ) -> [String: String] {
+        var variables: [String: String] = [:]
+
+        // Color variables
+        if let colors = settings.theme.color {
+            for (key, value) in colors {
+                let variableName = "--color-\(key)"
+                switch colorScheme {
+                case .light:
+                    variables[variableName] = value.light
+                case .dark, .auto:
+                    variables[variableName] = value.dark
+                }
+            }
+        }
+
+        // Typography variables
+        if let typography = settings.theme.typography {
+            for (key, value) in typography {
+                let variableName = "--typography-\(key)"
+                variables[variableName] = value
+            }
+        }
+
+        // Spacing variables (docc-static extension)
+        if let spacing = settings.theme.spacing {
+            for (key, value) in spacing {
+                let variableName = "--spacing-\(key)"
+                variables[variableName] = value
+            }
+        }
+
+        return variables
+    }
+}

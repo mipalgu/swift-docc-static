@@ -296,12 +296,12 @@ private extension IndexPageBuilder {
         let footerContent = configuration.footerHTML ?? Configuration.defaultFooter
         return """
 
-            <footer class="doc-footer">
+            <footer class="documentation-footer">
                 <div class="footer-content">\(footerContent)</div>
                 <div class="appearance-selector" id="appearance-selector">
-                    <button type="button" class="appearance-btn" data-theme="light" aria-label="Light mode">Light</button>
-                    <button type="button" class="appearance-btn" data-theme="dark" aria-label="Dark mode">Dark</button>
-                    <button type="button" class="appearance-btn active" data-theme="auto" aria-label="Auto mode">Auto</button>
+                    <button type="button" class="appearance-btn" data-color-scheme="light" aria-label="Light mode">Light</button>
+                    <button type="button" class="appearance-btn" data-color-scheme="dark" aria-label="Dark mode">Dark</button>
+                    <button type="button" class="appearance-btn active" data-color-scheme="auto" aria-label="Auto mode">Auto</button>
                 </div>
             </footer>
         """
@@ -320,34 +320,34 @@ private extension IndexPageBuilder {
                 selector.style.visibility = 'visible';
 
                 const buttons = selector.querySelectorAll('.appearance-btn');
-                const html = document.documentElement;
+                const body = document.body;
 
                 // Load saved preference
-                const saved = localStorage.getItem('docc-theme') || 'auto';
+                const saved = localStorage.getItem('docc-color-scheme') || 'auto';
                 applyTheme(saved);
                 updateButtons(saved);
 
                 // Add click handlers
                 buttons.forEach(btn => {
                     btn.addEventListener('click', () => {
-                        const theme = btn.dataset.theme;
-                        localStorage.setItem('docc-theme', theme);
-                        applyTheme(theme);
-                        updateButtons(theme);
+                        const scheme = btn.dataset.colorScheme;
+                        localStorage.setItem('docc-color-scheme', scheme);
+                        applyTheme(scheme);
+                        updateButtons(scheme);
                     });
                 });
 
-                function applyTheme(theme) {
-                    if (theme === 'auto') {
-                        html.removeAttribute('data-theme');
+                function applyTheme(scheme) {
+                    if (scheme === 'auto') {
+                        body.removeAttribute('data-color-scheme');
                     } else {
-                        html.setAttribute('data-theme', theme);
+                        body.setAttribute('data-color-scheme', scheme);
                     }
                 }
 
-                function updateButtons(theme) {
+                function updateButtons(scheme) {
                     buttons.forEach(btn => {
-                        btn.classList.toggle('active', btn.dataset.theme === theme);
+                        btn.classList.toggle('active', btn.dataset.colorScheme === scheme);
                     });
                 }
             })();

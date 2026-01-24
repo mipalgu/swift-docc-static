@@ -29,6 +29,9 @@ struct GenerateStaticDocumentation: CommandPlugin {
         let externalDocs = argumentExtractor.extractOption(named: "external-docs", allowMultiple: true)
         let includeSearch = argumentExtractor.extractFlag(named: "include-search")
         let verbose = argumentExtractor.extractFlag(named: "verbose")
+        let theme = argumentExtractor.extractOption(named: "theme")
+        let themeSettings = argumentExtractor.extractOption(named: "theme-settings")
+        let disableDarkMode = argumentExtractor.extractFlag(named: "disable-dark-mode")
 
         // Determine which targets to document
         let sourceModuleTargets: [SourceModuleTarget]
@@ -118,6 +121,18 @@ struct GenerateStaticDocumentation: CommandPlugin {
 
         if verbose {
             processArgs.append("--verbose")
+        }
+
+        if let theme = theme {
+            processArgs.append(contentsOf: ["--theme", theme])
+        }
+
+        if let themeSettings = themeSettings {
+            processArgs.append(contentsOf: ["--theme-settings", themeSettings])
+        }
+
+        if disableDarkMode {
+            processArgs.append("--disable-dark-mode")
         }
 
         // Run the tool

@@ -1,0 +1,13 @@
+{
+  "theme": {
+    "color": {
+      "aside-note-border": "#3b82f6",
+      "aside-note-background": { "light": "#eff6ff", "dark": "#1e3a5f" },
+      "aside-warning-border": "#f59e0b",
+      "aside-warning-background": { "light": "#fffbeb", "dark": "#422006" },
+      "aside-important-border": "#ef4444",
+      "aside-important-background": { "light": "#fef2f2", "dark": "#450a0a" },
+      "link": "#6366f1"
+    }
+  }
+}

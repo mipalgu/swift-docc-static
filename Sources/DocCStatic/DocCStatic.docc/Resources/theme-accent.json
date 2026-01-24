@@ -1,0 +1,11 @@
+{
+  "theme": {
+    "color": {
+      "fill": { "light": "#fff", "dark": "#000" },
+      "link": "#6366f1"
+    },
+    "typography": {
+      "html-font": "-apple-system, BlinkMacSystemFont, sans-serif"
+    }
+  }
+}

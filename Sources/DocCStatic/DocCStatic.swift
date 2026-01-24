@@ -197,8 +197,25 @@ public enum DependencyInclusionPolicy: Sendable, Equatable, Hashable {
 }
 
 /// Configuration for the documentation theme.
-public struct ThemeConfiguration: Sendable, Equatable, Hashable {
+///
+/// Themes can be configured in two ways:
+/// 1. Using the built-in accent colour and dark mode settings
+/// 2. Using a theme-settings.json file compatible with swift-docc-render
+///
+/// ## Using Theme Settings
+///
+/// ```swift
+/// // Load a theme from a file
+/// let settings = try ThemeSettingsParser.parse(contentsOf: themeURL)
+/// let theme = ThemeConfiguration(themeSettings: settings)
+///
+/// // Use a built-in theme
+/// let theme = ThemeConfiguration(builtInTheme: .classic)
+/// ```
+public struct ThemeConfiguration: Sendable, Equatable {
     /// The accent colour used for links and highlights.
+    ///
+    /// This is only used when `themeSettings` is `nil`.
     public var accentColour: String
 
     /// Whether to include dark mode styles.
@@ -207,9 +224,15 @@ public struct ThemeConfiguration: Sendable, Equatable, Hashable {
     /// Custom CSS to append to the generated stylesheet.
     public var customCSS: String?
 
-    /// The default theme configuration matching Apple's DocC appearance.
+    /// Theme settings loaded from a theme-settings.json file.
+    ///
+    /// When set, these settings override the default CSS variable values.
+    /// The settings are compatible with swift-docc-render themes.
+    public var themeSettings: ThemeSettings.Root?
+
+    /// The default theme configuration matching swift-docc-render's appearance.
     public static let `default` = ThemeConfiguration(
-        accentColour: "#0066cc",
+        builtInTheme: .default,
         includeDarkMode: true,
         customCSS: nil
     )
@@ -220,13 +243,51 @@ public struct ThemeConfiguration: Sendable, Equatable, Hashable {
     ///   - accentColour: The accent colour for links and highlights (CSS colour value).
     ///   - includeDarkMode: Whether to generate dark mode styles.
     ///   - customCSS: Optional custom CSS to append.
+    ///   - themeSettings: Optional theme settings from a theme-settings.json file.
     public init(
         accentColour: String,
         includeDarkMode: Bool,
-        customCSS: String? = nil
+        customCSS: String? = nil,
+        themeSettings: ThemeSettings.Root? = nil
     ) {
         self.accentColour = accentColour
         self.includeDarkMode = includeDarkMode
         self.customCSS = customCSS
+        self.themeSettings = themeSettings
+    }
+
+    /// Creates a theme configuration from a built-in theme.
+    ///
+    /// - Parameters:
+    ///   - builtInTheme: The built-in theme to use.
+    ///   - includeDarkMode: Whether to include dark mode styles.
+    ///   - customCSS: Optional custom CSS to append.
+    public init(
+        builtInTheme: ThemeSettings.BuiltInTheme,
+        includeDarkMode: Bool = true,
+        customCSS: String? = nil
+    ) {
+        let settings = builtInTheme.settings
+        self.accentColour = settings.theme.color?["link"]?.light ?? "#0066cc"
+        self.includeDarkMode = includeDarkMode
+        self.customCSS = customCSS
+        self.themeSettings = settings
+    }
+
+    /// Creates a theme configuration from theme settings.
+    ///
+    /// - Parameters:
+    ///   - themeSettings: The theme settings to use.
+    ///   - includeDarkMode: Whether to include dark mode styles.
+    ///   - customCSS: Optional custom CSS to append.
+    public init(
+        themeSettings: ThemeSettings.Root,
+        includeDarkMode: Bool = true,
+        customCSS: String? = nil
+    ) {
+        self.accentColour = themeSettings.theme.color?["link"]?.light ?? "#0066cc"
+        self.includeDarkMode = includeDarkMode
+        self.customCSS = customCSS
+        self.themeSettings = themeSettings
     }
 }

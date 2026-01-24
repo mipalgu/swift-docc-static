@@ -70,9 +70,8 @@ public extension NavigationSidebarBuilder {
     ) -> String {
         var html = """
 
-                <nav class="doc-sidebar">
+                <nav class="sidebar">
                     <div class="sidebar-content">
-                        <h2 class="sidebar-module">Documentation</h2>
         """
 
         // Modules are already in Package.swift order from filterNavigationIndex
@@ -125,13 +124,13 @@ public extension NavigationSidebarBuilder {
                         <div class="sidebar-section module-section">
                             <input type="checkbox" id="\(checkboxId)" class="disclosure-checkbox"\(checkedAttr)>
                             <div class="module-header">
-                                <label for="\(checkboxId)" class="disclosure-chevron" aria-label="Toggle \(escapeHTML(moduleNode.title))">
-                                    <svg viewBox="0 0 10 10" fill="currentColor">
-                                        <path d="M3 1.5L7 5L3 8.5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-                                    </svg>
-                                </label>
-                                <a href="\(escapeHTML(relativeURL))" class="sidebar-module-link">
-                                    <h3 class="sidebar-heading module-name">\(escapeHTML(moduleNode.title))</h3>
+                                <a href="\(escapeHTML(relativeURL))" class="technology-title">
+                                    <h2 class="card-link">\(escapeHTML(moduleNode.title))</h2>
+                                    <label for="\(checkboxId)" class="disclosure-chevron" aria-label="Toggle \(escapeHTML(moduleNode.title))">
+                                        <svg viewBox="0 0 10 10" fill="currentColor">
+                                            <path d="M3 1.5L7 5L3 8.5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                                        </svg>
+                                    </label>
                                 </a>
                             </div>
         """
@@ -164,10 +163,10 @@ private extension NavigationSidebarBuilder {
     mutating func buildSidebarFromNode(_ moduleNode: NavigationNode, currentPath: String, depth: Int) -> String {
         var html = """
 
-                <nav class="doc-sidebar">
+                <nav class="sidebar">
                     <div class="sidebar-content">
-                        <a href="\(makeRelativeURL(moduleNode.path ?? "", depth: depth))" class="sidebar-module-link">
-                            <h2 class="sidebar-module">\(escapeHTML(moduleNode.title))</h2>
+                        <a href="\(makeRelativeURL(moduleNode.path ?? "", depth: depth))" class="technology-title">
+                            <h2 class="card-link">\(escapeHTML(moduleNode.title))</h2>
                         </a>
         """
 
@@ -214,7 +213,7 @@ private extension NavigationSidebarBuilder {
                 html += """
 
                         <div class="sidebar-section">
-                            <h3 class="sidebar-heading">\(escapeHTML(node.title))</h3>
+                            <h3 class="leaf-link">\(escapeHTML(node.title))</h3>
                             <ul class="sidebar-list">
                 """
             } else {
@@ -273,7 +272,7 @@ private extension NavigationSidebarBuilder {
 
         var html = """
 
-                                <li class="sidebar-item expandable\(selectedClass)">
+                                <li class="navigator-card expandable\(selectedClass)">
                                     <input type="checkbox" id="\(checkboxId)" class="disclosure-checkbox"\(checkedAttr)>
                                     <label for="\(checkboxId)" class="disclosure-chevron" aria-label="Toggle \(escapeHTML(node.title))">
                                         <svg viewBox="0 0 10 10" fill="currentColor">
@@ -282,13 +281,9 @@ private extension NavigationSidebarBuilder {
                                     </label>
         """
 
-        // Add badge or icon
-        if nodeType.showsBadge {
-            html += """
-
-                                    <span class="symbol-badge \(nodeType.badgeClass)">\(nodeType.badgeCharacter)</span>
-            """
-        } else if let iconSVG = nodeType.iconSVG {
+        // Note: swift-docc doesn't show badges in the sidebar navigator, only icons for articles/tutorials
+        // Add icon for articles/tutorials only
+        if let iconSVG = nodeType.iconSVG, !nodeType.showsBadge {
             html += """
 
                                     <span class="symbol-icon">\(iconSVG)</span>
@@ -509,16 +504,12 @@ private extension NavigationSidebarBuilder {
 
         var html = """
 
-                                <li class="sidebar-item\(selectedClass)">
+                                <li class="navigator-card\(selectedClass)">
         """
 
-        // Add badge or icon
-        if nodeType.showsBadge {
-            html += """
-
-                                    <span class="symbol-badge \(nodeType.badgeClass)">\(nodeType.badgeCharacter)</span>
-            """
-        } else if let iconSVG = nodeType.iconSVG {
+        // Note: swift-docc doesn't show badges in the sidebar navigator, only icons for articles/tutorials
+        // Add icon for articles/tutorials only
+        if let iconSVG = nodeType.iconSVG, !nodeType.showsBadge {
             html += """
 
                                     <span class="symbol-icon">\(iconSVG)</span>
@@ -545,13 +536,8 @@ private extension NavigationSidebarBuilder {
                                         <li class="nav-child-item\(selectedClass)">
         """
 
-        // Add badge or icon
-        if nodeType.showsBadge {
-            html += """
-
-                                            <span class="symbol-badge \(nodeType.badgeClass)">\(nodeType.badgeCharacter)</span>
-            """
-        }
+        // Note: swift-docc doesn't show badges in the sidebar navigator
+        // (no badges added here to match swift-docc behavior)
 
         html += """
 
@@ -630,9 +616,8 @@ private extension NavigationSidebarBuilder {
     func buildFallbackSidebar(currentPath: String, depth: Int) -> String {
         return """
 
-                <nav class="doc-sidebar">
+                <nav class="sidebar">
                     <div class="sidebar-content">
-                        <h2 class="sidebar-module">Documentation</h2>
                     </div>
                     <div class="sidebar-filter" id="sidebar-filter">
                         <input type="text" placeholder="Filter" class="filter-input" aria-label="Filter navigation">

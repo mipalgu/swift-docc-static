@@ -50,9 +50,11 @@ struct ConfigurationTests {
     func defaultTheme() {
         let theme = ThemeConfiguration.default
 
-        #expect(theme.accentColour == "#0066cc")
+        // Default theme uses the generated theme data from Themes/default.theme-settings.json
+        #expect(theme.accentColour == "#36f")
         #expect(theme.includeDarkMode == true)
         #expect(theme.customCSS == nil)
+        #expect(theme.themeSettings != nil)
     }
 
     @Test("Custom theme configuration")
