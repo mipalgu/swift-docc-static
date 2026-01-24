@@ -281,9 +281,13 @@ private extension NavigationSidebarBuilder {
                                     </label>
         """
 
-        // Note: swift-docc doesn't show badges in the sidebar navigator, only icons for articles/tutorials
-        // Add icon for articles/tutorials only
-        if let iconSVG = nodeType.iconSVG, !nodeType.showsBadge {
+        // Add badge or icon
+        if nodeType.showsBadge {
+            html += """
+
+                                    <span class="symbol-badge \(nodeType.badgeClass)">\(nodeType.badgeCharacter)</span>
+            """
+        } else if let iconSVG = nodeType.iconSVG {
             html += """
 
                                     <span class="symbol-icon">\(iconSVG)</span>
@@ -507,9 +511,13 @@ private extension NavigationSidebarBuilder {
                                 <li class="navigator-card\(selectedClass)">
         """
 
-        // Note: swift-docc doesn't show badges in the sidebar navigator, only icons for articles/tutorials
-        // Add icon for articles/tutorials only
-        if let iconSVG = nodeType.iconSVG, !nodeType.showsBadge {
+        // Add badge or icon
+        if nodeType.showsBadge {
+            html += """
+
+                                    <span class="symbol-badge \(nodeType.badgeClass)">\(nodeType.badgeCharacter)</span>
+            """
+        } else if let iconSVG = nodeType.iconSVG {
             html += """
 
                                     <span class="symbol-icon">\(iconSVG)</span>
@@ -536,8 +544,18 @@ private extension NavigationSidebarBuilder {
                                         <li class="nav-child-item\(selectedClass)">
         """
 
-        // Note: swift-docc doesn't show badges in the sidebar navigator
-        // (no badges added here to match swift-docc behavior)
+        // Add badge or icon for nested items (swift-docc-render shows badges for all items)
+        if nodeType.showsBadge {
+            html += """
+
+                                            <span class="symbol-badge \(nodeType.badgeClass)">\(nodeType.badgeCharacter)</span>
+            """
+        } else if let iconSVG = nodeType.iconSVG {
+            html += """
+
+                                            <span class="symbol-icon">\(iconSVG)</span>
+            """
+        }
 
         html += """
 
