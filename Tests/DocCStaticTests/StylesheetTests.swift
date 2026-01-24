@@ -94,6 +94,41 @@ struct StylesheetTests {
         #expect(css.contains(".module-name"))
         #expect(css.contains(".module-abstract"))
     }
+
+    @Test("Default theme CSS includes code block padding variable")
+    func codeBlockPaddingVariable() {
+        let css = DocCStylesheet.generate(theme: .default)
+
+        // Verify the swift-docc-render compatible variable is defined
+        #expect(css.contains("--code-block-style-elements-padding"))
+    }
+
+    @Test("Pre element uses code block padding variable")
+    func preElementPadding() {
+        let css = DocCStylesheet.generate(theme: .default)
+
+        // Verify pre element references the padding variable
+        // It should use --code-block-style-elements-padding with fallback to --spacing-pre-padding
+        #expect(css.contains("padding: var(--code-block-style-elements-padding"))
+    }
+
+    @Test("Default theme code padding is 8px 14px")
+    func defaultCodePadding() {
+        let css = DocCStylesheet.generate(theme: .default)
+
+        // Verify the default padding value matches swift-docc-render
+        #expect(css.contains("8px 14px"))
+    }
+
+    @Test("Pre code element has no background")
+    func preCodeStyling() {
+        let css = DocCStylesheet.generate(theme: .default)
+
+        // Verify pre code has correct styling
+        #expect(css.contains("pre code"))
+        #expect(css.contains("background: none"))
+        #expect(css.contains("display: block"))
+    }
 }
 
 @Suite("Generation Error Tests")
