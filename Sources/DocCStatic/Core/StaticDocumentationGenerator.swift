@@ -1812,6 +1812,11 @@ enum DocCStylesheet {
                 font-weight: var(--spacing-body-font-weight, 400);
                 -webkit-font-smoothing: antialiased;
 
+                /* Spacing variables matching swift-docc-render */
+                --spacing-stacked-margin-small: 0.4em;
+                --spacing-stacked-margin-large: 0.8em;
+                --spacing-stacked-margin-xlarge: 1.6em;
+
                 /* Default padding for code blocks (matches swift-docc-render) */
                 --code-block-style-elements-padding: 8px 14px;
             }
@@ -1843,7 +1848,8 @@ enum DocCStylesheet {
                 /* Use swift-docc-render variable name, fallback to legacy for classic theme */
                 padding: var(--code-block-style-elements-padding, var(--spacing-pre-padding, 8px 14px));
                 overflow-x: auto;
-                margin: var(--spacing-pre-margin, 27px 0 0);
+                /* Use spacing-stacked-margin-large to match swift-docc-render (0.8em ≈ 13.6px at 17px font) */
+                margin: var(--spacing-pre-margin, var(--spacing-stacked-margin-large, 0.8em) 0 0);
                 max-width: 100%;
                 box-sizing: border-box;
                 position: var(--spacing-pre-code-position, static);
