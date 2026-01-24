@@ -129,6 +129,44 @@ struct StylesheetTests {
         #expect(css.contains("background: none"))
         #expect(css.contains("display: block"))
     }
+
+    @Test("Spacing variables are defined in body")
+    func spacingVariables() {
+        let css = DocCStylesheet.generate(theme: .default)
+
+        // Verify swift-docc-render spacing variables are defined
+        #expect(css.contains("--spacing-stacked-margin-small"))
+        #expect(css.contains("--spacing-stacked-margin-large"))
+        #expect(css.contains("--spacing-stacked-margin-xlarge"))
+    }
+
+    @Test("Spacing variables have correct values")
+    func spacingVariableValues() {
+        let css = DocCStylesheet.generate(theme: .default)
+
+        // Verify the spacing values match swift-docc-render
+        #expect(css.contains("--spacing-stacked-margin-small: 0.4em"))
+        #expect(css.contains("--spacing-stacked-margin-large: 0.8em"))
+        #expect(css.contains("--spacing-stacked-margin-xlarge: 1.6em"))
+    }
+
+    @Test("Pre element margin uses spacing variable")
+    func preElementMargin() {
+        let css = DocCStylesheet.generate(theme: .default)
+
+        // Verify pre element uses spacing-stacked-margin-large for top margin
+        // Should reference the variable, not use fixed 27px
+        #expect(css.contains("--spacing-stacked-margin-large"))
+    }
+
+    @Test("Pre code element has zero padding")
+    func preCodePadding() {
+        let css = DocCStylesheet.generate(theme: .default)
+
+        // Verify pre code has padding: 0 to avoid double padding
+        #expect(css.contains("pre code"))
+        #expect(css.contains("padding: var(--spacing-pre-code-padding, 0)"))
+    }
 }
 
 @Suite("Generation Error Tests")
