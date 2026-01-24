@@ -35,6 +35,9 @@
     "typography": {
       "html-font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
       "html-font-mono": "monospace"
+    },
+    "spacing": {
+      "badge-border-radius": "0"
     }
   }
 }

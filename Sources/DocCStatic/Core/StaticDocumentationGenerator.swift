@@ -2419,10 +2419,11 @@ enum DocCStylesheet {
             }
 
             /* Symbol type badges - monochrome like DocC */
-            .badge {
+            .badge,
+            .symbol-badge {
                 width: 17px;
                 height: 17px;
-                border-radius: 3px;
+                border-radius: var(--spacing-badge-border-radius, 3px);
                 display: inline-flex;
                 align-items: center;
                 justify-content: center;
