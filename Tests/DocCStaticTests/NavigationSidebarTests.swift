@@ -134,4 +134,243 @@ struct NavigationSidebarBuilderTests {
         #expect(nodeType.showsBadge == true)
         #expect(nodeType.badgeClass == "badge-typealias")
     }
+
+    @Test("Navigator card has depth-spacer element")
+    func depthSpacerGeneration() {
+        let childNode = NavigationNode(
+            title: "TestStruct",
+            path: "/documentation/test/teststruct",
+            type: "struct",
+            children: [],
+            isDeprecated: nil,
+            isExternal: nil,
+            isBeta: nil
+        )
+
+        let moduleNode = NavigationNode(
+            title: "Test",
+            path: "/documentation/test",
+            type: "module",
+            children: [childNode],
+            isDeprecated: nil,
+            isExternal: nil,
+            isBeta: nil
+        )
+
+        let navigationIndex = NavigationIndex(
+            schemaVersion: nil,
+            includedArchiveIdentifiers: nil,
+            interfaceLanguages: ["swift": [moduleNode]]
+        )
+
+        var builder = NavigationSidebarBuilder(navigationIndex: navigationIndex)
+        let html = builder.buildSidebar(
+            moduleName: "test",
+            currentPath: "/documentation/test",
+            depth: 1
+        )
+
+        // Should contain depth-spacer div
+        #expect(html.contains("<div class=\"depth-spacer\">"))
+    }
+
+    @Test("Navigator card has nesting-index CSS variable")
+    func nestingIndexVariable() {
+        let child = NavigationNode(
+            title: "InnerStruct",
+            path: "/documentation/test/innerstruct",
+            type: "struct",
+            children: [],
+            isDeprecated: nil,
+            isExternal: nil,
+            isBeta: nil
+        )
+
+        let parent = NavigationNode(
+            title: "ParentStruct",
+            path: "/documentation/test/parentstruct",
+            type: "struct",
+            children: [child],
+            isDeprecated: nil,
+            isExternal: nil,
+            isBeta: nil
+        )
+
+        let moduleNode = NavigationNode(
+            title: "Test",
+            path: "/documentation/test",
+            type: "module",
+            children: [parent],
+            isDeprecated: nil,
+            isExternal: nil,
+            isBeta: nil
+        )
+
+        let navigationIndex = NavigationIndex(
+            schemaVersion: nil,
+            includedArchiveIdentifiers: nil,
+            interfaceLanguages: ["swift": [moduleNode]]
+        )
+
+        var builder = NavigationSidebarBuilder(navigationIndex: navigationIndex)
+        let html = builder.buildSidebar(
+            moduleName: "test",
+            currentPath: "/documentation/test",
+            depth: 1
+        )
+
+        // Should contain nesting-index CSS variable
+        #expect(html.contains("--nesting-index:"))
+    }
+
+    @Test("Navigator card has disclosure chevron")
+    func disclosureChevron() {
+        let child = NavigationNode(
+            title: "ChildStruct",
+            path: "/documentation/test/childstruct",
+            type: "struct",
+            children: [],
+            isDeprecated: nil,
+            isExternal: nil,
+            isBeta: nil
+        )
+
+        let parent = NavigationNode(
+            title: "ParentStruct",
+            path: "/documentation/test/parentstruct",
+            type: "struct",
+            children: [child],
+            isDeprecated: nil,
+            isExternal: nil,
+            isBeta: nil
+        )
+
+        let moduleNode = NavigationNode(
+            title: "Test",
+            path: "/documentation/test",
+            type: "module",
+            children: [parent],
+            isDeprecated: nil,
+            isExternal: nil,
+            isBeta: nil
+        )
+
+        let navigationIndex = NavigationIndex(
+            schemaVersion: nil,
+            includedArchiveIdentifiers: nil,
+            interfaceLanguages: ["swift": [moduleNode]]
+        )
+
+        var builder = NavigationSidebarBuilder(navigationIndex: navigationIndex)
+        let html = builder.buildSidebar(
+            moduleName: "test",
+            currentPath: "/documentation/test",
+            depth: 1
+        )
+
+        // Should contain disclosure chevron elements
+        #expect(html.contains("disclosure-checkbox"))
+        #expect(html.contains("disclosure-chevron"))
+        #expect(html.contains("expandable"))
+    }
+
+    @Test("Navigator badge uses correct CSS classes")
+    func badgeCSSClasses() {
+        let childNode = NavigationNode(
+            title: "TestStruct",
+            path: "/documentation/test/teststruct",
+            type: "struct",
+            children: [],
+            isDeprecated: nil,
+            isExternal: nil,
+            isBeta: nil
+        )
+
+        let moduleNode = NavigationNode(
+            title: "Test",
+            path: "/documentation/test",
+            type: "module",
+            children: [childNode],
+            isDeprecated: nil,
+            isExternal: nil,
+            isBeta: nil
+        )
+
+        let navigationIndex = NavigationIndex(
+            schemaVersion: nil,
+            includedArchiveIdentifiers: nil,
+            interfaceLanguages: ["swift": [moduleNode]]
+        )
+
+        var builder = NavigationSidebarBuilder(navigationIndex: navigationIndex)
+        let html = builder.buildSidebar(
+            moduleName: "test",
+            currentPath: "/documentation/test",
+            depth: 1
+        )
+
+        // Should contain badge with correct class
+        #expect(html.contains("class=\"badge"))
+        #expect(html.contains("badge-struct"))
+    }
+
+    @Test("Nesting index increments with depth")
+    func nestingIndexIncrement() {
+        let grandchild = NavigationNode(
+            title: "GrandchildStruct",
+            path: "/documentation/test/grandchildstruct",
+            type: "struct",
+            children: [],
+            isDeprecated: nil,
+            isExternal: nil,
+            isBeta: nil
+        )
+
+        let child = NavigationNode(
+            title: "ChildStruct",
+            path: "/documentation/test/childstruct",
+            type: "struct",
+            children: [grandchild],
+            isDeprecated: nil,
+            isExternal: nil,
+            isBeta: nil
+        )
+
+        let parent = NavigationNode(
+            title: "ParentStruct",
+            path: "/documentation/test/parentstruct",
+            type: "struct",
+            children: [child],
+            isDeprecated: nil,
+            isExternal: nil,
+            isBeta: nil
+        )
+
+        let moduleNode = NavigationNode(
+            title: "Test",
+            path: "/documentation/test",
+            type: "module",
+            children: [parent],
+            isDeprecated: nil,
+            isExternal: nil,
+            isBeta: nil
+        )
+
+        let navigationIndex = NavigationIndex(
+            schemaVersion: nil,
+            includedArchiveIdentifiers: nil,
+            interfaceLanguages: ["swift": [moduleNode]]
+        )
+
+        var builder = NavigationSidebarBuilder(navigationIndex: navigationIndex)
+        let html = builder.buildSidebar(
+            moduleName: "test",
+            currentPath: "/documentation/test",
+            depth: 1
+        )
+
+        // Should contain different nesting levels
+        #expect(html.contains("--nesting-index: 0"))
+        #expect(html.contains("--nesting-index: 1") || html.contains("--nesting-index: 2"))
+    }
 }

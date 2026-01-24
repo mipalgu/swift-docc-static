@@ -19,9 +19,9 @@
       "syntax-comments": { "light": "#5d6c79", "dark": "#7f8c8d" },
       "syntax-numbers": { "light": "#272ad8", "dark": "#d9c97c" },
       "documentation-intro-fill": { "light": "#f0f0f0", "dark": "#2a2a2a" },
-      "badge-default": { "light": "#666666", "dark": "#b0b0b0" },
-      "badge-text": { "light": "#666666", "dark": "#b0b0b0" },
-      "badge-border": { "light": "#cccccc", "dark": "#575757" },
+      "badge-default": { "light": "transparent", "dark": "transparent" },
+      "badge-text": { "light": "#666666", "dark": "#cccccc" },
+      "badge-border": { "light": "#666666", "dark": "#cccccc" },
       "aside-note": { "light": "#666666", "dark": "#b0b0b0" },
       "aside-note-background": { "light": "#f7f7f7", "dark": "#161616" },
       "aside-note-border": { "light": "#666666", "dark": "#b0b0b0" },
@@ -35,9 +35,6 @@
     "typography": {
       "html-font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
       "html-font-mono": "monospace"
-    },
-    "spacing": {
-      "badge-border-radius": "0"
     }
   }
 }

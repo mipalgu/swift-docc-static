@@ -235,7 +235,8 @@ private extension NavigationSidebarBuilder {
                     html += buildSimpleItem(
                         node,
                         depth: depth,
-                        isSelected: isSelected
+                        isSelected: isSelected,
+                        level: level
                     )
                 }
             }
@@ -272,13 +273,15 @@ private extension NavigationSidebarBuilder {
 
         var html = """
 
-                                <li class="navigator-card expandable\(selectedClass)">
-                                    <input type="checkbox" id="\(checkboxId)" class="disclosure-checkbox"\(checkedAttr)>
-                                    <label for="\(checkboxId)" class="disclosure-chevron" aria-label="Toggle \(escapeHTML(node.title))">
-                                        <svg viewBox="0 0 10 10" fill="currentColor">
-                                            <path d="M3 1.5L7 5L3 8.5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-                                        </svg>
-                                    </label>
+                                <li class="navigator-card expandable\(selectedClass)" style="--nesting-index: \(level)">
+                                    <div class="depth-spacer">
+                                        <input type="checkbox" id="\(checkboxId)" class="disclosure-checkbox"\(checkedAttr)>
+                                        <label for="\(checkboxId)" class="disclosure-chevron" aria-label="Toggle \(escapeHTML(node.title))">
+                                            <svg viewBox="0 0 10 10" fill="currentColor">
+                                                <path d="M3 1.5L7 5L3 8.5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                                            </svg>
+                                        </label>
+                                    </div>
         """
 
         // Add badge or icon
@@ -405,7 +408,7 @@ private extension NavigationSidebarBuilder {
                         isExpanded: shouldExpandNode(node, currentPath: currentPath)
                     )
                 } else {
-                    html += buildNestedSimpleItem(node, depth: depth, isSelected: isSelected)
+                    html += buildNestedSimpleItem(node, depth: depth, isSelected: isSelected, level: level)
                 }
             }
             i += 1
@@ -501,14 +504,15 @@ private extension NavigationSidebarBuilder {
     }
 
     /// Builds a simple (non-expandable) navigation item.
-    func buildSimpleItem(_ node: NavigationNode, depth: Int, isSelected: Bool) -> String {
+    func buildSimpleItem(_ node: NavigationNode, depth: Int, isSelected: Bool, level: Int = 0) -> String {
         let nodeType = node.nodeType
         let relativeURL = makeRelativeURL(node.path ?? "", depth: depth)
         let selectedClass = isSelected ? " selected" : ""
 
         var html = """
 
-                                <li class="navigator-card\(selectedClass)">
+                                <li class="navigator-card\(selectedClass)" style="--nesting-index: \(level)">
+                                    <div class="depth-spacer"></div>
         """
 
         // Add badge or icon
@@ -534,14 +538,15 @@ private extension NavigationSidebarBuilder {
     }
 
     /// Builds a nested simple item (inside an expandable parent).
-    func buildNestedSimpleItem(_ node: NavigationNode, depth: Int, isSelected: Bool) -> String {
+    func buildNestedSimpleItem(_ node: NavigationNode, depth: Int, isSelected: Bool, level: Int) -> String {
         let nodeType = node.nodeType
         let relativeURL = makeRelativeURL(node.path ?? "", depth: depth)
         let selectedClass = isSelected ? " selected" : ""
 
         var html = """
 
-                                        <li class="nav-child-item\(selectedClass)">
+                                        <li class="nav-child-item\(selectedClass)" style="--nesting-index: \(level)">
+                                            <div class="depth-spacer"></div>
         """
 
         // Add badge or icon for nested items (swift-docc-render shows badges for all items)

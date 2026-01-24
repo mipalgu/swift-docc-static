@@ -1778,10 +1778,10 @@ enum DocCStylesheet {
                 --color-syntax-comments: #707f8c;
                 --color-syntax-numbers: #272ad8;
 
-                /* Symbol badge colours */
-                --color-badge-default: #f5f5f5;
-                --color-badge-text: #666;
-                --color-badge-border: #ccc;
+                /* Symbol badge colours - matching swift-docc-render SVG badges */
+                --color-badge-default: transparent;
+                --color-badge-text: #666666;
+                --color-badge-border: #666666;
 
                 /* Aside colours */
                 --color-aside-note-background: #e3f2fd;
@@ -1793,6 +1793,14 @@ enum DocCStylesheet {
 
                 /* Decorative colours */
                 --color-documentation-intro-fill: #f0f0f0;
+
+                /* Navigator spacing - matching swift-docc-render defaults */
+                --spacing-nesting-spacing: 15px;
+                --spacing-nav-depth-spacer: 20px;
+                --spacing-nav-chevron-padding: 5px;
+
+                /* Content padding - matching swift-docc-render container padding */
+                --spacing-content-padding-horizontal: 5rem;
             }
 
             \(theme.includeDarkMode ? darkModeStyles : "")
@@ -1842,17 +1850,19 @@ enum DocCStylesheet {
                 font-family: var(--typography-html-font-mono);
                 font-size: var(--spacing-pre-font-size, 15px);
                 line-height: var(--spacing-pre-line-height, 25px);
-                background: var(--color-pre-background, var(--color-fill-secondary));
-                border: var(--spacing-pre-border, 1px solid var(--color-fill-gray));
+                background: var(--color-pre-background, transparent);
+                border: var(--spacing-pre-border, none);
                 border-radius: var(--spacing-pre-border-radius, 4px);
                 /* Use swift-docc-render variable name, fallback to legacy for classic theme */
                 padding: var(--code-block-style-elements-padding, var(--spacing-pre-padding, 8px 14px));
                 overflow-x: auto;
-                /* Use spacing-stacked-margin-large to match swift-docc-render (0.8em ≈ 13.6px at 17px font) */
-                margin: var(--spacing-pre-margin, var(--spacing-stacked-margin-large, 0.8em) 0 0);
+                margin: var(--spacing-pre-margin, 0);
+                margin-left: var(--spacing-content-padding-horizontal, 5rem);
+                margin-right: var(--spacing-content-padding-horizontal, 5rem);
                 max-width: 100%;
                 box-sizing: border-box;
                 position: var(--spacing-pre-code-position, static);
+                display: var(--spacing-pre-display, flex);
             }
 
             pre code {
@@ -1914,21 +1924,20 @@ enum DocCStylesheet {
 
             h1, h2, h3, h4, h5, h6 {
                 font-family: var(--typography-html-font, 'Helvetica Neue', Helvetica, Arial, sans-serif);
-                margin-top: var(--spacing-heading-margin-top, 1.5em);
-                margin-bottom: var(--spacing-heading-margin-bottom, 0.5em);
+                margin-top: var(--spacing-heading-margin-top, 0);
+                margin-bottom: var(--spacing-heading-margin-bottom, 0);
+                padding: 0;
             }
 
             h1 {
                 font-size: var(--spacing-h1-font-size, 32px);
                 line-height: var(--spacing-h1-line-height, 36px);
                 font-weight: var(--spacing-h1-font-weight, 400);
-                margin-top: 0;
-                margin-bottom: var(--spacing-h1-margin-bottom, 0);
             }
             h2 {
-                font-size: var(--spacing-h2-font-size, 21px);
-                line-height: var(--spacing-h2-line-height, 25px);
-                font-weight: var(--spacing-h2-font-weight, 600);
+                font-size: var(--spacing-h2-font-size, 32px);
+                line-height: var(--spacing-h2-line-height, 36px);
+                font-weight: var(--spacing-h2-font-weight, 400);
                 border-bottom: var(--spacing-h2-border-bottom, none);
                 padding-bottom: var(--spacing-h2-padding-bottom, 0);
             }
@@ -2164,14 +2173,44 @@ enum DocCStylesheet {
             }
 
             .navigator-card {
+                --nesting-index: 0;
                 display: flex;
                 align-items: center;
                 gap: 0.375rem;
-                padding: var(--spacing-navigator-card-padding, 5px 20px);
+                padding: 5px 0;
                 font-size: var(--spacing-navigator-card-font-size, 17px);
                 line-height: var(--spacing-navigator-card-line-height, 25px);
                 min-height: var(--spacing-navigator-card-min-height, 32px);
                 box-sizing: border-box;
+            }
+
+            /* Depth spacer for nesting indentation (matches swift-docc-render)
+               Defaults: nesting-spacing = 15px, nav-depth-spacer = 20px (from swift-docc-render)
+               These can be overridden via --spacing-nesting-spacing and --spacing-nav-depth-spacer */
+            .depth-spacer {
+                width: calc(var(--nesting-index) * var(--spacing-nesting-spacing, 15px) + var(--spacing-nav-depth-spacer, 20px));
+                height: 100%;
+                position: relative;
+                flex: 0 0 auto;
+            }
+
+            /* Disclosure checkbox and chevron inside depth-spacer */
+            .depth-spacer .disclosure-checkbox {
+                position: absolute;
+                opacity: 0;
+                pointer-events: none;
+            }
+
+            .depth-spacer .disclosure-chevron {
+                position: absolute;
+                width: 100%;
+                height: 100%;
+                padding-right: var(--spacing-nav-chevron-padding, 5px);
+                box-sizing: border-box;
+                z-index: 1;
+                display: flex;
+                align-items: center;
+                justify-content: flex-end;
             }
 
             .navigator-card a {
@@ -2350,6 +2389,7 @@ enum DocCStylesheet {
 
             /* Nested child items */
             .nav-child-item {
+                --nesting-index: 1;
                 display: flex;
                 align-items: center;
                 gap: 0.375rem;
@@ -2418,17 +2458,17 @@ enum DocCStylesheet {
                 color: var(--color-figure-gray-secondary);
             }
 
-            /* Symbol type badges - monochrome like DocC */
+            /* Symbol type badges - matching swift-docc-render SVG style */
             .badge,
             .symbol-badge {
-                width: 17px;
-                height: 17px;
-                border-radius: var(--spacing-badge-border-radius, 3px);
+                width: 16px;
+                height: 16px;
+                border-radius: var(--spacing-badge-border-radius, 0);
                 display: inline-flex;
                 align-items: center;
                 justify-content: center;
-                font-size: 0.6875rem;
-                font-weight: 600;
+                font-size: 11px;
+                font-weight: bold;
                 flex-shrink: 0;
                 background: var(--color-badge-default);
                 color: var(--color-badge-text);
@@ -2762,15 +2802,14 @@ enum DocCStylesheet {
             .doc-topic > p,
             .doc-topic > ul,
             .doc-topic > ol,
-            .doc-topic > pre,
             .doc-topic > h2,
             .doc-topic > h3,
             .doc-topic > h4,
             .doc-topic > h5,
             .doc-topic > h6,
             .doc-topic > .aside {
-                padding-left: 3rem;
-                padding-right: 3rem;
+                padding-left: var(--spacing-content-padding-horizontal, 5rem);
+                padding-right: var(--spacing-content-padding-horizontal, 5rem);
             }
 
             .topics,
@@ -4379,10 +4418,10 @@ enum DocCStylesheet {
                 --color-syntax-comments: #7f8c8d;
                 --color-syntax-numbers: #d9c97c;
 
-                /* Symbol badge colours - dark mode (monochrome) */
-                --color-badge-default: #2c2c2e;
-                --color-badge-text: #a1a1a6;
-                --color-badge-border: #424245;
+                /* Symbol badge colours - dark mode - matching swift-docc-render */
+                --color-badge-default: transparent;
+                --color-badge-text: #cccccc;
+                --color-badge-border: #cccccc;
 
                 /* Aside colours - dark mode */
                 --color-aside-note-background: rgba(59, 130, 246, 0.15);
@@ -4411,9 +4450,9 @@ enum DocCStylesheet {
             --color-syntax-strings: #d12f1b;
             --color-syntax-comments: #707f8c;
             --color-syntax-numbers: #272ad8;
-            --color-badge-default: #f5f5f5;
-            --color-badge-text: #666;
-            --color-badge-border: #ccc;
+            --color-badge-default: transparent;
+            --color-badge-text: #666666;
+            --color-badge-border: #666666;
             --color-documentation-intro-fill: #f0f0f0;
         }
 
@@ -4428,9 +4467,9 @@ enum DocCStylesheet {
             --color-syntax-strings: #ff8170;
             --color-syntax-comments: #7f8c8d;
             --color-syntax-numbers: #d9c97c;
-            --color-badge-default: #2c2c2e;
-            --color-badge-text: #a1a1a6;
-            --color-badge-border: #424245;
+            --color-badge-default: transparent;
+            --color-badge-text: #cccccc;
+            --color-badge-border: #cccccc;
             --color-documentation-intro-fill: #4a4a4a;
         }
         """
