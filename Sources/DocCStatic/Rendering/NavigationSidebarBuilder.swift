@@ -285,7 +285,7 @@ private extension NavigationSidebarBuilder {
         if nodeType.showsBadge {
             html += """
 
-                                    <span class="symbol-badge \(nodeType.badgeClass)">\(nodeType.badgeCharacter)</span>
+                                    <span class="badge \(nodeType.badgeClass)">\(nodeType.badgeCharacter)</span>
             """
         } else if let iconSVG = nodeType.iconSVG {
             html += """
@@ -515,7 +515,7 @@ private extension NavigationSidebarBuilder {
         if nodeType.showsBadge {
             html += """
 
-                                    <span class="symbol-badge \(nodeType.badgeClass)">\(nodeType.badgeCharacter)</span>
+                                    <span class="badge \(nodeType.badgeClass)">\(nodeType.badgeCharacter)</span>
             """
         } else if let iconSVG = nodeType.iconSVG {
             html += """
@@ -548,7 +548,7 @@ private extension NavigationSidebarBuilder {
         if nodeType.showsBadge {
             html += """
 
-                                            <span class="symbol-badge \(nodeType.badgeClass)">\(nodeType.badgeCharacter)</span>
+                                            <span class="badge \(nodeType.badgeClass)">\(nodeType.badgeCharacter)</span>
             """
         } else if let iconSVG = nodeType.iconSVG {
             html += """
