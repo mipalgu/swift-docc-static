@@ -1766,7 +1766,7 @@ enum DocCStylesheet {
                 --color-fill-gray-secondary: #f5f5f5;
                 --color-fill-gray-quaternary: #f0f0f0;
                 --color-navigator-item-hover: rgba(51, 102, 255, 0.05);
-                --sidebar-width: 320px;
+                --sidebar-width: var(--spacing-sidebar-width, 400px);
                 --header-height: 52px;
 
                 /* Typography */

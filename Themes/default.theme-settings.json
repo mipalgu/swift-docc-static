@@ -32,6 +32,9 @@
     "typography": {
       "html-font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
       "html-font-mono": "monospace"
+    },
+    "spacing": {
+      "sidebar-width": "400px"
     }
   }
 }

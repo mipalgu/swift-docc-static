@@ -178,7 +178,9 @@
 
       "nesting-spacing": "15px",
       "nav-depth-spacer": "20px",
-      "nav-chevron-padding": "5px"
+      "nav-chevron-padding": "5px",
+
+      "sidebar-width": "320px"
     }
   }
 }

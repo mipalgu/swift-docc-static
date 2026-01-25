@@ -271,6 +271,19 @@ struct StylesheetTests {
         #expect(css.contains(".technology-title:hover"))
         #expect(css.contains("background: var(--color-technology-title-background-hover, var(--color-navigator-item-hover))"))
     }
+
+    @Test("Sidebar width is themeable")
+    func sidebarWidthThemeable() {
+        let css = DocCStylesheet.generate(theme: .default)
+        #expect(css.contains("--sidebar-width: var(--spacing-sidebar-width, 400px)"))
+    }
+
+    @Test("Default theme sidebar width is 400px")
+    func defaultSidebarWidth() {
+        let theme = ThemeConfiguration(builtInTheme: .default, includeDarkMode: true, customCSS: nil)
+        let css = DocCStylesheet.generate(theme: theme)
+        #expect(css.contains("--spacing-sidebar-width: 400px"))
+    }
 }
 
 @Suite("Classic Theme Override Tests")
@@ -331,6 +344,15 @@ struct ClassicThemeTests {
 
         // Classic theme should have chevron before text (order: -1)
         #expect(css.contains("--spacing-disclosure-chevron-order: -1"))
+    }
+
+    @Test("Classic theme sidebar width is 320px")
+    func classicSidebarWidth() throws {
+        let theme = ThemeConfiguration(builtInTheme: .classic, includeDarkMode: true, customCSS: nil)
+        let css = DocCStylesheet.generate(theme: theme)
+
+        // Classic theme should have narrower sidebar (matching old docc-static)
+        #expect(css.contains("--spacing-sidebar-width: 320px"))
     }
 }
 
