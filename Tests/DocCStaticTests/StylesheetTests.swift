@@ -264,6 +264,13 @@ struct StylesheetTests {
         #expect(css.contains(".navigator-card.selected"))
         #expect(css.contains("background: var(--color-fill-gray-quaternary)"))
     }
+
+    @Test("Technology title hover uses navigator-item-hover as default")
+    func technologyTitleHoverDefault() {
+        let css = DocCStylesheet.generate(theme: .default)
+        #expect(css.contains(".technology-title:hover"))
+        #expect(css.contains("background: var(--color-technology-title-background-hover, var(--color-navigator-item-hover))"))
+    }
 }
 
 @Suite("Classic Theme Override Tests")

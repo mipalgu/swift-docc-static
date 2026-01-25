@@ -2265,7 +2265,7 @@ enum DocCStylesheet {
 
             .technology-title:hover {
                 text-decoration: none;
-                background: var(--color-technology-title-background-hover, var(--color-fill-gray));
+                background: var(--color-technology-title-background-hover, var(--color-navigator-item-hover));
             }
 
             /* Chevron inside .technology-title */
