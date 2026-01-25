@@ -243,6 +243,27 @@ struct StylesheetTests {
         #expect(css.contains("padding: var(--spacing-module-header-technology-title-padding,"))
         #expect(css.contains("width: var(--spacing-module-header-technology-title-width,"))
     }
+
+    @Test("Navigator card hover uses navigator-item-hover variable")
+    func navigatorCardHover() {
+        let css = DocCStylesheet.generate(theme: .default)
+        #expect(css.contains(".navigator-card:hover"))
+        #expect(css.contains("background: var(--color-navigator-item-hover)"))
+    }
+
+    @Test("Navigator card active uses fill-gray-quaternary variable")
+    func navigatorCardActive() {
+        let css = DocCStylesheet.generate(theme: .default)
+        #expect(css.contains(".navigator-card.active"))
+        #expect(css.contains("background: var(--color-fill-gray-quaternary)"))
+    }
+
+    @Test("Navigator card selected uses fill-gray-quaternary variable")
+    func navigatorCardSelected() {
+        let css = DocCStylesheet.generate(theme: .default)
+        #expect(css.contains(".navigator-card.selected"))
+        #expect(css.contains("background: var(--color-fill-gray-quaternary)"))
+    }
 }
 
 @Suite("Classic Theme Override Tests")

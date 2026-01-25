@@ -2234,7 +2234,7 @@ enum DocCStylesheet {
             }
 
             .navigator-card:hover {
-                background: var(--color-fill-secondary);
+                background: var(--color-navigator-item-hover);
             }
 
             .navigator-card a:hover {
@@ -2243,7 +2243,7 @@ enum DocCStylesheet {
 
             .navigator-card.active,
             .navigator-card.selected {
-                background: rgba(0, 102, 204, 0.1);
+                background: var(--color-fill-gray-quaternary);
             }
 
             .navigator-card.selected > .nav-link {
