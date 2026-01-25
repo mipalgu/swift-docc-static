@@ -170,6 +170,42 @@ struct StylesheetTests {
 
     // MARK: - Swift-DocC-Render Compliance Tests
 
+    @Test("Stylesheet includes fill-gray-quaternary variable")
+    func fillGrayQuaternaryVariable() {
+        let css = DocCStylesheet.generate(theme: .default)
+        #expect(css.contains("--color-fill-gray-quaternary:"))
+    }
+
+    @Test("Stylesheet includes navigator-item-hover variable")
+    func navigatorItemHoverVariable() {
+        let css = DocCStylesheet.generate(theme: .default)
+        #expect(css.contains("--color-navigator-item-hover:"))
+    }
+
+    @Test("Dark mode includes correct fill-gray-quaternary")
+    func darkModeFillGrayQuaternary() {
+        let css = DocCStylesheet.generate(theme: .default)
+        #expect(css.contains("--color-fill-gray-quaternary: #424242"))
+    }
+
+    @Test("Light mode includes correct fill-gray-quaternary")
+    func lightModeFillGrayQuaternary() {
+        let css = DocCStylesheet.generate(theme: .default)
+        #expect(css.contains("--color-fill-gray-quaternary: #f0f0f0"))
+    }
+
+    @Test("Dark mode includes correct navigator-item-hover")
+    func darkModeNavigatorItemHover() {
+        let css = DocCStylesheet.generate(theme: .default)
+        #expect(css.contains("--color-navigator-item-hover: rgba(0, 102, 255, 0.5)"))
+    }
+
+    @Test("Light mode includes correct navigator-item-hover")
+    func lightModeNavigatorItemHover() {
+        let css = DocCStylesheet.generate(theme: .default)
+        #expect(css.contains("--color-navigator-item-hover: rgba(51, 102, 255, 0.05)"))
+    }
+
     @Test("Technology title background matches swift-docc-render default")
     func technologyTitleBackgroundDefault() {
         let css = DocCStylesheet.generate(theme: .default)

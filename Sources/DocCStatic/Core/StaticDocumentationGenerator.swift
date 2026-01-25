@@ -1764,6 +1764,8 @@ enum DocCStylesheet {
                 --color-link: \(theme.accentColour);
                 --color-fill-gray: #ccc;
                 --color-fill-gray-secondary: #f5f5f5;
+                --color-fill-gray-quaternary: #f0f0f0;
+                --color-navigator-item-hover: rgba(51, 102, 255, 0.05);
                 --sidebar-width: 320px;
                 --header-height: 52px;
 
@@ -4425,6 +4427,8 @@ enum DocCStylesheet {
                 --color-figure-gray: #f5f5f7;
                 --color-figure-gray-secondary: #a1a1a6;
                 --color-fill-gray: #424245;
+                --color-fill-gray-quaternary: #424242;
+                --color-navigator-item-hover: rgba(0, 102, 255, 0.5);
 
                 /* Syntax highlighting colours - dark mode */
                 --color-syntax-keywords: #ff7ab2;
@@ -4462,6 +4466,8 @@ enum DocCStylesheet {
             --color-figure-gray-secondary: #666;
             --color-fill-gray: #ccc;
             --color-fill-gray-secondary: #f5f5f5;
+            --color-fill-gray-quaternary: #f0f0f0;
+            --color-navigator-item-hover: rgba(51, 102, 255, 0.05);
             --color-syntax-keywords: #ad3da4;
             --color-syntax-other-type-names: #703daa;
             --color-syntax-strings: #d12f1b;
@@ -4479,6 +4485,8 @@ enum DocCStylesheet {
             --color-figure-gray: #f5f5f7;
             --color-figure-gray-secondary: #a1a1a6;
             --color-fill-gray: #424245;
+            --color-fill-gray-quaternary: #424242;
+            --color-navigator-item-hover: rgba(0, 102, 255, 0.5);
             --color-syntax-keywords: #ff7ab2;
             --color-syntax-other-type-names: #dabaff;
             --color-syntax-strings: #ff8170;
