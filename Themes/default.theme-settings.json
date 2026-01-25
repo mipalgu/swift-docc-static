@@ -13,6 +13,8 @@
       "fill-gray": { "light": "#cccccc", "dark": "#575757" },
       "fill-gray-secondary": { "light": "#f5f5f5", "dark": "#222222" },
       "fill-gray-tertiary": { "light": "#f0f0f0", "dark": "#424242" },
+      "fill-gray-quaternary": { "light": "#f0f0f0", "dark": "#424242" },
+      "navigator-item-hover": { "light": "rgba(51, 102, 255, 0.05)", "dark": "rgba(0, 102, 255, 0.5)" },
       "syntax-keywords": { "light": "#ad3da4", "dark": "#ff7ab2" },
       "syntax-other-type-names": { "light": "#703daa", "dark": "#dabaff" },
       "syntax-strings": { "light": "#d12f1b", "dark": "#ff8170" },

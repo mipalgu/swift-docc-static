@@ -284,6 +284,20 @@ struct StylesheetTests {
         let css = DocCStylesheet.generate(theme: theme)
         #expect(css.contains("--spacing-sidebar-width: 400px"))
     }
+
+    @Test("Default theme has fill-gray-quaternary colour")
+    func defaultThemeFillGrayQuaternary() {
+        let settings = ThemeSettings.BuiltInTheme.default.settings
+        let color = settings.theme.color?["fill-gray-quaternary"]
+        #expect(color != nil)
+    }
+
+    @Test("Default theme has navigator-item-hover colour")
+    func defaultThemeNavigatorItemHover() {
+        let settings = ThemeSettings.BuiltInTheme.default.settings
+        let color = settings.theme.color?["navigator-item-hover"]
+        #expect(color != nil)
+    }
 }
 
 @Suite("Classic Theme Override Tests")
