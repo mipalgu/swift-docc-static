@@ -103,14 +103,19 @@ public struct ThemeCodeGenerator: Sendable {
         code += "\(indentation)static let \(propertyName) = ThemeSettings.Root(\n"
         code += "\(indentation)\(indentation)theme: ThemeSettings.Theme("
 
+        let hasBadge = settings.theme.badge != nil && !settings.theme.badge!.isEmpty
         let hasColours = settings.theme.color != nil && !settings.theme.color!.isEmpty
         let hasTypography = settings.theme.typography != nil && !settings.theme.typography!.isEmpty
         let hasSpacing = settings.theme.spacing != nil && !settings.theme.spacing!.isEmpty
 
-        if hasColours || hasTypography || hasSpacing {
+        if hasBadge || hasColours || hasTypography || hasSpacing {
             code += "\n"
 
             var sections: [String] = []
+
+            if hasBadge {
+                sections.append(generateBadgeDictionary(settings.theme.badge!, baseIndent: 3))
+            }
 
             if hasColours {
                 sections.append(generateColourDictionary(settings.theme.color!, baseIndent: 3))
@@ -173,6 +178,33 @@ public struct ThemeCodeGenerator: Sendable {
         case .lightDark(let light, let dark):
             return "ThemeSettings.ColorValue.lightDark(light: \"\(light)\", dark: \"\(dark)\")"
         }
+    }
+
+    /// Generates Swift code for a badge dictionary.
+    ///
+    /// - Parameters:
+    ///   - badge: The badge dictionary to convert.
+    ///   - baseIndent: The base indentation level.
+    /// - Returns: The Swift code for the badge dictionary.
+    public func generateBadgeDictionary(
+        _ badge: [String: String],
+        baseIndent: Int
+    ) -> String {
+        let indent = String(repeating: indentation, count: baseIndent)
+        let entryIndent = String(repeating: indentation, count: baseIndent + 1)
+
+        var code = "\(indent)badge: [\n"
+
+        let sortedBadge = badge.sorted { $0.key < $1.key }
+        for (index, (key, value)) in sortedBadge.enumerated() {
+            // Escape quotes in the value
+            let escapedValue = value.replacingOccurrences(of: "\"", with: "\\\"")
+            let separator = index < sortedBadge.count - 1 ? "," : ""
+            code += "\(entryIndent)\"\(key)\": \"\(escapedValue)\"\(separator)\n"
+        }
+
+        code += "\(indent)]"
+        return code
     }
 
     /// Generates Swift code for a typography dictionary.

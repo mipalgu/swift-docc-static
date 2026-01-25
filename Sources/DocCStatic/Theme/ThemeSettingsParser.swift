@@ -101,6 +101,14 @@ public enum ThemeSettingsParser {
     public static func generateLightModeCSS(from settings: ThemeSettings.Root) -> String {
         var variables: [String] = []
 
+        // Badge variables
+        if let badge = settings.theme.badge {
+            for (key, value) in badge.sorted(by: { $0.key < $1.key }) {
+                let variableName = "--badge-\(key)"
+                variables.append("    \(variableName): \(value);")
+            }
+        }
+
         // Color variables
         if let colors = settings.theme.color {
             for (key, value) in colors.sorted(by: { $0.key < $1.key }) {
@@ -204,6 +212,14 @@ public enum ThemeSettingsParser {
         from settings: ThemeSettings.Root, colorScheme: ColorScheme
     ) -> [String: String] {
         var variables: [String: String] = [:]
+
+        // Badge variables
+        if let badge = settings.theme.badge {
+            for (key, value) in badge {
+                let variableName = "--badge-\(key)"
+                variables[variableName] = value
+            }
+        }
 
         // Color variables
         if let colors = settings.theme.color {

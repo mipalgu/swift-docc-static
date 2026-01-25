@@ -159,6 +159,9 @@ public struct ThemeSettingsInput: Codable, Equatable, Sendable {
 
 /// Theme configuration containing colour and typography settings.
 public struct ThemeInput: Codable, Equatable, Sendable {
+    /// Badge settings for the theme.
+    public let badge: [String: String]?
+
     /// Colour settings for the theme.
     public let color: [String: ColorValueInput]?
 
@@ -169,19 +172,22 @@ public struct ThemeInput: Codable, Equatable, Sendable {
     public let spacing: [String: String]?
 
     /// Known theme keys.
-    private static let knownKeys: Set<String> = ["color", "typography", "spacing"]
+    private static let knownKeys: Set<String> = ["badge", "color", "typography", "spacing"]
 
     enum CodingKeys: String, CodingKey {
+        case badge
         case color
         case typography
         case spacing
     }
 
     public init(
+        badge: [String: String]? = nil,
         color: [String: ColorValueInput]? = nil,
         typography: [String: String]? = nil,
         spacing: [String: String]? = nil
     ) {
+        self.badge = badge
         self.color = color
         self.typography = typography
         self.spacing = spacing
@@ -189,6 +195,7 @@ public struct ThemeInput: Codable, Equatable, Sendable {
 
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
+        badge = try container.decodeIfPresent([String: String].self, forKey: .badge)
         color = try container.decodeIfPresent([String: ColorValueInput].self, forKey: .color)
         typography = try container.decodeIfPresent([String: String].self, forKey: .typography)
         spacing = try container.decodeIfPresent([String: String].self, forKey: .spacing)

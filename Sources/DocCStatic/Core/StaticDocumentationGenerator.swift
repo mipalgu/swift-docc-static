@@ -1778,10 +1778,10 @@ enum DocCStylesheet {
                 --color-syntax-comments: #707f8c;
                 --color-syntax-numbers: #272ad8;
 
-                /* Symbol badge colours - matching swift-docc-render SVG badges */
-                --color-badge-default: transparent;
-                --color-badge-text: #666666;
-                --color-badge-border: #666666;
+                /* Symbol badge colours - using filled backgrounds for HTML badges */
+                --color-badge-default: #f5f5f7;
+                --color-badge-text: #6e6e73;
+                --color-badge-border: #d2d2d7;
 
                 /* Aside colours */
                 --color-aside-note-background: #e3f2fd;
@@ -2458,12 +2458,15 @@ enum DocCStylesheet {
                 color: var(--color-figure-gray-secondary);
             }
 
-            /* Symbol type badges - matching swift-docc-render SVG style */
+            /* Symbol type badges - HTML badges with filled backgrounds */
             .badge,
             .symbol-badge {
                 width: 16px;
                 height: 16px;
-                border-radius: var(--spacing-badge-border-radius, 0);
+                border-radius: var(--badge-border-radius, 1px);
+                border-style: var(--badge-border-style, solid);
+                border-width: var(--badge-border-width, 1px);
+                border-color: var(--color-badge-border);
                 display: inline-flex;
                 align-items: center;
                 justify-content: center;
@@ -2472,7 +2475,6 @@ enum DocCStylesheet {
                 flex-shrink: 0;
                 background: var(--color-badge-default);
                 color: var(--color-badge-text);
-                border: 1px solid var(--color-badge-border);
             }
 
             .badge-article,
@@ -4418,10 +4420,12 @@ enum DocCStylesheet {
                 --color-syntax-comments: #7f8c8d;
                 --color-syntax-numbers: #d9c97c;
 
-                /* Symbol badge colours - dark mode - matching swift-docc-render */
-                --color-badge-default: transparent;
-                --color-badge-text: #cccccc;
-                --color-badge-border: #cccccc;
+                /* Symbol badge colours - dark mode - using filled backgrounds for HTML badges */
+                --color-badge-default: #2c2c2e;
+                --color-badge-text: #a1a1a6;
+                --color-badge-border: #424245;
+
+                /* Badge border properties remain same in dark mode (inherit from light mode defaults) */
 
                 /* Aside colours - dark mode */
                 --color-aside-note-background: rgba(59, 130, 246, 0.15);
@@ -4450,9 +4454,9 @@ enum DocCStylesheet {
             --color-syntax-strings: #d12f1b;
             --color-syntax-comments: #707f8c;
             --color-syntax-numbers: #272ad8;
-            --color-badge-default: transparent;
-            --color-badge-text: #666666;
-            --color-badge-border: #666666;
+            --color-badge-default: #f5f5f7;
+            --color-badge-text: #6e6e73;
+            --color-badge-border: #d2d2d7;
             --color-documentation-intro-fill: #f0f0f0;
         }
 
@@ -4467,9 +4471,9 @@ enum DocCStylesheet {
             --color-syntax-strings: #ff8170;
             --color-syntax-comments: #7f8c8d;
             --color-syntax-numbers: #d9c97c;
-            --color-badge-default: transparent;
-            --color-badge-text: #cccccc;
-            --color-badge-border: #cccccc;
+            --color-badge-default: #2c2c2e;
+            --color-badge-text: #a1a1a6;
+            --color-badge-border: #424245;
             --color-documentation-intro-fill: #4a4a4a;
         }
         """

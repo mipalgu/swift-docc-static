@@ -69,6 +69,12 @@ extension ThemeSettings {
     /// The `color` and `typography` sections follow the swift-docc specification exactly.
     /// The `spacing` section is a docc-static extension that swift-docc will ignore.
     public struct Theme: Codable, Sendable, Equatable {
+        /// Badge settings for the theme.
+        ///
+        /// Each key becomes a `--badge-<key>` CSS variable.
+        /// Supports border attributes (border-radius, border-style, border-width).
+        public var badge: [String: String]?
+
         /// Color settings for the theme.
         ///
         /// Each key becomes a `--color-<key>` CSS variable.
@@ -91,14 +97,17 @@ extension ThemeSettings {
         /// Creates a new theme configuration.
         ///
         /// - Parameters:
+        ///   - badge: Badge settings dictionary.
         ///   - color: Color settings dictionary.
         ///   - typography: Typography settings dictionary.
         ///   - spacing: Spacing settings dictionary (docc-static extension).
         public init(
+            badge: [String: String]? = nil,
             color: [String: ColorValue]? = nil,
             typography: [String: String]? = nil,
             spacing: [String: String]? = nil
         ) {
+            self.badge = badge
             self.color = color
             self.typography = typography
             self.spacing = spacing
