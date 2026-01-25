@@ -99,6 +99,8 @@
       "pre-font-size": "0.8125rem",
       "pre-line-height": "1.6",
       "pre-padding": "1rem",
+      "pre-padding-left": "3rem",
+      "pre-padding-right": "3rem",
       "pre-border": "none",
       "pre-border-radius": "12px",
       "pre-margin": "1rem 1.5rem",

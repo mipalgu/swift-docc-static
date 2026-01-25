@@ -1181,7 +1181,7 @@ public struct StaticDocumentationGenerator: Sendable {
                 <title>\(escapeHTML(title))</title>
                 <link rel="stylesheet" href="../../css/main.css">
             </head>
-            <body class="tutorial-overview-page">
+            <body class="tutorial-overview-page" data-color-scheme="auto">
                 <main class="tutorial-overview-main">
                     <section class="overview-hero">
                         <div class="overview-hero-content">
@@ -1857,6 +1857,9 @@ enum DocCStylesheet {
                 border-radius: var(--spacing-pre-border-radius, 4px);
                 /* Use swift-docc-render variable name, fallback to legacy for classic theme */
                 padding: var(--code-block-style-elements-padding, var(--spacing-pre-padding, 8px 14px));
+                /* Individual padding properties allow themes to override horizontal padding */
+                padding-left: var(--spacing-pre-padding-left, 14px);
+                padding-right: var(--spacing-pre-padding-right, 14px);
                 overflow-x: auto;
                 margin: var(--spacing-pre-margin, 0);
                 margin-left: var(--spacing-content-padding-horizontal, 5rem);
@@ -2138,12 +2141,6 @@ enum DocCStylesheet {
                 margin-right: 0.5rem;
             }
 
-            .module-section .module-header .technology-title {
-                margin: var(--spacing-module-header-technology-title-margin, 0);
-                padding: var(--spacing-module-header-technology-title-padding, 0);
-                width: var(--spacing-module-header-technology-title-width, 100%);
-            }
-
             .module-section .module-name {
                 font-size: var(--spacing-module-name-font-size, 17px);
                 line-height: var(--spacing-module-name-line-height, 25px);
@@ -2266,6 +2263,10 @@ enum DocCStylesheet {
             .technology-title:hover {
                 text-decoration: none;
                 background: var(--color-technology-title-background-hover, var(--color-navigator-item-hover));
+            }
+
+            .technology-title.active {
+                background: var(--color-fill-gray-quaternary);
             }
 
             /* Chevron inside .technology-title */

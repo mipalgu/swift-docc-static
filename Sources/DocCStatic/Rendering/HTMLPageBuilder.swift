@@ -82,7 +82,7 @@ public extension HTMLPageBuilder {
 
             <link rel="stylesheet" href="\(cssPath)">
         </head>
-        <body>
+        <body data-color-scheme="auto">
             <input type="checkbox" id="sidebar-toggle" class="sidebar-toggle-checkbox" aria-hidden="true">
         """
 
@@ -170,7 +170,7 @@ public extension HTMLPageBuilder {
 
             <link rel="stylesheet" href="\(cssPath)">
         </head>
-        <body class="tutorial-overview-page">
+        <body class="tutorial-overview-page" data-color-scheme="auto">
             <main class="tutorial-overview-main">
         """
 
@@ -357,7 +357,7 @@ public extension HTMLPageBuilder {
 
             <link rel="stylesheet" href="\(cssPath)">
         </head>
-        <body class="tutorial-page">
+        <body class="tutorial-page" data-color-scheme="auto">
         """
 
         // Add tutorial navigation bar

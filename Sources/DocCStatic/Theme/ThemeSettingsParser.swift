@@ -86,8 +86,9 @@ public enum ThemeSettingsParser {
         // Generate light mode (root) variables
         css += generateLightModeCSS(from: settings)
 
-        // Generate dark mode variables if enabled
+        // Generate explicit color scheme selectors if dark mode is enabled
         if includeDarkMode {
+            css += generateLightModeExplicitCSS(from: settings)
             css += generateDarkModeCSS(from: settings)
         }
 
@@ -139,6 +140,60 @@ public enum ThemeSettingsParser {
 
             /* Theme settings overrides - light mode */
             :root {
+            \(variables.joined(separator: "\n"))
+            }
+
+            """
+    }
+
+    /// Generates explicit light mode CSS variables for color scheme switching.
+    ///
+    /// This generates the same variables as `generateLightModeCSS` but with
+    /// a `body[data-color-scheme="light"]` selector to allow JavaScript theme
+    /// switching to force light mode even when the system prefers dark mode.
+    ///
+    /// - Parameter settings: The theme settings.
+    /// - Returns: CSS for explicit light mode variables.
+    public static func generateLightModeExplicitCSS(from settings: ThemeSettings.Root) -> String {
+        var variables: [String] = []
+
+        // Badge variables
+        if let badge = settings.theme.badge {
+            for (key, value) in badge.sorted(by: { $0.key < $1.key }) {
+                let variableName = "--badge-\(key)"
+                variables.append("    \(variableName): \(value);")
+            }
+        }
+
+        // Color variables
+        if let colors = settings.theme.color {
+            for (key, value) in colors.sorted(by: { $0.key < $1.key }) {
+                let variableName = "--color-\(key)"
+                variables.append("    \(variableName): \(value.light);")
+            }
+        }
+
+        // Typography variables
+        if let typography = settings.theme.typography {
+            for (key, value) in typography.sorted(by: { $0.key < $1.key }) {
+                let variableName = "--typography-\(key)"
+                variables.append("    \(variableName): \(value);")
+            }
+        }
+
+        // Spacing variables (docc-static extension)
+        if let spacing = settings.theme.spacing {
+            for (key, value) in spacing.sorted(by: { $0.key < $1.key }) {
+                let variableName = "--spacing-\(key)"
+                variables.append("    \(variableName): \(value);")
+            }
+        }
+
+        guard !variables.isEmpty else { return "" }
+
+        return """
+
+            body[data-color-scheme="light"] {
             \(variables.joined(separator: "\n"))
             }
 

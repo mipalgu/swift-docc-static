@@ -118,13 +118,14 @@ public extension NavigationSidebarBuilder {
         // Expand current module by default
         let isExpanded = isCurrentModule || shouldExpandNode(moduleNode, currentPath: currentPath)
         let checkedAttr = isExpanded ? " checked" : ""
+        let activeClass = isCurrentModule ? " active" : ""
 
         var html = """
 
                         <div class="sidebar-section module-section">
                             <input type="checkbox" id="\(checkboxId)" class="disclosure-checkbox"\(checkedAttr)>
                             <div class="module-header">
-                                <a href="\(escapeHTML(relativeURL))" class="technology-title">
+                                <a href="\(escapeHTML(relativeURL))" class="technology-title\(activeClass)">
                                     <h2 class="card-link">\(escapeHTML(moduleNode.title))</h2>
                                     <label for="\(checkboxId)" class="disclosure-chevron" aria-label="Toggle \(escapeHTML(moduleNode.title))">
                                         <svg viewBox="0 0 10 10" fill="currentColor">

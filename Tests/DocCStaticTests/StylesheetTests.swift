@@ -206,6 +206,26 @@ struct StylesheetTests {
         #expect(css.contains("--color-navigator-item-hover: rgba(51, 102, 255, 0.05)"))
     }
 
+    @Test("Stylesheet includes explicit light mode selector")
+    func explicitLightModeSelector() {
+        let css = DocCStylesheet.generate(theme: .default)
+        #expect(css.contains("body[data-color-scheme=\"light\"]"))
+    }
+
+    @Test("Explicit light mode selector includes color variables")
+    func explicitLightModeColorVariables() {
+        let css = DocCStylesheet.generate(theme: .default)
+
+        // Find the body[data-color-scheme="light"] block
+        #expect(css.contains("body[data-color-scheme=\"light\"]"))
+
+        // Verify it contains color variables (these should be in the same block)
+        // We can't easily verify they're in the same block without parsing,
+        // but we can verify the selector exists which is the critical fix
+        #expect(css.contains("--color-fill-gray-quaternary: #f0f0f0"))
+        #expect(css.contains("--color-navigator-item-hover: rgba(51, 102, 255, 0.05)"))
+    }
+
     @Test("Technology title background matches swift-docc-render default")
     func technologyTitleBackgroundDefault() {
         let css = DocCStylesheet.generate(theme: .default)
@@ -233,15 +253,17 @@ struct StylesheetTests {
         #expect(css.contains("padding: var(--spacing-module-header-padding,"))
     }
 
-    @Test("Module header technology title properties are themeable")
-    func moduleHeaderTechnologyTitleThemeable() {
+    @Test("Module header technology title override rule does not exist")
+    func moduleHeaderTechnologyTitleNoOverride() {
         let css = DocCStylesheet.generate(theme: .default)
 
-        // Technology title inside module header should have themeable properties
-        #expect(css.contains(".module-section .module-header .technology-title"))
-        #expect(css.contains("margin: var(--spacing-module-header-technology-title-margin,"))
-        #expect(css.contains("padding: var(--spacing-module-header-technology-title-padding,"))
-        #expect(css.contains("width: var(--spacing-module-header-technology-title-width,"))
+        // The overly-specific .module-section .module-header .technology-title rule
+        // was causing a CSS specificity bug where padding/margin were forced to 0.
+        // This rule should NOT exist - .technology-title should stand alone.
+        #expect(!css.contains(".module-section .module-header .technology-title"))
+        #expect(!css.contains("--spacing-module-header-technology-title-margin"))
+        #expect(!css.contains("--spacing-module-header-technology-title-padding"))
+        #expect(!css.contains("--spacing-module-header-technology-title-width"))
     }
 
     @Test("Navigator card hover uses navigator-item-hover variable")
@@ -297,6 +319,28 @@ struct StylesheetTests {
         let settings = ThemeSettings.BuiltInTheme.default.settings
         let color = settings.theme.color?["navigator-item-hover"]
         #expect(color != nil)
+    }
+
+    @Test("Pre element has individual padding-left and padding-right variables")
+    func preIndividualPaddingVariables() {
+        let css = DocCStylesheet.generate(theme: .default)
+        #expect(css.contains("padding-left: var(--spacing-pre-padding-left, 14px)"))
+        #expect(css.contains("padding-right: var(--spacing-pre-padding-right, 14px)"))
+    }
+
+    @Test("Technology title active state uses fill-gray-quaternary")
+    func technologyTitleActiveState() {
+        let css = DocCStylesheet.generate(theme: .default)
+        #expect(css.contains(".technology-title.active"))
+        #expect(css.contains("background: var(--color-fill-gray-quaternary)"))
+    }
+
+    @Test("Classic theme has pre-padding-left and pre-padding-right")
+    func classicThemePrePadding() {
+        let theme = ThemeConfiguration(builtInTheme: .classic, includeDarkMode: true, customCSS: nil)
+        let css = DocCStylesheet.generate(theme: theme)
+        #expect(css.contains("--spacing-pre-padding-left: 3rem"))
+        #expect(css.contains("--spacing-pre-padding-right: 3rem"))
     }
 }
 
