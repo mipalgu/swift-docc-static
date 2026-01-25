@@ -167,6 +167,107 @@ struct StylesheetTests {
         #expect(css.contains("pre code"))
         #expect(css.contains("padding: var(--spacing-pre-code-padding, 0)"))
     }
+
+    // MARK: - Swift-DocC-Render Compliance Tests
+
+    @Test("Technology title background matches swift-docc-render default")
+    func technologyTitleBackgroundDefault() {
+        let css = DocCStylesheet.generate(theme: .default)
+
+        // Swift-docc-render uses var(--color-fill) as default background
+        #expect(css.contains(".technology-title"))
+        #expect(css.contains("background: var(--color-technology-title-background, var(--color-fill))"))
+    }
+
+    @Test("Leaf link padding matches swift-docc-render default")
+    func leafLinkPaddingDefault() {
+        let css = DocCStylesheet.generate(theme: .default)
+
+        // Swift-docc-render has no padding on .leaf-link (padding is on container)
+        #expect(css.contains(".leaf-link"))
+        #expect(css.contains("padding: var(--spacing-leaf-link-padding, 0)"))
+    }
+
+    @Test("Module header padding is themeable")
+    func moduleHeaderPaddingThemeable() {
+        let css = DocCStylesheet.generate(theme: .default)
+
+        // Module header padding should use CSS variable for themeability
+        #expect(css.contains(".module-section .module-header"))
+        #expect(css.contains("padding: var(--spacing-module-header-padding,"))
+    }
+
+    @Test("Module header technology title properties are themeable")
+    func moduleHeaderTechnologyTitleThemeable() {
+        let css = DocCStylesheet.generate(theme: .default)
+
+        // Technology title inside module header should have themeable properties
+        #expect(css.contains(".module-section .module-header .technology-title"))
+        #expect(css.contains("margin: var(--spacing-module-header-technology-title-margin,"))
+        #expect(css.contains("padding: var(--spacing-module-header-technology-title-padding,"))
+        #expect(css.contains("width: var(--spacing-module-header-technology-title-width,"))
+    }
+}
+
+@Suite("Classic Theme Override Tests")
+struct ClassicThemeTests {
+    @Test("Classic theme overrides technology title background to transparent")
+    func technologyTitleBackgroundClassic() throws {
+        let theme = ThemeConfiguration(builtInTheme: .classic, includeDarkMode: true, customCSS: nil)
+        let css = DocCStylesheet.generate(theme: theme)
+
+        // Classic theme should override to transparent (matching old docc-static)
+        #expect(css.contains("--color-technology-title-background: transparent"))
+        #expect(css.contains("--color-technology-title-background-hover: transparent"))
+    }
+
+    @Test("Classic theme overrides leaf link padding")
+    func leafLinkPaddingClassic() throws {
+        let theme = ThemeConfiguration(builtInTheme: .classic, includeDarkMode: true, customCSS: nil)
+        let css = DocCStylesheet.generate(theme: theme)
+
+        // Classic theme should have sidebar-style padding (matching old docc-static)
+        #expect(css.contains("--spacing-leaf-link-padding: 0.75rem 1.25rem 0.25rem"))
+    }
+
+    @Test("Classic theme has badge border radius override")
+    func badgeBorderRadiusClassic() throws {
+        let theme = ThemeConfiguration(builtInTheme: .classic, includeDarkMode: true, customCSS: nil)
+        let css = DocCStylesheet.generate(theme: theme)
+
+        // Classic theme should override badge border-radius to 3px (old docc-static)
+        #expect(css.contains("--badge-border-radius: 3px"))
+    }
+
+    @Test("Classic theme has filled badge backgrounds")
+    func badgeBackgroundsClassic() throws {
+        let theme = ThemeConfiguration(builtInTheme: .classic, includeDarkMode: true, customCSS: nil)
+        let css = DocCStylesheet.generate(theme: theme)
+
+        // Classic theme should have filled badge backgrounds
+        #expect(css.contains("--color-badge-default:"))
+        #expect(css.contains("--color-badge-text:"))
+        #expect(css.contains("--color-badge-border:"))
+    }
+
+    @Test("Classic theme uses SF fonts")
+    func sfFontsClassic() throws {
+        let theme = ThemeConfiguration(builtInTheme: .classic, includeDarkMode: true, customCSS: nil)
+        let css = DocCStylesheet.generate(theme: theme)
+
+        // Classic theme should use SF Pro Text and SF Mono
+        #expect(css.contains("'SF Pro Text'"))
+        #expect(css.contains("'SF Mono'"))
+    }
+
+    @Test("Classic theme has disclosure chevron before text")
+    func disclosureChevronOrderClassic() throws {
+        let theme = ThemeConfiguration(builtInTheme: .classic, includeDarkMode: true, customCSS: nil)
+        let css = DocCStylesheet.generate(theme: theme)
+
+        // Classic theme should have chevron before text (order: -1)
+        #expect(css.contains("--spacing-disclosure-chevron-order: -1"))
+    }
 }
 
 @Suite("Generation Error Tests")

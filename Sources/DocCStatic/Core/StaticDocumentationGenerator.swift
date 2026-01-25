@@ -2128,12 +2128,18 @@ enum DocCStylesheet {
             .module-section .module-header {
                 display: flex;
                 align-items: center;
-                padding: 0.5rem 1rem;
+                padding: var(--spacing-module-header-padding, 0.5rem 1rem);
             }
 
             .module-section .module-header .disclosure-chevron {
                 position: static;
                 margin-right: 0.5rem;
+            }
+
+            .module-section .module-header .technology-title {
+                margin: var(--spacing-module-header-technology-title-margin, 0);
+                padding: var(--spacing-module-header-technology-title-padding, 0);
+                width: var(--spacing-module-header-technology-title-width, 100%);
             }
 
             .module-section .module-name {
@@ -2249,7 +2255,7 @@ enum DocCStylesheet {
                 align-items: var(--spacing-technology-title-align-items, center);
                 text-decoration: none;
                 color: var(--color-technology-title, var(--color-link));
-                background: var(--color-technology-title-background, var(--color-fill-secondary));
+                background: var(--color-technology-title-background, var(--color-fill));
                 padding: var(--spacing-technology-title-padding, 8px 10px 8px 20px);
                 margin: var(--spacing-technology-title-margin, 0 20px);
                 border-radius: var(--spacing-technology-title-border-radius, 4px);
