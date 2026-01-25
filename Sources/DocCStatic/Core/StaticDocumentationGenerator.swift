@@ -2126,7 +2126,14 @@ enum DocCStylesheet {
             }
 
             .module-section .module-header {
-                position: relative;
+                display: flex;
+                align-items: center;
+                padding: 0.5rem 1rem;
+            }
+
+            .module-section .module-header .disclosure-chevron {
+                position: static;
+                margin-right: 0.5rem;
             }
 
             .module-section .module-name {
