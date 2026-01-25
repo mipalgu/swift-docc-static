@@ -449,11 +449,13 @@ private extension HTMLPageBuilder {
         }
 
         // Fallback to building sidebar from current page's topic sections
+        // Use the title for display if available, otherwise use the module name
+        let displayTitle = renderNode.metadata.title ?? moduleName
         var html = """
 
                 <nav class="sidebar">
                     <div class="sidebar-content">
-                        <h2 class="sidebar-module">\(escapeHTML(moduleName))</h2>
+                        <h2 class="sidebar-module">\(escapeHTML(displayTitle))</h2>
         """
 
         // Build sidebar from topic sections
@@ -567,10 +569,7 @@ private extension HTMLPageBuilder {
 
         // The module name is typically the second component after "documentation"
         if components.count >= 2, components[0].lowercased() == "documentation" {
-            // Return the title if available, otherwise use the path component
-            if let title = renderNode.metadata.title, components.count == 2 {
-                return title
-            }
+            // Always return the path component for module matching (not the title)
             return components[1]
         }
 
