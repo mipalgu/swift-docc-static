@@ -133,6 +133,8 @@ let configuration = Configuration(
 | `fill-gray` | Border colour | `#d2d2d7` | `#424245` |
 | `fill-gray-secondary` | Secondary border | `#b0b0b5` | `#5a5a5d` |
 | `fill-gray-tertiary` | Tertiary border | `#e0e0e5` | `#3a3a3d` |
+| `fill-gray-quaternary` | Active/selected navigator background | `#f0f0f0` | `#424242` |
+| `navigator-item-hover` | Navigator item hover background | `rgba(51, 102, 255, 0.05)` | `rgba(0, 102, 255, 0.5)` |
 | `fill-blue` | Blue fill | `#36f` | `#36f` |
 | `documentation-intro-fill` | Hero section background | `transparent` | `transparent` |
 | `heading-link` | Heading anchor link colour | `inherit` | `inherit` |
@@ -159,6 +161,12 @@ let configuration = Configuration(
 |----------|-------------|---------------|
 | `html-font` | Body text font | System font stack |
 | `html-font-mono` | Monospace font | Menlo, monospace |
+
+### Spacing Variables
+
+| Variable | Description | Default Value |
+|----------|-------------|---------------|
+| `sidebar-width` | Width of the navigation sidebar | `400px` (default), `320px` (classic) |
 
 ## Customising the Accent Colour
 
@@ -231,6 +239,7 @@ let theme = ThemeConfiguration(
 CSS variables are prefixed based on their category:
 - `--color-*` for colour variables (e.g., `--color-fill`, `--color-link`)
 - `--typography-*` for typography variables (e.g., `--typography-html-font`)
+- `--spacing-*` for spacing and layout variables (e.g., `--spacing-sidebar-width`)
 
 ### Overriding Variables
 
