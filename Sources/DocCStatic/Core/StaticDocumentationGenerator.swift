@@ -2834,6 +2834,7 @@ enum DocCStylesheet {
             /* Content sections within main */
             .doc-topic section,
             .doc-topic .declaration,
+            .doc-topic > p,
             .doc-topic > ul,
             .doc-topic > ol,
             .doc-topic > h2,
