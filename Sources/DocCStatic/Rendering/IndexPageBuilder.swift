@@ -338,11 +338,7 @@ private extension IndexPageBuilder {
                 });
 
                 function applyTheme(scheme) {
-                    if (scheme === 'auto') {
-                        body.removeAttribute('data-color-scheme');
-                    } else {
-                        body.setAttribute('data-color-scheme', scheme);
-                    }
+                    body.setAttribute('data-color-scheme', scheme);
                 }
 
                 function updateButtons(scheme) {
