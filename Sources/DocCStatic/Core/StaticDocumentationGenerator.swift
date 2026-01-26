@@ -1762,7 +1762,7 @@ enum DocCStylesheet {
                 --color-fill-gray-secondary: #f5f5f5;
                 --color-fill-gray-quaternary: #f0f0f0;
                 --color-navigator-item-hover: rgba(51, 102, 255, 0.05);
-                --sidebar-width: var(--spacing-sidebar-width, 400px);
+                --sidebar-width: var(--spacing-sidebar-width, 432px);
                 --header-height: 52px;
 
                 /* Typography */
@@ -1846,11 +1846,11 @@ enum DocCStylesheet {
 
             pre {
                 font-family: var(--typography-html-font-mono);
-                font-size: var(--spacing-pre-font-size, 15px);
+                font-size: var(--spacing-pre-font-size, 17px);
                 line-height: var(--spacing-pre-line-height, 25px);
                 background: var(--color-pre-background, transparent);
                 border: var(--spacing-pre-border, none);
-                border-radius: var(--spacing-pre-border-radius, 4px);
+                border-radius: var(--spacing-pre-border-radius, 0px);
                 /* Use swift-docc-render variable name, fallback to legacy for classic theme */
                 padding: var(--code-block-style-elements-padding, var(--spacing-pre-padding, 8px 14px));
                 /* Individual padding properties allow themes to override horizontal padding */
@@ -1858,8 +1858,6 @@ enum DocCStylesheet {
                 padding-right: var(--spacing-pre-padding-right, 14px);
                 overflow-x: auto;
                 margin: var(--spacing-pre-margin, 0);
-                margin-left: var(--spacing-content-padding-horizontal, 5rem);
-                margin-right: var(--spacing-content-padding-horizontal, 5rem);
                 max-width: 100%;
                 box-sizing: border-box;
                 position: var(--spacing-pre-code-position, static);
@@ -1870,6 +1868,7 @@ enum DocCStylesheet {
                 display: block;
                 background: none;
                 padding: var(--spacing-pre-code-padding, 0);
+                font-size: 15px;
                 position: var(--spacing-pre-code-position, static);
                 left: var(--spacing-pre-code-left, 0);
             }

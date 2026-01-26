@@ -439,3 +439,84 @@ struct GenerationErrorTests {
         #expect(error.errorDescription?.contains("invalid JSON") == true)
     }
 }
+
+@Suite("Swift-DocC Render Compatibility Tests")
+struct SwiftDocCRenderCompatibilityTests {
+
+    @Test("Default theme sidebar width matches swift-docc-render (432px)")
+    func defaultSidebarWidth() {
+        let theme = ThemeConfiguration(builtInTheme: .default, includeDarkMode: true, customCSS: nil)
+        let css = DocCStylesheet.generate(theme: theme)
+
+        // swift-docc-render uses 432px for sidebar width @ 1440px viewport
+        #expect(css.contains("--sidebar-width: var(--spacing-sidebar-width, 432px)"))
+    }
+
+    @Test("Pre element font-size matches swift-docc-render (17px)")
+    func preFontSize() {
+        let theme = ThemeConfiguration(builtInTheme: .default, includeDarkMode: true, customCSS: nil)
+        let css = DocCStylesheet.generate(theme: theme)
+
+        // swift-docc-render uses 17px for pre font-size
+        #expect(css.contains("font-size: var(--spacing-pre-font-size, 17px)"))
+    }
+
+    @Test("Pre element border-radius matches swift-docc-render (0px)")
+    func preBorderRadius() {
+        let theme = ThemeConfiguration(builtInTheme: .default, includeDarkMode: true, customCSS: nil)
+        let css = DocCStylesheet.generate(theme: theme)
+
+        // swift-docc-render uses 0px border-radius for pre (no rounding)
+        #expect(css.contains("border-radius: var(--spacing-pre-border-radius, 0px)"))
+    }
+
+    @Test("Pre element has no horizontal margins in default theme")
+    func preNoHorizontalMargins() {
+        let theme = ThemeConfiguration(builtInTheme: .default, includeDarkMode: true, customCSS: nil)
+        let css = DocCStylesheet.generate(theme: theme)
+
+        // swift-docc-render does not apply content-padding-horizontal to pre
+        // The CSS should NOT contain margin-left/right with spacing-content-padding-horizontal for pre
+        let preSection = css.components(separatedBy: "pre {").dropFirst().first?.components(separatedBy: "}").first ?? ""
+        #expect(!preSection.contains("margin-left: var(--spacing-content-padding-horizontal"))
+        #expect(!preSection.contains("margin-right: var(--spacing-content-padding-horizontal"))
+    }
+
+    @Test("Pre code element font-size is 15px")
+    func preCodeFontSize() {
+        let theme = ThemeConfiguration(builtInTheme: .default, includeDarkMode: true, customCSS: nil)
+        let css = DocCStylesheet.generate(theme: theme)
+
+        // swift-docc-render uses 15px for pre code font-size
+        let preCodeSection = css.components(separatedBy: "pre code {").dropFirst().first?.components(separatedBy: "}").first ?? ""
+        #expect(preCodeSection.contains("font-size: 15px") || preCodeSection.contains("font-size: var(--spacing-pre-code-font-size, 15px)"))
+    }
+
+    @Test("Pre code element has no border-radius")
+    func preCodeNoBorderRadius() {
+        let theme = ThemeConfiguration(builtInTheme: .default, includeDarkMode: true, customCSS: nil)
+        let css = DocCStylesheet.generate(theme: theme)
+
+        // pre code should not have border-radius
+        let preCodeSection = css.components(separatedBy: "pre code {").dropFirst().first?.components(separatedBy: "}").first ?? ""
+        #expect(!preCodeSection.contains("border-radius: 4px"))
+    }
+
+    @Test("Classic theme overrides pre font-size to 15px")
+    func classicPreFontSize() {
+        let theme = ThemeConfiguration(builtInTheme: .classic, includeDarkMode: true, customCSS: nil)
+        let css = DocCStylesheet.generate(theme: theme)
+
+        // Classic theme should override to 15px
+        #expect(css.contains("--spacing-pre-font-size: 15px"))
+    }
+
+    @Test("Classic theme overrides pre border-radius to 4px")
+    func classicPreBorderRadius() {
+        let theme = ThemeConfiguration(builtInTheme: .classic, includeDarkMode: true, customCSS: nil)
+        let css = DocCStylesheet.generate(theme: theme)
+
+        // Classic theme should override to 4px
+        #expect(css.contains("--spacing-pre-border-radius: 4px"))
+    }
+}
