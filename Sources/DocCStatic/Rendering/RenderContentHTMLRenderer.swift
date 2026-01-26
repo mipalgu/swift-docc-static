@@ -328,9 +328,14 @@ private extension RenderContentHTMLRenderer {
             highlightedCode = escapeHTML(code)
         }
 
+        // Wrap in .code-listing wrapper to match swift-docc-render structure
         return """
 
-                <pre class="language-\(language)"><code>\(highlightedCode)</code></pre>
+                <div class="code-listing" data-syntax="\(language)">
+                    <div class="container-general">
+                        <pre class="language-\(language)"><code>\(highlightedCode)</code></pre>
+                    </div>
+                </div>
         """
     }
 

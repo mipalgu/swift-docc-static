@@ -1873,6 +1873,21 @@ enum DocCStylesheet {
                 left: var(--spacing-pre-code-left, 0);
             }
 
+            /* Code listing wrapper (matches swift-docc-render structure) */
+            .code-listing {
+                background-color: var(--color-code-background, #f7f7f7);
+                border: 1px solid var(--color-grid, #ccc);
+                border-radius: var(--code-border-radius, 4px);
+                margin-top: 1.6rem;
+                padding: 0;
+            }
+
+            .container-general {
+                /* Container for code blocks within code-listing */
+                margin: 0;
+                padding: 0;
+            }
+
             table {
                 border-collapse: collapse;
                 margin: var(--spacing-table-margin, 1rem 0);
@@ -2245,11 +2260,11 @@ enum DocCStylesheet {
             /* Module link (matches swift-docc .technology-title) */
             .technology-title {
                 display: var(--spacing-technology-title-display, flex);
-                justify-content: var(--spacing-technology-title-justify-content, space-between);
+                justify-content: var(--spacing-technology-title-justify-content, normal);
                 align-items: var(--spacing-technology-title-align-items, center);
                 text-decoration: none;
                 color: var(--color-technology-title, var(--color-link));
-                background: var(--color-technology-title-background, var(--color-fill));
+                background: var(--color-technology-title-background, var(--color-fill-gray-quaternary));
                 padding: var(--spacing-technology-title-padding, 8px 10px 8px 20px);
                 margin: var(--spacing-technology-title-margin, 0 20px);
                 border-radius: var(--spacing-technology-title-border-radius, 4px);
@@ -2823,6 +2838,15 @@ enum DocCStylesheet {
             .doc-topic > .aside {
                 padding-left: var(--spacing-content-padding-horizontal, 5rem);
                 padding-right: var(--spacing-content-padding-horizontal, 5rem);
+            }
+
+            /* Paragraph spacing (matches swift-docc-render) */
+            main p, article p {
+                margin-bottom: 0;
+            }
+
+            main p:first-of-type, article p:first-of-type {
+                margin-top: 0.8rem;
             }
 
             .topics,

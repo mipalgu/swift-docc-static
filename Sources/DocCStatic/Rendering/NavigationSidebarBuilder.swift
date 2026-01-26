@@ -30,27 +30,19 @@ public extension NavigationSidebarBuilder {
         self.navigationIndex = navigationIndex
     }
 
-    /// Builds the sidebar HTML showing all modules with the current module expanded.
+    /// Builds the sidebar HTML showing only the current module's navigation.
+    ///
+    /// This matches swift-docc-render behaviour: only the current module is shown in the sidebar,
+    /// not all available modules.
     ///
     /// - Parameters:
-    ///   - moduleName: The name of the current module (will be expanded).
+    ///   - moduleName: The name of the current module.
     ///   - currentPath: The path of the currently selected page.
     ///   - depth: The depth of the current page for relative URL calculation.
     /// - Returns: The sidebar HTML string.
     mutating func buildSidebar(moduleName: String, currentPath: String, depth: Int) -> String {
-        let allModules = navigationIndex.allModules()
-
-        // If we have multiple modules, show them all
-        if allModules.count > 1 {
-            return buildMultiModuleSidebar(
-                allModules: allModules,
-                currentModuleName: moduleName,
-                currentPath: currentPath,
-                depth: depth
-            )
-        }
-
-        // Single module: show its navigation tree
+        // swift-docc-render shows ONLY the current module, not all modules
+        // Find the current module node
         guard let moduleNode = navigationIndex.findModule(moduleName) else {
             return buildFallbackSidebar(currentPath: currentPath, depth: depth)
         }
@@ -166,6 +158,7 @@ private extension NavigationSidebarBuilder {
 
                 <nav class="sidebar">
                     <div class="sidebar-content">
+                        <h2 class="nav-title">Documentation</h2>
                         <a href="\(makeRelativeURL(moduleNode.path ?? "", depth: depth))" class="technology-title">
                             <h2 class="card-link">\(escapeHTML(moduleNode.title))</h2>
                         </a>
@@ -301,7 +294,7 @@ private extension NavigationSidebarBuilder {
         // Add the link
         html += """
 
-                                    <a href="\(escapeHTML(relativeURL))" class="nav-link">\(escapeHTML(node.title))</a>
+                                    <a href="\(escapeHTML(relativeURL))" class="leaf-link">\(escapeHTML(node.title))</a>
         """
 
         // Add children
@@ -531,7 +524,7 @@ private extension NavigationSidebarBuilder {
 
         html += """
 
-                                    <a href="\(escapeHTML(relativeURL))" class="nav-link">\(escapeHTML(node.title))</a>
+                                    <a href="\(escapeHTML(relativeURL))" class="leaf-link">\(escapeHTML(node.title))</a>
                                 </li>
         """
 

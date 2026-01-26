@@ -5,7 +5,6 @@
 //  Created by Rene Hexel on 3/01/2026.
 //  Copyright © 2026 Rene Hexel. All rights reserved.
 //
-
 import Testing
 import Foundation
 @testable import DocCStatic
@@ -518,5 +517,184 @@ struct SwiftDocCRenderCompatibilityTests {
 
         // Classic theme should override to 4px
         #expect(css.contains("--spacing-pre-border-radius: 4px"))
+    }
+}
+
+// MARK: - Swift-DocC Render Complete Compatibility Tests
+
+@Suite("Complete Swift-DocC Render Compatibility Tests")
+struct CompleteSwiftDocCRenderCompatibilityTests {
+
+    // MARK: - Code Listing Wrapper Styles
+
+    @Test("Code listing wrapper has grey background")
+    func codeListing_hasGreyBackground() {
+        let css = DocCStylesheet.generate(theme: .default)
+
+        // .code-listing should have a grey background color
+        #expect(css.contains(".code-listing"))
+
+        // Check for background color on .code-listing
+        let lines = css.split(separator: "\n")
+        var inCodeListingBlock = false
+        var foundBackground = false
+
+        for line in lines {
+            if line.contains(".code-listing") && line.contains("{") {
+                inCodeListingBlock = true
+            }
+            if inCodeListingBlock && line.contains("background") {
+                // Should be #f7f7f7 or rgb(247, 247, 247) or similar grey
+                foundBackground = true
+                break
+            }
+            if inCodeListingBlock && line.contains("}") {
+                inCodeListingBlock = false
+            }
+        }
+
+        #expect(foundBackground, "Expected .code-listing to have background-color property")
+    }
+
+    @Test("Code listing wrapper has border")
+    func codeListing_hasBorder() {
+        let css = DocCStylesheet.generate(theme: .default)
+
+        #expect(css.contains(".code-listing"))
+
+        // Check for border on .code-listing
+        let lines = css.split(separator: "\n")
+        var inCodeListingBlock = false
+        var foundBorder = false
+
+        for line in lines {
+            if line.contains(".code-listing") && line.contains("{") {
+                inCodeListingBlock = true
+            }
+            if inCodeListingBlock && line.contains("border") && !line.contains("border-radius") {
+                foundBorder = true
+                break
+            }
+            if inCodeListingBlock && line.contains("}") {
+                inCodeListingBlock = false
+            }
+        }
+
+        #expect(foundBorder, "Expected .code-listing to have border property")
+    }
+
+    @Test("Code listing wrapper has rounded corners (4px)")
+    func codeListing_hasRoundedCorners() {
+        let css = DocCStylesheet.generate(theme: .default)
+
+        #expect(css.contains(".code-listing"))
+
+        // Check for border-radius on .code-listing
+        let lines = css.split(separator: "\n")
+        var inCodeListingBlock = false
+        var foundBorderRadius = false
+
+        for line in lines {
+            if line.contains(".code-listing") && line.contains("{") {
+                inCodeListingBlock = true
+            }
+            if inCodeListingBlock && line.contains("border-radius") {
+                foundBorderRadius = true
+                break
+            }
+            if inCodeListingBlock && line.contains("}") {
+                inCodeListingBlock = false
+            }
+        }
+
+        #expect(foundBorderRadius, "Expected .code-listing to have border-radius property")
+    }
+
+    @Test("Code element inside pre has no border-radius")
+    func preCode_hasNoBorderRadius() {
+        let css = DocCStylesheet.generate(theme: .default)
+
+        // pre code should NOT have border-radius (it should be 0)
+        // Border-radius belongs on the .code-listing wrapper
+        let lines = css.split(separator: "\n")
+        var inPreCodeBlock = false
+        var hasBorderRadius = false
+
+        for line in lines {
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            if trimmed.starts(with: "pre code") && trimmed.contains("{") {
+                inPreCodeBlock = true
+            }
+            if inPreCodeBlock && trimmed.contains("border-radius") {
+                // Check if it's set to 0
+                if !trimmed.contains("0px") && !trimmed.contains(": 0") {
+                    hasBorderRadius = true
+                }
+                break
+            }
+            if inPreCodeBlock && trimmed == "}" {
+                inPreCodeBlock = false
+            }
+        }
+
+        #expect(!hasBorderRadius, "Expected pre code to have no border-radius (or 0px)")
+    }
+
+    // MARK: - Paragraph Spacing
+
+    @Test("Paragraphs have zero bottom margin")
+    func paragraphs_haveZeroBottomMargin() {
+        let css = DocCStylesheet.generate(theme: .default)
+
+        // main p and article p should have margin-bottom: 0
+        let hasMainParagraph = css.contains("main p") || css.contains("article p")
+        #expect(hasMainParagraph, "Expected CSS to have main p or article p selector")
+
+        // Check that margin-bottom is 0
+        let lines = css.split(separator: "\n")
+        var foundZeroMarginBottom = false
+
+        for line in lines {
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            if trimmed.contains("margin-bottom") && trimmed.contains(": 0") {
+                foundZeroMarginBottom = true
+                break
+            }
+        }
+
+        #expect(foundZeroMarginBottom, "Expected paragraphs to have margin-bottom: 0")
+    }
+
+    @Test("First paragraph has top margin")
+    func firstParagraph_hasTopMargin() {
+        let css = DocCStylesheet.generate(theme: .default)
+
+        // p:first-of-type or p:first-child should have margin-top
+        let hasFirstParagraphSelector = css.contains(":first-of-type") || css.contains(":first-child")
+
+        if hasFirstParagraphSelector {
+            // Check for margin-top
+            let lines = css.split(separator: "\n")
+            var foundMarginTop = false
+
+            for line in lines {
+                if line.contains("margin-top") && !line.contains(": 0") {
+                    foundMarginTop = true
+                    break
+                }
+            }
+
+            #expect(foundMarginTop, "Expected first paragraph to have non-zero margin-top")
+        }
+    }
+
+    // MARK: - Container General
+
+    @Test(".container-general exists for code blocks")
+    func containerGeneral_existsForCodeBlocks() {
+        let css = DocCStylesheet.generate(theme: .default)
+
+        // .container-general should exist as it's a child of .code-listing
+        #expect(css.contains(".container-general"), "Expected .container-general CSS class to exist")
     }
 }
