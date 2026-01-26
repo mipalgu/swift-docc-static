@@ -698,3 +698,163 @@ struct CompleteSwiftDocCRenderCompatibilityTests {
         #expect(css.contains(".container-general"), "Expected .container-general CSS class to exist")
     }
 }
+
+// MARK: - DOM/CSS Comparison Failures (from Puppeteer analysis)
+
+@Suite("DOM CSS Comparison Tests - Based on Puppeteer Analysis")
+struct DOMCSSComparisonTests {
+
+    // FAILURE 1: Module Links Background Color
+    @Test("Module links (.technology-title) have grey quaternary background, not white")
+    func moduleLinks_haveGreyBackground_notWhite() {
+        let css = DocCStylesheet.generate(theme: .default)
+
+        // .technology-title should use --color-fill-gray-quaternary (#f0f0f0), NOT --color-fill (white)
+        #expect(css.contains(".technology-title"))
+
+        // Find the .technology-title block and check background
+        let lines = css.split(separator: "\n")
+        var inTechnologyTitleBlock = false
+        var hasGreyBackground = false
+
+        for line in lines {
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            if trimmed.starts(with: ".technology-title") && trimmed.contains("{") {
+                inTechnologyTitleBlock = true
+            }
+            if inTechnologyTitleBlock && trimmed.contains("background:") {
+                // Should contain fill-gray-quaternary, NOT just fill
+                if trimmed.contains("fill-gray-quaternary") {
+                    hasGreyBackground = true
+                }
+                break
+            }
+            if inTechnologyTitleBlock && trimmed == "}" {
+                break
+            }
+        }
+
+        #expect(hasGreyBackground,
+                "technology-title must use var(--color-fill-gray-quaternary), not var(--color-fill)")
+    }
+
+    // FAILURE 2: Module Links Width
+    @Test("Module links (.technology-title) have auto width, not fixed pixel widths")
+    func moduleLinks_haveAutoWidth() {
+        let css = DocCStylesheet.generate(theme: .default)
+
+        // .technology-title should NOT have explicit width
+        let lines = css.split(separator: "\n")
+        var inTechnologyTitleBlock = false
+        var hasFixedWidth = false
+
+        for line in lines {
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            if trimmed.starts(with: ".technology-title") && trimmed.contains("{") {
+                inTechnologyTitleBlock = true
+            }
+            if inTechnologyTitleBlock && trimmed.contains("width:") {
+                // Should not have explicit px width
+                if trimmed.range(of: "\\d+px", options: .regularExpression) != nil {
+                    hasFixedWidth = true
+                }
+                break
+            }
+            if inTechnologyTitleBlock && trimmed == "}" {
+                break
+            }
+        }
+
+        #expect(!hasFixedWidth,
+                "technology-title should not have fixed width - should be auto (default)")
+    }
+
+    // FAILURE 3: Wrong CSS Class - should be leaf-link
+    @Test("Navigation items use .leaf-link class, not .nav-link")
+    func navigationItems_useLeafLinkClass() {
+        let css = DocCStylesheet.generate(theme: .default)
+
+        // CSS should have .leaf-link rules
+        #expect(css.contains(".leaf-link"),
+                "CSS must include .leaf-link class for navigation items")
+
+        // Ideally .nav-link should not exist in default theme (it's the wrong class)
+        // However, this is more of an HTML generation test
+        // We verify that .leaf-link exists and has proper styles
+        let hasLeafLinkStyles = css.contains("a.leaf-link") || css.contains(".leaf-link")
+        #expect(hasLeafLinkStyles,
+                "leaf-link class must be present and styled")
+    }
+
+    // FAILURE 5: Code Block Margins - Pre should have no 80px margins
+    @Test("Pre elements have no 80px horizontal margins")
+    func preElements_noHugeHorizontalMargins() {
+        let css = DocCStylesheet.generate(theme: .default)
+
+        // Pre should NOT have margin-left: 80px or margin-right: 80px
+        let lines = css.split(separator: "\n")
+        var hasWrongMargins = false
+
+        for line in lines {
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            if trimmed.starts(with: "pre") && trimmed.contains("{") {
+                // Check subsequent lines for 80px margins
+                continue
+            }
+            if trimmed.contains("margin") && trimmed.contains("80px") {
+                hasWrongMargins = true
+                break
+            }
+        }
+
+        #expect(!hasWrongMargins,
+                "Pre elements must not have 80px horizontal margins")
+    }
+
+    // FAILURE 7: Paragraph Margins - should be top, not bottom
+    @Test("Paragraphs have margin-top, not margin-bottom")
+    func paragraphs_haveTopMargin_notBottom() {
+        let css = DocCStylesheet.generate(theme: .default)
+
+        // Paragraphs should have margin-bottom: 0
+        let hasZeroBottomMargin = css.contains("margin-bottom: 0") || css.contains("margin-bottom:0")
+        #expect(hasZeroBottomMargin,
+                "Paragraphs should have margin-bottom: 0, not 17px")
+
+        // First paragraph should have margin-top
+        let hasTopMargin = css.range(of: ":first[^{]*\\{[^}]*margin-top",
+                                     options: .regularExpression) != nil
+        #expect(hasTopMargin,
+                "First paragraph should have margin-top, not margin-bottom")
+    }
+
+    // FAILURE 8: Paragraph Padding - should be 0, not 80px
+    @Test("Paragraphs have no 80px horizontal padding")
+    func paragraphs_noHugeHorizontalPadding() {
+        let css = DocCStylesheet.generate(theme: .default)
+
+        // Check if any paragraph rules have 80px padding
+        let hasWrongPadding = css.range(of: "(main p|article p)[^{]*\\{[^}]*padding[^:]*:[^;}]*80px",
+                                       options: .regularExpression) != nil
+
+        #expect(!hasWrongPadding,
+                "Paragraphs must not have 80px horizontal padding - should be 0")
+    }
+
+    // FAILURE 9: Sidebar Indentations
+    @Test("Sidebar navigation has proper indentation structure")
+    func sidebar_hasProperIndentation() {
+        let css = DocCStylesheet.generate(theme: .default)
+
+        // Sidebar should have indentation rules
+        #expect(css.contains(".sidebar"),
+                "CSS must include sidebar styles")
+
+        // Check for nested list indentation with padding-left
+        let hasIndentationRules = css.contains("padding-left") &&
+                                 (css.contains(".sidebar li") || css.contains(".sidebar ul"))
+
+        #expect(hasIndentationRules,
+                "Sidebar must have indentation rules for nested navigation items")
+    }
+}

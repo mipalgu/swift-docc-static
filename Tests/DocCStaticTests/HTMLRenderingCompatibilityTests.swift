@@ -64,8 +64,8 @@ struct HTMLRenderingCompatibilityTests {
 
     // MARK: - Navigation Sidebar Structure
 
-    @Test("Sidebar includes Documentation heading")
-    func sidebar_hasDocumentationHeading() async throws {
+    @Test("Single-module sidebar has NO Documentation heading (avoids duplicate)")
+    func singleModuleSidebar_noDocumentationHeading() async throws {
         var builder = NavigationSidebarBuilder(navigationIndex: createTestNavigationIndex())
 
         let html = builder.buildSidebar(
@@ -74,12 +74,14 @@ struct HTMLRenderingCompatibilityTests {
             depth: 0
         )
 
-        #expect(html.contains("<h2 class=\"nav-title\">Documentation</h2>"),
-                "Sidebar must include Documentation H2 heading with nav-title class")
+        // Single module view should NOT have "Documentation" heading
+        // (it already has the module title as h2)
+        #expect(!html.contains("<h2 class=\"nav-title\">Documentation</h2>"),
+                "Single-module sidebar must NOT have Documentation heading (avoids duplicate h2)")
     }
 
-    @Test("Sidebar shows only current module")
-    func sidebar_showsOnlyCurrentModule() async throws {
+    @Test("Multi-module sidebar shows ALL module links")
+    func multiModuleSidebar_showsAllModules() async throws {
         // Create navigation index with multiple modules
         let multiModuleIndex = createMultiModuleNavigationIndex()
         var builder = NavigationSidebarBuilder(navigationIndex: multiModuleIndex)
@@ -94,10 +96,27 @@ struct HTMLRenderingCompatibilityTests {
         #expect(html.contains("ModuleA"),
                 "Sidebar must show current module")
 
-        // Should NOT contain other modules in the rendered sidebar
-        // (buildSidebar now only renders the current module, not all modules)
-        #expect(!html.contains("ModuleB"),
-                "Sidebar should not show other modules when viewing single module")
+        // MUST also contain other modules (docc-static multi-module support)
+        #expect(html.contains("ModuleB"),
+                "Sidebar MUST show links to other modules in multi-module documentation")
+    }
+
+    @Test("Multi-module sidebar has NO duplicate Documentation headings")
+    func multiModuleSidebar_noDuplicateHeadings() async throws {
+        let multiModuleIndex = createMultiModuleNavigationIndex()
+        var builder = NavigationSidebarBuilder(navigationIndex: multiModuleIndex)
+
+        let html = builder.buildSidebar(
+            moduleName: "ModuleA",
+            currentPath: "/documentation/modulea",
+            depth: 0
+        )
+
+        // Count occurrences of "Documentation" heading
+        let documentationHeadingCount = html.components(separatedBy: "<h2 class=\"nav-title\">Documentation</h2>").count - 1
+
+        #expect(documentationHeadingCount <= 1,
+                "Must have at most ONE Documentation heading, not multiple")
     }
 
     @Test("Document links use leaf-link class")
