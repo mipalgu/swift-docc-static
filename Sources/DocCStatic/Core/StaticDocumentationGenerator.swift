@@ -1875,6 +1875,7 @@ enum DocCStylesheet {
 
             /* Code listing wrapper (matches swift-docc-render structure) */
             .code-listing {
+                display: block;
                 background-color: var(--color-code-background, #f7f7f7);
                 border: 1px solid var(--color-grid, #ccc);
                 border-radius: var(--code-border-radius, 4px);
@@ -2194,6 +2195,11 @@ enum DocCStylesheet {
                 margin: 0;
             }
 
+            /* Nested sidebar ul elements need consistent padding for indentation */
+            .sidebar ul ul {
+                padding-left: 16px;
+            }
+
             .navigator-card {
                 --nesting-index: 0;
                 display: flex;
@@ -2260,6 +2266,7 @@ enum DocCStylesheet {
             /* Module link (matches swift-docc .technology-title) */
             .technology-title {
                 display: var(--spacing-technology-title-display, flex);
+                width: 100%;
                 justify-content: var(--spacing-technology-title-justify-content, normal);
                 align-items: var(--spacing-technology-title-align-items, center);
                 text-decoration: none;
@@ -2827,7 +2834,6 @@ enum DocCStylesheet {
             /* Content sections within main */
             .doc-topic section,
             .doc-topic .declaration,
-            .doc-topic > p,
             .doc-topic > ul,
             .doc-topic > ol,
             .doc-topic > h2,

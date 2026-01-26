@@ -857,4 +857,104 @@ struct DOMCSSComparisonTests {
         #expect(hasIndentationRules,
                 "Sidebar must have indentation rules for nested navigation items")
     }
+
+    // COMPREHENSIVE DOM/CSS FAILURES (from Puppeteer analysis)
+
+    // FAILURE: Module link widths must be fluid (auto), not fixed pixels
+    @Test("Module links (.technology-title) must have width: auto, not fixed pixels")
+    func moduleLinks_mustHaveAutoWidth_notFixedPixels() {
+        let css = DocCStylesheet.generate(theme: .default)
+
+        // Find .technology-title block
+        let lines = css.split(separator: "\n")
+        var inTechnologyTitleBlock = false
+        var hasExplicitWidth = false
+
+        for line in lines {
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            if trimmed.starts(with: ".technology-title") && trimmed.contains("{") {
+                inTechnologyTitleBlock = true
+            }
+            if inTechnologyTitleBlock && trimmed.starts(with: "width:") {
+                // Should NOT have explicit px width
+                if trimmed.contains("px") && !trimmed.contains("auto") {
+                    hasExplicitWidth = true
+                }
+                break
+            }
+            if inTechnologyTitleBlock && trimmed == "}" {
+                break
+            }
+        }
+
+        #expect(!hasExplicitWidth,
+                ".technology-title must NOT have explicit width in px - should be auto for full justification")
+    }
+
+    // FAILURE: Paragraphs must have NO horizontal padding
+    @Test("Paragraphs must have NO horizontal padding (0px), not 80px")
+    func paragraphs_mustHaveNoHorizontalPadding() {
+        let css = DocCStylesheet.generate(theme: .default)
+
+        // Main content paragraphs should NOT have horizontal padding
+        // Check if p elements have padding-left or padding-right with 80px or similar
+        let has80pxPadding = css.range(of: "p\\s*\\{[^}]*(padding-left|padding-right)\\s*:[^;}]*80px",
+                                       options: .regularExpression) != nil ||
+                            css.range(of: "p\\s*\\{[^}]*padding\\s*:[^;}]*80px",
+                                     options: .regularExpression) != nil
+
+        #expect(!has80pxPadding,
+                "Paragraphs must NOT have 80px horizontal padding - content is too squeezed")
+    }
+
+    // FAILURE: Code listing wrapper must be display: flex (or block with proper width)
+    @Test(".code-listing must be display: flex or block, and must NOT collapse")
+    func codeListing_mustNotCollapse() {
+        let css = DocCStylesheet.generate(theme: .default)
+
+        // .code-listing should exist and have proper display
+        let hasCodeListing = css.contains(".code-listing")
+        #expect(hasCodeListing, ".code-listing class must exist")
+
+        // Check display property
+        let lines = css.split(separator: "\n")
+        var inCodeListingBlock = false
+        var hasProperDisplay = false
+
+        for line in lines {
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            if trimmed.starts(with: ".code-listing") && trimmed.contains("{") {
+                inCodeListingBlock = true
+            }
+            if inCodeListingBlock && trimmed.starts(with: "display:") {
+                // Should be flex or block
+                if trimmed.contains("flex") || trimmed.contains("block") {
+                    hasProperDisplay = true
+                }
+                break
+            }
+            if inCodeListingBlock && trimmed == "}" {
+                break
+            }
+        }
+
+        #expect(hasProperDisplay,
+                ".code-listing must have display: flex or display: block")
+    }
+
+    // FAILURE: Sidebar nested ul must have consistent padding-left for indentation
+    @Test("Sidebar nested ul must have consistent padding-left for proper indentation")
+    func sidebar_nestedUl_mustHaveConsistentPadding() {
+        let css = DocCStylesheet.generate(theme: .default)
+
+        // Nested ul in sidebar should have padding-left for indentation
+        // Look for .sidebar ul ul or similar nested selectors with padding-left
+        let hasNestedUlPadding = css.range(of: "\\.sidebar\\s+ul\\s+ul[^{]*\\{[^}]*padding-left",
+                                          options: .regularExpression) != nil ||
+                                css.range(of: "\\.sidebar-list[^{]*\\{[^}]*padding-left",
+                                         options: .regularExpression) != nil
+
+        #expect(hasNestedUlPadding,
+                "Sidebar nested ul elements must have padding-left for proper visual indentation")
+    }
 }
