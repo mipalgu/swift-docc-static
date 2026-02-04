@@ -1085,21 +1085,28 @@ struct ThemeCompatibilitySpacingTests {
                 "Contenttable title must have margin-bottom variable for spacing below headings")
     }
 
-    @Test("Contenttable section has top margin")
-    func contenttableSectionTopMargin() {
+    @Test("Contenttable title uses label font style (24px)")
+    func contenttableTitleFontSize() {
         let css = DocCStylesheet.generate(theme: .default)
-        #expect(css.contains(".contenttable-section"))
-        #expect(css.contains("--spacing-contenttable-section-margin-top"),
-                "Contenttable section must have margin-top variable for group separation")
+        #expect(css.contains("--spacing-contenttable-title-font-size"),
+                "Contenttable title must have font-size variable matching swift-docc-render label style")
     }
 
-    @Test("First contenttable section has smaller top margin")
-    func contenttableFirstSectionMargin() {
+    @Test("Contenttable section has top padding (matches swift-docc-render)")
+    func contenttableSectionTopPadding() {
+        let css = DocCStylesheet.generate(theme: .default)
+        #expect(css.contains(".contenttable-section"))
+        #expect(css.contains("--spacing-contenttable-section-padding-top"),
+                "Contenttable section must have padding-top variable for group separation")
+    }
+
+    @Test("First contenttable section has smaller top padding")
+    func contenttableFirstSectionPadding() {
         let css = DocCStylesheet.generate(theme: .default)
         #expect(css.contains(".contenttable-section:first-child"),
-                "First contenttable section must have :first-child selector for smaller margin")
-        #expect(css.contains("--spacing-contenttable-first-section-margin-top"),
-                "First section must have specific margin-top variable")
+                "First contenttable section must have :first-child selector for smaller padding")
+        #expect(css.contains("--spacing-contenttable-first-section-padding-top"),
+                "First section must have specific padding-top variable")
     }
 
     @Test("Nav group header has indentation")
@@ -1110,22 +1117,22 @@ struct ThemeCompatibilitySpacingTests {
                 "Nav group header must have padding-left variable for visual hierarchy")
     }
 
-    @Test("Topic sections within Topics have margin separation")
-    func topicSectionMargin() {
+    @Test("Sidebar section headings have indentation")
+    func sidebarSectionHeadingIndent() {
         let css = DocCStylesheet.generate(theme: .default)
-        #expect(css.contains(".topics .contenttable-section"),
-                "Topics section must have contenttable-section styling")
-        #expect(css.contains("--spacing-topic-group-margin-top"),
-                "Topic groups must have margin-top variable for separation")
+        #expect(css.contains(".sidebar-section > h3.leaf-link") ||
+                css.contains(".sidebar-section > .leaf-link"),
+                "Sidebar section headings must have specific selector for indentation")
+        #expect(css.contains("--spacing-sidebar-section-heading-indent"),
+                "Sidebar section heading must have indent variable")
     }
 
-    @Test("First topic section within Topics has smaller margin")
-    func topicFirstSectionMargin() {
+    @Test("Content headings have margin-bottom for spacing before lists")
+    func contentHeadingMarginBottom() {
         let css = DocCStylesheet.generate(theme: .default)
-        #expect(css.contains(".topics .contenttable-section:first-of-type"),
-                "First topic section must have :first-of-type selector")
-        #expect(css.contains("--spacing-topic-first-group-margin-top"),
-                "First topic group must have specific margin-top variable")
+        #expect(css.contains(".doc-topic > h3"))
+        #expect(css.contains("--spacing-content-heading-margin-bottom"),
+                "Content H3 headings must have margin-bottom variable for spacing before lists")
     }
 
     @Test("Topic group indent variable exists")
@@ -1133,5 +1140,15 @@ struct ThemeCompatibilitySpacingTests {
         let css = DocCStylesheet.generate(theme: .default)
         #expect(css.contains("--spacing-topic-group-indent"),
                 "Topic group indent variable must exist for theming")
+    }
+
+    @Test("Code listing uses margin for wrapper indentation")
+    func codeListingMarginIndentation() {
+        let css = DocCStylesheet.generate(theme: .default)
+        #expect(css.contains(".doc-topic .code-listing"))
+        #expect(css.contains("margin-left: var(--spacing-content-padding-horizontal"),
+                "Code listing must use margin-left (not padding-left) to indent the grey box")
+        #expect(css.contains("margin-right: var(--spacing-content-padding-horizontal"),
+                "Code listing must use margin-right (not padding-right) to indent the grey box")
     }
 }

@@ -1949,24 +1949,29 @@ enum DocCStylesheet {
             /* Only direct child H3s of .doc-topic (content headings like "Quick Start") */
             .doc-topic > h3 {
                 margin-top: var(--spacing-content-heading-margin-top, 2.8rem);
+                margin-bottom: var(--spacing-content-heading-margin-bottom, 1.25rem);
             }
 
             /* Topic group headings (Essentials, Guides, etc.) have NO top margin */
             /* These are inside .contenttable-section with class .contenttable-title */
+            /* Uses "label" font style from swift-docc-render: 24px/28px vs H3's 28px/32px */
             .contenttable-title,
             .contenttable-section h3 {
                 margin-top: 0;
                 margin-bottom: var(--spacing-contenttable-title-margin-bottom, 1rem);
+                font-size: var(--spacing-contenttable-title-font-size, 24px);
+                line-height: var(--spacing-contenttable-title-line-height, 28px);
+                font-weight: var(--spacing-contenttable-title-font-weight, 600);
             }
 
-            /* Topic group sections need top margin for separation */
+            /* Topic group sections need top padding for separation (matches swift-docc-render) */
             .contenttable-section {
-                margin-top: var(--spacing-contenttable-section-margin-top, 2.353rem);
+                padding-top: var(--spacing-contenttable-section-padding-top, 2.353rem);
             }
 
-            /* First topic group section has smaller top margin */
+            /* First topic group section has smaller top padding */
             .contenttable-section:first-child {
-                margin-top: var(--spacing-contenttable-first-section-margin-top, 1rem);
+                padding-top: var(--spacing-contenttable-first-section-padding-top, 1rem);
             }
 
             h1 {
@@ -2211,6 +2216,17 @@ enum DocCStylesheet {
                 border: none;
                 text-transform: var(--spacing-leaf-link-text-transform, none);
                 letter-spacing: var(--spacing-leaf-link-letter-spacing, normal);
+            }
+
+            /* Sidebar section group headings need indentation for visual hierarchy */
+            .sidebar-section > h3.leaf-link,
+            .sidebar-section > .leaf-link {
+                padding-left: var(--spacing-sidebar-section-heading-indent, 0.5rem);
+                margin-top: var(--spacing-sidebar-section-heading-margin-top, 0.75rem);
+                margin-bottom: var(--spacing-sidebar-section-heading-margin-bottom, 0.25rem);
+                font-size: var(--spacing-sidebar-heading-font-size, 0.75rem);
+                text-transform: var(--spacing-sidebar-heading-text-transform, uppercase);
+                letter-spacing: var(--spacing-sidebar-heading-letter-spacing, 0.02em);
             }
 
             .sidebar-list {
@@ -2860,7 +2876,6 @@ enum DocCStylesheet {
             /* Content sections within main - matches swift-docc-render 80px content padding */
             .doc-topic section,
             .doc-topic .declaration,
-            .doc-topic .code-listing,
             .doc-topic > ul,
             .doc-topic > ol,
             .doc-topic > p,
@@ -2872,6 +2887,12 @@ enum DocCStylesheet {
             .doc-topic > .aside {
                 padding-left: var(--spacing-content-padding-horizontal, 5rem);
                 padding-right: var(--spacing-content-padding-horizontal, 5rem);
+            }
+
+            /* Code listings use margin to indent the grey box wrapper itself */
+            .doc-topic .code-listing {
+                margin-left: var(--spacing-content-padding-horizontal, 5rem);
+                margin-right: var(--spacing-content-padding-horizontal, 5rem);
             }
 
             /* Paragraph spacing - matches swift-docc-render exactly (13.6px = 0.85rem) */
@@ -2909,14 +2930,9 @@ enum DocCStylesheet {
                 padding-top: var(--spacing-section-heading-padding-top, 2.5rem);  /* 40px at 16px root */
             }
 
-            /* Topic groups within Topics section - visual hierarchy */
+            /* Topic groups within Topics section - optional indentation for visual hierarchy */
             .topics .contenttable-section {
                 padding-left: var(--spacing-topic-group-indent, 0);
-                margin-top: var(--spacing-topic-group-margin-top, 1.5rem);
-            }
-
-            .topics .contenttable-section:first-of-type {
-                margin-top: var(--spacing-topic-first-group-margin-top, 1rem);
             }
 
             /* Legacy single-column layout (for index page) */
