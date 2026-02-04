@@ -1940,9 +1940,22 @@ enum DocCStylesheet {
 
             h1, h2, h3, h4, h5, h6 {
                 font-family: var(--typography-html-font, 'Helvetica Neue', Helvetica, Arial, sans-serif);
-                margin-top: var(--spacing-heading-margin-top, 0);
-                margin-bottom: var(--spacing-heading-margin-bottom, 0);
+                margin: 0;
                 padding: 0;
+            }
+
+            /* Content section headings - matches swift-docc-render exactly */
+            /* H3 content headings: 44.8px = 2.8rem (at 16px root) */
+            /* Only direct child H3s of .doc-topic (content headings like "Quick Start") */
+            .doc-topic > h3 {
+                margin-top: var(--spacing-content-heading-margin-top, 2.8rem);
+            }
+
+            /* Topic group headings (Essentials, Guides, etc.) have NO margin */
+            /* These are inside .contenttable-section with class .contenttable-title */
+            .contenttable-title,
+            .contenttable-section h3 {
+                margin-top: 0;
             }
 
             h1 {
@@ -2831,12 +2844,13 @@ enum DocCStylesheet {
                 margin-bottom: var(--spacing-abstract-margin-bottom, 1.5rem);
             }
 
-            /* Content sections within main */
+            /* Content sections within main - matches swift-docc-render 80px content padding */
             .doc-topic section,
             .doc-topic .declaration,
-            .doc-topic > p,
+            .doc-topic .code-listing,
             .doc-topic > ul,
             .doc-topic > ol,
+            .doc-topic > p,
             .doc-topic > h2,
             .doc-topic > h3,
             .doc-topic > h4,
@@ -2847,13 +2861,23 @@ enum DocCStylesheet {
                 padding-right: var(--spacing-content-padding-horizontal, 5rem);
             }
 
-            /* Paragraph spacing (matches swift-docc-render) */
-            main p, article p {
+            /* Paragraph spacing - matches swift-docc-render exactly (13.6px = 0.85rem) */
+            main p, article p, .doc-topic p {
+                margin-top: var(--spacing-paragraph-margin-top, 0.85rem);  /* 13.6px at 16px root */
                 margin-bottom: 0;
             }
 
-            main p:first-of-type, article p:first-of-type {
-                margin-top: 0.8rem;
+            /* List items have no top margin (inside ul/ol) - matches swift-docc-render */
+            main li p,
+            article li p,
+            .doc-topic li p,
+            main ul li p,
+            main ol li p,
+            article ul li p,
+            article ol li p,
+            .doc-topic ul li p,
+            .doc-topic ol li p {
+                margin-top: 0;
             }
 
             .topics,
@@ -2862,8 +2886,14 @@ enum DocCStylesheet {
             .mentioned-in,
             .discussion,
             .parameters {
-                padding-top: 1rem;
                 padding-bottom: 1rem;
+            }
+
+            /* Section headings - matches swift-docc-render (40px = 2.5rem) */
+            .topics > h2,
+            .relationships > h2,
+            .see-also > h2 {
+                padding-top: var(--spacing-section-heading-padding-top, 2.5rem);  /* 40px at 16px root */
             }
 
             /* Legacy single-column layout (for index page) */

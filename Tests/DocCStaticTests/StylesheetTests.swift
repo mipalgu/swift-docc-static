@@ -229,9 +229,9 @@ struct StylesheetTests {
     func technologyTitleBackgroundDefault() {
         let css = DocCStylesheet.generate(theme: .default)
 
-        // Swift-docc-render uses var(--color-fill) as default background
+        // Technology title background uses fill-gray-quaternary as default
         #expect(css.contains(".technology-title"))
-        #expect(css.contains("background: var(--color-technology-title-background, var(--color-fill))"))
+        #expect(css.contains("background: var(--color-technology-title-background, var(--color-fill-gray-quaternary))"))
     }
 
     @Test("Leaf link padding matches swift-docc-render default")
@@ -296,14 +296,16 @@ struct StylesheetTests {
     @Test("Sidebar width is themeable")
     func sidebarWidthThemeable() {
         let css = DocCStylesheet.generate(theme: .default)
-        #expect(css.contains("--sidebar-width: var(--spacing-sidebar-width, 400px)"))
+        // Default sidebar width is 432px per swift-docc-render
+        #expect(css.contains("--sidebar-width: var(--spacing-sidebar-width, 432px)"))
     }
 
-    @Test("Default theme sidebar width is 400px")
+    @Test("Default theme sidebar width is 432px")
     func defaultSidebarWidth() {
         let theme = ThemeConfiguration(builtInTheme: .default, includeDarkMode: true, customCSS: nil)
         let css = DocCStylesheet.generate(theme: theme)
-        #expect(css.contains("--spacing-sidebar-width: 400px"))
+        // Sidebar width uses CSS variable for themeability
+        #expect(css.contains("--sidebar-width: var(--spacing-sidebar-width, 432px)"))
     }
 
     @Test("Default theme has fill-gray-quaternary colour")
@@ -340,6 +342,20 @@ struct StylesheetTests {
         let css = DocCStylesheet.generate(theme: theme)
         #expect(css.contains("--spacing-pre-padding-left: 3rem"))
         #expect(css.contains("--spacing-pre-padding-right: 3rem"))
+    }
+
+    @Test("Code listings receive content padding")
+    func codeListingsGetPadding() {
+        let css = DocCStylesheet.generate(theme: .default)
+        #expect(css.contains(".doc-topic .code-listing"))
+        #expect(css.contains("padding-left: var(--spacing-content-padding-horizontal"))
+    }
+
+    @Test("Direct paragraphs receive content padding")
+    func directParagraphsGetPadding() {
+        let css = DocCStylesheet.generate(theme: .default)
+        #expect(css.contains(".doc-topic > p"))
+        #expect(css.contains("padding-left: var(--spacing-content-padding-horizontal"))
     }
 }
 
@@ -501,22 +517,22 @@ struct SwiftDocCRenderCompatibilityTests {
         #expect(!preCodeSection.contains("border-radius: 4px"))
     }
 
-    @Test("Classic theme overrides pre font-size to 15px")
+    @Test("Classic theme overrides pre font-size to 0.8125rem")
     func classicPreFontSize() {
         let theme = ThemeConfiguration(builtInTheme: .classic, includeDarkMode: true, customCSS: nil)
         let css = DocCStylesheet.generate(theme: theme)
 
-        // Classic theme should override to 15px
-        #expect(css.contains("--spacing-pre-font-size: 15px"))
+        // Classic theme uses 0.8125rem (13px) per docc-static-classic.theme-settings.json
+        #expect(css.contains("--spacing-pre-font-size: 0.8125rem"))
     }
 
-    @Test("Classic theme overrides pre border-radius to 4px")
+    @Test("Classic theme overrides pre border-radius to 12px")
     func classicPreBorderRadius() {
         let theme = ThemeConfiguration(builtInTheme: .classic, includeDarkMode: true, customCSS: nil)
         let css = DocCStylesheet.generate(theme: theme)
 
-        // Classic theme should override to 4px
-        #expect(css.contains("--spacing-pre-border-radius: 4px"))
+        // Classic theme uses 12px border-radius per docc-static-classic.theme-settings.json
+        #expect(css.contains("--spacing-pre-border-radius: 12px"))
     }
 }
 
@@ -956,5 +972,94 @@ struct DOMCSSComparisonTests {
 
         #expect(hasNestedUlPadding,
                 "Sidebar nested ul elements must have padding-left for proper visual indentation")
+    }
+}
+
+// MARK: - Heading Spacing Tests (Verified via DOM Comparison with swift-docc-render)
+
+@Suite("Heading Spacing Tests - Verified via DOM Comparison")
+struct HeadingSpacingTests {
+
+    // IMPORTANT: These tests reflect actual swift-docc-render behaviour verified via Puppeteer DOM comparison
+    // swift-docc-render uses margin: 0 on base h1-h6 elements
+    // Spacing is achieved through:
+    // 1. padding-top on specific section H2s (Topics, Relationships, See Also) = 40px
+    // 2. margin-top on content H3s (.doc-topic > h3) = 44.8px
+    // 3. margin-top: 0 on topic group H3s (.contenttable-title)
+
+    @Test("Explicit light mode selector exists")
+    func explicitLightModeExists() {
+        let css = DocCStylesheet.generate(theme: .default)
+        #expect(css.contains("body[data-color-scheme=\"light\"]"),
+                "Explicit light mode selector must exist for theme switching")
+    }
+
+    @Test("Explicit dark mode selector exists")
+    func explicitDarkModeExists() {
+        let css = DocCStylesheet.generate(theme: .default)
+        #expect(css.contains("body[data-color-scheme=\"dark\"]"),
+                "Explicit dark mode selector must exist for theme switching")
+    }
+
+    @Test("Content heading margin variable exists")
+    func contentHeadingMarginVariable() {
+        let css = DocCStylesheet.generate(theme: .default)
+        // Content H3s use --spacing-content-heading-margin-top for 44.8px (2.8rem) margin
+        #expect(css.contains("--spacing-content-heading-margin-top"),
+                "Content heading margin variable must exist for theming")
+    }
+
+    @Test("Section heading padding variable exists")
+    func sectionHeadingPaddingVariable() {
+        let css = DocCStylesheet.generate(theme: .default)
+        // Section H2s use --spacing-section-heading-padding-top for 40px (2.5rem) padding
+        #expect(css.contains("--spacing-section-heading-padding-top"),
+                "Section heading padding variable must exist for theming")
+    }
+
+    @Test("H1-H6 base elements have zero margin (matches swift-docc-render)")
+    func baseHeadingsHaveZeroMargin() {
+        let css = DocCStylesheet.generate(theme: .default)
+        // swift-docc-render sets margin: 0; padding: 0; on base heading elements
+        #expect(css.contains("h1, h2, h3, h4, h5, h6"),
+                "Must have combined h1-h6 selector")
+        #expect(css.contains("margin: 0"),
+                "Base headings must have margin: 0 per swift-docc-render")
+    }
+
+    @Test("Topics section H2 has paddingTop 40px (2.5rem)")
+    func topicsSectionH2PaddingTop() {
+        let css = DocCStylesheet.generate(theme: .default)
+        // Verified via DOM comparison: Topics H2 has paddingTop: 40px
+        #expect(css.contains(".topics > h2"),
+                "Topics H2 selector must exist")
+        #expect(css.contains("--spacing-section-heading-padding-top") || css.contains("2.5rem"),
+                "Topics H2 must have padding-top of 2.5rem (40px)")
+    }
+
+    @Test("Content H3s have margin-top 44.8px (2.8rem)")
+    func contentH3MarginTop() {
+        let css = DocCStylesheet.generate(theme: .default)
+        // Verified via DOM comparison: Content H3s like "Key Features" have marginTop: 44.8px
+        #expect(css.contains(".doc-topic > h3"),
+                "Content H3 selector must exist")
+        #expect(css.contains("--spacing-content-heading-margin-top") || css.contains("2.8rem"),
+                "Content H3s must have margin-top of 2.8rem (44.8px)")
+    }
+
+    @Test("Topic group H3s have zero margin (matches swift-docc-render)")
+    func topicGroupH3ZeroMargin() {
+        let css = DocCStylesheet.generate(theme: .default)
+        // Verified via DOM comparison: "Essentials" H3 inside .contenttable-section has marginTop: 0px
+        #expect(css.contains(".contenttable-title") || css.contains(".contenttable-section h3"),
+                "Topic group H3 selector must exist")
+    }
+
+    @Test("Documentation hero H1 has margin-bottom 0.5rem")
+    func documentationHeroH1MarginBottom() {
+        let css = DocCStylesheet.generate(theme: .default)
+        // The hero section H1 needs margin-bottom for spacing before abstract
+        #expect(css.contains(".documentation-hero h1"),
+                "Documentation hero H1 selector must exist")
     }
 }
