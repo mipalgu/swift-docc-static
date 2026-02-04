@@ -1951,11 +1951,22 @@ enum DocCStylesheet {
                 margin-top: var(--spacing-content-heading-margin-top, 2.8rem);
             }
 
-            /* Topic group headings (Essentials, Guides, etc.) have NO margin */
+            /* Topic group headings (Essentials, Guides, etc.) have NO top margin */
             /* These are inside .contenttable-section with class .contenttable-title */
             .contenttable-title,
             .contenttable-section h3 {
                 margin-top: 0;
+                margin-bottom: var(--spacing-contenttable-title-margin-bottom, 1rem);
+            }
+
+            /* Topic group sections need top margin for separation */
+            .contenttable-section {
+                margin-top: var(--spacing-contenttable-section-margin-top, 2.353rem);
+            }
+
+            /* First topic group section has smaller top margin */
+            .contenttable-section:first-child {
+                margin-top: var(--spacing-contenttable-first-section-margin-top, 1rem);
             }
 
             h1 {
@@ -2361,12 +2372,13 @@ enum DocCStylesheet {
                 opacity: 1;
             }
 
-            /* Nested group headers */
+            /* Nested group headers - indented for visual hierarchy */
             .nav-group-header {
                 font-size: 0.75rem;
                 font-weight: 600;
                 color: var(--color-figure-gray-secondary);
                 padding: 0.5rem 0 0.25rem;
+                padding-left: var(--spacing-nav-group-header-indent, 1rem);
                 list-style: none;
             }
 
@@ -2743,6 +2755,7 @@ enum DocCStylesheet {
                 text-align: left;
                 position: relative;
                 padding-right: 0;
+                margin-bottom: var(--spacing-hero-margin-bottom, 2rem);
             }
 
             .documentation-hero::before {
@@ -2894,6 +2907,16 @@ enum DocCStylesheet {
             .relationships > h2,
             .see-also > h2 {
                 padding-top: var(--spacing-section-heading-padding-top, 2.5rem);  /* 40px at 16px root */
+            }
+
+            /* Topic groups within Topics section - visual hierarchy */
+            .topics .contenttable-section {
+                padding-left: var(--spacing-topic-group-indent, 0);
+                margin-top: var(--spacing-topic-group-margin-top, 1.5rem);
+            }
+
+            .topics .contenttable-section:first-of-type {
+                margin-top: var(--spacing-topic-first-group-margin-top, 1rem);
             }
 
             /* Legacy single-column layout (for index page) */
