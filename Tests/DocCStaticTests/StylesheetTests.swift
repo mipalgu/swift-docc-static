@@ -1696,5 +1696,71 @@ struct DOMComparisonParityTests {
         #expect(usesGray,
                 "Breadcrumb must use --color-figure-gray, not --color-figure-gray-secondary")
     }
+
+    // G. Sidebar and Section Separator Issues (DOM Comparison v2)
+
+    @Test("Sidebar section heading uses figure-gray-secondary-alt colour (rgb 176,176,176)")
+    func sidebarHeadingColour() {
+        let css = DocCStylesheet.generate(theme: .default)
+        #expect(css.contains("--color-figure-gray-secondary-alt"),
+                "Leaf-link colour must use figure-gray-secondary-alt, not figure-gray-secondary")
+        // Must NOT use the lighter --color-figure-gray-secondary for leaf-link colour
+        let lines = css.components(separatedBy: "\n")
+        var inLeafLink = false
+        for line in lines {
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            if trimmed.hasPrefix(".leaf-link") && trimmed.contains("{") {
+                inLeafLink = true
+            }
+            if inLeafLink && trimmed.contains("color:") {
+                #expect(trimmed.contains("figure-gray-secondary-alt"),
+                        "leaf-link colour must reference figure-gray-secondary-alt")
+                break
+            }
+            if inLeafLink && trimmed == "}" { break }
+        }
+    }
+
+    @Test("Section H2s (Topics, Relationships, See Also) have border-top separator")
+    func sectionH2sBorderTop() {
+        let css = DocCStylesheet.generate(theme: .default)
+        #expect(css.contains("border-top: 1px solid var(--color-fill-gray)"),
+                "Section H2s must have border-top separator matching docc-render ContentTable.vue")
+    }
+
+    @Test("Overview H2 after declaration has border-top and 40px padding-top")
+    func overviewSeparatorAfterDeclaration() {
+        let css = DocCStylesheet.generate(theme: .default)
+        #expect(css.contains(".doc-topic > .declaration + h2"),
+                "Must target Overview H2 adjacent to declaration for separator")
+        let lines = css.components(separatedBy: "\n")
+        var inRule = false
+        var hasBorderTop = false
+        var hasPaddingTop = false
+        for line in lines {
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            if trimmed.contains(".declaration + h2") && trimmed.contains("{") {
+                inRule = true
+            }
+            if inRule {
+                if trimmed.contains("border-top:") && trimmed.contains("fill-gray") {
+                    hasBorderTop = true
+                }
+                if trimmed.contains("padding-top:") && trimmed.contains("40px") {
+                    hasPaddingTop = true
+                }
+                if trimmed == "}" { break }
+            }
+        }
+        #expect(hasBorderTop, "Overview H2 must have border-top separator")
+        #expect(hasPaddingTop, "Overview H2 must have 40px padding-top")
+    }
+
+    @Test("Content before section gets 40px margin gap")
+    func overviewBottomMarginBeforeSection() {
+        let css = DocCStylesheet.generate(theme: .default)
+        #expect(css.contains(".doc-topic > p + section"),
+                "Must target paragraph adjacent to section for 40px gap")
+    }
 }
 

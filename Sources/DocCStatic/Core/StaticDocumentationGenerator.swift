@@ -2226,7 +2226,7 @@ enum DocCStylesheet {
                 font-size: var(--spacing-leaf-link-font-size, 17px);
                 line-height: var(--spacing-leaf-link-line-height, 25px);
                 font-weight: var(--spacing-leaf-link-font-weight, 600);
-                color: var(--color-leaf-link, var(--color-figure-gray-secondary));
+                color: var(--color-leaf-link, var(--color-figure-gray-secondary-alt));
                 padding: var(--spacing-leaf-link-padding, 0);
                 margin: var(--spacing-leaf-link-margin, 0);
                 border: none;
@@ -2951,6 +2951,22 @@ enum DocCStylesheet {
                 margin-right: var(--spacing-content-margin-right, auto);
             }
 
+            /* Overview separator — matches docc-render .primary-content.with-border::before
+               (border immediately after declaration, then 40px padding to heading text) */
+            .doc-topic > .declaration + h2 {
+                padding-top: 40px;
+                border-top: 1px solid var(--color-fill-gray);
+            }
+
+            /* Overview bottom margin — matches docc-render .primary-content .content marginBottom.
+               Provides 40px gap between overview content and the next section. */
+            .doc-topic > p + section,
+            .doc-topic > ul + section,
+            .doc-topic > ol + section,
+            .doc-topic > .aside + section {
+                margin-top: 40px;
+            }
+
             /* Prevent adjacent-sibling rules from adding margin to top-level sections */
             .doc-topic > section,
             .doc-topic > .declaration {
@@ -2991,11 +3007,12 @@ enum DocCStylesheet {
                 padding-bottom: 1rem;
             }
 
-            /* Section headings - matches swift-docc-render (fixed 40px) */
+            /* Section headings - matches swift-docc-render ContentTable.vue (border + 40px) */
             .topics > h2,
             .relationships > h2,
             .see-also > h2 {
                 padding-top: var(--spacing-section-heading-padding-top, 40px);
+                border-top: 1px solid var(--color-fill-gray);
             }
 
             /* Topic groups within Topics section - optional indentation for visual hierarchy */
