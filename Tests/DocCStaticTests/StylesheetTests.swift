@@ -1055,12 +1055,13 @@ struct HeadingSpacingTests {
                 "Topic group H3 selector must exist")
     }
 
-    @Test("Documentation hero H1 has margin-bottom 0.5rem")
+    @Test("Documentation hero H1 has margin-bottom 0 (matches docc-render)")
     func documentationHeroH1MarginBottom() {
         let css = DocCStylesheet.generate(theme: .default)
-        // The hero section H1 needs margin-bottom for spacing before abstract
         #expect(css.contains(".documentation-hero h1"),
                 "Documentation hero H1 selector must exist")
+        #expect(css.contains("margin-bottom: 0"),
+                "Documentation hero H1 must have margin-bottom: 0 per docc-render")
     }
 }
 
@@ -1100,13 +1101,11 @@ struct ThemeCompatibilitySpacingTests {
                 "Contenttable section must have padding-top variable for group separation")
     }
 
-    @Test("First contenttable section has smaller top padding")
-    func contenttableFirstSectionPadding() {
+    @Test("No special first-child padding for contenttable sections (matches docc-render)")
+    func contenttableNoFirstChildSpecialPadding() {
         let css = DocCStylesheet.generate(theme: .default)
-        #expect(css.contains(".contenttable-section:first-child"),
-                "First contenttable section must have :first-child selector for smaller padding")
-        #expect(css.contains("--spacing-contenttable-first-section-padding-top"),
-                "First section must have specific padding-top variable")
+        #expect(!css.contains(".contenttable-section:first-child"),
+                "First contenttable section must NOT have :first-child override — docc-render treats all sections equally")
     }
 
     @Test("Nav group header has indentation")
@@ -1152,3 +1151,550 @@ struct ThemeCompatibilitySpacingTests {
                 "Code listing must use margin-right (not padding-right) to indent the grey box")
     }
 }
+
+// MARK: - Pixel-Level Parity Tests (Verified via Puppeteer DOM Comparison)
+
+@Suite("Pixel-Level Parity with swift-docc-render")
+struct PixelLevelParityTests {
+
+    @Test("Root font-size is 17px (themeable via --spacing-html-font-size)")
+    func rootFontSize17px() {
+        let css = DocCStylesheet.generate(theme: .default)
+        #expect(css.contains("html {"),
+                "Must have html selector")
+        #expect(css.contains("font-size: var(--spacing-html-font-size, 17px)"),
+                "Root font-size must be 17px via themeable variable to match docc-render")
+    }
+
+    @Test("H1 font-size is 40px with 44px line-height")
+    func h1FontSize40px() {
+        let css = DocCStylesheet.generate(theme: .default)
+        #expect(css.contains("--spacing-h1-font-size, 40px"),
+                "H1 font-size default must be 40px")
+        #expect(css.contains("--spacing-h1-line-height, 44px"),
+                "H1 line-height default must be 44px")
+    }
+
+    @Test("Eyebrow has no text-transform: capitalize")
+    func eyebrowNoTextTransformCapitalize() {
+        let css = DocCStylesheet.generate(theme: .default)
+        // Find the .eyebrow block and ensure it does NOT contain text-transform: capitalize
+        let lines = css.components(separatedBy: "\n")
+        var inEyebrowBlock = false
+        var hasCapitalize = false
+
+        for line in lines {
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            if trimmed.hasPrefix(".eyebrow") && trimmed.contains("{") {
+                inEyebrowBlock = true
+            }
+            if inEyebrowBlock && trimmed.contains("text-transform") && trimmed.contains("capitalize") {
+                hasCapitalize = true
+                break
+            }
+            if inEyebrowBlock && trimmed == "}" {
+                inEyebrowBlock = false
+            }
+        }
+
+        #expect(!hasCapitalize,
+                "Eyebrow must NOT have text-transform: capitalize — docc-render uses none")
+    }
+
+    @Test("Contenttable title font-weight is 400")
+    func contenttableTitleFontWeight400() {
+        let css = DocCStylesheet.generate(theme: .default)
+        #expect(css.contains("--spacing-contenttable-title-font-weight, 400"),
+                "Contenttable title font-weight default must be 400 (not 600)")
+    }
+
+    @Test("Contenttable title margin-bottom is 0")
+    func contenttableTitleMarginBottomZero() {
+        let css = DocCStylesheet.generate(theme: .default)
+        #expect(css.contains("--spacing-contenttable-title-margin-bottom, 0"),
+                "Contenttable title margin-bottom default must be 0")
+    }
+
+    @Test("No first-child special padding for contenttable sections")
+    func noFirstChildSpecialPadding() {
+        let css = DocCStylesheet.generate(theme: .default)
+        #expect(!css.contains(".contenttable-section:first-child"),
+                "Must NOT have .contenttable-section:first-child — docc-render treats all sections equally")
+    }
+
+    @Test("Link-block topic items have margin-top 15px")
+    func linkBlockTopicMarginTop() {
+        let css = DocCStylesheet.generate(theme: .default)
+        #expect(css.contains(".link-block.topic"),
+                "Must have .link-block.topic selector")
+        #expect(css.contains("--spacing-link-block-topic-margin-top, 15px"),
+                "Link-block topic margin-top default must be 15px")
+    }
+
+    @Test("Topic abstract uses body font (17px/25px)")
+    func topicAbstractBodyFont() {
+        let css = DocCStylesheet.generate(theme: .default)
+        #expect(css.contains(".link-block .abstract"),
+                "Must have .link-block .abstract selector")
+        #expect(css.contains("--spacing-topic-abstract-font-size, 17px"),
+                "Topic abstract font-size must be 17px (body font, not hero 21px)")
+        #expect(css.contains("--spacing-topic-abstract-line-height, 25px"),
+                "Topic abstract line-height must be 25px")
+    }
+
+    @Test("Topic abstract has margin-inline-start for icon spacing")
+    func topicAbstractMarginLeft() {
+        let css = DocCStylesheet.generate(theme: .default)
+        #expect(css.contains("margin-inline-start: var(--spacing-topic-abstract-margin-start"),
+                "Topic abstract must have margin-inline-start for icon alignment")
+    }
+
+    @Test("Hero margin-bottom is 0")
+    func heroMarginBottomZero() {
+        let css = DocCStylesheet.generate(theme: .default)
+        #expect(css.contains("--spacing-hero-margin-bottom, 0)"),
+                "Hero margin-bottom default must be 0 (not 2rem)")
+    }
+
+    @Test("Hero content max-width is 980px")
+    func heroContentMaxWidth980px() {
+        let css = DocCStylesheet.generate(theme: .default)
+        #expect(css.contains("--spacing-hero-max-width, 980px"),
+                "Hero content max-width must be 980px")
+    }
+
+    @Test("Hero content has 80px horizontal padding")
+    func heroContentPadding80px() {
+        let css = DocCStylesheet.generate(theme: .default)
+        #expect(css.contains("--spacing-hero-padding-left, 80px"),
+                "Hero content must have 80px left padding")
+        #expect(css.contains("--spacing-hero-padding-right, 80px"),
+                "Hero content must have 80px right padding")
+    }
+
+    @Test("Adjacent sibling margin rules exist (matches _typography.scss)")
+    func adjacentSiblingMarginRules() {
+        let css = DocCStylesheet.generate(theme: .default)
+        #expect(css.contains("h1 + *"),
+                "Must have h1 + * adjacent sibling rule")
+        #expect(css.contains("p + *"),
+                "Must have p + * adjacent sibling rule")
+        #expect(css.contains("margin-inline-start: var(--spacing-list-indent, 1.176em)"),
+                "ul/ol must use margin-inline-start: 1.176em (em(20px) at 17px root)")
+    }
+
+    @Test("Sidebar heading font-size is 17px (not 12px)")
+    func sidebarHeadingFontSize17px() {
+        let css = DocCStylesheet.generate(theme: .default)
+        #expect(css.contains("--spacing-sidebar-heading-font-size, 17px"),
+                "Sidebar heading font-size must be 17px, not 0.75rem/12px")
+    }
+
+    @Test("Sidebar heading has no uppercase text-transform")
+    func sidebarHeadingNoUppercase() {
+        let css = DocCStylesheet.generate(theme: .default)
+        #expect(css.contains("--spacing-sidebar-heading-text-transform, none"),
+                "Sidebar heading text-transform must default to none, not uppercase")
+    }
+
+    @Test("Eyebrow margin-bottom is 15px (overrides .doc-topic p reset)")
+    func eyebrowMarginBottom15px() {
+        let css = DocCStylesheet.generate(theme: .default)
+        #expect(css.contains(".doc-topic .eyebrow"),
+                "Must have .doc-topic .eyebrow selector for specificity")
+        #expect(css.contains("--spacing-eyebrow-margin-bottom, 15px"),
+                "Eyebrow margin-bottom must be 15px")
+    }
+
+    @Test("Hero H1 margin-bottom is 0")
+    func heroH1MarginBottomZero() {
+        let css = DocCStylesheet.generate(theme: .default)
+        // Find the .documentation-hero h1 block and verify margin-bottom: 0
+        let lines = css.components(separatedBy: "\n")
+        var inHeroH1Block = false
+        var hasMarginBottomZero = false
+
+        for line in lines {
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            if trimmed.contains(".documentation-hero h1") && trimmed.contains("{") {
+                inHeroH1Block = true
+            }
+            if inHeroH1Block && trimmed.contains("margin-bottom: 0") {
+                hasMarginBottomZero = true
+                break
+            }
+            if inHeroH1Block && trimmed == "}" {
+                inHeroH1Block = false
+            }
+        }
+
+        #expect(hasMarginBottomZero,
+                "Hero H1 must have margin-bottom: 0 (not 0.5rem)")
+    }
+}
+
+// MARK: - Layout Safety Tests (Prevent Sidebar/Content Overlap Regressions)
+
+@Suite("Layout Safety Tests — Prevent Sidebar Overlap Regressions")
+struct LayoutSafetyTests {
+
+    /// Helper: extract the LAST `.doc-topic` block from the CSS (the one that could
+    /// override the layout rule if it comes later in the cascade).
+    /// Returns nil if no duplicate `.doc-topic` rule exists after the layout rule.
+    private func findDuplicateDocTopicRule(in css: String) -> String? {
+        let blocks = css.components(separatedBy: ".doc-topic {")
+        // First occurrence is the layout rule (margin-left: sidebar-width).
+        // Any subsequent occurrences would override it.
+        guard blocks.count > 2 else { return nil }
+        // Return the content of the last duplicate block
+        return blocks.last?.components(separatedBy: "}").first
+    }
+
+    @Test("doc-topic must NOT have margin-left: auto (would break sidebar layout)")
+    func docTopicNoMarginLeftAuto() {
+        let css = DocCStylesheet.generate(theme: .default)
+        // If a second .doc-topic rule exists with margin-left: auto, it overrides
+        // the layout rule's margin-left: var(--sidebar-width) — content slides under sidebar.
+        if let duplicate = findDuplicateDocTopicRule(in: css) {
+            #expect(!duplicate.contains("margin-left: auto"),
+                    "A later .doc-topic rule must NOT set margin-left: auto — it overrides the sidebar layout")
+        }
+    }
+
+    @Test("doc-topic must NOT have margin-right: auto (would break sidebar layout)")
+    func docTopicNoMarginRightAuto() {
+        let css = DocCStylesheet.generate(theme: .default)
+        if let duplicate = findDuplicateDocTopicRule(in: css) {
+            #expect(!duplicate.contains("margin-right: auto"),
+                    "A later .doc-topic rule must NOT set margin-right: auto — it breaks sidebar positioning")
+        }
+    }
+
+    @Test("doc-topic layout rule has margin-left: var(--sidebar-width)")
+    func docTopicHasSidebarMargin() {
+        let css = DocCStylesheet.generate(theme: .default)
+        // The essential layout rule: .doc-topic needs margin-left equal to sidebar width
+        #expect(css.contains("margin-left: var(--sidebar-width)"),
+                "doc-topic must have margin-left: var(--sidebar-width) for sidebar layout")
+    }
+
+    @Test("doc-topic layout rule has max-width: calc(100% - var(--sidebar-width))")
+    func docTopicHasSidebarMaxWidth() {
+        let css = DocCStylesheet.generate(theme: .default)
+        #expect(css.contains("max-width: calc(100% - var(--sidebar-width))"),
+                "doc-topic must have max-width accounting for sidebar width")
+    }
+
+    @Test("No later .doc-topic rule overrides max-width with a fixed pixel value")
+    func docTopicNoFixedMaxWidthOverride() {
+        let css = DocCStylesheet.generate(theme: .default)
+        // A second .doc-topic { max-width: 980px } would override the sidebar-aware calc()
+        if let duplicate = findDuplicateDocTopicRule(in: css) {
+            let hasFixedMaxWidth = duplicate.range(of: "max-width:\\s*\\d+px",
+                                                    options: .regularExpression) != nil ||
+                                   duplicate.range(of: "max-width:\\s*var\\(--spacing-content-max-width",
+                                                    options: .regularExpression) != nil
+            #expect(!hasFixedMaxWidth,
+                    "A later .doc-topic rule must NOT override max-width with a fixed value — it breaks sidebar layout")
+        }
+    }
+
+    @Test("Hero content padding aligns with section content padding")
+    func heroContentPaddingMatchesSections() {
+        let css = DocCStylesheet.generate(theme: .default)
+        // Hero content should use similar horizontal padding as doc-topic sections
+        // Both should use 80px (5rem) so text aligns vertically
+        #expect(css.contains("--spacing-hero-padding-left, 80px"),
+                "Hero content left padding must match section content padding (80px)")
+        #expect(css.contains("--spacing-hero-padding-right, 80px"),
+                "Hero content right padding must match section content padding (80px)")
+    }
+
+    @Test("Documentation-layout is a flex container")
+    func documentationLayoutIsFlex() {
+        let css = DocCStylesheet.generate(theme: .default)
+        #expect(css.contains(".documentation-layout"),
+                "documentation-layout class must exist")
+        let lines = css.components(separatedBy: "\n")
+        var inLayoutBlock = false
+        var hasFlex = false
+        for line in lines {
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            if trimmed.contains(".documentation-layout") && trimmed.contains("{") {
+                inLayoutBlock = true
+            }
+            if inLayoutBlock && trimmed.contains("display: flex") {
+                hasFlex = true
+                break
+            }
+            if inLayoutBlock && trimmed == "}" {
+                inLayoutBlock = false
+            }
+        }
+        #expect(hasFlex, "documentation-layout must be display: flex for sidebar/content layout")
+    }
+
+    @Test("Sidebar is position: fixed with sidebar-width")
+    func sidebarIsFixed() {
+        let css = DocCStylesheet.generate(theme: .default)
+        let lines = css.components(separatedBy: "\n")
+        var inSidebarBlock = false
+        var hasFixed = false
+        var hasWidth = false
+        for line in lines {
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            if trimmed.hasPrefix(".sidebar {") || trimmed.hasPrefix(".sidebar{") {
+                inSidebarBlock = true
+            }
+            if inSidebarBlock {
+                if trimmed.contains("position: fixed") { hasFixed = true }
+                if trimmed.contains("width: var(--sidebar-width)") { hasWidth = true }
+            }
+            if inSidebarBlock && trimmed == "}" {
+                break
+            }
+        }
+        #expect(hasFixed, "Sidebar must be position: fixed")
+        #expect(hasWidth, "Sidebar must use var(--sidebar-width) for width")
+    }
+}
+
+// MARK: - DOM Comparison Parity Tests (Puppeteer-verified, Session 2)
+
+@Suite("DOM Comparison Parity — Puppeteer-verified Fixes")
+struct DOMComparisonParityTests {
+
+    // A. Content Padding Model
+
+    @Test("Content padding horizontal is 80px fixed (not 5rem which computes to 85px)")
+    func contentPaddingHorizontal80pxFixed() {
+        let css = DocCStylesheet.generate(theme: .default)
+        #expect(css.contains("--spacing-content-padding-horizontal: 80px"),
+                "Content padding must be 80px fixed, not 5rem (which is 85px at 17px root)")
+    }
+
+    @Test("Content sections have max-width 980px with auto margins")
+    func contentSectionsMaxWidth980px() {
+        let css = DocCStylesheet.generate(theme: .default)
+        #expect(css.contains("max-width: var(--spacing-content-max-width, 980px)"),
+                "Content sections must have max-width 980px")
+        #expect(css.contains("margin-left: var(--spacing-content-margin-left, auto)"),
+                "Content sections must have margin-left: auto for centring")
+        #expect(css.contains("margin-right: var(--spacing-content-margin-right, auto)"),
+                "Content sections must have margin-right: auto for centring")
+    }
+
+    @Test("Top-level sections within doc-topic have margin-top: 0")
+    func topLevelSectionsNoMarginTop() {
+        let css = DocCStylesheet.generate(theme: .default)
+        #expect(css.contains(".doc-topic > section"),
+                "Must have .doc-topic > section selector")
+    }
+
+    // B. Colour Issues
+
+    @Test("Hero abstract uses --color-figure-gray (white in dark mode), not secondary (grey)")
+    func heroAbstractColourIsGray() {
+        let css = DocCStylesheet.generate(theme: .default)
+        // Find .documentation-hero .abstract and check colour
+        let lines = css.components(separatedBy: "\n")
+        var inHeroAbstract = false
+        var usesGray = false
+        var usesGraySecondary = false
+
+        for line in lines {
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            if trimmed.contains(".documentation-hero") && trimmed.contains(".abstract")
+                && trimmed.contains("{")
+            {
+                inHeroAbstract = true
+            }
+            if inHeroAbstract && trimmed.contains("color:") {
+                if trimmed.contains("--color-figure-gray-secondary") {
+                    usesGraySecondary = true
+                } else if trimmed.contains("--color-figure-gray") {
+                    usesGray = true
+                }
+                break
+            }
+            if inHeroAbstract && trimmed == "}" {
+                break
+            }
+        }
+
+        #expect(usesGray,
+                "Hero abstract must use --color-figure-gray (white in dark mode)")
+        #expect(!usesGraySecondary,
+                "Hero abstract must NOT use --color-figure-gray-secondary (grey in dark mode)")
+    }
+
+    @Test("Dark mode link colour is #09f (via theme settings)")
+    func darkModeLinkColour() {
+        let css = DocCStylesheet.generate(theme: .default)
+        // The theme settings CSS should generate --color-link: #09f in dark mode
+        let hasDarkLink = css.range(
+            of: "prefers-color-scheme:\\s*dark[^}]*--color-link:\\s*#09f",
+            options: .regularExpression) != nil
+        #expect(hasDarkLink,
+                "Dark mode must override --color-link to #09f")
+    }
+
+    // C. Typography / Code Issues
+
+    @Test("Inline code has transparent background, no padding, inherits font-size")
+    func inlineCodeTransparent() {
+        let css = DocCStylesheet.generate(theme: .default)
+        #expect(css.contains("--color-code-inline-background, transparent"),
+                "Inline code background must default to transparent")
+        #expect(css.contains("--spacing-code-padding, 0"),
+                "Inline code padding must default to 0")
+        #expect(css.contains("--spacing-code-border-radius, 0"),
+                "Inline code border-radius must default to 0")
+        #expect(css.contains("--spacing-code-font-size, inherit"),
+                "Inline code font-size must default to inherit")
+    }
+
+    @Test("Code font-family includes Menlo")
+    func codeFontFamilyIncludesMenlo() {
+        let css = DocCStylesheet.generate(theme: .default)
+        // Both code and pre elements should include Menlo in font-family
+        #expect(css.contains("Menlo, monospace"),
+                "Code font-family must include Menlo before monospace")
+    }
+
+    @Test("Pre element display is block (not flex)")
+    func preDisplayBlock() {
+        let css = DocCStylesheet.generate(theme: .default)
+        #expect(css.contains("--spacing-pre-display, block"),
+                "Pre element display must default to block, not flex")
+    }
+
+    @Test("Pre element max-width is none (not 100%)")
+    func preMaxWidthNone() {
+        let css = DocCStylesheet.generate(theme: .default)
+        #expect(css.contains("--spacing-pre-max-width, none"),
+                "Pre element max-width must default to none, not 100%")
+    }
+
+    // D. Spacing / Margin Issues
+
+    @Test("Declaration section margin is 0")
+    func declarationMarginZero() {
+        let css = DocCStylesheet.generate(theme: .default)
+        #expect(css.contains("--spacing-declaration-margin, 0"),
+                "Declaration margin must default to 0, not 30px")
+    }
+
+    @Test("Hero content children have margin-top: 0 (prevents p tag margins)")
+    func heroContentChildrenNoMarginTop() {
+        let css = DocCStylesheet.generate(theme: .default)
+        #expect(css.contains(".documentation-hero__content > *"),
+                "Must have .documentation-hero__content > * selector to reset child margins")
+    }
+
+    @Test("Link-block abstract has margin-bottom: 0")
+    func linkBlockAbstractMarginBottomZero() {
+        let css = DocCStylesheet.generate(theme: .default)
+        let lines = css.components(separatedBy: "\n")
+        var inLinkBlockAbstract = false
+        var hasMarginBottomZero = false
+
+        for line in lines {
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            if trimmed.contains(".link-block") && trimmed.contains(".abstract")
+                && trimmed.contains("{")
+            {
+                inLinkBlockAbstract = true
+            }
+            if inLinkBlockAbstract && trimmed.contains("margin-bottom: 0") {
+                hasMarginBottomZero = true
+                break
+            }
+            if inLinkBlockAbstract && trimmed == "}" {
+                inLinkBlockAbstract = false
+            }
+        }
+
+        #expect(hasMarginBottomZero,
+                "Link-block abstract must have margin-bottom: 0")
+    }
+
+    @Test("Topics H2 padding-top is 40px fixed (not 2.5rem)")
+    func topicsH2PaddingTop40pxFixed() {
+        let css = DocCStylesheet.generate(theme: .default)
+        #expect(css.contains("--spacing-section-heading-padding-top, 40px"),
+                "Topics H2 padding-top must be 40px fixed, not 2.5rem (42.5px at 17px root)")
+    }
+
+    // E. Topic Link Issues
+
+    @Test("Topic link display is inline-flex with vertical padding")
+    func topicLinkInlineFlex() {
+        let css = DocCStylesheet.generate(theme: .default)
+        #expect(css.contains("--spacing-topic-link-display, inline-flex"),
+                "Topic link display must default to inline-flex")
+        #expect(css.contains("--spacing-topic-link-padding, 5px 0"),
+                "Topic link padding must default to 5px 0")
+    }
+
+    @Test("Topic icon wrapper is flex with 17px margin-right")
+    func topicIconWrapperFlex() {
+        let css = DocCStylesheet.generate(theme: .default)
+        #expect(css.contains("--spacing-topic-icon-display, flex"),
+                "Topic icon wrapper display must default to flex")
+        #expect(css.contains("--spacing-topic-icon-margin-right, 17px"),
+                "Topic icon wrapper margin-right must be 17px")
+    }
+
+    // F. Breadcrumb Issues
+
+    @Test("Breadcrumb has 14px font-size, 20px line-height, and 20px margin-bottom")
+    func breadcrumbStyling() {
+        let css = DocCStylesheet.generate(theme: .default)
+        #expect(css.contains("--spacing-hierarchy-font-size, 14px"),
+                "Breadcrumb font-size must be 14px")
+        #expect(css.contains("--spacing-hierarchy-line-height, 20px"),
+                "Breadcrumb line-height must be 20px")
+        #expect(css.contains("--spacing-hierarchy-margin-bottom, 20px"),
+                "Breadcrumb margin-bottom must be 20px")
+    }
+
+    @Test("Breadcrumb has no border-bottom and no horizontal padding")
+    func breadcrumbNoBorderNoPadding() {
+        let css = DocCStylesheet.generate(theme: .default)
+        #expect(css.contains("--spacing-hierarchy-border-bottom, none"),
+                "Breadcrumb border-bottom must default to none")
+        #expect(css.contains("--spacing-hierarchy-padding, 0"),
+                "Breadcrumb padding must default to 0")
+    }
+
+    @Test("Breadcrumb colour is --color-figure-gray (white in dark), not secondary")
+    func breadcrumbColourIsGray() {
+        let css = DocCStylesheet.generate(theme: .default)
+        let lines = css.components(separatedBy: "\n")
+        var inHierarchy = false
+        var usesGray = false
+
+        for line in lines {
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            if (trimmed.hasPrefix(".hierarchy") || trimmed.hasPrefix("nav.hierarchy"))
+                && trimmed.contains("{")
+            {
+                inHierarchy = true
+            }
+            if inHierarchy && trimmed.contains("color:") && trimmed.contains("--color-figure-gray")
+                && !trimmed.contains("--color-figure-gray-secondary")
+            {
+                usesGray = true
+                break
+            }
+            if inHierarchy && trimmed == "}" {
+                inHierarchy = false
+            }
+        }
+
+        #expect(usesGray,
+                "Breadcrumb must use --color-figure-gray, not --color-figure-gray-secondary")
+    }
+}
+

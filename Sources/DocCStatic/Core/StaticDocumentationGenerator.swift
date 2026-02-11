@@ -1797,11 +1797,15 @@ enum DocCStylesheet {
                 --spacing-nav-depth-spacer: 20px;
                 --spacing-nav-chevron-padding: 5px;
 
-                /* Content padding - matching swift-docc-render container padding */
-                --spacing-content-padding-horizontal: 5rem;
+                /* Content padding - matching swift-docc-render container padding (fixed px, not rem) */
+                --spacing-content-padding-horizontal: 80px;
             }
 
             \(theme.includeDarkMode ? darkModeStyles : "")
+
+            html {
+                font-size: var(--spacing-html-font-size, 17px);
+            }
 
             * {
                 box-sizing: border-box;
@@ -1837,15 +1841,15 @@ enum DocCStylesheet {
             }
 
             code {
-                font-family: var(--typography-html-font-mono);
-                font-size: var(--spacing-code-font-size, 0.875em);
-                background: var(--color-fill-secondary);
-                padding: var(--spacing-code-padding, 0.125em 0.25em);
-                border-radius: var(--spacing-code-border-radius, 4px);
+                font-family: var(--typography-html-font-mono, Menlo, monospace);
+                font-size: var(--spacing-code-font-size, inherit);
+                background: var(--color-code-inline-background, transparent);
+                padding: var(--spacing-code-padding, 0);
+                border-radius: var(--spacing-code-border-radius, 0);
             }
 
             pre {
-                font-family: var(--typography-html-font-mono);
+                font-family: var(--typography-html-font-mono, Menlo, monospace);
                 font-size: var(--spacing-pre-font-size, 17px);
                 line-height: var(--spacing-pre-line-height, 25px);
                 background: var(--color-pre-background, transparent);
@@ -1858,17 +1862,18 @@ enum DocCStylesheet {
                 padding-right: var(--spacing-pre-padding-right, 14px);
                 overflow-x: auto;
                 margin: var(--spacing-pre-margin, 0);
-                max-width: 100%;
+                max-width: var(--spacing-pre-max-width, none);
                 box-sizing: border-box;
                 position: var(--spacing-pre-code-position, static);
-                display: var(--spacing-pre-display, flex);
+                display: var(--spacing-pre-display, block);
             }
 
             pre code {
                 display: block;
                 background: none;
                 padding: var(--spacing-pre-code-padding, 0);
-                font-size: 15px;
+                font-size: var(--spacing-pre-code-font-size, 15px);
+                font-family: var(--typography-html-font-mono, Menlo, monospace);
                 position: var(--spacing-pre-code-position, static);
                 left: var(--spacing-pre-code-left, 0);
             }
@@ -1958,25 +1963,23 @@ enum DocCStylesheet {
             .contenttable-title,
             .contenttable-section h3 {
                 margin-top: 0;
-                margin-bottom: var(--spacing-contenttable-title-margin-bottom, 1rem);
+                margin-bottom: var(--spacing-contenttable-title-margin-bottom, 0);
                 font-size: var(--spacing-contenttable-title-font-size, 24px);
                 line-height: var(--spacing-contenttable-title-line-height, 28px);
-                font-weight: var(--spacing-contenttable-title-font-weight, 600);
+                font-weight: var(--spacing-contenttable-title-font-weight, 400);
             }
 
-            /* Topic group sections need top padding for separation (matches swift-docc-render) */
+            /* Topic group sections need top padding for separation (matches swift-docc-render).
+               margin-top: 0 prevents adjacent-sibling rules (h2 + *) from adding extra spacing. */
             .contenttable-section {
                 padding-top: var(--spacing-contenttable-section-padding-top, 2.353rem);
+                margin-top: 0;
             }
 
-            /* First topic group section has smaller top padding */
-            .contenttable-section:first-child {
-                padding-top: var(--spacing-contenttable-first-section-padding-top, 1rem);
-            }
 
             h1 {
-                font-size: var(--spacing-h1-font-size, 32px);
-                line-height: var(--spacing-h1-line-height, 36px);
+                font-size: var(--spacing-h1-font-size, 40px);
+                line-height: var(--spacing-h1-line-height, 44px);
                 font-weight: var(--spacing-h1-font-weight, 400);
             }
             h2 {
@@ -2017,9 +2020,22 @@ enum DocCStylesheet {
                 text-decoration: underline;
             }
 
-            p { margin-bottom: 1em; }
-            ul, ol { margin-bottom: 1em; padding-left: 1.5em; }
-            li { margin-bottom: 0.5em; }
+            /* Adjacent sibling margin rules — matches swift-docc-render _typography.scss */
+            h1 + *, h2 + *, h3 + *, h4 + *, h5 + *, h6 + * {
+                margin-top: var(--spacing-stacked-margin-large, 0.8em);
+            }
+            p + h1, p + h2, p + h3, p + h4, p + h5, p + h6,
+            ul + h1, ul + h2, ul + h3, ul + h4, ul + h5, ul + h6,
+            ol + h1, ol + h2, ol + h3, ol + h4, ol + h5, ol + h6 {
+                margin-top: var(--spacing-stacked-margin-xlarge, 1.6em);
+            }
+            p + *, ul + *, ol + * {
+                margin-top: var(--spacing-stacked-margin-large, 0.8em);
+            }
+            ul, ol {
+                margin-inline-start: var(--spacing-list-indent, 1.176em);
+            }
+            li { margin-bottom: 0; }
 
             /* Syntax highlighting - token-* classes match swift-docc-render */
             .token-keyword { color: var(--color-syntax-keywords); font-weight: 500; }
@@ -2218,15 +2234,15 @@ enum DocCStylesheet {
                 letter-spacing: var(--spacing-leaf-link-letter-spacing, normal);
             }
 
-            /* Sidebar section group headings need indentation for visual hierarchy */
+            /* Sidebar section group headings — matches swift-docc-render .leaf-link H3 */
             .sidebar-section > h3.leaf-link,
             .sidebar-section > .leaf-link {
-                padding-left: var(--spacing-sidebar-section-heading-indent, 0.5rem);
+                padding-left: var(--spacing-sidebar-section-heading-indent, 0);
                 margin-top: var(--spacing-sidebar-section-heading-margin-top, 0.75rem);
                 margin-bottom: var(--spacing-sidebar-section-heading-margin-bottom, 0.25rem);
-                font-size: var(--spacing-sidebar-heading-font-size, 0.75rem);
-                text-transform: var(--spacing-sidebar-heading-text-transform, uppercase);
-                letter-spacing: var(--spacing-sidebar-heading-letter-spacing, 0.02em);
+                font-size: var(--spacing-sidebar-heading-font-size, 17px);
+                text-transform: var(--spacing-sidebar-heading-text-transform, none);
+                letter-spacing: var(--spacing-sidebar-heading-letter-spacing, normal);
             }
 
             .sidebar-list {
@@ -2740,15 +2756,17 @@ enum DocCStylesheet {
                 max-width: 100%;
             }
 
-            /* Breadcrumbs */
+            /* Breadcrumbs - matches swift-docc-render hierarchy */
             .hierarchy {
                 display: flex;
                 align-items: center;
                 gap: 0.5rem;
-                font-size: 0.8125rem;
-                color: var(--color-figure-gray-secondary);
-                padding: 1rem 3rem;
-                border-bottom: 1px solid var(--color-fill-gray);
+                font-size: var(--spacing-hierarchy-font-size, 14px);
+                line-height: var(--spacing-hierarchy-line-height, 20px);
+                color: var(--color-figure-gray);
+                padding: var(--spacing-hierarchy-padding, 0);
+                margin-bottom: var(--spacing-hierarchy-margin-bottom, 20px);
+                border-bottom: var(--spacing-hierarchy-border-bottom, none);
             }
 
             .hierarchy a {
@@ -2771,7 +2789,7 @@ enum DocCStylesheet {
                 text-align: left;
                 position: relative;
                 padding-right: 0;
-                margin-bottom: var(--spacing-hero-margin-bottom, 2rem);
+                margin-bottom: var(--spacing-hero-margin-bottom, 0);
             }
 
             .documentation-hero::before {
@@ -2787,11 +2805,11 @@ enum DocCStylesheet {
                 padding-bottom: var(--spacing-hero-padding-bottom, 40px);
                 position: relative;
                 z-index: 1;
-                max-width: var(--spacing-hero-max-width, 820px);
+                max-width: var(--spacing-hero-max-width, 980px);
                 margin-left: var(--spacing-hero-margin-left, auto);
                 margin-right: var(--spacing-hero-margin-right, auto);
-                padding-left: var(--spacing-hero-padding-left, 0);
-                padding-right: var(--spacing-hero-padding-right, 0);
+                padding-left: var(--spacing-hero-padding-left, 80px);
+                padding-right: var(--spacing-hero-padding-right, 80px);
                 box-sizing: border-box;
             }
 
@@ -2846,23 +2864,33 @@ enum DocCStylesheet {
                 }
             }
 
-            .eyebrow {
+            .eyebrow,
+            .doc-topic .eyebrow {
                 font-size: var(--spacing-eyebrow-font-size, 21px);
                 line-height: var(--spacing-eyebrow-line-height, 25px);
                 color: var(--color-figure-gray-secondary);
                 margin-bottom: var(--spacing-eyebrow-margin-bottom, 15px);
-                text-transform: capitalize;
             }
 
             .documentation-hero h1 {
                 margin-top: 0;
-                margin-bottom: 0.5rem;
+                margin-bottom: 0;
+            }
+
+            /* Reset margins on hero content elements — prevents adjacent-sibling
+               rules from adding unwanted margin-top to <p> eyebrow/abstract tags.
+               Uses .doc-topic prefix for specificity (0-2-1) to beat .doc-topic p (0-1-1). */
+            .doc-topic .documentation-hero__content > p,
+            .doc-topic .documentation-hero__content > div,
+            .doc-topic .documentation-hero__content > span,
+            .documentation-hero__content > * {
+                margin-top: 0;
             }
 
             .documentation-hero .abstract {
                 font-size: var(--spacing-abstract-font-size, 21px);
                 line-height: var(--spacing-abstract-line-height, 29px);
-                color: var(--color-figure-gray-secondary);
+                color: var(--color-figure-gray);
                 margin-bottom: 0;
             }
 
@@ -2873,7 +2901,38 @@ enum DocCStylesheet {
                 margin-bottom: var(--spacing-abstract-margin-bottom, 1.5rem);
             }
 
-            /* Content sections within main - matches swift-docc-render 80px content padding */
+            /* Topic link items within content table sections */
+            .link-block.topic {
+                margin-top: var(--spacing-link-block-topic-margin-top, 15px);
+            }
+
+            .no-title .link-block.topic:first-child {
+                margin-top: 0;
+            }
+
+            /* Topic link styling - matches swift-docc-render inline-flex with vertical padding */
+            .link-block a.link {
+                display: var(--spacing-topic-link-display, inline-flex);
+                padding: var(--spacing-topic-link-padding, 5px 0);
+            }
+
+            /* Topic icon wrapper - matches swift-docc-render flex display with right margin */
+            .topic-icon-wrapper {
+                display: var(--spacing-topic-icon-display, flex);
+                margin-right: var(--spacing-topic-icon-margin-right, 17px);
+            }
+
+            /* Topic abstracts inside content table sections use body font, not hero font */
+            .contenttable-section .section-content .abstract,
+            .link-block .abstract {
+                font-size: var(--spacing-topic-abstract-font-size, 17px);
+                line-height: var(--spacing-topic-abstract-line-height, 25px);
+                color: var(--color-figure-gray);
+                margin-inline-start: var(--spacing-topic-abstract-margin-start, calc(1rem + 1.294rem));
+                margin-bottom: 0;
+            }
+
+            /* Content sections within main - matches swift-docc-render container model */
             .doc-topic section,
             .doc-topic .declaration,
             .doc-topic > ul,
@@ -2885,8 +2944,17 @@ enum DocCStylesheet {
             .doc-topic > h5,
             .doc-topic > h6,
             .doc-topic > .aside {
-                padding-left: var(--spacing-content-padding-horizontal, 5rem);
-                padding-right: var(--spacing-content-padding-horizontal, 5rem);
+                max-width: var(--spacing-content-max-width, 980px);
+                padding-left: var(--spacing-content-padding-horizontal, 80px);
+                padding-right: var(--spacing-content-padding-horizontal, 80px);
+                margin-left: var(--spacing-content-margin-left, auto);
+                margin-right: var(--spacing-content-margin-right, auto);
+            }
+
+            /* Prevent adjacent-sibling rules from adding margin to top-level sections */
+            .doc-topic > section,
+            .doc-topic > .declaration {
+                margin-top: 0;
             }
 
             /* Code listings use margin to indent the grey box wrapper itself */
@@ -2923,11 +2991,11 @@ enum DocCStylesheet {
                 padding-bottom: 1rem;
             }
 
-            /* Section headings - matches swift-docc-render (40px = 2.5rem) */
+            /* Section headings - matches swift-docc-render (fixed 40px) */
             .topics > h2,
             .relationships > h2,
             .see-also > h2 {
-                padding-top: var(--spacing-section-heading-padding-top, 2.5rem);  /* 40px at 16px root */
+                padding-top: var(--spacing-section-heading-padding-top, 40px);
             }
 
             /* Topic groups within Topics section - optional indentation for visual hierarchy */
@@ -2944,14 +3012,13 @@ enum DocCStylesheet {
 
             /* Declaration section - matches swift-docc-render structure */
             .declaration {
-                margin: var(--spacing-declaration-margin, 30px 0 0 0);
+                margin: var(--spacing-declaration-margin, 0);
             }
             .declaration .source {
                 background: var(--color-code-background, var(--color-fill-secondary));
                 border: var(--spacing-declaration-border, 1px solid var(--color-grid, var(--color-fill-gray)));
                 padding: var(--spacing-declaration-padding, 8px 14px);
                 border-radius: var(--spacing-declaration-border-radius, 4px);
-                font-size: var(--spacing-declaration-font-size, 15px);
                 line-height: var(--spacing-declaration-line-height, 25px);
                 margin: var(--spacing-declaration-source-margin, 0);
                 overflow-x: auto;
@@ -2961,9 +3028,9 @@ enum DocCStylesheet {
             }
 
             nav.hierarchy {
-                font-size: 0.8125rem;
-                color: var(--color-figure-gray-secondary);
-                margin-bottom: 1rem;
+                font-size: var(--spacing-hierarchy-font-size, 14px);
+                color: var(--color-figure-gray);
+                margin-bottom: var(--spacing-hierarchy-margin-bottom, 20px);
             }
 
             nav.hierarchy a {
