@@ -344,11 +344,12 @@ struct StylesheetTests {
         #expect(css.contains("--spacing-pre-padding-right: 3rem"))
     }
 
-    @Test("Code listings receive content padding")
-    func codeListingsGetPadding() {
+    @Test("Code listings use auto margins for alignment")
+    func codeListingsAutoMargins() {
         let css = DocCStylesheet.generate(theme: .default)
         #expect(css.contains(".doc-topic .code-listing"))
-        #expect(css.contains("padding-left: var(--spacing-content-padding-horizontal"))
+        #expect(css.contains("margin-left: auto"),
+                "Code listing must use auto margins to align grey box with paragraph text")
     }
 
     @Test("Direct paragraphs receive content padding")
@@ -1141,14 +1142,17 @@ struct ThemeCompatibilitySpacingTests {
                 "Topic group indent variable must exist for theming")
     }
 
-    @Test("Code listing uses margin for wrapper indentation")
-    func codeListingMarginIndentation() {
+    @Test("Code listing uses auto margins and calc max-width to align with content text")
+    func codeListingAlignedWithContent() {
         let css = DocCStylesheet.generate(theme: .default)
         #expect(css.contains(".doc-topic .code-listing"))
-        #expect(css.contains("margin-left: var(--spacing-content-padding-horizontal"),
-                "Code listing must use margin-left (not padding-left) to indent the grey box")
-        #expect(css.contains("margin-right: var(--spacing-content-padding-horizontal"),
-                "Code listing must use margin-right (not padding-right) to indent the grey box")
+        #expect(css.contains("margin-left: auto"),
+                "Code listing must use margin-left: auto for centring (matching paragraph model)")
+        #expect(css.contains("margin-right: auto"),
+                "Code listing must use margin-right: auto for centring (matching paragraph model)")
+        // max-width = content-max-width − 2 × content-padding so grey box aligns with text
+        #expect(css.contains("max-width: calc(var(--spacing-content-max-width, 980px) - 2 * var(--spacing-content-padding-horizontal, 80px))"),
+                "Code listing max-width must be content-max-width minus 2× content-padding (820px)")
     }
 }
 
@@ -1765,8 +1769,8 @@ struct DOMComparisonParityTests {
 
     // H. Sidebar Indentation and Font-Weight (DOM Comparison v3)
 
-    @Test("Sidebar section headings indented 36px (aligns with depth-spacer + inner UL padding)")
-    func sidebarSectionHeadingIndent36px() {
+    @Test("Sidebar section headings indented 40px (aligns with card padding + depth-spacer)")
+    func sidebarSectionHeadingIndent40px() {
         let css = DocCStylesheet.generate(theme: .default)
         let lines = css.components(separatedBy: "\n")
         var inRule = false
@@ -1776,14 +1780,14 @@ struct DOMComparisonParityTests {
             if trimmed.contains(".sidebar-section > h3.leaf-link") || trimmed.contains(".sidebar-section > .leaf-link") {
                 inRule = true
             }
-            if inRule && trimmed.contains("padding-left:") && trimmed.contains("36px") {
+            if inRule && trimmed.contains("padding-left:") && trimmed.contains("40px") {
                 hasPadding = true
                 break
             }
             if inRule && trimmed == "}" { break }
         }
         #expect(hasPadding,
-                "Sidebar section headings must have 36px padding-left to align with navigator card depth-spacer")
+                "Sidebar section headings must have 40px padding-left (matching docc-render: 20px card-padding + 20px depth-spacer)")
     }
 
     @Test("Navigator card links have font-weight 400 (non-heading items)")
@@ -1828,6 +1832,119 @@ struct DOMComparisonParityTests {
         }
         #expect(hasWeight,
                 "Active/selected navigator card links must have font-weight 600 matching docc-render")
+    }
+}
+
+// MARK: - CSS Parity Phase 2 Tests (Puppeteer-verified Discrepancies)
+
+@Suite("CSS Parity Phase 2 — Remaining Discrepancies")
+struct CSSParityPhase2Tests {
+
+    @Test("Module page Overview H2 after hero has 40px padding-top and border-top")
+    func modulePageOverviewSpacing() {
+        let css = DocCStylesheet.generate(theme: .default)
+        #expect(css.contains(".doc-topic > .documentation-hero + h2"),
+                "Must target Overview H2 adjacent to documentation-hero for module pages")
+        // The rule selector may span multiple lines, so track when we've seen the selector
+        // and then entered its block
+        let lines = css.components(separatedBy: "\n")
+        var foundSelector = false
+        var inRule = false
+        var hasPaddingTop = false
+        var hasBorderTop = false
+        for line in lines {
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            if trimmed.contains(".documentation-hero + h2") {
+                foundSelector = true
+            }
+            if foundSelector && trimmed.contains("{") {
+                inRule = true
+                foundSelector = false
+            }
+            if inRule {
+                if trimmed.contains("padding-top:") && trimmed.contains("40px") {
+                    hasPaddingTop = true
+                }
+                if trimmed.contains("border-top:") && trimmed.contains("fill-gray") {
+                    hasBorderTop = true
+                }
+                if trimmed == "}" { break }
+            }
+        }
+        #expect(hasPaddingTop,
+                "Module page Overview H2 must have 40px padding-top")
+        #expect(hasBorderTop,
+                "Module page Overview H2 must have border-top separator")
+    }
+
+    @Test("Disclosure chevron has margin-left: auto for flush-right alignment")
+    func disclosureChevronFlushRight() {
+        let css = DocCStylesheet.generate(theme: .default)
+        let lines = css.components(separatedBy: "\n")
+        var inRule = false
+        var hasMarginLeftAuto = false
+        for line in lines {
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            if trimmed.contains(".technology-title .disclosure-chevron") && trimmed.contains("{") {
+                inRule = true
+            }
+            if inRule && trimmed.contains("margin-left:") && trimmed.contains("auto") {
+                hasMarginLeftAuto = true
+                break
+            }
+            if inRule && trimmed == "}" { break }
+        }
+        #expect(hasMarginLeftAuto,
+                "Disclosure chevron must have margin-left: auto for flush-right alignment in flex container")
+    }
+
+    @Test("Navigator card has no vertical padding (matches docc-render)")
+    func navigatorCardNoPaddingTopBottom() {
+        let css = DocCStylesheet.generate(theme: .default)
+        let lines = css.components(separatedBy: "\n")
+        var inRule = false
+        var paddingValue = ""
+        for line in lines {
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            if trimmed.hasPrefix(".navigator-card {") || trimmed.hasPrefix(".navigator-card{") {
+                inRule = true
+            }
+            if inRule && trimmed.hasPrefix("padding:") {
+                paddingValue = trimmed
+                break
+            }
+            if inRule && trimmed == "}" { break }
+        }
+        #expect(!paddingValue.contains("5px"),
+                "Navigator card must NOT have 5px vertical padding — docc-render has 0")
+    }
+
+    @Test("Navigator card has 20px padding-left (matches docc-render card model)")
+    func navigatorCardPaddingLeft() {
+        let css = DocCStylesheet.generate(theme: .default)
+        #expect(css.contains("--spacing-navigator-card-padding-left, 20px"),
+                "Navigator card must have 20px padding-left matching docc-render")
+    }
+
+    @Test("Module contents list has 0 padding-left (card padding provides base indent)")
+    func moduleContentsNoPaddingLeft() {
+        let css = DocCStylesheet.generate(theme: .default)
+        let lines = css.components(separatedBy: "\n")
+        var inRule = false
+        var hasPaddingZero = false
+        for line in lines {
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            if trimmed.contains(".module-section .module-contents") && trimmed.contains("{") {
+                inRule = true
+            }
+            if inRule && trimmed.contains("padding-left:") && trimmed.contains("0") {
+                hasPaddingZero = true
+                break
+            }
+            if inRule && trimmed == "}" { break }
+        }
+        #expect(hasPaddingZero,
+                "Module contents must have padding-left: 0 (card padding-left: 20px provides the base indent)")
     }
 }
 

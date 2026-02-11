@@ -2209,7 +2209,7 @@ enum DocCStylesheet {
 
             .module-section .module-contents {
                 display: none;
-                padding-left: 1rem;
+                padding-left: 0;
                 margin: 0;
             }
 
@@ -2237,7 +2237,7 @@ enum DocCStylesheet {
             /* Sidebar section group headings — matches swift-docc-render .leaf-link H3 */
             .sidebar-section > h3.leaf-link,
             .sidebar-section > .leaf-link {
-                padding-left: var(--spacing-sidebar-section-heading-indent, 36px);
+                padding-left: var(--spacing-sidebar-section-heading-indent, 40px);
                 margin-top: var(--spacing-sidebar-section-heading-margin-top, 0.75rem);
                 margin-bottom: var(--spacing-sidebar-section-heading-margin-bottom, 0.25rem);
                 font-size: var(--spacing-sidebar-heading-font-size, 17px);
@@ -2261,7 +2261,8 @@ enum DocCStylesheet {
                 display: flex;
                 align-items: center;
                 gap: 0.375rem;
-                padding: 5px 0;
+                padding: var(--spacing-navigator-card-padding, 0);
+                padding-left: var(--spacing-navigator-card-padding-left, 20px);
                 font-size: var(--spacing-navigator-card-font-size, 17px);
                 line-height: var(--spacing-navigator-card-line-height, 25px);
                 min-height: var(--spacing-navigator-card-min-height, 32px);
@@ -2347,7 +2348,7 @@ enum DocCStylesheet {
             /* Chevron inside .technology-title */
             .technology-title .disclosure-chevron {
                 order: var(--spacing-disclosure-chevron-order, 2);
-                margin-left: var(--spacing-disclosure-chevron-margin-left, 0.5rem);
+                margin-left: var(--spacing-disclosure-chevron-margin-left, auto);
                 margin-right: var(--spacing-disclosure-chevron-margin-right, 0);
             }
 
@@ -2960,6 +2961,14 @@ enum DocCStylesheet {
                 border-top: 1px solid var(--color-fill-gray);
             }
 
+            /* Module pages have no .declaration, so Overview H2 follows the hero directly.
+               Apply the same separator and spacing as the declaration + h2 rule above. */
+            .doc-topic > .documentation-hero + h2,
+            .doc-topic > .documentation-hero + p + h2 {
+                padding-top: var(--spacing-overview-padding-top, 40px);
+                border-top: 1px solid var(--color-fill-gray);
+            }
+
             /* Overview bottom margin — matches docc-render .primary-content .content marginBottom.
                Provides 40px gap between overview content and the next section. */
             .doc-topic > p + section,
@@ -2975,10 +2984,13 @@ enum DocCStylesheet {
                 margin-top: 0;
             }
 
-            /* Code listings use margin to indent the grey box wrapper itself */
+            /* Code listings use auto margins + calc max-width so the grey box
+               aligns with paragraph text at any viewport width.
+               max-width = content-max-width − 2 × content-padding = 980 − 160 = 820px */
             .doc-topic .code-listing {
-                margin-left: var(--spacing-content-padding-horizontal, 5rem);
-                margin-right: var(--spacing-content-padding-horizontal, 5rem);
+                max-width: calc(var(--spacing-content-max-width, 980px) - 2 * var(--spacing-content-padding-horizontal, 80px));
+                margin-left: auto;
+                margin-right: auto;
             }
 
             /* Paragraph spacing - matches swift-docc-render exactly (13.6px = 0.85rem) */
