@@ -2237,7 +2237,7 @@ enum DocCStylesheet {
             /* Sidebar section group headings — matches swift-docc-render .leaf-link H3 */
             .sidebar-section > h3.leaf-link,
             .sidebar-section > .leaf-link {
-                padding-left: var(--spacing-sidebar-section-heading-indent, 0);
+                padding-left: var(--spacing-sidebar-section-heading-indent, 36px);
                 margin-top: var(--spacing-sidebar-section-heading-margin-top, 0.75rem);
                 margin-bottom: var(--spacing-sidebar-section-heading-margin-bottom, 0.25rem);
                 font-size: var(--spacing-sidebar-heading-font-size, 17px);
@@ -2300,6 +2300,7 @@ enum DocCStylesheet {
             .navigator-card a {
                 color: var(--color-figure-gray);
                 text-decoration: none;
+                font-weight: 400;
             }
 
             .navigator-card:hover {
@@ -2315,8 +2316,9 @@ enum DocCStylesheet {
                 background: var(--color-fill-gray-quaternary);
             }
 
-            .navigator-card.selected > .nav-link {
-                font-weight: 500;
+            .navigator-card.active a,
+            .navigator-card.selected a {
+                font-weight: 600;
             }
 
             /* Module link (matches swift-docc .technology-title) */

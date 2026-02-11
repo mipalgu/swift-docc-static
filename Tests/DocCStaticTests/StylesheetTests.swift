@@ -1762,5 +1762,72 @@ struct DOMComparisonParityTests {
         #expect(css.contains(".doc-topic > p + section"),
                 "Must target paragraph adjacent to section for 40px gap")
     }
+
+    // H. Sidebar Indentation and Font-Weight (DOM Comparison v3)
+
+    @Test("Sidebar section headings indented 36px (aligns with depth-spacer + inner UL padding)")
+    func sidebarSectionHeadingIndent36px() {
+        let css = DocCStylesheet.generate(theme: .default)
+        let lines = css.components(separatedBy: "\n")
+        var inRule = false
+        var hasPadding = false
+        for line in lines {
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            if trimmed.contains(".sidebar-section > h3.leaf-link") || trimmed.contains(".sidebar-section > .leaf-link") {
+                inRule = true
+            }
+            if inRule && trimmed.contains("padding-left:") && trimmed.contains("36px") {
+                hasPadding = true
+                break
+            }
+            if inRule && trimmed == "}" { break }
+        }
+        #expect(hasPadding,
+                "Sidebar section headings must have 36px padding-left to align with navigator card depth-spacer")
+    }
+
+    @Test("Navigator card links have font-weight 400 (non-heading items)")
+    func navigatorCardLinkFontWeight400() {
+        let css = DocCStylesheet.generate(theme: .default)
+        let lines = css.components(separatedBy: "\n")
+        var inRule = false
+        var hasWeight = false
+        for line in lines {
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            if trimmed.hasPrefix(".navigator-card a") && trimmed.contains("{") && !trimmed.contains(":hover") {
+                inRule = true
+            }
+            if inRule && trimmed.contains("font-weight:") && trimmed.contains("400") {
+                hasWeight = true
+                break
+            }
+            if inRule && trimmed == "}" { break }
+        }
+        #expect(hasWeight,
+                "Navigator card link font-weight must be 400 (matches docc-render non-active items)")
+    }
+
+    @Test("Active/selected navigator card links have font-weight 600")
+    func navigatorCardActiveFontWeight600() {
+        let css = DocCStylesheet.generate(theme: .default)
+        #expect(css.contains(".navigator-card.active a") || css.contains(".navigator-card.selected a"),
+                "Active/selected navigator card links must have font-weight override")
+        let lines = css.components(separatedBy: "\n")
+        var inRule = false
+        var hasWeight = false
+        for line in lines {
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            if (trimmed.contains(".navigator-card.active a") || trimmed.contains(".navigator-card.selected a")) && trimmed.contains("{") {
+                inRule = true
+            }
+            if inRule && trimmed.contains("font-weight:") && trimmed.contains("600") {
+                hasWeight = true
+                break
+            }
+            if inRule && trimmed == "}" { break }
+        }
+        #expect(hasWeight,
+                "Active/selected navigator card links must have font-weight 600 matching docc-render")
+    }
 }
 
