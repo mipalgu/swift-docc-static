@@ -2251,21 +2251,22 @@ enum DocCStylesheet {
                 margin: 0;
             }
 
-            /* Nested sidebar ul elements need consistent padding for indentation */
+            /* Nested sidebar ul elements: depth-spacer handles all nesting indentation
+               (matches docc-render model where UL padding is zero) */
             .sidebar ul ul {
-                padding-left: 16px;
+                padding-left: 0;
             }
 
             .navigator-card {
                 --nesting-index: 0;
                 display: flex;
                 align-items: center;
-                gap: 0.375rem;
+                gap: var(--spacing-navigator-card-gap, 0);
                 padding: var(--spacing-navigator-card-padding, 0);
                 padding-left: var(--spacing-navigator-card-padding-left, 20px);
                 font-size: var(--spacing-navigator-card-font-size, 17px);
                 line-height: var(--spacing-navigator-card-line-height, 25px);
-                min-height: var(--spacing-navigator-card-min-height, 32px);
+                min-height: var(--spacing-navigator-card-min-height, 35px);
                 box-sizing: border-box;
             }
 
@@ -2345,11 +2346,14 @@ enum DocCStylesheet {
                 background: var(--color-fill-gray-quaternary);
             }
 
-            /* Chevron inside .technology-title */
+            /* Chevron inside .technology-title — margin-top: 0 overrides
+               h2 + * { margin-top: 0.8em } which otherwise pushes the chevron down */
             .technology-title .disclosure-chevron {
                 order: var(--spacing-disclosure-chevron-order, 2);
                 margin-left: var(--spacing-disclosure-chevron-margin-left, auto);
                 margin-right: var(--spacing-disclosure-chevron-margin-right, 0);
+                margin-top: 0;
+                align-self: var(--spacing-disclosure-chevron-align-self, center);
             }
 
             /* Disclosure chevron for expandable items */
@@ -2505,14 +2509,16 @@ enum DocCStylesheet {
                 color: var(--color-link);
             }
 
-            /* Symbol icon for articles/tutorials */
+            /* Symbol icon for articles/tutorials — matches docc-render
+               .navigator-icon-wrapper (17x17 with 7px margin-right) */
             .symbol-icon {
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                width: 14px;
-                height: 14px;
+                width: var(--spacing-symbol-icon-width, 17px);
+                height: var(--spacing-symbol-icon-height, 17px);
                 flex-shrink: 0;
+                margin-right: var(--spacing-symbol-icon-margin-right, 7px);
                 color: var(--color-figure-gray-secondary);
             }
 
@@ -2952,6 +2958,15 @@ enum DocCStylesheet {
                 padding-right: var(--spacing-content-padding-horizontal, 80px);
                 margin-left: var(--spacing-content-margin-left, auto);
                 margin-right: var(--spacing-content-margin-right, auto);
+            }
+
+            /* Content list items: margin-left creates the indent for list text
+               while bullets (list-style-position: outside) sit in the margin space,
+               aligning with paragraph text. Matches docc-render's
+               ul { margin-inline-start: em(20px) } model. */
+            .doc-topic > ul > li,
+            .doc-topic > ol > li {
+                margin-left: var(--spacing-list-indent, 1.176em);
             }
 
             /* Overview separator — matches docc-render .primary-content.with-border::before

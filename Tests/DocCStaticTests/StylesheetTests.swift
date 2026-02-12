@@ -1948,3 +1948,109 @@ struct CSSParityPhase2Tests {
     }
 }
 
+// MARK: - Puppeteer-Verified Pixel-Accuracy Tests (Phase 2b)
+
+@Suite("Puppeteer-Verified Pixel-Accuracy Tests")
+struct PuppeteerVerifiedPixelAccuracyTests {
+
+    // DISCREPANCY 1: Technology-title chevron not vertically centred
+    // Measured: chevron centre 6.8px below title centre because:
+    //   a) align-self defaults to auto (baseline), and
+    //   b) h2 + * { margin-top: 0.8em } applies 13.6px margin-top to the LABEL after the H2.
+    // Fix: align-self: center AND margin-top: 0 on the chevron.
+    @Test("Technology-title chevron has align-self: center and margin-top: 0 for vertical centring")
+    func technologyTitleChevronVerticalCentre() {
+        let css = DocCStylesheet.generate(theme: .default)
+        let lines = css.components(separatedBy: "\n")
+        var inRule = false
+        var hasAlignSelf = false
+        var hasMarginTopZero = false
+        for line in lines {
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            if trimmed.contains(".technology-title .disclosure-chevron") && trimmed.contains("{") {
+                inRule = true
+            }
+            if inRule && trimmed.contains("align-self:") && trimmed.contains("center") {
+                hasAlignSelf = true
+            }
+            if inRule && trimmed.contains("margin-top:") && trimmed.contains("0") {
+                hasMarginTopZero = true
+            }
+            if inRule && trimmed == "}" { break }
+        }
+        #expect(hasAlignSelf,
+                "Chevron must have align-self: center — Puppeteer measured 6.8px vertical offset without it")
+        #expect(hasMarginTopZero,
+                "Chevron must have margin-top: 0 — h2 + * rule applies 13.6px margin-top to the LABEL after the H2")
+    }
+
+    // DISCREPANCY 2: Sidebar nav items 22px too far right
+    // Measured: icon at 62px (should be 40px), link at 83px (should be 64px).
+    // Root cause: .sidebar ul ul { padding-left: 16px } adds unwanted nesting indent.
+    // docc-render uses depth-spacer exclusively for nesting — no UL padding.
+    @Test("Sidebar nested ULs have zero padding-left (depth-spacer handles nesting)")
+    func sidebarNestedULZeroPadding() {
+        let css = DocCStylesheet.generate(theme: .default)
+        let lines = css.components(separatedBy: "\n")
+        var inRule = false
+        var paddingValue = ""
+        for line in lines {
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            if trimmed.contains(".sidebar ul ul") && trimmed.contains("{") {
+                inRule = true
+            }
+            if inRule && trimmed.contains("padding-left:") {
+                paddingValue = trimmed
+                break
+            }
+            if inRule && trimmed == "}" { break }
+        }
+        #expect(paddingValue.contains("0"),
+                "sidebar ul ul must have padding-left: 0 — Puppeteer measured 16px excess indent pushing icons from 40px to 62px")
+    }
+
+    // DISCREPANCY 3: Sidebar card height 32px vs docc-render 35px
+    // Measured: docc-render card height = 35px, docc-static = 32px (min-height).
+    @Test("Navigator card min-height is 35px (matches docc-render)")
+    func navigatorCardMinHeight35px() {
+        let css = DocCStylesheet.generate(theme: .default)
+        #expect(css.contains("--spacing-navigator-card-min-height, 35px"),
+                "Navigator card min-height must be 35px — Puppeteer measured 32px vs docc-render 35px")
+    }
+
+    // DISCREPANCY 4: Bullet points outdented from paragraph text
+    // docc-render indents list text via margin-inline-start: em(20px) on UL,
+    // placing bullets in the margin space (aligned with paragraph text).
+    // Fix: .doc-topic > ul/ol > li { margin-left: 1.176em } — bullets sit in the margin,
+    // aligning with paragraph text; list text is indented 1.176em further.
+    @Test("Content list items have margin-left for text indent (bullets align with paragraphs)")
+    func contentLIMarginIndent() {
+        let css = DocCStylesheet.generate(theme: .default)
+        // There must be a rule for .doc-topic > ul > li / .doc-topic > ol > li
+        // with margin-left that includes the list-indent
+        let hasLIMargin = css.contains(".doc-topic > ul > li") &&
+            css.range(of: "\\.doc-topic > ul > li[^}]*margin-left:", options: .regularExpression) != nil
+        #expect(hasLIMargin,
+                "Content LI must have margin-left for list indent — Puppeteer measured bullets misaligned with paragraph text")
+    }
+
+    // DISCREPANCY 5: Sidebar card icon 6.4px too far right, text 2.8px too far right
+    // Root cause: gap: 0.375rem on .navigator-card applies between ALL children.
+    // docc-render uses gap: 0 with margin-right: 7px on the icon only.
+    @Test("Navigator card has zero gap (icon margin-right handles spacing)")
+    func navigatorCardZeroGap() {
+        let css = DocCStylesheet.generate(theme: .default)
+        #expect(css.contains("--spacing-navigator-card-gap, 0)"),
+                "Navigator card gap must be 0 — Puppeteer measured 6.4px excess offset from flex gap")
+    }
+
+    @Test("Symbol icon is 17x17 with 7px margin-right (matches docc-render)")
+    func symbolIconDimensions() {
+        let css = DocCStylesheet.generate(theme: .default)
+        #expect(css.contains("--spacing-symbol-icon-width, 17px"),
+                "Symbol icon must be 17px wide (docc-render uses 17px)")
+        #expect(css.contains("--spacing-symbol-icon-margin-right, 7px"),
+                "Symbol icon must have 7px margin-right (docc-render .navigator-icon-wrapper)")
+    }
+}
+
