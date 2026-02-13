@@ -1632,20 +1632,20 @@ struct DOMComparisonParityTests {
 
     // E. Topic Link Issues
 
-    @Test("Topic link display is inline-flex with vertical padding")
-    func topicLinkInlineFlex() {
+    @Test("Topic link display is inline with vertical padding")
+    func topicLinkInline() {
         let css = DocCStylesheet.generate(theme: .default)
-        #expect(css.contains("--spacing-topic-link-display, inline-flex"),
-                "Topic link display must default to inline-flex")
+        #expect(css.contains("--spacing-topic-link-display, inline)"),
+                "Topic link display must default to inline (not inline-flex) for natural inline flow")
         #expect(css.contains("--spacing-topic-link-padding, 5px 0"),
                 "Topic link padding must default to 5px 0")
     }
 
-    @Test("Topic icon wrapper is flex with 17px margin-right")
-    func topicIconWrapperFlex() {
+    @Test("Topic icon wrapper is inline-flex with 17px margin-right")
+    func topicIconWrapperInlineFlex() {
         let css = DocCStylesheet.generate(theme: .default)
-        #expect(css.contains("--spacing-topic-icon-display, flex"),
-                "Topic icon wrapper display must default to flex")
+        #expect(css.contains("--spacing-topic-icon-display, inline-flex)"),
+                "Topic icon wrapper display must default to inline-flex")
         #expect(css.contains("--spacing-topic-icon-margin-right, 17px"),
                 "Topic icon wrapper margin-right must be 17px")
     }
@@ -2098,6 +2098,170 @@ struct PuppeteerVerifiedPixelAccuracyTests {
         let css = DocCStylesheet.generate(theme: .default)
         #expect(css.contains(".decorated-title .identifier"),
                 "CSS must include .decorated-title .identifier selector")
+    }
+}
+
+// MARK: - DOM Comparison Phase 2c Tests (Remaining Discrepancies)
+
+@Suite("DOM Comparison Phase 2c — Remaining Discrepancies")
+struct DOMComparisonPhase2cTests {
+
+    // Item 1: Code listing dark mode background
+    @Test("Dark mode defines --color-code-background for code listings")
+    func darkModeCodeBackground() {
+        let css = DocCStylesheet.generate(theme: .default)
+        #expect(css.contains("--color-code-background: #2c2c2e"),
+                "Dark mode must define --color-code-background to avoid light grey (#f7f7f7) in dark mode")
+    }
+
+    // Item 2: Code listing dark mode border
+    @Test("Dark mode defines --color-grid for code listing borders")
+    func darkModeGridColour() {
+        let css = DocCStylesheet.generate(theme: .default)
+        #expect(css.contains("--color-grid: #424245"),
+                "Dark mode must define --color-grid to avoid light grey (#ccc) borders in dark mode")
+    }
+
+    // Item 3: Sidebar badge-name spacing
+    @Test("Navigator card badge has margin-right for badge-name spacing")
+    func navigatorCardBadgeMarginRight() {
+        let css = DocCStylesheet.generate(theme: .default)
+        #expect(css.contains(".navigator-card .badge"),
+                "Must have .navigator-card .badge selector for badge spacing")
+        #expect(css.contains("--spacing-navigator-card-badge-margin-right, 7px"),
+                "Navigator card badge must have 7px margin-right for spacing between badge and name")
+    }
+
+    // Item 4: Declaration source no bottom border
+    @Test("Declaration source has no bottom border (avoids spurious hairline)")
+    func declarationSourceNoBottomBorder() {
+        let css = DocCStylesheet.generate(theme: .default)
+        let lines = css.components(separatedBy: "\n")
+        var inRule = false
+        var hasBorderBottomNone = false
+        for line in lines {
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            if trimmed.contains(".declaration .source") && trimmed.contains("{") {
+                inRule = true
+            }
+            if inRule && trimmed.contains("border-bottom:") && trimmed.contains("none") {
+                hasBorderBottomNone = true
+                break
+            }
+            if inRule && trimmed == "}" { break }
+        }
+        #expect(hasBorderBottomNone,
+                "Declaration source must have border-bottom: none — docc-render has no bottom border on declaration")
+    }
+
+    // Item 5: Decorated title display inline
+    @Test("Decorated title specifies display: inline")
+    func decoratedTitleDisplayInline() {
+        let css = DocCStylesheet.generate(theme: .default)
+        let lines = css.components(separatedBy: "\n")
+        var inBlock = false
+        var hasInline = false
+        for line in lines {
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            if trimmed.hasPrefix(".decorated-title {") || trimmed.hasPrefix(".decorated-title{") {
+                inBlock = true
+            }
+            if inBlock && trimmed.contains("display:") && trimmed.contains("inline")
+                && !trimmed.contains("inline-flex") && !trimmed.contains("inline-block")
+            {
+                hasInline = true
+                break
+            }
+            if inBlock && trimmed == "}" { break }
+        }
+        #expect(hasInline,
+                "Decorated title must have display: inline to match docc-render")
+    }
+
+    // Item 5 supporting: Topic link uses inline display (not inline-flex)
+    @Test("Topic link uses inline display for natural inline flow")
+    func topicLinkInlineDisplay() {
+        let css = DocCStylesheet.generate(theme: .default)
+        #expect(css.contains("--spacing-topic-link-display, inline)"),
+                "Topic link display must default to inline (not inline-flex) for natural inline flow")
+    }
+
+    // Item 5 supporting: Topic icon wrapper uses inline-flex (not flex)
+    @Test("Topic icon wrapper uses inline-flex display")
+    func topicIconWrapperInlineFlex() {
+        let css = DocCStylesheet.generate(theme: .default)
+        #expect(css.contains("--spacing-topic-icon-display, inline-flex)"),
+                "Topic icon wrapper must use inline-flex (not flex) to participate in inline flow")
+    }
+
+    // Item 6: No-icon link block abstract has zero indent
+    @Test("Link-block without icon has zero abstract indent")
+    func noIconAbstractIndent() {
+        let css = DocCStylesheet.generate(theme: .default)
+        #expect(css.contains(".link-block.no-icon .abstract"),
+                "Must have .link-block.no-icon .abstract selector for items without icons")
+    }
+
+    // Item 7: Eyebrow display block (disabled — pending fix)
+    @Test("Eyebrow has display: block for span tag", .disabled("Pending fix — low impact"))
+    func eyebrowDisplayBlock() {
+        let css = DocCStylesheet.generate(theme: .default)
+        let lines = css.components(separatedBy: "\n")
+        var inBlock = false
+        var hasDisplayBlock = false
+        for line in lines {
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            if trimmed.contains(".eyebrow") && trimmed.contains("{") {
+                inBlock = true
+            }
+            if inBlock && trimmed.contains("display:") && trimmed.contains("block") {
+                hasDisplayBlock = true
+                break
+            }
+            if inBlock && trimmed == "}" { break }
+        }
+        #expect(hasDisplayBlock,
+                "Eyebrow must have display: block since it is now a <span> (inline by default)")
+    }
+
+    // Item 8: Nav position sticky (disabled — pending fix)
+    @Test("Documentation nav uses sticky positioning", .disabled("Pending fix — low impact"))
+    func navPositionSticky() {
+        let css = DocCStylesheet.generate(theme: .default)
+        let lines = css.components(separatedBy: "\n")
+        var inBlock = false
+        var hasSticky = false
+        for line in lines {
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            if trimmed.contains(".documentation-nav") && trimmed.contains("{") {
+                inBlock = true
+            }
+            if inBlock && trimmed.contains("position:") && trimmed.contains("sticky") {
+                hasSticky = true
+                break
+            }
+            if inBlock && trimmed == "}" { break }
+        }
+        #expect(hasSticky,
+                "Documentation nav must use position: sticky (docc-render uses sticky, not fixed)")
+    }
+
+    // Item 9: Navigator card padding-right (disabled — pending fix)
+    @Test("Navigator card has 20px padding-right", .disabled("Pending fix — low impact"))
+    func navigatorCardPaddingRight() {
+        let css = DocCStylesheet.generate(theme: .default)
+        #expect(css.contains("--spacing-navigator-card-padding-right, 20px"),
+                "Navigator card must have 20px padding-right to match docc-render")
+    }
+
+    // Item 10: Hero abstract wrapper (disabled — pending fix)
+    @Test("Hero abstract uses div wrapper with content class", .disabled("Pending fix — low impact"))
+    func heroAbstractDivWrapper() {
+        let css = DocCStylesheet.generate(theme: .default)
+        // When the abstract changes from <p> to <div class="abstract content"><p>...</p></div>,
+        // the CSS should still apply correctly
+        #expect(css.contains(".documentation-hero .abstract"),
+                "Hero abstract selector must target .abstract class (works for both <p> and <div> tags)")
     }
 }
 

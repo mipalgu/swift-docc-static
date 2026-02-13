@@ -2299,6 +2299,10 @@ enum DocCStylesheet {
                 justify-content: flex-end;
             }
 
+            .navigator-card .badge {
+                margin-right: var(--spacing-navigator-card-badge-margin-right, 7px);
+            }
+
             .navigator-card a {
                 color: var(--color-figure-gray);
                 text-decoration: none;
@@ -2921,15 +2925,16 @@ enum DocCStylesheet {
                 margin-top: 0;
             }
 
-            /* Topic link styling - matches swift-docc-render inline-flex with vertical padding */
+            /* Topic link styling - matches swift-docc-render inline display with vertical padding */
             .link-block a.link {
-                display: var(--spacing-topic-link-display, inline-flex);
+                display: var(--spacing-topic-link-display, inline);
                 padding: var(--spacing-topic-link-padding, 5px 0);
             }
 
-            /* Topic icon wrapper - matches swift-docc-render flex display with right margin */
+            /* Topic icon wrapper - matches swift-docc-render inline-flex display with right margin */
             .topic-icon-wrapper {
-                display: var(--spacing-topic-icon-display, flex);
+                display: var(--spacing-topic-icon-display, inline-flex);
+                vertical-align: middle;
                 margin-right: var(--spacing-topic-icon-margin-right, 17px);
             }
 
@@ -2943,8 +2948,14 @@ enum DocCStylesheet {
                 margin-bottom: 0;
             }
 
+            /* When link-block has no icon, remove the abstract indent */
+            .link-block.no-icon .abstract {
+                margin-inline-start: 0;
+            }
+
             /* Decorated topic title - matches swift-docc-render DecoratedTopicTitle */
             .decorated-title {
+                display: inline;
                 font-family: var(--typography-html-font-mono, monospace);
                 font-size: var(--spacing-decorated-title-font-size, 16px);
                 line-height: var(--spacing-decorated-title-line-height, 25px);
@@ -3083,6 +3094,7 @@ enum DocCStylesheet {
             .declaration .source {
                 background: var(--color-code-background, var(--color-fill-secondary));
                 border: var(--spacing-declaration-border, 1px solid var(--color-grid, var(--color-fill-gray)));
+                border-bottom: none;
                 padding: var(--spacing-declaration-padding, 8px 14px);
                 border-radius: var(--spacing-declaration-border-radius, 4px);
                 line-height: var(--spacing-declaration-line-height, 25px);
@@ -4663,6 +4675,10 @@ enum DocCStylesheet {
 
                 /* Badge border properties remain same in dark mode (inherit from light mode defaults) */
 
+                /* Code listing colours - dark mode */
+                --color-code-background: #2c2c2e;
+                --color-grid: #424245;
+
                 /* Aside colours - dark mode */
                 --color-aside-note-background: rgba(59, 130, 246, 0.15);
                 --color-aside-note-border: #3b82f6;
@@ -4714,6 +4730,8 @@ enum DocCStylesheet {
             --color-badge-default: #2c2c2e;
             --color-badge-text: #a1a1a6;
             --color-badge-border: #424245;
+            --color-code-background: #2c2c2e;
+            --color-grid: #424245;
             --color-documentation-intro-fill: #4a4a4a;
         }
         """

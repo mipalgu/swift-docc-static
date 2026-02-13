@@ -1165,6 +1165,7 @@ private extension HTMLPageBuilder {
 
         // Get icon SVG for the reference type
         let iconSVG = topicIcon(for: reference)
+        let hasIcon = !iconSVG.isEmpty
 
         // Render title: use fragments if available, fall back to plain title
         let titleHTML: String
@@ -1174,13 +1175,25 @@ private extension HTMLPageBuilder {
             titleHTML = "<span>\(escapeHTML(reference.title))</span>"
         }
 
-        return """
+        // Only include icon wrapper when icon SVG is present (avoids 0px collapsed wrapper)
+        let iconBlock: String
+        if hasIcon {
+            iconBlock = """
 
-                                <div class="link-block topic">
-                                    <a href="\(escapeHTML(relativeURL))" class="link has-adjacent-elements">
                                         <div class="topic-icon-wrapper">
                                             \(iconSVG)
                                         </div>
+            """
+        } else {
+            iconBlock = ""
+        }
+
+        let linkBlockClass = hasIcon ? "link-block topic" : "link-block topic no-icon"
+
+        return """
+
+                                <div class="\(linkBlockClass)">
+                                    <a href="\(escapeHTML(relativeURL))" class="link has-adjacent-elements">\(iconBlock)
                                         \(titleHTML)
                                     </a>
                                     <div class="abstract">
