@@ -2202,8 +2202,8 @@ struct DOMComparisonPhase2cTests {
                 "Must have .link-block.no-icon .abstract selector for items without icons")
     }
 
-    // Item 7: Eyebrow display block (disabled — pending fix)
-    @Test("Eyebrow has display: block for span tag", .disabled("Pending fix — low impact"))
+    // Item 7: Eyebrow display block
+    @Test("Eyebrow has display: block for span tag")
     func eyebrowDisplayBlock() {
         let css = DocCStylesheet.generate(theme: .default)
         let lines = css.components(separatedBy: "\n")
@@ -2224,8 +2224,8 @@ struct DOMComparisonPhase2cTests {
                 "Eyebrow must have display: block since it is now a <span> (inline by default)")
     }
 
-    // Item 8: Nav position sticky (disabled — pending fix)
-    @Test("Documentation nav uses sticky positioning", .disabled("Pending fix — low impact"))
+    // Item 8: Nav position sticky
+    @Test("Documentation nav uses sticky positioning")
     func navPositionSticky() {
         let css = DocCStylesheet.generate(theme: .default)
         let lines = css.components(separatedBy: "\n")
@@ -2246,16 +2246,16 @@ struct DOMComparisonPhase2cTests {
                 "Documentation nav must use position: sticky (docc-render uses sticky, not fixed)")
     }
 
-    // Item 9: Navigator card padding-right (disabled — pending fix)
-    @Test("Navigator card has 20px padding-right", .disabled("Pending fix — low impact"))
+    // Item 9: Navigator card padding-right
+    @Test("Navigator card has 20px padding-right")
     func navigatorCardPaddingRight() {
         let css = DocCStylesheet.generate(theme: .default)
         #expect(css.contains("--spacing-navigator-card-padding-right, 20px"),
                 "Navigator card must have 20px padding-right to match docc-render")
     }
 
-    // Item 10: Hero abstract wrapper (disabled — pending fix)
-    @Test("Hero abstract uses div wrapper with content class", .disabled("Pending fix — low impact"))
+    // Item 10: Hero abstract wrapper
+    @Test("Hero abstract uses div wrapper with content class")
     func heroAbstractDivWrapper() {
         let css = DocCStylesheet.generate(theme: .default)
         // When the abstract changes from <p> to <div class="abstract content"><p>...</p></div>,

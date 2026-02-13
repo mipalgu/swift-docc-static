@@ -2052,10 +2052,8 @@ enum DocCStylesheet {
 
             /* Header bar */
             .documentation-nav {
-                position: fixed;
+                position: sticky;
                 top: 0;
-                left: 0;
-                right: 0;
                 height: var(--header-height);
                 background: var(--color-fill);
                 border-bottom: 1px solid var(--color-fill-gray);
@@ -2135,7 +2133,6 @@ enum DocCStylesheet {
             .documentation-layout {
                 display: flex;
                 min-height: 100vh;
-                padding-top: var(--header-height);
             }
 
             /* Sidebar */
@@ -2264,6 +2261,7 @@ enum DocCStylesheet {
                 gap: var(--spacing-navigator-card-gap, 0);
                 padding: var(--spacing-navigator-card-padding, 0);
                 padding-left: var(--spacing-navigator-card-padding-left, 20px);
+                padding-right: var(--spacing-navigator-card-padding-right, 20px);
                 font-size: var(--spacing-navigator-card-font-size, 17px);
                 line-height: var(--spacing-navigator-card-line-height, 25px);
                 min-height: var(--spacing-navigator-card-min-height, 35px);
@@ -2881,6 +2879,7 @@ enum DocCStylesheet {
 
             .eyebrow,
             .doc-topic .eyebrow {
+                display: block;
                 font-size: var(--spacing-eyebrow-font-size, 21px);
                 line-height: var(--spacing-eyebrow-line-height, 25px);
                 color: var(--color-figure-gray-secondary);
@@ -2907,6 +2906,10 @@ enum DocCStylesheet {
                 line-height: var(--spacing-abstract-line-height, 29px);
                 color: var(--color-figure-gray);
                 margin-bottom: 0;
+            }
+
+            .documentation-hero .abstract p {
+                margin: 0;
             }
 
             .abstract {

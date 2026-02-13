@@ -732,16 +732,16 @@ private extension HTMLPageBuilder {
         html += buildBreadcrumbs(for: renderNode, references: references, depth: depth)
 
         html += """
-                            <p class="eyebrow">\(escapeHTML(roleLabel))</p>
+                            <span class="eyebrow">\(escapeHTML(roleLabel))</span>
                             <h1>\(escapeHTML(title))</h1>
         """
 
-        // Abstract
+        // Abstract — uses <div class="abstract content"> wrapper matching docc-render
         if let abstract = renderNode.abstract {
             let abstractHTML = contentRenderer.renderInlineContent(abstract, references: references, depth: depth)
             html += """
 
-                            <p class="abstract">\(abstractHTML.html)</p>
+                            <div class="abstract content"><p>\(abstractHTML.html)</p></div>
             """
         }
 
