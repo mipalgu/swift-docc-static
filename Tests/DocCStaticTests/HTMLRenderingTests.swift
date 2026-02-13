@@ -8,6 +8,7 @@
 
 import Testing
 import Foundation
+import SwiftDocC
 @testable import DocCStatic
 
 @Suite("HTML Escaping Tests")
@@ -206,5 +207,94 @@ struct IndexPageBuilderTests {
 
         #expect(zebraIndex < appleIndex)
         #expect(appleIndex < mangoIndex)
+    }
+}
+
+// MARK: - Phase 2b: Decorated Topic Title Tests
+
+@Suite("Decorated Topic Title Tests")
+struct DecoratedTopicTitleTests {
+    @Test("Decorated title wraps tokens in code element with decorated-title class")
+    func decoratedTitleWrapper() {
+        let tokens: [DeclarationRenderSection.Token] = [
+            .init(text: "class", kind: .keyword),
+            .init(text: " ", kind: .text),
+            .init(text: "MyClass", kind: .identifier),
+        ]
+        let html = renderDecoratedTitle(tokens)
+        #expect(html.hasPrefix("<code class=\"decorated-title\">"))
+        #expect(html.hasSuffix("</code>"))
+    }
+
+    @Test("Keyword tokens render with decorator class")
+    func keywordTokensUseDecoratorClass() {
+        let tokens: [DeclarationRenderSection.Token] = [
+            .init(text: "struct", kind: .keyword),
+        ]
+        let html = renderDecoratedTitle(tokens)
+        #expect(html.contains("<span class=\"decorator\">struct</span>"))
+    }
+
+    @Test("Identifier tokens render with identifier class")
+    func identifierTokensUseIdentifierClass() {
+        let tokens: [DeclarationRenderSection.Token] = [
+            .init(text: "MyStruct", kind: .identifier),
+        ]
+        let html = renderDecoratedTitle(tokens)
+        #expect(html.contains("<span class=\"identifier\">MyStruct</span>"))
+    }
+
+    @Test("Type identifier tokens render with identifier class")
+    func typeIdentifierTokensUseIdentifierClass() {
+        let tokens: [DeclarationRenderSection.Token] = [
+            .init(text: "Int", kind: .typeIdentifier),
+        ]
+        let html = renderDecoratedTitle(tokens)
+        #expect(html.contains("<span class=\"identifier\">Int</span>"))
+    }
+
+    @Test("Text tokens render with decorator class")
+    func textTokensUseDecoratorClass() {
+        let tokens: [DeclarationRenderSection.Token] = [
+            .init(text: " ", kind: .text),
+        ]
+        let html = renderDecoratedTitle(tokens)
+        #expect(html.contains("<span class=\"decorator\"> </span>"))
+    }
+
+    @Test("Label tokens render with label class")
+    func labelTokensUseLabelClass() {
+        let tokens: [DeclarationRenderSection.Token] = [
+            .init(text: "name", kind: .label),
+        ]
+        let html = renderDecoratedTitle(tokens)
+        #expect(html.contains("<span class=\"label\">name</span>"))
+    }
+
+    @Test("Full declaration renders all token kinds correctly")
+    func fullDeclarationRendering() {
+        let tokens: [DeclarationRenderSection.Token] = [
+            .init(text: "class", kind: .keyword),
+            .init(text: " ", kind: .text),
+            .init(text: "StaticHTMLConsumer", kind: .identifier),
+        ]
+        let html = renderDecoratedTitle(tokens)
+        #expect(html == "<code class=\"decorated-title\"><span class=\"decorator\">class</span><span class=\"decorator\"> </span><span class=\"identifier\">StaticHTMLConsumer</span></code>")
+    }
+
+    @Test("Decorated title escapes HTML in token text")
+    func decoratedTitleEscapesHTML() {
+        let tokens: [DeclarationRenderSection.Token] = [
+            .init(text: "Array<Element>", kind: .typeIdentifier),
+        ]
+        let html = renderDecoratedTitle(tokens)
+        #expect(html.contains("Array&lt;Element&gt;"))
+        #expect(!html.contains("Array<Element>"))
+    }
+
+    @Test("Empty tokens produce empty code element")
+    func emptyTokensProduceEmptyCode() {
+        let html = renderDecoratedTitle([])
+        #expect(html == "<code class=\"decorated-title\"></code>")
     }
 }

@@ -2765,17 +2765,23 @@ enum DocCStylesheet {
                 max-width: 100%;
             }
 
-            /* Breadcrumbs - matches swift-docc-render hierarchy */
+            /* Breadcrumbs - matches swift-docc-render hierarchy (ul inside hero) */
             .hierarchy {
                 display: flex;
+                flex-wrap: wrap;
                 align-items: center;
-                gap: 0.5rem;
+                list-style: none;
+                padding: 0;
+                margin: 0 0 var(--spacing-hierarchy-margin-bottom, 20px) 0;
                 font-size: var(--spacing-hierarchy-font-size, 14px);
                 line-height: var(--spacing-hierarchy-line-height, 20px);
                 color: var(--color-figure-gray);
-                padding: var(--spacing-hierarchy-padding, 0);
-                margin-bottom: var(--spacing-hierarchy-margin-bottom, 20px);
-                border-bottom: var(--spacing-hierarchy-border-bottom, none);
+            }
+
+            .hierarchy li + li::before {
+                content: "/";
+                margin: 0 0.5rem;
+                color: var(--color-figure-gray-secondary);
             }
 
             .hierarchy a {
@@ -2785,10 +2791,6 @@ enum DocCStylesheet {
 
             .hierarchy a:hover {
                 text-decoration: underline;
-            }
-
-            .hierarchy .separator {
-                color: var(--color-figure-gray-secondary);
             }
 
             /* Hero section */
@@ -2941,6 +2943,24 @@ enum DocCStylesheet {
                 margin-bottom: 0;
             }
 
+            /* Decorated topic title - matches swift-docc-render DecoratedTopicTitle */
+            .decorated-title {
+                font-family: var(--typography-html-font-mono, monospace);
+                font-size: var(--spacing-decorated-title-font-size, 16px);
+                line-height: var(--spacing-decorated-title-line-height, 25px);
+                font-weight: var(--spacing-decorated-title-font-weight, 400);
+                background: transparent;
+                padding: 0;
+            }
+            .decorated-title .decorator,
+            .decorated-title .label {
+                color: var(--color-secondary-label, var(--color-figure-gray-secondary));
+            }
+            .decorated-title .identifier {
+                color: var(--color-link);
+                font-weight: var(--spacing-decorated-title-identifier-font-weight, 600);
+            }
+
             /* Content sections within main - matches swift-docc-render container model */
             .doc-topic section,
             .doc-topic .declaration,
@@ -3071,16 +3091,6 @@ enum DocCStylesheet {
             }
             .declaration .source code {
                 white-space: pre;
-            }
-
-            nav.hierarchy {
-                font-size: var(--spacing-hierarchy-font-size, 14px);
-                color: var(--color-figure-gray);
-                margin-bottom: var(--spacing-hierarchy-margin-bottom, 20px);
-            }
-
-            nav.hierarchy a {
-                color: var(--color-figure-gray-secondary);
             }
 
             /* Symbol cards in Topics section */

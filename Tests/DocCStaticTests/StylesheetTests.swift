@@ -1663,13 +1663,15 @@ struct DOMComparisonParityTests {
                 "Breadcrumb margin-bottom must be 20px")
     }
 
-    @Test("Breadcrumb has no border-bottom and no horizontal padding")
+    @Test("Breadcrumb has no border-bottom and padding is 0")
     func breadcrumbNoBorderNoPadding() {
         let css = DocCStylesheet.generate(theme: .default)
-        #expect(css.contains("--spacing-hierarchy-border-bottom, none"),
-                "Breadcrumb border-bottom must default to none")
-        #expect(css.contains("--spacing-hierarchy-padding, 0"),
-                "Breadcrumb padding must default to 0")
+        // Hierarchy is now a ul inside the hero — no border-bottom needed,
+        // padding: 0 is part of the list reset
+        #expect(!css.contains("--spacing-hierarchy-border-bottom"),
+                "Breadcrumb should not use border-bottom variable (ul inside hero)")
+        #expect(css.contains("padding: 0"),
+                "Breadcrumb padding must be 0 (list reset)")
     }
 
     @Test("Breadcrumb colour is --color-figure-gray (white in dark), not secondary")
@@ -2051,6 +2053,51 @@ struct PuppeteerVerifiedPixelAccuracyTests {
                 "Symbol icon must be 17px wide (docc-render uses 17px)")
         #expect(css.contains("--spacing-symbol-icon-margin-right, 7px"),
                 "Symbol icon must have 7px margin-right (docc-render .navigator-icon-wrapper)")
+    }
+
+    // MARK: - Phase 2b: Hierarchy List Styling
+
+    @Test("Hierarchy uses list-style none (ul-based breadcrumbs)")
+    func hierarchyListStyleNone() {
+        let css = DocCStylesheet.generate(theme: .default)
+        #expect(css.contains("list-style: none"),
+                "Hierarchy must use list-style: none for ul-based breadcrumbs")
+    }
+
+    @Test("Hierarchy uses CSS ::before separators on li + li")
+    func hierarchyCSSSeparators() {
+        let css = DocCStylesheet.generate(theme: .default)
+        #expect(css.contains(".hierarchy li + li::before"),
+                "Hierarchy must use CSS ::before on li + li for separators")
+        #expect(css.contains("content: \"/\""),
+                "Hierarchy separator content must be '/'")
+    }
+
+    // MARK: - Phase 2b: Decorated Title Styling
+
+    @Test("Decorated title uses monospace font")
+    func decoratedTitleFont() {
+        let css = DocCStylesheet.generate(theme: .default)
+        #expect(css.contains(".decorated-title"),
+                "CSS must include .decorated-title selector")
+        #expect(css.contains("--typography-html-font-mono, monospace"),
+                "Decorated title must use mono font variable with monospace fallback")
+    }
+
+    @Test("Decorated title decorator class has secondary label colour")
+    func decoratedTitleDecoratorColour() {
+        let css = DocCStylesheet.generate(theme: .default)
+        #expect(css.contains(".decorated-title .decorator"),
+                "CSS must include .decorated-title .decorator selector")
+        #expect(css.contains("--color-secondary-label"),
+                "Decorator must use --color-secondary-label variable")
+    }
+
+    @Test("Decorated title identifier class has link colour and bold weight")
+    func decoratedTitleIdentifierStyle() {
+        let css = DocCStylesheet.generate(theme: .default)
+        #expect(css.contains(".decorated-title .identifier"),
+                "CSS must include .decorated-title .identifier selector")
     }
 }
 

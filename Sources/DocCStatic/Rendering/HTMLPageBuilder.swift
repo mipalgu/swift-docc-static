@@ -103,10 +103,7 @@ public extension HTMLPageBuilder {
                 <main class="doc-topic">
         """
 
-        // Add breadcrumb navigation
-        html += buildBreadcrumbs(for: renderNode, references: references, depth: depth)
-
-        // Add main content
+        // Add main content (breadcrumbs are rendered inside the hero section)
         html += buildMainContent(from: renderNode, references: references, depth: depth)
 
         html += """
@@ -623,27 +620,28 @@ private extension HTMLPageBuilder {
 
         var html = """
 
-                <nav class="hierarchy" aria-label="Breadcrumbs">
+                            <ul class="hierarchy" aria-label="Breadcrumbs">
         """
 
-        // Build breadcrumb trail from hierarchy
-        for (index, identifier) in firstPath.enumerated() {
-            if index > 0 {
-                html += " <span class=\"separator\">/</span> "
-            }
-
+        // Build breadcrumb trail from hierarchy using list items
+        // (separators rendered via CSS ::before on li + li)
+        for identifier in firstPath {
             if let reference = references[identifier] as? TopicRenderReference {
                 let title = reference.title
                 let relativeURL = makeRelativeURL(reference.url, depth: depth)
-                html += "<a href=\"\(escapeHTML(relativeURL))\">\(escapeHTML(title))</a>"
+                html += "\n                                <li><a href=\"\(escapeHTML(relativeURL))\">\(escapeHTML(title))</a></li>"
             } else {
-                html += "<span>\(escapeHTML(identifier))</span>"
+                html += "\n                                <li><span>\(escapeHTML(identifier))</span></li>"
             }
         }
 
+        // Add current page title as the last (non-linked) breadcrumb item
+        let currentTitle = extractTitle(from: renderNode)
+        html += "\n                                <li><span>\(escapeHTML(currentTitle))</span></li>"
+
         html += """
 
-                </nav>
+                            </ul>
         """
 
         return html
@@ -728,6 +726,12 @@ private extension HTMLPageBuilder {
         html += """
 
                         <div class="documentation-hero__content">
+        """
+
+        // Insert breadcrumb hierarchy inside hero content
+        html += buildBreadcrumbs(for: renderNode, references: references, depth: depth)
+
+        html += """
                             <p class="eyebrow">\(escapeHTML(roleLabel))</p>
                             <h1>\(escapeHTML(title))</h1>
         """
@@ -1157,11 +1161,18 @@ private extension HTMLPageBuilder {
 
     func buildSymbolCard(for reference: TopicRenderReference, depth: Int) -> String {
         let relativeURL = makeRelativeURL(reference.url, depth: depth)
-        let title = reference.title
         let abstract = contentRenderer.renderInlineContent(reference.abstract, references: [:], depth: 0).plainText
 
         // Get icon SVG for the reference type
         let iconSVG = topicIcon(for: reference)
+
+        // Render title: use fragments if available, fall back to plain title
+        let titleHTML: String
+        if let fragments = reference.fragments, !fragments.isEmpty {
+            titleHTML = renderDecoratedTitle(fragments)
+        } else {
+            titleHTML = "<span>\(escapeHTML(reference.title))</span>"
+        }
 
         return """
 
@@ -1170,7 +1181,7 @@ private extension HTMLPageBuilder {
                                         <div class="topic-icon-wrapper">
                                             \(iconSVG)
                                         </div>
-                                        <span>\(escapeHTML(title))</span>
+                                        \(titleHTML)
                                     </a>
                                     <div class="abstract">
                                         <p>\(escapeHTML(abstract))</p>
@@ -2417,4 +2428,32 @@ func escapeHTML(_ string: String) -> String {
         .replacingOccurrences(of: ">", with: "&gt;")
         .replacingOccurrences(of: "\"", with: "&quot;")
         .replacingOccurrences(of: "'", with: "&#39;")
+}
+
+/// Renders a decorated title from declaration tokens.
+///
+/// Maps token kinds to CSS classes matching swift-docc-render's
+/// `DecoratedTopicTitle` component:
+/// - `keyword`, `attribute`, `text`, `number`, `string` → `decorator`
+/// - `identifier`, `typeIdentifier`, `genericParameter`, `externalParam`, `internalParam` → `identifier`
+/// - `label` → `label`
+///
+/// - Parameter tokens: The declaration fragment tokens to render.
+/// - Returns: An HTML string containing a `<code class="decorated-title">` element.
+func renderDecoratedTitle(_ tokens: [DeclarationRenderSection.Token]) -> String {
+    var html = "<code class=\"decorated-title\">"
+    for token in tokens {
+        let cssClass: String
+        switch token.kind {
+        case .identifier, .typeIdentifier, .genericParameter, .externalParam, .internalParam:
+            cssClass = "identifier"
+        case .label:
+            cssClass = "label"
+        case .keyword, .attribute, .text, .number, .string:
+            cssClass = "decorator"
+        }
+        html += "<span class=\"\(cssClass)\">\(escapeHTML(token.text))</span>"
+    }
+    html += "</code>"
+    return html
 }
