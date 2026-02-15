@@ -1127,12 +1127,27 @@ struct ThemeCompatibilitySpacingTests {
                 "Sidebar section heading must have indent variable")
     }
 
-    @Test("Content headings have margin-bottom for spacing before lists")
+    @Test("Content headings have margin-bottom 0 (Phase 3 update)")
     func contentHeadingMarginBottom() {
         let css = DocCStylesheet.generate(theme: .default)
         #expect(css.contains(".doc-topic > h3"))
-        #expect(css.contains("--spacing-content-heading-margin-bottom"),
-                "Content H3 headings must have margin-bottom variable for spacing before lists")
+        // Phase 3: Changed to margin-bottom: 0 (docc-render parity)
+        let lines = css.components(separatedBy: "\n")
+        var inH3Block = false
+        var hasMarginBottomZero = false
+        for line in lines {
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            if trimmed.contains(".doc-topic > h3") {
+                inH3Block = true
+            }
+            if inH3Block && trimmed.contains("margin-bottom: 0") {
+                hasMarginBottomZero = true
+                break
+            }
+            if inH3Block && trimmed == "}" { break }
+        }
+        #expect(hasMarginBottomZero,
+                "Content H3 headings must have margin-bottom: 0 (Phase 3: docc-render parity)")
     }
 
     @Test("Topic group indent variable exists")
@@ -1310,21 +1325,21 @@ struct PixelLevelParityTests {
                 "Eyebrow margin-bottom must be 15px")
     }
 
-    @Test("Hero H1 margin-bottom is 0")
+    @Test("Hero H1 margin-bottom is 12px (Phase 3 update)")
     func heroH1MarginBottomZero() {
         let css = DocCStylesheet.generate(theme: .default)
-        // Find the .documentation-hero h1 block and verify margin-bottom: 0
+        // Phase 3: Changed to margin-bottom: 12px (title-abstract gap)
         let lines = css.components(separatedBy: "\n")
         var inHeroH1Block = false
-        var hasMarginBottomZero = false
+        var hasMarginBottom12px = false
 
         for line in lines {
             let trimmed = line.trimmingCharacters(in: .whitespaces)
             if trimmed.contains(".documentation-hero h1") && trimmed.contains("{") {
                 inHeroH1Block = true
             }
-            if inHeroH1Block && trimmed.contains("margin-bottom: 0") {
-                hasMarginBottomZero = true
+            if inHeroH1Block && trimmed.contains("margin-bottom:") && trimmed.contains("12px") {
+                hasMarginBottom12px = true
                 break
             }
             if inHeroH1Block && trimmed == "}" {
@@ -1332,8 +1347,8 @@ struct PixelLevelParityTests {
             }
         }
 
-        #expect(hasMarginBottomZero,
-                "Hero H1 must have margin-bottom: 0 (not 0.5rem)")
+        #expect(hasMarginBottom12px,
+                "Hero H1 must have margin-bottom: 12px (Phase 3: title-abstract gap)")
     }
 }
 
@@ -1842,17 +1857,16 @@ struct DOMComparisonParityTests {
 @Suite("CSS Parity Phase 2 — Remaining Discrepancies")
 struct CSSParityPhase2Tests {
 
-    @Test("Module page Overview H2 after hero has 40px padding-top and border-top")
+    @Test("Module page Overview H2 after hero has 40px margin-top and NO border (Phase 3 update)")
     func modulePageOverviewSpacing() {
         let css = DocCStylesheet.generate(theme: .default)
         #expect(css.contains(".doc-topic > .documentation-hero + h2"),
                 "Must target Overview H2 adjacent to documentation-hero for module pages")
-        // The rule selector may span multiple lines, so track when we've seen the selector
-        // and then entered its block
+        // Phase 3: Changed to margin-top (not padding) and NO border
         let lines = css.components(separatedBy: "\n")
         var foundSelector = false
         var inRule = false
-        var hasPaddingTop = false
+        var hasMarginTop = false
         var hasBorderTop = false
         for line in lines {
             let trimmed = line.trimmingCharacters(in: .whitespaces)
@@ -1864,19 +1878,19 @@ struct CSSParityPhase2Tests {
                 foundSelector = false
             }
             if inRule {
-                if trimmed.contains("padding-top:") && trimmed.contains("40px") {
-                    hasPaddingTop = true
+                if trimmed.contains("margin-top:") && trimmed.contains("40px") {
+                    hasMarginTop = true
                 }
-                if trimmed.contains("border-top:") && trimmed.contains("fill-gray") {
+                if trimmed.contains("border-top:") {
                     hasBorderTop = true
                 }
                 if trimmed == "}" { break }
             }
         }
-        #expect(hasPaddingTop,
-                "Module page Overview H2 must have 40px padding-top")
-        #expect(hasBorderTop,
-                "Module page Overview H2 must have border-top separator")
+        #expect(hasMarginTop,
+                "Module page Overview H2 must have 40px margin-top (Phase 3: matches docc-render)")
+        #expect(!hasBorderTop,
+                "Module page Overview H2 must NOT have border-top (Phase 3: only .declaration + h2 has border)")
     }
 
     @Test("Disclosure chevron has margin-left: auto for flush-right alignment")
@@ -2262,6 +2276,153 @@ struct DOMComparisonPhase2cTests {
         // the CSS should still apply correctly
         #expect(css.contains(".documentation-hero .abstract"),
                 "Hero abstract selector must target .abstract class (works for both <p> and <div> tags)")
+    }
+}
+
+@Suite("CSS Parity Phase 3 — Spacing & Border Fixes (17px Root Corrections)")
+struct DOMComparisonPhase3Tests {
+    // Item 1: Hero H1 margin-bottom
+    @Test("Hero H1 has 12px margin-bottom for title-abstract gap")
+    func heroH1MarginBottom() {
+        let css = DocCStylesheet.generate(theme: .default)
+        let lines = css.components(separatedBy: "\n")
+        var inBlock = false
+        var hasMarginBottom = false
+        for line in lines {
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            if trimmed.contains(".documentation-hero h1") && trimmed.contains("{") {
+                inBlock = true
+            }
+            if inBlock && trimmed.contains("margin-bottom:") && trimmed.contains("12px") {
+                hasMarginBottom = true
+                break
+            }
+            if inBlock && trimmed == "}" { break }
+        }
+        #expect(hasMarginBottom,
+                "Hero H1 must have margin-bottom: 12px to create gap between title and abstract")
+    }
+
+    // Item 2: Overview H2 has NO border after hero
+    @Test("Overview H2 after hero has no border-top")
+    func overviewH2NoBorder() {
+        let css = DocCStylesheet.generate(theme: .default)
+        let lines = css.components(separatedBy: "\n")
+        var foundRule = false
+        var hasBorderTop = false
+        for line in lines {
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            if trimmed.contains(".documentation-hero + h2") {
+                foundRule = true
+            }
+            if foundRule && trimmed.contains("border-top:") {
+                hasBorderTop = true
+                break
+            }
+            if foundRule && trimmed == "}" { break }
+        }
+        #expect(foundRule, "Must have .documentation-hero + h2 rule")
+        #expect(!hasBorderTop,
+                "First H2 after hero must NOT have border-top (40px gap comes from margin-top)")
+    }
+
+    // Item 3: Overview H2 uses margin-top not padding-top
+    @Test("Overview H2 after hero uses margin-top 40px")
+    func overviewH2MarginTop() {
+        let css = DocCStylesheet.generate(theme: .default)
+        let lines = css.components(separatedBy: "\n")
+        var inBlock = false
+        var hasMarginTop = false
+        for line in lines {
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            if trimmed.contains(".documentation-hero + h2") {
+                inBlock = true
+            }
+            if inBlock && trimmed.contains("margin-top:") && trimmed.contains("40px") {
+                hasMarginTop = true
+                break
+            }
+            if inBlock && trimmed == "}" { break }
+        }
+        #expect(hasMarginTop,
+                "Overview H2 after hero must use margin-top: 40px (not padding-top)")
+    }
+
+    // Item 4: Content H3 margin-top is 44.8px (not rem-based)
+    @Test("Content H3 has margin-top 44.8px (fixed, not rem)")
+    func contentH3MarginTop() {
+        let css = DocCStylesheet.generate(theme: .default)
+        let lines = css.components(separatedBy: "\n")
+        var inBlock = false
+        var hasCorrectMarginTop = false
+        for line in lines {
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            if trimmed.contains(".doc-topic > h3") && trimmed.contains("{") {
+                inBlock = true
+            }
+            if inBlock && trimmed.contains("margin-top:") && trimmed.contains("44.8px") {
+                hasCorrectMarginTop = true
+                break
+            }
+            if inBlock && trimmed == "}" { break }
+        }
+        #expect(hasCorrectMarginTop,
+                "Content H3 must have margin-top: 44.8px (not 2.8rem which = 47.6px at 17px root)")
+    }
+
+    // Item 5: Content H3 margin-bottom is 0
+    @Test("Content H3 has margin-bottom 0")
+    func contentH3MarginBottomZero() {
+        let css = DocCStylesheet.generate(theme: .default)
+        let lines = css.components(separatedBy: "\n")
+        var inBlock = false
+        var hasOldMarginBottom = false
+        for line in lines {
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            if trimmed.contains(".doc-topic > h3") && trimmed.contains("{") {
+                inBlock = true
+            }
+            if inBlock && trimmed.contains("margin-bottom: var(--spacing-content-heading-margin-bottom") {
+                hasOldMarginBottom = true
+                break
+            }
+            if inBlock && trimmed == "}" { break }
+        }
+        #expect(!hasOldMarginBottom,
+                "Content H3 must NOT have margin-bottom: var(--spacing-content-heading-margin-bottom...) (should be 0)")
+    }
+
+    // Item 6: Paragraph margin-top is 0.8rem (not 0.85rem)
+    @Test("Paragraph margin-top is 0.8rem (13.6px at 17px root)")
+    func paragraphMarginTop() {
+        let css = DocCStylesheet.generate(theme: .default)
+        let lines = css.components(separatedBy: "\n")
+        var inBlock = false
+        var foundCorrect = false
+        var foundIncorrect = false
+        for line in lines {
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            if trimmed.contains(".doc-topic p") {
+                inBlock = true
+            }
+            if inBlock {
+                if trimmed.contains("margin-top:") {
+                    if trimmed.contains("0.8rem") {
+                        foundCorrect = true
+                    }
+                    if trimmed.contains("0.85rem") {
+                        foundIncorrect = true
+                    }
+                }
+                if trimmed == "}" {
+                    inBlock = false
+                }
+            }
+        }
+        #expect(foundCorrect,
+                "Paragraph margin-top must use 0.8rem (13.6px at 17px root)")
+        #expect(!foundIncorrect,
+                "Paragraph margin-top must NOT use 0.85rem (would be 14.45px at 17px root)")
     }
 }
 

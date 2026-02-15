@@ -1950,11 +1950,11 @@ enum DocCStylesheet {
             }
 
             /* Content section headings - matches swift-docc-render exactly */
-            /* H3 content headings: 44.8px = 2.8rem (at 16px root) */
+            /* H3 content headings: 44.8px matches docc-render exactly */
             /* Only direct child H3s of .doc-topic (content headings like "Quick Start") */
             .doc-topic > h3 {
-                margin-top: var(--spacing-content-heading-margin-top, 2.8rem);
-                margin-bottom: var(--spacing-content-heading-margin-bottom, 1.25rem);
+                margin-top: var(--spacing-content-heading-margin-top, 44.8px);
+                margin-bottom: 0;
             }
 
             /* Topic group headings (Essentials, Guides, etc.) have NO top margin */
@@ -2888,7 +2888,7 @@ enum DocCStylesheet {
 
             .documentation-hero h1 {
                 margin-top: 0;
-                margin-bottom: 0;
+                margin-bottom: var(--spacing-hero-title-margin-bottom, 12px);
             }
 
             /* Reset margins on hero content elements — prevents adjacent-sibling
@@ -3011,11 +3011,10 @@ enum DocCStylesheet {
             }
 
             /* Module pages have no .declaration, so Overview H2 follows the hero directly.
-               Apply the same separator and spacing as the declaration + h2 rule above. */
+               Uses margin-top (not padding) and NO border (unlike .declaration + h2). */
             .doc-topic > .documentation-hero + h2,
             .doc-topic > .documentation-hero + p + h2 {
-                padding-top: var(--spacing-overview-padding-top, 40px);
-                border-top: 1px solid var(--color-fill-gray);
+                margin-top: var(--spacing-overview-margin-top, 40px);
             }
 
             /* Overview bottom margin — matches docc-render .primary-content .content marginBottom.
@@ -3042,9 +3041,9 @@ enum DocCStylesheet {
                 margin-right: auto;
             }
 
-            /* Paragraph spacing - matches swift-docc-render exactly (13.6px = 0.85rem) */
+            /* Paragraph spacing - matches swift-docc-render exactly (0.8rem × 17px root = 13.6px) */
             main p, article p, .doc-topic p {
-                margin-top: var(--spacing-paragraph-margin-top, 0.85rem);  /* 13.6px at 16px root */
+                margin-top: var(--spacing-paragraph-margin-top, 0.8rem);
                 margin-bottom: 0;
             }
 
