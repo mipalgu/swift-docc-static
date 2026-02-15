@@ -841,7 +841,10 @@ public struct StaticDocumentationGenerator: Sendable {
         let fileManager = FileManager.default
 
         guard fileManager.fileExists(atPath: documentationDir.path) else {
-            throw GenerationError.archiveParsingFailed("No documentation data found in archive")
+            if configuration.isVerbose {
+                log("Warning: Archive has no documentation data, skipping: \(archiveDir.path)")
+            }
+            return  // Skip this archive instead of failing
         }
 
         // Note: Navigation index is already loaded and merged upfront in generate()
@@ -2408,7 +2411,7 @@ enum DocCStylesheet {
                 transition: max-height 0.2s ease, opacity 0.15s ease;
             }
 
-            .disclosure-checkbox:checked ~ .nav-children {
+            .navigator-card:has(.disclosure-checkbox:checked) > .nav-children {
                 max-height: 2000px;
                 opacity: 1;
             }
@@ -3001,6 +3004,13 @@ enum DocCStylesheet {
             .doc-topic > ul > li,
             .doc-topic > ol > li {
                 margin-left: var(--spacing-list-indent, 1.176em);
+                margin-top: var(--spacing-content-list-item-margin-top, 0.5em);
+            }
+
+            /* First list item has no top margin to avoid extra space at list start */
+            .doc-topic > ul > li:first-child,
+            .doc-topic > ol > li:first-child {
+                margin-top: 0;
             }
 
             /* Overview separator — matches docc-render .primary-content.with-border::before
