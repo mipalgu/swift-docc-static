@@ -390,7 +390,7 @@ private extension NavigationSidebarBuilder {
                     currentPath: currentPath,
                     depth: depth,
                     level: level,
-                    defaultExpanded: true  // Normal groups start expanded
+                    defaultExpanded: false  // Normal groups start collapsed
                 )
 
                 i = j  // Skip to next group marker or end
