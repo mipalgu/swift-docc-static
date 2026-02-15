@@ -2390,128 +2390,61 @@ enum DocCStylesheet {
                 transform: rotate(90deg);
             }
 
-            .navigator-card.expandable {
-                flex-wrap: wrap;
-            }
+            /* Flat list disclosure mechanism (simplified with wrappers)
+               Children are wrapped in .nav-children-wrapper for easy CSS hiding/showing.
+               This avoids complex sibling selectors while maintaining flat visual structure. */
 
-            .navigator-card.expandable > .nav-link {
-                flex: 1;
-            }
-
-            /* Nested children (collapsed by default with animation) */
-            .nav-children {
-                width: 100%;
+            /* Children wrapper - hidden by default */
+            .nav-children-wrapper {
                 list-style: none;
                 padding: 0;
                 margin: 0;
-                margin-left: 1.125rem;
                 max-height: 0;
                 overflow: hidden;
                 opacity: 0;
                 transition: max-height 0.2s ease, opacity 0.15s ease;
             }
 
-            .navigator-card:has(.disclosure-checkbox:checked) > .nav-children {
-                max-height: 2000px;
+            /* Show children when parent checkbox is checked
+               Use :has() to check if checkbox inside .navigator-card is checked,
+               then show the adjacent sibling .nav-children-wrapper */
+            .navigator-card.expandable:has(.disclosure-checkbox:checked) + .nav-children-wrapper {
+                max-height: 5000px;
                 opacity: 1;
             }
 
-            /* Nested group headers - indented for visual hierarchy */
-            .nav-group-header {
+            /* Group markers (.is-group class) */
+            .navigator-card.is-group {
                 font-size: 0.75rem;
                 font-weight: 600;
                 color: var(--color-figure-gray-secondary);
-                padding: 0.5rem 0 0.25rem;
-                padding-left: var(--spacing-nav-group-header-indent, 1rem);
-                list-style: none;
+                padding-top: 0.5rem;
+                padding-bottom: 0.25rem;
+                position: relative;
             }
 
-            /* Collapsible group headers with disclosure */
-            .nav-group-header.expandable {
-                display: flex;
-                flex-wrap: wrap;
-                align-items: center;
-                gap: 0.25rem;
-                padding: 0.375rem 0 0.25rem;
-            }
-
-            .nav-group-header.expandable .disclosure-checkbox {
+            .navigator-card.is-group .disclosure-checkbox {
                 position: absolute;
                 opacity: 0;
                 pointer-events: none;
             }
 
-            .nav-group-header.expandable > .disclosure-chevron {
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                width: 16px;
-                height: 16px;
-                cursor: pointer;
-                flex-shrink: 0;
-            }
-
-            .nav-group-header.expandable > .disclosure-chevron svg {
-                width: 10px;
-                height: 10px;
-                transition: transform 0.15s ease;
-                transform-origin: center;
-            }
-
-            .nav-group-header.expandable > .disclosure-checkbox:checked + .disclosure-chevron svg {
-                transform: rotate(90deg);
-            }
-
-            .nav-group-header.expandable .group-title,
-            .nav-group-header.expandable .nav-link.group-link {
+            .navigator-card.is-group .group-title {
                 font-size: 0.75rem;
                 font-weight: 600;
                 color: var(--color-figure-gray-secondary);
-                text-decoration: none;
+                flex: 1;
             }
 
-            .nav-group-header.expandable .nav-link.group-link:hover {
-                color: var(--color-link);
+            .navigator-card.is-group:hover {
+                background: transparent;
             }
 
-            .nav-group-header.expandable .nav-children {
-                flex-basis: 100%;
-                max-height: 0;
-                overflow: hidden;
+            /* Expandable items - position checkbox absolutely for sibling selector */
+            .navigator-card.expandable > .disclosure-checkbox {
+                position: absolute;
                 opacity: 0;
-                transition: max-height 0.2s ease, opacity 0.15s ease;
-                padding-left: 0.5rem;
-                margin-top: 0.25rem;
-            }
-
-            .nav-group-header.expandable .disclosure-checkbox:checked ~ .nav-children {
-                max-height: 2000px;
-                opacity: 1;
-            }
-
-            /* Nested child items */
-            .nav-child-item {
-                --nesting-index: 1;
-                display: flex;
-                align-items: center;
-                gap: 0.375rem;
-                padding: 0.125rem 0;
-                font-size: 0.8125rem;
-                line-height: 1.3;
-            }
-
-            .nav-child-item a {
-                color: var(--color-figure-gray);
-                text-decoration: none;
-            }
-
-            .nav-child-item:hover a {
-                color: var(--color-link);
-            }
-
-            .nav-child-item.selected a {
-                font-weight: 500;
-                color: var(--color-link);
+                pointer-events: none;
             }
 
             /* Symbol icon for articles/tutorials — matches docc-render

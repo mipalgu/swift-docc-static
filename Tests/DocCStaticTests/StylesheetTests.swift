@@ -1109,12 +1109,13 @@ struct ThemeCompatibilitySpacingTests {
                 "First contenttable section must NOT have :first-child override — docc-render treats all sections equally")
     }
 
-    @Test("Nav group header has indentation")
+    @Test("Nav group header has indentation (flat list structure)")
     func navGroupHeaderIndent() {
         let css = DocCStylesheet.generate(theme: .default)
-        #expect(css.contains(".nav-group-header"))
-        #expect(css.contains("--spacing-nav-group-header-indent"),
-                "Nav group header must have padding-left variable for visual hierarchy")
+        #expect(css.contains(".navigator-card.is-group"),
+                "Group markers use .is-group class in flat list structure")
+        #expect(css.contains("--nesting-index"),
+                "Flat list uses --nesting-index for depth-based indentation")
     }
 
     @Test("Sidebar section headings have indentation")
