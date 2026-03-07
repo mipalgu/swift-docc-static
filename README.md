@@ -1,6 +1,7 @@
 # swift-docc-static
 
 [![CI](https://github.com/mipalgu/swift-docc-static/actions/workflows/ci.yml/badge.svg)](https://github.com/mipalgu/swift-docc-static/actions/workflows/ci.yml)
+[![Windows CI](https://github.com/mipalgu/swift-docc-static/actions/workflows/windows-ci.yml/badge.svg)](https://github.com/mipalgu/swift-docc-static/actions/workflows/windows-ci.yml)
 [![Documentation](https://github.com/mipalgu/swift-docc-static/actions/workflows/documentation.yml/badge.svg)](https://github.com/mipalgu/swift-docc-static/actions/workflows/documentation.yml)
 [![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fmipalgu%2Fswift-docc-static%2Fbadge%3Ftype%3Dswift-versions)](https://swiftpackageindex.com/mipalgu/swift-docc-static)
 [![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fmipalgu%2Fswift-docc-static%2Fbadge%3Ftype%3Dplatforms)](https://swiftpackageindex.com/mipalgu/swift-docc-static)
