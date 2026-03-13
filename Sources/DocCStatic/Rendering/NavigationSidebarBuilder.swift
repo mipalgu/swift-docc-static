@@ -294,8 +294,9 @@ private extension NavigationSidebarBuilder {
         let checkboxId = "nav-\(checkboxCounter)"
         checkboxCounter += 1
 
-        // Groups start collapsed by default
-        let checkedAttr = ""
+        // Expand group if the current path is within any of its children
+        let shouldExpand = children.contains { shouldExpandNode($0, currentPath: currentPath) }
+        let checkedAttr = shouldExpand ? " checked" : ""
 
         var html = """
 
@@ -467,25 +468,40 @@ private extension NavigationSidebarBuilder {
         return normalisedPath == normalisedCurrent
     }
 
-    /// Determines if a node should be expanded (contains the current path).
+    /// Determines if a node should be expanded (contains the current path, or is a
+    /// child of the current page so its parent group should be visible).
     func shouldExpandNode(_ node: NavigationNode, currentPath: String) -> Bool {
-        // Check if this node or any descendant matches the current path
+        // Expand if this node IS the current path (show its children)
         if isPathSelected(node.path, currentPath: currentPath) {
+            return true
+        }
+
+        // Expand if this node is a direct child of the current page (show siblings)
+        if isChildOfCurrentPath(node.path, currentPath: currentPath) {
             return true
         }
 
         guard let children = node.children else { return false }
 
         for child in children {
-            if isPathSelected(child.path, currentPath: currentPath) {
-                return true
-            }
             if shouldExpandNode(child, currentPath: currentPath) {
                 return true
             }
         }
 
         return false
+    }
+
+    /// Checks whether a path is a direct child of the current page's path.
+    ///
+    /// Used to auto-expand sub-groups when viewing a parent page, matching
+    /// swift-docc-render's behaviour of showing all immediate members.
+    func isChildOfCurrentPath(_ path: String?, currentPath: String) -> Bool {
+        guard let path else { return false }
+        let normalisedPath = path.lowercased().trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+        let normalisedCurrent = currentPath.lowercased().trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+        guard !normalisedCurrent.isEmpty else { return false }
+        return normalisedPath.hasPrefix(normalisedCurrent + "/")
     }
 
     /// Converts an absolute DocC URL to a relative URL.
