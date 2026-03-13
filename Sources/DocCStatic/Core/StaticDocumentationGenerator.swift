@@ -2122,7 +2122,7 @@ enum DocCStylesheet {
             .header-language {
                 margin-left: auto;
                 font-size: 0.875rem;
-                color: var(--color-figure-gray-secondary);
+                color: var(--color-figure-gray);
             }
 
             /* Sidebar toggle (hidden checkbox) */
@@ -2837,8 +2837,8 @@ enum DocCStylesheet {
             }
 
             .documentation-hero .abstract {
-                font-size: var(--spacing-abstract-font-size, 21px);
-                line-height: var(--spacing-abstract-line-height, 29px);
+                font-size: var(--spacing-abstract-font-size, 17px);
+                line-height: var(--spacing-abstract-line-height, 25px);
                 color: var(--color-figure-gray);
                 margin-bottom: 0;
             }
@@ -2848,8 +2848,8 @@ enum DocCStylesheet {
             }
 
             .abstract {
-                font-size: var(--spacing-abstract-font-size, 21px);
-                line-height: var(--spacing-abstract-line-height, 29px);
+                font-size: var(--spacing-abstract-font-size, 17px);
+                line-height: var(--spacing-abstract-line-height, 25px);
                 color: var(--color-figure-gray-secondary);
                 margin-bottom: var(--spacing-abstract-margin-bottom, 1.5rem);
             }
