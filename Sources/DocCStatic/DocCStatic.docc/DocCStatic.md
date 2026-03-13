@@ -21,7 +21,7 @@ This package provides:
 - **Multi-target support**: Document all targets and products in a package
 - **Cross-package linking**: Relative links work correctly for local file:// URLs
 - **DocC compatibility**: Supports symbols, articles, and tutorials
-- **Customisable styling**: Match Apple's DocC appearance or use your own theme
+- **Customisable styling**: Match DocC appearance or use your own theme
 
 ### Quick Start
 

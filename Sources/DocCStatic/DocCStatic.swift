@@ -39,7 +39,7 @@
 /// - **Multi-package support**: Document all targets and dependencies
 /// - **Cross-linking**: Relative links work with `file://` URLs
 /// - **DocC compatibility**: Supports articles, tutorials, and code snippets
-/// - **Customisable themes**: Match Apple's DocC style or create your own
+/// - **Customisable themes**: Match DocC style or create your own
 ///
 /// ## Topics
 ///

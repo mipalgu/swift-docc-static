@@ -280,10 +280,11 @@ private extension NavigationSidebarBuilder {
         return html
     }
 
-    /// Builds a group marker item with its children wrapped for disclosure.
+    /// Builds a group marker item with its children always visible.
     ///
-    /// Group markers are rendered as `<li>` items with the `.is-group` class
-    /// and a disclosure triangle. Children are wrapped in a div for CSS-based hiding/showing.
+    /// Group markers are rendered as non-interactive `<li>` items with the `.is-group`
+    /// class — plain flat section headers with no disclosure chevron, matching
+    /// swift-docc-render's behaviour where groups are always expanded.
     mutating func buildGroupMarkerItemWithChildren(
         _ node: NavigationNode,
         children: [NavigationNode],
@@ -291,29 +292,15 @@ private extension NavigationSidebarBuilder {
         depth: Int,
         nestingLevel: Int
     ) -> String {
-        let checkboxId = "nav-\(checkboxCounter)"
-        checkboxCounter += 1
-
-        // Expand group if the current path is within any of its children
-        let shouldExpand = children.contains { shouldExpandNode($0, currentPath: currentPath) }
-        let checkedAttr = shouldExpand ? " checked" : ""
-
         var html = """
 
-                                <li class="navigator-card is-group expandable" style="--nesting-index: \(nestingLevel)">
-                                    <input type="checkbox" id="\(checkboxId)" class="disclosure-checkbox"\(checkedAttr)>
-                                    <div class="depth-spacer">
-                                        <label for="\(checkboxId)" class="disclosure-chevron" aria-label="Toggle \(escapeHTML(node.title))">
-                                            <svg viewBox="0 0 10 10" fill="currentColor">
-                                                <path d="M3 1.5L7 5L3 8.5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-                                            </svg>
-                                        </label>
-                                    </div>
+                                <li class="navigator-card is-group" style="--nesting-index: \(nestingLevel)">
+                                    <div class="depth-spacer"></div>
                                     <span class="group-title">\(escapeHTML(node.title))</span>
                                 </li>
         """
 
-        // Wrap children in a container for CSS disclosure
+        // Children are always visible (no disclosure toggle for groups)
         if !children.isEmpty {
             html += """
 
@@ -468,16 +455,12 @@ private extension NavigationSidebarBuilder {
         return normalisedPath == normalisedCurrent
     }
 
-    /// Determines if a node should be expanded (contains the current path, or is a
-    /// child of the current page so its parent group should be visible).
+    /// Determines if a node should be expanded (i.e., its disclosure checkbox checked).
+    ///
+    /// Returns `true` when this node or any descendant matches the current path,
+    /// so that the path from the root to the current page is pre-opened on load.
     func shouldExpandNode(_ node: NavigationNode, currentPath: String) -> Bool {
-        // Expand if this node IS the current path (show its children)
         if isPathSelected(node.path, currentPath: currentPath) {
-            return true
-        }
-
-        // Expand if this node is a direct child of the current page (show siblings)
-        if isChildOfCurrentPath(node.path, currentPath: currentPath) {
             return true
         }
 
@@ -490,18 +473,6 @@ private extension NavigationSidebarBuilder {
         }
 
         return false
-    }
-
-    /// Checks whether a path is a direct child of the current page's path.
-    ///
-    /// Used to auto-expand sub-groups when viewing a parent page, matching
-    /// swift-docc-render's behaviour of showing all immediate members.
-    func isChildOfCurrentPath(_ path: String?, currentPath: String) -> Bool {
-        guard let path else { return false }
-        let normalisedPath = path.lowercased().trimmingCharacters(in: CharacterSet(charactersIn: "/"))
-        let normalisedCurrent = currentPath.lowercased().trimmingCharacters(in: CharacterSet(charactersIn: "/"))
-        guard !normalisedCurrent.isEmpty else { return false }
-        return normalisedPath.hasPrefix(normalisedCurrent + "/")
     }
 
     /// Converts an absolute DocC URL to a relative URL.

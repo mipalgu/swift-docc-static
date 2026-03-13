@@ -1744,7 +1744,7 @@ public struct StaticDocumentationGenerator: Sendable {
 
 /// Generates the CSS stylesheet for documentation.
 ///
-/// This type creates a complete stylesheet matching Apple's DocC visual style,
+/// This type creates a complete stylesheet matching DocC visual style,
 /// with support for light and dark modes.
 enum DocCStylesheet {
     /// Generates the complete CSS stylesheet.
@@ -2405,32 +2405,31 @@ enum DocCStylesheet {
                 transition: max-height 0.2s ease, opacity 0.15s ease;
             }
 
-            /* Show children when parent checkbox is checked
-               Use :has() to check if checkbox inside .navigator-card is checked,
-               then show the adjacent sibling .nav-children-wrapper */
+            /* Show children when parent expandable item's checkbox is checked */
             .navigator-card.expandable:has(.disclosure-checkbox:checked) + .nav-children-wrapper {
                 max-height: 5000px;
                 opacity: 1;
             }
 
-            /* Group markers (.is-group class) */
-            .navigator-card.is-group {
-                font-size: 0.75rem;
-                font-weight: 600;
-                color: var(--color-figure-gray-secondary);
-                padding-top: 0.5rem;
-                padding-bottom: 0.25rem;
-                position: relative;
+            /* Group markers are always-visible flat headers (no disclosure toggle),
+               matching swift-docc-render: children of .is-group are always shown */
+            .navigator-card.is-group + .nav-children-wrapper {
+                max-height: 5000px;
+                opacity: 1;
             }
 
-            .navigator-card.is-group .disclosure-checkbox {
-                position: absolute;
-                opacity: 0;
-                pointer-events: none;
+            /* Group markers (.is-group class) — plain non-interactive section headers,
+               same font size as regular items (1rem/17px), bold, gray, matching
+               swift-docc-render's navigator-card-item.is-group style */
+            .navigator-card.is-group {
+                font-size: 1rem;
+                font-weight: 600;
+                color: var(--color-figure-gray-secondary);
+                cursor: default;
             }
 
             .navigator-card.is-group .group-title {
-                font-size: 0.75rem;
+                font-size: 1rem;
                 font-weight: 600;
                 color: var(--color-figure-gray-secondary);
                 flex: 1;

@@ -4,7 +4,7 @@ Customise the appearance of your documentation.
 
 ## Overview
 
-DocCStatic generates documentation styled to match Apple's DocC appearance by default. You can customise the theme through built-in themes, custom theme files, or programmatic configuration.
+DocCStatic generates documentation styled to match DocC appearance by default. You can customise the theme through built-in themes, custom theme files, or programmatic configuration.
 
 Theme customisation is available through:
 - **Built-in themes**: Pre-configured themes included with DocCStatic
