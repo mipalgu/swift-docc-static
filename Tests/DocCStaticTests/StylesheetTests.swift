@@ -296,16 +296,16 @@ struct StylesheetTests {
     @Test("Sidebar width is themeable")
     func sidebarWidthThemeable() {
         let css = DocCStylesheet.generate(theme: .default)
-        // Default sidebar width is 432px per swift-docc-render
-        #expect(css.contains("--sidebar-width: var(--spacing-sidebar-width, 432px)"))
+        // Default sidebar width is 400px per swift-docc-render (LARGE_DEFAULT_WIDTH in AdjustableSidebarWidth.vue)
+        #expect(css.contains("--sidebar-width: var(--spacing-sidebar-width, 400px)"))
     }
 
-    @Test("Default theme sidebar width is 432px")
+    @Test("Default theme sidebar width is 400px")
     func defaultSidebarWidth() {
         let theme = ThemeConfiguration(builtInTheme: .default, includeDarkMode: true, customCSS: nil)
         let css = DocCStylesheet.generate(theme: theme)
         // Sidebar width uses CSS variable for themeability
-        #expect(css.contains("--sidebar-width: var(--spacing-sidebar-width, 432px)"))
+        #expect(css.contains("--sidebar-width: var(--spacing-sidebar-width, 400px)"))
     }
 
     @Test("Default theme has fill-gray-quaternary colour")
@@ -459,13 +459,13 @@ struct GenerationErrorTests {
 @Suite("Swift-DocC Render Compatibility Tests")
 struct SwiftDocCRenderCompatibilityTests {
 
-    @Test("Default theme sidebar width matches swift-docc-render (432px)")
+    @Test("Default theme sidebar width matches swift-docc-render (400px)")
     func defaultSidebarWidth() {
         let theme = ThemeConfiguration(builtInTheme: .default, includeDarkMode: true, customCSS: nil)
         let css = DocCStylesheet.generate(theme: theme)
 
         // swift-docc-render uses 432px for sidebar width @ 1440px viewport
-        #expect(css.contains("--sidebar-width: var(--spacing-sidebar-width, 432px)"))
+        #expect(css.contains("--sidebar-width: var(--spacing-sidebar-width, 400px)"))
     }
 
     @Test("Pre element font-size matches swift-docc-render (17px)")
@@ -2467,6 +2467,220 @@ struct DOMComparisonPhase3Tests {
                 "Paragraph margin-top must use 0.8rem (13.6px at 17px root)")
         #expect(!foundIncorrect,
                 "Paragraph margin-top must NOT use 0.85rem (would be 14.45px at 17px root)")
+    }
+}
+
+// MARK: - Layout Width and Padding Parity Tests
+// These tests guard against double-padding regressions found during DOM comparison.
+// The key invariant: content text must start at the same horizontal offset (80px into
+// the content column) regardless of whether it is in primary content or a Topics section.
+
+@Suite("Layout Width and Padding Parity — Prevent Double-Padding Regressions")
+struct LayoutPaddingParityTests {
+
+    // Extracts all properties inside the first CSS block whose selector line
+    // matches `selectorPredicate`. Handles multi-selector rules.
+    private func properties(in css: String, matching selectorPredicate: (String) -> Bool) -> [String: String] {
+        let lines = css.components(separatedBy: "\n")
+        var result: [String: String] = [:]
+        var inBlock = false
+        var depth = 0
+        for line in lines {
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            if !inBlock {
+                if selectorPredicate(trimmed) {
+                    inBlock = true
+                    // Opening brace may be on this line or a subsequent selector line
+                    if trimmed.hasSuffix("{") { depth = 1 }
+                }
+                if inBlock && trimmed.hasSuffix("{") { depth = 1 }
+                continue
+            }
+            if trimmed.hasSuffix("{") {
+                depth += 1
+                continue
+            }
+            if trimmed == "}" {
+                depth -= 1
+                if depth == 0 { break }
+                continue
+            }
+            // Property line: "name: value;"
+            if depth == 1, let colon = trimmed.firstIndex(of: ":") {
+                let key = String(trimmed[trimmed.startIndex..<colon]).trimmingCharacters(in: .whitespaces)
+                let value = String(trimmed[trimmed.index(after: colon)...])
+                    .trimmingCharacters(in: .whitespaces)
+                    .replacingOccurrences(of: ";", with: "")
+                    .trimmingCharacters(in: .whitespaces)
+                result[key] = value
+            }
+        }
+        return result
+    }
+
+    @Test("primary-content-container has 80px horizontal padding")
+    func primaryContentContainerPadding() {
+        let css = DocCStylesheet.generate(theme: .default)
+        let props = properties(in: css) { $0.contains(".primary-content-container") && !$0.contains(">") }
+        #expect(props["padding-left"]?.contains("80px") == true,
+                "primary-content-container must have padding-left containing 80px, got: \(props["padding-left"] ?? "nil")")
+        #expect(props["padding-right"]?.contains("80px") == true,
+                "primary-content-container must have padding-right containing 80px")
+    }
+
+    @Test("primary-content-container constrains content to 980px max-width")
+    func primaryContentContainerMaxWidth() {
+        let css = DocCStylesheet.generate(theme: .default)
+        let props = properties(in: css) { $0.contains(".primary-content-container") && !$0.contains(">") }
+        #expect(props["max-width"]?.contains("980px") == true,
+                "primary-content-container must have max-width containing 980px, got: \(props["max-width"] ?? "nil")")
+    }
+
+    @Test("contenttable.alt-light section itself has no horizontal padding (full-width)")
+    func contenttableAltLightNoPadding() {
+        let css = DocCStylesheet.generate(theme: .default)
+        // The section must not receive any direct padding-left from a rule whose selector
+        // targets .contenttable.alt-light directly (without a descendant combinator for .container).
+        // We look for a block where selector is EXACTLY ".contenttable.alt-light {" with padding-left.
+        let lines = css.components(separatedBy: "\n")
+        var inBlock = false
+        var foundPaddingLeft = false
+        for line in lines {
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            // Only match the block for .contenttable.alt-light alone (not .container child)
+            if !inBlock && trimmed.hasPrefix(".contenttable.alt-light") &&
+               !trimmed.contains(".container") && !trimmed.contains(".title") &&
+               !trimmed.contains(".section") {
+                inBlock = true
+            }
+            if inBlock {
+                if trimmed.contains("padding-left:") {
+                    foundPaddingLeft = true
+                }
+                if trimmed == "}" { inBlock = false }
+            }
+        }
+        #expect(!foundPaddingLeft,
+                ".contenttable.alt-light section must NOT have direct padding-left (it is full-width; only inner .container has padding)")
+    }
+
+    @Test("contenttable.alt-light has no background colour (matches docc-render ContentTable.vue)")
+    func contenttableAltLightNoBackground() {
+        let css = DocCStylesheet.generate(theme: .default)
+        // In docc-render, the alt-light class is a modifier with no background-color.
+        // The Topics section appears on a white/transparent background matching the page.
+        let lines = css.components(separatedBy: "\n")
+        var inBlock = false
+        var foundBackground = false
+        for line in lines {
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            if !inBlock && trimmed.hasPrefix(".contenttable.alt-light") &&
+               !trimmed.contains(".container") && !trimmed.contains(".title") &&
+               !trimmed.contains(".section") {
+                inBlock = true
+            }
+            if inBlock {
+                if trimmed.contains("background-color:") || trimmed.contains("background:") {
+                    foundBackground = true
+                }
+                if trimmed == "}" { inBlock = false }
+            }
+        }
+        #expect(!foundBackground,
+                ".contenttable.alt-light must NOT have a background-color rule — in docc-render the alt-light class carries no background (docc-render ContentTable.vue scoped styles have no background property)")
+    }
+
+    @Test("contenttable inner container has 80px horizontal padding")
+    func contenttableContainerPadding() {
+        let css = DocCStylesheet.generate(theme: .default)
+        let props = properties(in: css) { $0.contains(".contenttable.alt-light .container") }
+        #expect(props["padding-left"]?.contains("80px") == true,
+                ".contenttable.alt-light .container must have padding-left containing 80px")
+        #expect(props["padding-right"]?.contains("80px") == true,
+                ".contenttable.alt-light .container must have padding-right containing 80px")
+    }
+
+    @Test("contenttable inner container constrains content to 980px max-width")
+    func contenttableContainerMaxWidth() {
+        let css = DocCStylesheet.generate(theme: .default)
+        let props = properties(in: css) { $0.contains(".contenttable.alt-light .container") }
+        #expect(props["max-width"]?.contains("980px") == true,
+                ".contenttable.alt-light .container must have max-width containing 980px")
+    }
+
+    @Test("No descendant .doc-topic section rule sets horizontal padding (prevents double-padding)")
+    func noDescendantSectionPaddingRule() {
+        let css = DocCStylesheet.generate(theme: .default)
+        let lines = css.components(separatedBy: "\n")
+        var inBlock = false
+        var blockHasPaddingLeft = false
+        for line in lines {
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            // Detect a rule that uses `.doc-topic section` as a descendant selector
+            // (no `>` combinator — this catches ALL sections including contenttable)
+            if !inBlock && trimmed.contains(".doc-topic section") && !trimmed.contains(".doc-topic section >") {
+                inBlock = true
+            }
+            if inBlock {
+                if trimmed.contains("padding-left:") { blockHasPaddingLeft = true }
+                if trimmed == "}" { inBlock = false }
+            }
+        }
+        #expect(!blockHasPaddingLeft,
+                "A '.doc-topic section' descendant rule must NOT set padding-left — it matches .contenttable.alt-light and causes double-padding. Use .primary-content-container instead.")
+    }
+
+    @Test("No legacy descendant .doc-topic .declaration rule sets horizontal padding (prevents double-padding in hero)")
+    func noLegacyDeclarationPaddingRule() {
+        let css = DocCStylesheet.generate(theme: .default)
+        let lines = css.components(separatedBy: "\n")
+        var inBlock = false
+        var blockHasPaddingLeft = false
+        for (i, line) in lines.enumerated() {
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            // Match the legacy grouped rule that includes ".doc-topic .declaration" as one
+            // of several selectors and sets padding-left (the old container-model fallback).
+            // The .declaration rule inside .documentation-hero__content already inherits
+            // the correct horizontal position; a descendant rule duplicates it.
+            if !inBlock && trimmed == ".doc-topic .declaration," {
+                inBlock = true
+            }
+            if inBlock {
+                if trimmed.contains("padding-left:") { blockHasPaddingLeft = true }
+                if trimmed == "}" { inBlock = false }
+            }
+            _ = i  // suppress unused-variable warning
+        }
+        #expect(!blockHasPaddingLeft,
+                "'.doc-topic .declaration' must NOT set padding-left in a grouped fallback rule — the hero's .documentation-hero__content already provides the 80px gutter.")
+    }
+
+    @Test("contenttable inner container has no top padding (title provides spacing via padding-top)")
+    func contenttableContainerNoPaddingTop() {
+        let css = DocCStylesheet.generate(theme: .default)
+        let props = properties(in: css) { $0.contains(".contenttable.alt-light .container") }
+        let pt = props["padding-top"] ?? ""
+        #expect(pt == "0" || pt == "0px",
+                ".contenttable.alt-light .container must have padding-top: 0 to prevent double spacing from the generic .container rule (got '\(pt)'). Spacing is provided by .title padding-top: 40px.")
+    }
+
+    @Test("Sidebar default width is 400px matching docc-render LARGE_DEFAULT_WIDTH")
+    func sidebarDefaultWidth400() {
+        let css = DocCStylesheet.generate(theme: .default)
+        #expect(css.contains("--sidebar-width: var(--spacing-sidebar-width, 400px)"),
+                "Default sidebar width must be 400px — matches LARGE_DEFAULT_WIDTH constant in AdjustableSidebarWidth.vue")
+    }
+
+    @Test("Hero abstract uses intro font size 21px/29px (font-styles(intro) at large viewport)")
+    func heroAbstractIntroFontSize() {
+        let css = DocCStylesheet.generate(theme: .default)
+        let props = properties(in: css) { $0.contains(".documentation-hero .abstract") && !$0.contains("p") }
+        let fs = props["font-size"] ?? ""
+        let lh = props["line-height"] ?? ""
+        #expect(fs.contains("21px"),
+                ".documentation-hero .abstract must use 21px font-size (font-styles(intro) at large viewport), got: '\(fs)'")
+        #expect(lh.contains("29px"),
+                ".documentation-hero .abstract must use 29px line-height (font-styles(intro) at large viewport), got: '\(lh)'")
     }
 }
 

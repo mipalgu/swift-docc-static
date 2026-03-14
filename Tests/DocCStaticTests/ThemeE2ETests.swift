@@ -105,8 +105,8 @@ struct ThemeE2ETests {
         let classicTheme = ThemeConfiguration(builtInTheme: .classic, includeDarkMode: true, customCSS: nil)
         let classicCSS = DocCStylesheet.generate(theme: classicTheme)
 
-        // Default theme uses 432px sidebar width via CSS variable fallback
-        #expect(defaultCSS.contains("--sidebar-width: var(--spacing-sidebar-width, 432px)"))
+        // Default theme uses 400px sidebar width matching docc-render LARGE_DEFAULT_WIDTH
+        #expect(defaultCSS.contains("--sidebar-width: var(--spacing-sidebar-width, 400px)"))
 
         // Classic theme also uses the same variable pattern (theme can override via --spacing-sidebar-width)
         #expect(classicCSS.contains("--sidebar-width: var(--spacing-sidebar-width,"))

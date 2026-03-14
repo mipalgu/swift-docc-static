@@ -1765,7 +1765,7 @@ enum DocCStylesheet {
                 --color-fill-gray-secondary: #f5f5f5;
                 --color-fill-gray-quaternary: #f0f0f0;
                 --color-navigator-item-hover: rgba(51, 102, 255, 0.05);
-                --sidebar-width: var(--spacing-sidebar-width, 432px);
+                --sidebar-width: var(--spacing-sidebar-width, 400px);
                 --header-height: 52px;
 
                 /* Typography */
@@ -2847,9 +2847,10 @@ enum DocCStylesheet {
                 margin-top: 0;
             }
 
+            /* Hero abstract uses font-styles(intro) from docc-render: 21px/29px at large viewport */
             .documentation-hero .abstract {
-                font-size: var(--spacing-abstract-font-size, 17px);
-                line-height: var(--spacing-abstract-line-height, 25px);
+                font-size: var(--spacing-hero-abstract-font-size, 21px);
+                line-height: var(--spacing-hero-abstract-line-height, 29px);
                 color: var(--color-figure-gray);
                 margin-bottom: 0;
             }
@@ -2921,9 +2922,11 @@ enum DocCStylesheet {
                 font-weight: var(--spacing-decorated-title-identifier-font-weight, 600);
             }
 
-            /* Content sections within main - matches swift-docc-render container model */
-            .doc-topic section,
-            .doc-topic .declaration,
+            /* Fallback width constraint for any content elements that appear directly
+               inside .doc-topic outside of .primary-content-container (e.g. on edge-case
+               page types). Uses direct-child (>) combinators to avoid matching nested
+               content that already has padding via .primary-content-container or
+               .documentation-hero__content. */
             .doc-topic > ul,
             .doc-topic > ol,
             .doc-topic > p,
@@ -3029,14 +3032,17 @@ enum DocCStylesheet {
                 }
             }
 
-            /* contenttable sections (Topics, Relationships, See Also) — matches docc-render ContentTable.vue */
+            /* contenttable sections (Topics, Relationships, See Also) — matches docc-render ContentTable.vue.
+               The section itself spans full width with no background; only its inner .container constrains
+               the content width. The alt-light class is a modifier in docc-render but carries no background. */
             .contenttable.alt-light .container {
                 max-width: var(--spacing-content-max-width, 980px);
                 margin-left: auto;
                 margin-right: auto;
+                padding-top: 0;
                 padding-left: var(--spacing-content-padding-horizontal, 80px);
                 padding-right: var(--spacing-content-padding-horizontal, 80px);
-                padding-bottom: 40px;
+                padding-bottom: var(--spacing-section-spacing-single-side, 40px);
                 box-sizing: border-box;
             }
 
