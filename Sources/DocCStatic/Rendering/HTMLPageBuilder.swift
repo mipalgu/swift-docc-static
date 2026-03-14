@@ -893,37 +893,46 @@ private extension HTMLPageBuilder {
     /// - Returns: HTML string for the sticky container, or an empty string if there
     ///   are no sections to navigate to.
     func buildOnThisPageNav(for renderNode: RenderNode, title: String) -> String {
-        // Collect (anchor, label) pairs for sections that are present on the page
-        var items: [(anchor: String, label: String)] = []
+        // Nav items carry both their anchor/label and whether they are a child (H3) or parent (H2).
+        struct NavItem {
+            let anchor: String
+            let label: String
+            let isChild: Bool
+        }
+        var items: [NavItem] = []
 
         // Always include the page title as the first item (links to top)
-        items.append(("app-top", title))
+        items.append(NavItem(anchor: "app-top", label: title, isChild: false))
 
         // Check primary content sections for mentions and content headings
         for section in renderNode.primaryContentSections {
             if let mentionsSection = section as? MentionsRenderSection,
                !mentionsSection.mentions.isEmpty {
-                items.append(("mentions", "Mentioned in"))
+                items.append(NavItem(anchor: "mentions", label: "Mentioned in", isChild: false))
             } else if let contentSection = section as? ContentRenderSection {
-                // Add anchor for the first H2 heading found in this content section
+                // Collect all H2 headings (parent-item) and H3 headings (child-item)
                 for block in contentSection.content {
-                    if case .heading(let heading) = block, heading.level == 2 {
-                        let anchor = heading.anchor ?? slugify(heading.text)
-                        items.append((anchor, heading.text))
-                        break
+                    if case .heading(let heading) = block {
+                        if heading.level == 2 {
+                            let anchor = heading.anchor ?? slugify(heading.text)
+                            items.append(NavItem(anchor: anchor, label: heading.text, isChild: false))
+                        } else if heading.level == 3 {
+                            let anchor = heading.anchor ?? slugify(heading.text)
+                            items.append(NavItem(anchor: anchor, label: heading.text, isChild: true))
+                        }
                     }
                 }
             }
         }
 
         if !renderNode.topicSections.isEmpty {
-            items.append(("topics", "Topics"))
+            items.append(NavItem(anchor: "topics", label: "Topics", isChild: false))
         }
         if !renderNode.relationshipSections.isEmpty {
-            items.append(("relationships", "Relationships"))
+            items.append(NavItem(anchor: "relationships", label: "Relationships", isChild: false))
         }
         if !renderNode.seeAlsoSections.isEmpty {
-            items.append(("see-also", "See Also"))
+            items.append(NavItem(anchor: "see-also", label: "See Also", isChild: false))
         }
 
         // Only render the sidebar when there are navigation targets beyond the title
@@ -938,9 +947,10 @@ private extension HTMLPageBuilder {
 
         for (index, item) in items.enumerated() {
             let activeClass = index == 0 ? " active" : ""
+            let itemClass = item.isChild ? "child-item" : "parent-item\(activeClass)"
             html += """
 
-                                    <li class="parent-item\(activeClass)">
+                                    <li class="\(itemClass)">
                                         <a href="#\(escapeHTML(item.anchor))" class="base-link">
                                             <span>\(escapeHTML(item.label))</span>
                                         </a>
