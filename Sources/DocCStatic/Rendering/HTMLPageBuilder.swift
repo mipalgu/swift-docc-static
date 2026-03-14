@@ -759,24 +759,11 @@ private extension HTMLPageBuilder {
             html += buildDeclaration(from: renderNode, references: references, depth: depth)
         }
 
-        // Add decorative hero image based on content type
-        let decorationSVG = heroDecorationSVG(for: renderNode.kind)
-        if let svg = decorationSVG {
-            html += """
-
-                        </div>
-                        <div class="hero-decoration">
-                            \(svg)
-                        </div>
-                    </div>
-            """
-        } else {
-            html += """
+        html += """
 
                         </div>
                     </div>
-            """
-        }
+        """
 
         // Flex wrapper: doc-content (main column) + OnThisPageStickyContainer (right column)
         html += """
@@ -1016,35 +1003,6 @@ private extension HTMLPageBuilder {
         }
 
         return "Framework"
-    }
-
-    /// Returns the appropriate hero decoration SVG for a render node kind.
-    func heroDecorationSVG(for kind: RenderNode.Kind) -> String? {
-        switch kind {
-        case .article, .tutorial:
-            // Document with code brackets - matches DocC's article decoration
-            return """
-            <svg width="180" height="180" viewBox="0 0 180 180" fill="none">
-                <rect x="30" y="15" width="120" height="150" rx="6" stroke="currentColor" stroke-width="4"/>
-                <path d="M30 40h90" stroke="currentColor" stroke-width="4"/>
-                <path d="M65 85L50 100L65 115" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M115 85L130 100L115 115" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-            """
-        case .overview:
-            // Overlapping angle brackets - matches DocC's framework decoration
-            return """
-            <svg width="180" height="180" viewBox="0 0 180 180" fill="none">
-                <path d="M55 40L20 90L55 140" stroke="currentColor" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M75 50L45 90L75 130" stroke="currentColor" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" opacity="0.6"/>
-                <path d="M125 40L160 90L125 140" stroke="currentColor" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M105 50L135 90L105 130" stroke="currentColor" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" opacity="0.6"/>
-            </svg>
-            """
-        default:
-            // No decoration for symbols
-            return nil
-        }
     }
 
     func buildDeclaration(from renderNode: RenderNode, references: [String: any RenderReference], depth: Int) -> String {

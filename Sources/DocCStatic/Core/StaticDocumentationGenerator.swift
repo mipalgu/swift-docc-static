@@ -2772,20 +2772,6 @@ enum DocCStylesheet {
                 box-sizing: border-box;
             }
 
-            .hero-decoration {
-                flex-shrink: 0;
-                width: 200px;
-                height: 200px;
-                color: var(--color-documentation-intro-fill);
-                opacity: 0.6;
-                margin-left: 2rem;
-            }
-
-            .hero-decoration svg {
-                width: 100%;
-                height: 100%;
-            }
-
             /* Technology icon for modules - background decoration */
             .documentation-hero .icon {
                 position: absolute;
@@ -2989,14 +2975,14 @@ enum DocCStylesheet {
             /* On-this-page sticky navigation sidebar — matches docc-render OnThisPageStickyContainer */
             .OnThisPageStickyContainer {
                 position: sticky;
-                top: 65px;
+                top: 3.82353rem;
                 align-self: flex-start;
                 flex: 0 0 auto;
                 width: 192px;
                 padding-inline-end: 22px;
                 box-sizing: border-box;
-                overflow: auto;
-                max-height: calc(100vh - 65px);
+                padding-bottom: var(--spacing-stacked-margin-small);
+                max-height: calc(100vh - 3.82353rem);
                 margin-top: 2.353rem;
             }
 
@@ -3016,16 +3002,20 @@ enum DocCStylesheet {
             }
 
             .OnThisPageNav .parent-item .base-link {
-                font-weight: 600;
+                font-weight: 700;
+            }
+
+            .OnThisPageNav .child-item .base-link {
+                padding-inline-start: 0.8rem;
             }
 
             .OnThisPageNav .active .base-link {
                 color: var(--color-figure-gray);
             }
 
-            /* Hide on-this-page nav when viewport is too narrow — matches docc-render
-               which hides it when the content area width is ≤ 1050px.
-               With a ~432px sidebar, 1050px content requires ~1482px total viewport. */
+            /* Hide on-this-page nav when viewport is too narrow.
+               docc-render uses JS to check contentWidth > 1050px; with a ~432px left
+               sidebar the threshold is ~1482px total viewport width. */
             @media only screen and (max-width: 1480px) {
                 .OnThisPageStickyContainer {
                     display: none;
@@ -3077,11 +3067,9 @@ enum DocCStylesheet {
                 margin-top: 0;
             }
 
-            /* Code listings use auto margins + calc max-width so the grey box
-               aligns with paragraph text at any viewport width.
-               max-width = content-max-width − 2 × content-padding = 980 − 160 = 820px */
+            /* Code listings fill the available content width — no max-width constraint,
+               matching docc-render which lets code blocks span the full content area. */
             .doc-topic .code-listing {
-                max-width: calc(var(--spacing-content-max-width, 980px) - 2 * var(--spacing-content-padding-horizontal, 80px));
                 margin-left: auto;
                 margin-right: auto;
             }
