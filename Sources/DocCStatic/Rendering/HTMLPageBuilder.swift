@@ -783,6 +783,7 @@ private extension HTMLPageBuilder {
 
                     <div class="doc-content-wrapper">
                         <div class="doc-content">
+                            <div class="primary-content-container">
         """
 
         // Primary content sections — skip declarations (already rendered inside the hero)
@@ -795,6 +796,11 @@ private extension HTMLPageBuilder {
         for section in renderNode.sections {
             html += buildSection(section, references: references, depth: depth)
         }
+
+        html += """
+
+                            </div>
+        """
 
         // Topic sections — contenttable structure matching swift-docc-render ContentTable.vue
         if !renderNode.topicSections.isEmpty {

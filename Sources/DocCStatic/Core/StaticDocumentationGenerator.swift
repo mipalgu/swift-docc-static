@@ -2960,13 +2960,27 @@ enum DocCStylesheet {
             .doc-content-wrapper {
                 display: flex;
                 flex-direction: row;
+                justify-content: center;
                 align-items: flex-start;
             }
 
             .doc-content {
                 flex: 1 1 auto;
                 min-width: 0;
+                width: 100%;
                 overflow: hidden;
+            }
+
+            /* Primary content container — constrains paragraph/heading width with 80px gutters,
+               matching docc-render's inner .container inside .doc-content */
+            .primary-content-container {
+                max-width: var(--spacing-content-max-width, 980px);
+                margin-left: auto;
+                margin-right: auto;
+                padding-left: var(--spacing-content-padding-horizontal, 80px);
+                padding-right: var(--spacing-content-padding-horizontal, 80px);
+                padding-top: 40px;
+                box-sizing: border-box;
             }
 
             /* On-this-page sticky navigation sidebar — matches docc-render OnThisPageStickyContainer */
@@ -3006,7 +3020,10 @@ enum DocCStylesheet {
                 color: var(--color-figure-gray);
             }
 
-            @media only screen and (max-width: 735px) {
+            /* Hide on-this-page nav when viewport is too narrow — matches docc-render
+               which hides it when the content area width is ≤ 1050px.
+               With a ~432px sidebar, 1050px content requires ~1482px total viewport. */
+            @media only screen and (max-width: 1480px) {
                 .OnThisPageStickyContainer {
                     display: none;
                 }
@@ -3032,26 +3049,20 @@ enum DocCStylesheet {
                 margin-bottom: 0;
             }
 
-            /* Overview separator for doc-content: first h2 after declaration (now inside hero) */
-            .doc-content > h2:first-child,
-            .doc-content > .mentions + h2,
-            .doc-content > .mentions + p + h2 {
-                padding-top: 40px;
+            /* Overview separator: first h2 in primary content (after declaration in hero) */
+            .primary-content-container > h2:first-child,
+            .primary-content-container > .mentions + h2,
+            .primary-content-container > .mentions + p + h2 {
                 border-top: 1px solid var(--color-fill-gray);
-            }
-
-            /* Module pages: Overview H2 follows the hero directly (no border) */
-            .doc-topic > .doc-content-wrapper > .doc-content > h2:first-child {
                 padding-top: 40px;
-                border-top: none;
+                margin-top: -40px;
             }
 
-            /* Overview bottom margin */
-            .doc-content > p + section,
-            .doc-content > ul + section,
-            .doc-content > ol + section,
-            .doc-content > .aside + section {
-                margin-top: 40px;
+            /* Module pages: first h2 has no border (no declaration preceding it in hero) */
+            .doc-topic > .doc-content-wrapper > .doc-content > .primary-content-container > h2:first-child {
+                border-top: none;
+                padding-top: 0;
+                margin-top: 0;
             }
 
             /* Prevent margin stacking on top-level content sections */
