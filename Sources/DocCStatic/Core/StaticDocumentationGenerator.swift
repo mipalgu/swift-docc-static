@@ -3114,6 +3114,12 @@ enum DocCStylesheet {
             .declaration {
                 margin: var(--spacing-declaration-margin, 0);
             }
+
+            /* Declaration rendered inside the hero (symbol pages) needs top margin
+               matching docc-render's spacing above the declarations-container */
+            .documentation-hero .declaration {
+                margin-top: var(--spacing-hero-declaration-margin-top, 40px);
+            }
             .declaration .source {
                 background: var(--color-code-background, var(--color-fill-secondary));
                 border: var(--spacing-declaration-border, 1px solid var(--color-grid, var(--color-fill-gray)));
