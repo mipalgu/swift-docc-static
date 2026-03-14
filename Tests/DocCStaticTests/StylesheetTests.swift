@@ -1010,12 +1010,15 @@ struct HeadingSpacingTests {
                 "Content heading margin variable must exist for theming")
     }
 
-    @Test("Section heading padding variable exists")
+    @Test("Section heading padding exists via contenttable title")
     func sectionHeadingPaddingVariable() {
         let css = DocCStylesheet.generate(theme: .default)
-        // Section H2s use --spacing-section-heading-padding-top for 40px (2.5rem) padding
-        #expect(css.contains("--spacing-section-heading-padding-top"),
-                "Section heading padding variable must exist for theming")
+        // Section H2s (Topics, Relationships, See Also) are now .contenttable.alt-light .title
+        // with 40px padding-top, matching docc-render ContentTable.vue
+        #expect(css.contains(".contenttable.alt-light .title"),
+                "Section heading selector .contenttable.alt-light .title must exist")
+        #expect(css.contains("padding-top: 40px"),
+                "Section headings must have padding-top: 40px")
     }
 
     @Test("H1-H6 base elements have zero margin (matches swift-docc-render)")
@@ -1028,14 +1031,28 @@ struct HeadingSpacingTests {
                 "Base headings must have margin: 0 per swift-docc-render")
     }
 
-    @Test("Topics section H2 has paddingTop 40px (2.5rem)")
+    @Test("Topics section H2 has paddingTop 40px via contenttable title")
     func topicsSectionH2PaddingTop() {
         let css = DocCStylesheet.generate(theme: .default)
         // Verified via DOM comparison: Topics H2 has paddingTop: 40px
-        #expect(css.contains(".topics > h2"),
-                "Topics H2 selector must exist")
-        #expect(css.contains("--spacing-section-heading-padding-top") || css.contains("2.5rem"),
-                "Topics H2 must have padding-top of 2.5rem (40px)")
+        // Topics/Relationships/See Also use .contenttable.alt-light structure matching docc-render
+        #expect(css.contains(".contenttable.alt-light .title"),
+                "Topics H2 selector .contenttable.alt-light .title must exist")
+        let lines = css.components(separatedBy: "\n")
+        var inBlock = false
+        var hasPaddingTop = false
+        for line in lines {
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            if trimmed.contains(".contenttable.alt-light .title") && trimmed.contains("{") {
+                inBlock = true
+            }
+            if inBlock && trimmed.contains("padding-top:") && trimmed.contains("40px") {
+                hasPaddingTop = true
+                break
+            }
+            if inBlock && trimmed == "}" { break }
+        }
+        #expect(hasPaddingTop, "Topics H2 must have padding-top of 40px")
     }
 
     @Test("Content H3s have margin-top 44.8px (2.8rem)")
@@ -1151,11 +1168,14 @@ struct ThemeCompatibilitySpacingTests {
                 "Content H3 headings must have margin-bottom: 0 (Phase 3: docc-render parity)")
     }
 
-    @Test("Topic group indent variable exists")
+    @Test("Topic group uses contenttable-section padding (matches docc-render)")
     func topicGroupIndent() {
         let css = DocCStylesheet.generate(theme: .default)
-        #expect(css.contains("--spacing-topic-group-indent"),
-                "Topic group indent variable must exist for theming")
+        // Topic groups use .contenttable-section with padding-top from contenttable-section-padding-top variable
+        #expect(css.contains(".contenttable-section"),
+                "Topic group selector .contenttable-section must exist")
+        #expect(css.contains("--spacing-contenttable-section-padding-top"),
+                "Topic group must use contenttable-section-padding-top variable for spacing")
     }
 
     @Test("Code listing uses auto margins and calc max-width to align with content text")
@@ -1642,7 +1662,22 @@ struct DOMComparisonParityTests {
     @Test("Topics H2 padding-top is 40px fixed (not 2.5rem)")
     func topicsH2PaddingTop40pxFixed() {
         let css = DocCStylesheet.generate(theme: .default)
-        #expect(css.contains("--spacing-section-heading-padding-top, 40px"),
+        // Topics/Relationships/See Also H2 are .contenttable.alt-light .title with padding-top: 40px
+        let lines = css.components(separatedBy: "\n")
+        var inBlock = false
+        var hasPaddingTop = false
+        for line in lines {
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            if trimmed.contains(".contenttable.alt-light .title") && trimmed.contains("{") {
+                inBlock = true
+            }
+            if inBlock && trimmed.contains("padding-top:") && trimmed.contains("40px") {
+                hasPaddingTop = true
+                break
+            }
+            if inBlock && trimmed == "}" { break }
+        }
+        #expect(hasPaddingTop,
                 "Topics H2 padding-top must be 40px fixed, not 2.5rem (42.5px at 17px root)")
     }
 
@@ -1750,19 +1785,25 @@ struct DOMComparisonParityTests {
                 "Section H2s must have border-top separator matching docc-render ContentTable.vue")
     }
 
-    @Test("Overview H2 after declaration has border-top and 40px padding-top")
+    @Test("Overview H2 (first child of doc-content) has border-top and 40px padding-top")
     func overviewSeparatorAfterDeclaration() {
         let css = DocCStylesheet.generate(theme: .default)
-        #expect(css.contains(".doc-topic > .declaration + h2"),
-                "Must target Overview H2 adjacent to declaration for separator")
+        // Declaration is now rendered inside the hero, so Overview H2 is the first h2 in .doc-content
+        #expect(css.contains(".doc-content > h2:first-child"),
+                "Must target Overview H2 as first child of doc-content for separator")
+        // The CSS rule is a multi-selector block; search for the properties after the selector
         let lines = css.components(separatedBy: "\n")
         var inRule = false
         var hasBorderTop = false
         var hasPaddingTop = false
         for line in lines {
             let trimmed = line.trimmingCharacters(in: .whitespaces)
-            if trimmed.contains(".declaration + h2") && trimmed.contains("{") {
+            // Enter rule block when we see the selector (may not have { on same line)
+            if trimmed.contains(".doc-content > h2:first-child") {
                 inRule = true
+            }
+            if inRule && trimmed.contains("{") && !trimmed.hasPrefix("//") {
+                // Reset to property-scanning mode once we see the opening brace
             }
             if inRule {
                 if trimmed.contains("border-top:") && trimmed.contains("fill-gray") {
@@ -1781,7 +1822,8 @@ struct DOMComparisonParityTests {
     @Test("Content before section gets 40px margin gap")
     func overviewBottomMarginBeforeSection() {
         let css = DocCStylesheet.generate(theme: .default)
-        #expect(css.contains(".doc-topic > p + section"),
+        // Content is now in .doc-content inside .doc-content-wrapper
+        #expect(css.contains(".doc-content > p + section"),
                 "Must target paragraph adjacent to section for 40px gap")
     }
 
@@ -1858,20 +1900,22 @@ struct DOMComparisonParityTests {
 @Suite("CSS Parity Phase 2 — Remaining Discrepancies")
 struct CSSParityPhase2Tests {
 
-    @Test("Module page Overview H2 after hero has 40px margin-top and NO border (Phase 3 update)")
+    @Test("Module page Overview H2 has 40px padding-top and NO border (Phase 3 update)")
     func modulePageOverviewSpacing() {
         let css = DocCStylesheet.generate(theme: .default)
-        #expect(css.contains(".doc-topic > .documentation-hero + h2"),
-                "Must target Overview H2 adjacent to documentation-hero for module pages")
-        // Phase 3: Changed to margin-top (not padding) and NO border
+        // Declaration is now inside the hero; module pages use .doc-content-wrapper so Overview H2
+        // is the first-child of .doc-content — overridden to have no border for module pages
+        let selector = ".doc-topic > .doc-content-wrapper > .doc-content > h2:first-child"
+        #expect(css.contains(selector),
+                "Must target Overview H2 as first child of doc-content inside doc-content-wrapper")
         let lines = css.components(separatedBy: "\n")
         var foundSelector = false
         var inRule = false
-        var hasMarginTop = false
-        var hasBorderTop = false
+        var hasPaddingTop = false
+        var hasBorderNone = false
         for line in lines {
             let trimmed = line.trimmingCharacters(in: .whitespaces)
-            if trimmed.contains(".documentation-hero + h2") {
+            if trimmed.contains(".doc-content-wrapper > .doc-content > h2:first-child") {
                 foundSelector = true
             }
             if foundSelector && trimmed.contains("{") {
@@ -1879,19 +1923,19 @@ struct CSSParityPhase2Tests {
                 foundSelector = false
             }
             if inRule {
-                if trimmed.contains("margin-top:") && trimmed.contains("40px") {
-                    hasMarginTop = true
+                if trimmed.contains("padding-top:") && trimmed.contains("40px") {
+                    hasPaddingTop = true
                 }
-                if trimmed.contains("border-top:") {
-                    hasBorderTop = true
+                if trimmed.contains("border-top:") && trimmed.contains("none") {
+                    hasBorderNone = true
                 }
                 if trimmed == "}" { break }
             }
         }
-        #expect(hasMarginTop,
-                "Module page Overview H2 must have 40px margin-top (Phase 3: matches docc-render)")
-        #expect(!hasBorderTop,
-                "Module page Overview H2 must NOT have border-top (Phase 3: only .declaration + h2 has border)")
+        #expect(hasPaddingTop,
+                "Module page Overview H2 must have 40px padding-top (matches docc-render)")
+        #expect(hasBorderNone,
+                "Module page Overview H2 must have border-top: none (only symbol pages get border)")
     }
 
     @Test("Disclosure chevron has margin-left: auto for flush-right alignment")
@@ -2304,49 +2348,51 @@ struct DOMComparisonPhase3Tests {
                 "Hero H1 must have margin-bottom: 12px to create gap between title and abstract")
     }
 
-    // Item 2: Overview H2 has NO border after hero
-    @Test("Overview H2 after hero has no border-top")
+    // Item 2: Module page Overview H2 has NO border (symbol pages DO have border)
+    @Test("Module page Overview H2 has no border-top")
     func overviewH2NoBorder() {
         let css = DocCStylesheet.generate(theme: .default)
+        // Module pages override .doc-content > h2:first-child to remove border
+        // (symbol pages have border via .doc-content > h2:first-child rule)
         let lines = css.components(separatedBy: "\n")
         var foundRule = false
-        var hasBorderTop = false
+        var hasBorderNone = false
         for line in lines {
             let trimmed = line.trimmingCharacters(in: .whitespaces)
-            if trimmed.contains(".documentation-hero + h2") {
+            if trimmed.contains(".doc-content-wrapper > .doc-content > h2:first-child") {
                 foundRule = true
             }
-            if foundRule && trimmed.contains("border-top:") {
-                hasBorderTop = true
+            if foundRule && trimmed.contains("border-top:") && trimmed.contains("none") {
+                hasBorderNone = true
                 break
             }
             if foundRule && trimmed == "}" { break }
         }
-        #expect(foundRule, "Must have .documentation-hero + h2 rule")
-        #expect(!hasBorderTop,
-                "First H2 after hero must NOT have border-top (40px gap comes from margin-top)")
+        #expect(foundRule, "Must have module-page h2:first-child override rule")
+        #expect(hasBorderNone,
+                "Module page first H2 must have border-top: none (only symbol pages get border)")
     }
 
-    // Item 3: Overview H2 uses margin-top not padding-top
-    @Test("Overview H2 after hero uses margin-top 40px")
+    // Item 3: Overview H2 uses padding-top (not margin-top) for consistent spacing
+    @Test("Overview H2 (first child of doc-content) uses padding-top 40px")
     func overviewH2MarginTop() {
         let css = DocCStylesheet.generate(theme: .default)
         let lines = css.components(separatedBy: "\n")
         var inBlock = false
-        var hasMarginTop = false
+        var hasPaddingTop = false
         for line in lines {
             let trimmed = line.trimmingCharacters(in: .whitespaces)
-            if trimmed.contains(".documentation-hero + h2") {
+            if trimmed.contains(".doc-content > h2:first-child") && trimmed.contains("{") {
                 inBlock = true
             }
-            if inBlock && trimmed.contains("margin-top:") && trimmed.contains("40px") {
-                hasMarginTop = true
+            if inBlock && trimmed.contains("padding-top:") && trimmed.contains("40px") {
+                hasPaddingTop = true
                 break
             }
             if inBlock && trimmed == "}" { break }
         }
-        #expect(hasMarginTop,
-                "Overview H2 after hero must use margin-top: 40px (not padding-top)")
+        #expect(hasPaddingTop,
+                "Overview H2 (first-child of doc-content) must use padding-top: 40px")
     }
 
     // Item 4: Content H3 margin-top is 44.8px (not rem-based)

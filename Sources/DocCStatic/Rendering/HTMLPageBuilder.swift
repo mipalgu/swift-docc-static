@@ -100,7 +100,7 @@ public extension HTMLPageBuilder {
         // Add main content area
         html += """
 
-                <main class="doc-topic">
+                <main class="doc-topic" id="app-top">
         """
 
         // Add main content (breadcrumbs are rendered inside the hero section)
@@ -702,15 +702,23 @@ private extension HTMLPageBuilder {
         let title = extractTitle(from: renderNode)
         let roleLabel = roleLabel(for: renderNode)
 
+        // Modules and articles get the enhanced (coloured) hero background;
+        // all other symbol pages get the --disabled hero (no background fill),
+        // matching swift-docc-render's DocumentationHero.vue `enhanceBackground` logic.
+        let isModule = renderNode.kind == .symbol && renderNode.metadata.symbolKind == "module"
+        let isSymbol = renderNode.metadata.symbolKind != nil
+        let enhanceBackground = !isSymbol || isModule
+        let heroClass = enhanceBackground
+            ? "documentation-hero"
+            : "documentation-hero documentation-hero--disabled"
+
         html += """
 
-                    <div class="documentation-hero">
+                    <div class="\(heroClass)">
         """
 
         // Add technology icon for modules/frameworks
-        if renderNode.kind == .symbol,
-           let symbolKind = renderNode.metadata.symbolKind,
-           symbolKind == "module" {
+        if isModule {
             html += """
 
                         <div class="icon">
@@ -745,6 +753,12 @@ private extension HTMLPageBuilder {
             """
         }
 
+        // Declaration inside the hero — matches swift-docc-render's DocumentationHero.vue layout
+        // where the declarations-container lives inside documentation-hero__content.
+        if renderNode.kind == .symbol {
+            html += buildDeclaration(from: renderNode, references: references, depth: depth)
+        }
+
         // Add decorative hero image based on content type
         let decorationSVG = heroDecorationSVG(for: renderNode.kind)
         if let svg = decorationSVG {
@@ -764,13 +778,16 @@ private extension HTMLPageBuilder {
             """
         }
 
-        // Declaration (for symbols)
-        if renderNode.kind == .symbol {
-            html += buildDeclaration(from: renderNode, references: references, depth: depth)
-        }
+        // Flex wrapper: doc-content (main column) + OnThisPageStickyContainer (right column)
+        html += """
 
-        // Primary content sections (used by symbols, articles)
+                    <div class="doc-content-wrapper">
+                        <div class="doc-content">
+        """
+
+        // Primary content sections — skip declarations (already rendered inside the hero)
         for section in renderNode.primaryContentSections {
+            if section is DeclarationsRenderSection { continue }
             html += buildSection(section, references: references, depth: depth)
         }
 
@@ -779,12 +796,13 @@ private extension HTMLPageBuilder {
             html += buildSection(section, references: references, depth: depth)
         }
 
-        // Topic sections (children)
+        // Topic sections — contenttable structure matching swift-docc-render ContentTable.vue
         if !renderNode.topicSections.isEmpty {
             html += """
 
-                    <section class="topics">
-                        <h2>Topics</h2>
+                        <section class="contenttable alt-light">
+                            <div class="container">
+                                <h2 id="topics" class="title">Topics</h2>
             """
 
             for taskGroup in renderNode.topicSections {
@@ -793,16 +811,18 @@ private extension HTMLPageBuilder {
 
             html += """
 
-                    </section>
+                            </div>
+                        </section>
             """
         }
 
-        // Relationships (for symbols)
+        // Relationships (for symbols) — contenttable structure
         if !renderNode.relationshipSections.isEmpty {
             html += """
 
-                    <section class="relationships">
-                        <h2>Relationships</h2>
+                        <section class="contenttable alt-light">
+                            <div class="container">
+                                <h2 id="relationships" class="title">Relationships</h2>
             """
 
             for relationship in renderNode.relationshipSections {
@@ -811,16 +831,18 @@ private extension HTMLPageBuilder {
 
             html += """
 
-                    </section>
+                            </div>
+                        </section>
             """
         }
 
-        // See Also
+        // See Also — contenttable structure
         if !renderNode.seeAlsoSections.isEmpty {
             html += """
 
-                    <section class="see-also">
-                        <h2>See Also</h2>
+                        <section class="contenttable alt-light">
+                            <div class="container">
+                                <h2 id="see-also" class="title">See Also</h2>
             """
 
             for seeAlso in renderNode.seeAlsoSections {
@@ -829,9 +851,103 @@ private extension HTMLPageBuilder {
 
             html += """
 
-                    </section>
+                            </div>
+                        </section>
             """
         }
+
+        // Close doc-content
+        html += """
+
+                        </div>
+        """
+
+        // On-this-page navigation sidebar (right column, sticky)
+        html += buildOnThisPageNav(for: renderNode, title: title)
+
+        // Close doc-content-wrapper
+        html += """
+
+                    </div>
+        """
+
+        return html
+    }
+
+    /// Builds the sticky on-this-page navigation sidebar shown to the right of the main content.
+    ///
+    /// Generates links to major sections present on the current page, matching
+    /// swift-docc-render's `OnThisPageStickyContainer` / `OnThisPageNav` components.
+    /// The first item (page title) is pre-marked active; active tracking during scroll
+    /// would require JavaScript and is omitted in this pure-HTML implementation.
+    ///
+    /// - Parameters:
+    ///   - renderNode: The render node for the current page.
+    ///   - title: The page title (used as the first nav item label).
+    /// - Returns: HTML string for the sticky container, or an empty string if there
+    ///   are no sections to navigate to.
+    func buildOnThisPageNav(for renderNode: RenderNode, title: String) -> String {
+        // Collect (anchor, label) pairs for sections that are present on the page
+        var items: [(anchor: String, label: String)] = []
+
+        // Always include the page title as the first item (links to top)
+        items.append(("app-top", title))
+
+        // Check primary content sections for mentions and content headings
+        for section in renderNode.primaryContentSections {
+            if let mentionsSection = section as? MentionsRenderSection,
+               !mentionsSection.mentions.isEmpty {
+                items.append(("mentions", "Mentioned in"))
+            } else if let contentSection = section as? ContentRenderSection {
+                // Add anchor for the first H2 heading found in this content section
+                for block in contentSection.content {
+                    if case .heading(let heading) = block, heading.level == 2 {
+                        let anchor = heading.anchor ?? slugify(heading.text)
+                        items.append((anchor, heading.text))
+                        break
+                    }
+                }
+            }
+        }
+
+        if !renderNode.topicSections.isEmpty {
+            items.append(("topics", "Topics"))
+        }
+        if !renderNode.relationshipSections.isEmpty {
+            items.append(("relationships", "Relationships"))
+        }
+        if !renderNode.seeAlsoSections.isEmpty {
+            items.append(("see-also", "See Also"))
+        }
+
+        // Only render the sidebar when there are navigation targets beyond the title
+        guard items.count > 1 else { return "" }
+
+        var html = """
+
+                        <div class="OnThisPageStickyContainer">
+                            <div class="OnThisPageNav">
+                                <ul class="items">
+        """
+
+        for (index, item) in items.enumerated() {
+            let activeClass = index == 0 ? " active" : ""
+            html += """
+
+                                    <li class="parent-item\(activeClass)">
+                                        <a href="#\(escapeHTML(item.anchor))" class="base-link">
+                                            <span>\(escapeHTML(item.label))</span>
+                                        </a>
+                                    </li>
+            """
+        }
+
+        html += """
+
+                                </ul>
+                            </div>
+                        </div>
+        """
 
         return html
     }
@@ -1720,8 +1836,8 @@ private extension HTMLPageBuilder {
 
         var html = """
 
-                <section class="mentioned-in">
-                    <h2 id="mentioned-in"><a href="#mentioned-in">Mentioned In</a></h2>
+                <section class="mentions">
+                    <h2 id="mentions"><a href="#mentions">Mentioned in</a></h2>
                     <div class="symbol-list">
         """
 

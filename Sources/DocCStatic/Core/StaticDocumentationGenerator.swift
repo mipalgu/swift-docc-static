@@ -2748,6 +2748,17 @@ enum DocCStylesheet {
                 height: 100%;
             }
 
+            /* Symbol pages (non-module) get no background fill — matches docc-render
+               DocumentationHero.vue `documentation-hero--disabled` logic. */
+            .documentation-hero--disabled {
+                background: none;
+            }
+
+            .documentation-hero--disabled::before,
+            .documentation-hero--disabled::after {
+                content: none;
+            }
+
             .documentation-hero__content {
                 padding-top: var(--spacing-hero-padding-top, 40px);
                 padding-bottom: var(--spacing-hero-padding-bottom, 40px);
@@ -2945,32 +2956,107 @@ enum DocCStylesheet {
                 margin-top: 0;
             }
 
-            /* Overview separator — matches docc-render .primary-content.with-border::before
-               (border immediately after declaration, then 40px padding to heading text) */
-            .doc-topic > .declaration + h2 {
+            /* Main content layout: doc-content (flex: 1) + OnThisPageStickyContainer (right) */
+            .doc-content-wrapper {
+                display: flex;
+                flex-direction: row;
+                align-items: flex-start;
+            }
+
+            .doc-content {
+                flex: 1 1 auto;
+                min-width: 0;
+                overflow: hidden;
+            }
+
+            /* On-this-page sticky navigation sidebar — matches docc-render OnThisPageStickyContainer */
+            .OnThisPageStickyContainer {
+                position: sticky;
+                top: 65px;
+                align-self: flex-start;
+                flex: 0 0 auto;
+                width: 192px;
+                padding-inline-end: 22px;
+                box-sizing: border-box;
+                overflow: auto;
+                max-height: calc(100vh - 65px);
+                margin-top: 2.353rem;
+            }
+
+            .OnThisPageNav ul.items {
+                list-style: none;
+                margin: 0;
+                padding: 0;
+            }
+
+            .OnThisPageNav .base-link {
+                color: var(--color-figure-gray-secondary);
+                font-size: 14px;
+                line-height: 18px;
+                display: inline-block;
+                margin: 5px 0;
+                text-decoration: none;
+            }
+
+            .OnThisPageNav .parent-item .base-link {
+                font-weight: 600;
+            }
+
+            .OnThisPageNav .active .base-link {
+                color: var(--color-figure-gray);
+            }
+
+            @media only screen and (max-width: 735px) {
+                .OnThisPageStickyContainer {
+                    display: none;
+                }
+            }
+
+            /* contenttable sections (Topics, Relationships, See Also) — matches docc-render ContentTable.vue */
+            .contenttable.alt-light .container {
+                max-width: var(--spacing-content-max-width, 980px);
+                margin-left: auto;
+                margin-right: auto;
+                padding-left: var(--spacing-content-padding-horizontal, 80px);
+                padding-right: var(--spacing-content-padding-horizontal, 80px);
+                padding-bottom: 40px;
+                box-sizing: border-box;
+            }
+
+            .contenttable.alt-light .title {
+                font-size: 32px;
+                line-height: 36px;
+                padding-top: 40px;
+                border-top: 1px solid var(--color-fill-gray);
+                margin-top: 0;
+                margin-bottom: 0;
+            }
+
+            /* Overview separator for doc-content: first h2 after declaration (now inside hero) */
+            .doc-content > h2:first-child,
+            .doc-content > .mentions + h2,
+            .doc-content > .mentions + p + h2 {
                 padding-top: 40px;
                 border-top: 1px solid var(--color-fill-gray);
             }
 
-            /* Module pages have no .declaration, so Overview H2 follows the hero directly.
-               Uses margin-top (not padding) and NO border (unlike .declaration + h2). */
-            .doc-topic > .documentation-hero + h2,
-            .doc-topic > .documentation-hero + p + h2 {
-                margin-top: var(--spacing-overview-margin-top, 40px);
+            /* Module pages: Overview H2 follows the hero directly (no border) */
+            .doc-topic > .doc-content-wrapper > .doc-content > h2:first-child {
+                padding-top: 40px;
+                border-top: none;
             }
 
-            /* Overview bottom margin — matches docc-render .primary-content .content marginBottom.
-               Provides 40px gap between overview content and the next section. */
-            .doc-topic > p + section,
-            .doc-topic > ul + section,
-            .doc-topic > ol + section,
-            .doc-topic > .aside + section {
+            /* Overview bottom margin */
+            .doc-content > p + section,
+            .doc-content > ul + section,
+            .doc-content > ol + section,
+            .doc-content > .aside + section {
                 margin-top: 40px;
             }
 
-            /* Prevent adjacent-sibling rules from adding margin to top-level sections */
-            .doc-topic > section,
-            .doc-topic > .declaration {
+            /* Prevent margin stacking on top-level content sections */
+            .doc-content > section,
+            .doc-topic > section {
                 margin-top: 0;
             }
 
@@ -3002,26 +3088,14 @@ enum DocCStylesheet {
                 margin-top: 0;
             }
 
-            .topics,
-            .relationships,
-            .see-also,
-            .mentioned-in,
             .discussion,
             .parameters {
                 padding-bottom: 1rem;
             }
 
-            /* Section headings - matches swift-docc-render ContentTable.vue (border + 40px) */
-            .topics > h2,
-            .relationships > h2,
-            .see-also > h2 {
-                padding-top: var(--spacing-section-heading-padding-top, 40px);
-                border-top: 1px solid var(--color-fill-gray);
-            }
-
-            /* Topic groups within Topics section - optional indentation for visual hierarchy */
-            .topics .contenttable-section {
-                padding-left: var(--spacing-topic-group-indent, 0);
+            /* Mentions section (matched to vue.js .mentions class) */
+            .mentions {
+                padding-bottom: 1rem;
             }
 
             /* Legacy single-column layout (for index page) */

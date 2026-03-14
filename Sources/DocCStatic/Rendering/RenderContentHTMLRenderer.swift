@@ -506,7 +506,7 @@ private extension RenderContentHTMLRenderer {
 // MARK: - Utilities
 
 /// Converts a string to a URL-friendly slug.
-private func slugify(_ string: String) -> String {
+func slugify(_ string: String) -> String {
     string
         .lowercased()
         .replacingOccurrences(of: " ", with: "-")
