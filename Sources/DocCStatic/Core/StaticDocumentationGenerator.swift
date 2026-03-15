@@ -1784,7 +1784,9 @@ enum DocCStylesheet {
                 --color-badge-text: #6e6e73;
                 --color-badge-border: #d2d2d7;
 
-                /* Aside colours */
+                /* Aside colours — matching docc-render computed values */
+                --color-aside-tip-background: #f5f5f5;
+                --color-aside-tip-border: #666666;
                 --color-aside-note-background: #e3f2fd;
                 --color-aside-note-border: #2196f3;
                 --color-aside-warning-background: #fff3e0;
@@ -3171,26 +3173,31 @@ enum DocCStylesheet {
                 line-height: 1.4;
             }
 
-            /* Aside boxes */
+            /* Aside boxes — border-radius, padding, and border-width match docc-render */
             .aside {
                 padding: 1rem;
-                border-radius: 8px;
+                border-radius: 4px;
                 margin: 1rem 1.5rem;
+            }
+
+            .aside.tip {
+                background: var(--color-aside-tip-background);
+                border-left: 6px solid var(--color-aside-tip-border);
             }
 
             .aside.note {
                 background: var(--color-aside-note-background);
-                border-left: 3px solid var(--color-aside-note-border);
+                border-left: 6px solid var(--color-aside-note-border);
             }
 
             .aside.warning {
                 background: var(--color-aside-warning-background);
-                border-left: 3px solid var(--color-aside-warning-border);
+                border-left: 6px solid var(--color-aside-warning-border);
             }
 
             .aside.important {
                 background: var(--color-aside-important-background);
-                border-left: 3px solid var(--color-aside-important-border);
+                border-left: 6px solid var(--color-aside-important-border);
             }
 
             .aside .label {
@@ -4709,6 +4716,8 @@ enum DocCStylesheet {
                 --color-grid: #424245;
 
                 /* Aside colours - dark mode */
+                --color-aside-tip-background: rgba(102, 102, 102, 0.2);
+                --color-aside-tip-border: #888888;
                 --color-aside-note-background: rgba(59, 130, 246, 0.15);
                 --color-aside-note-border: #3b82f6;
                 --color-aside-warning-background: rgba(245, 158, 11, 0.15);
