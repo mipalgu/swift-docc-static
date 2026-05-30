@@ -346,10 +346,13 @@ public struct StaticDocumentationGenerator: Sendable {
         let isVerbose = configuration.isVerbose
         let result = try await run(
             .name("swift"),
-            arguments: Arguments(arguments)
-        ) { execution, standardOutput in
+            arguments: Arguments(arguments),
+            input: .none,
+            output: .sequence,
+            error: .discarded
+        ) { execution in
             // Stream stdout lines as they arrive
-            for try await line in standardOutput.lines(encoding: UTF8.self) {
+            for try await line in execution.standardOutput.strings() {
                 if isVerbose {
                     print(line)
                 }
@@ -431,10 +434,13 @@ public struct StaticDocumentationGenerator: Sendable {
         // docc convert only outputs warnings/errors, so always show them to stderr
         let result = try await run(
             .path(FilePath(doccPath)),
-            arguments: Arguments(arguments)
-        ) { execution, standardOutput in
+            arguments: Arguments(arguments),
+            input: .none,
+            output: .sequence,
+            error: .discarded
+        ) { execution in
             // Stream stdout bytes directly to stderr - docc only outputs diagnostics
-            for try await chunk in standardOutput {
+            for try await chunk in execution.standardOutput {
                 FileHandle.standardError.write(Data(buffer: chunk))
             }
         }
