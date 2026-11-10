@@ -4,11 +4,12 @@
 // Usage:
 //   node measure.mjs --site <directory> --side static|main|vue --out <file.json>
 //                    [--pages id,id] [--viewports 1440x900,390x844] [--schemes light,dark]
+//                    (filters applied to the variants listed in harness.json)
 //                    [--probe]
 //
 // The site is served over HTTP from a free local port for the duration of the run.
-// Every page in pages.json is loaded once per viewport and colour scheme in a fresh
-// browser context, the in-page function in measure.js is evaluated, and the results are
+// Every page in pages.json is loaded once per variant (viewport and colour scheme) in
+// a fresh browser context, the in-page function in measure.js is evaluated, and the results are
 // written to one JSON file.  With --probe, a table of match counts per role and page is
 // printed instead, which helps when editing roles.json.
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';

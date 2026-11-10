@@ -26,7 +26,7 @@ if (!args.site) {
 }
 const config = JSON.parse(readFileSync(join(here, 'harness.json'), 'utf8'));
 const pages = JSON.parse(readFileSync(join(here, 'pages.json'), 'utf8')).filter((page) => page.static);
-const [width, height] = config.viewports[0].split('x').map(Number);
+const [width, height] = config.variants[0].split('/')[0].split('x').map(Number);
 const titleSelector = 'main h1, .tutorial-hero h1, .overview-hero h1, .index-header h1';
 
 const server = await serve(resolve(args.site));

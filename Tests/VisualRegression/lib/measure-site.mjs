@@ -14,7 +14,8 @@ const read = (name) => readFileSync(join(root, name), 'utf8');
  * @param {string} siteDirectory the generated site
  * @param {'static'|'main'|'vue'} side which selector of each role and page path to use
  * @param {{pages?: string, viewports?: string, schemes?: string}} options comma separated filters
- * @returns {Promise<object>} raw measurements keyed by page id and `WxH/scheme`
+ *   applied to the variants of harness.json
+ * @returns {Promise<object>} raw measurements keyed by page id and variant (`WxH/scheme`)
  */
 export async function measureSite(siteDirectory, side, options = {}) {
   const config = JSON.parse(read('harness.json'));
@@ -22,13 +23,17 @@ export async function measureSite(siteDirectory, side, options = {}) {
   const measureSource = read('measure.js');
   const wanted = options.pages ? new Set(options.pages.split(',')) : null;
   const pages = JSON.parse(read('pages.json')).filter((page) => page[side] && (!wanted || wanted.has(page.id)));
-  const viewports = (options.viewports || config.viewports.join(',')).split(',');
-  const schemes = (options.schemes || config.schemes.join(',')).split(',');
+  const variants = config.variants.filter((variant) => {
+    const [viewport, scheme] = variant.split('/');
+    return (!options.viewports || options.viewports.split(',').includes(viewport))
+      && (!options.schemes || options.schemes.split(',').includes(scheme));
+  });
 
   const server = await serve(resolve(siteDirectory));
   const browser = await launchBrowser();
   const results = {};
-  const measureVariant = async (viewport, scheme) => {
+  const measureVariant = async (variant) => {
+    const [viewport, scheme] = variant.split('/');
     const [width, height] = viewport.split('x').map(Number);
     const context = await browser.newContext({
       viewport: { width, height }, colorScheme: scheme, deviceScaleFactor: 1, reducedMotion: 'no-preference',
@@ -48,7 +53,7 @@ export async function measureSite(siteDirectory, side, options = {}) {
         const measurement = await tab.evaluate(
           `(${measureSource})(${JSON.stringify(pageRoles)}, ${JSON.stringify(side)}, ${JSON.stringify(config.properties)})`
         );
-        (results[page.id] ??= {})[`${viewport}/${scheme}`] = measurement;
+        (results[page.id] ??= {})[variant] = measurement;
         await tab.close();
       }
     } finally {
@@ -57,12 +62,10 @@ export async function measureSite(siteDirectory, side, options = {}) {
   };
   try {
     // Variants run concurrently, each in its own browser context
-    await Promise.all(viewports.flatMap((viewport) => schemes.map((scheme) => measureVariant(viewport, scheme))));
+    await Promise.all(variants.map(measureVariant));
     // Keep the variant order of the configuration, whatever order they finished in
-    for (const [pageId, variants] of Object.entries(results)) {
-      const ordered = {};
-      for (const viewport of viewports) for (const scheme of schemes) ordered[`${viewport}/${scheme}`] = variants[`${viewport}/${scheme}`];
-      results[pageId] = ordered;
+    for (const [pageId, measured] of Object.entries(results)) {
+      results[pageId] = Object.fromEntries(variants.map((variant) => [variant, measured[variant]]));
     }
   } finally {
     await browser.close();

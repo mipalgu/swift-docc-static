@@ -112,6 +112,14 @@
           "topicGroupTitle": {"style":{"fontSize":"21px","lineHeight":"25px","color":"rgb(255, 255, 255)","textDecorationColor":"rgb(255, 255, 255)","borderTopColor":"rgb(255, 255, 255)","borderRightColor":"rgb(255, 255, 255)","borderBottomColor":"rgb(255, 255, 255)","borderLeftColor":"rgb(255, 255, 255)","paddingBottom":"8.5px","marginBottom":"40.001px"}},
           "topicsSectionTitle": {"style":{"fontSize":"24px","lineHeight":"28px","color":"rgb(255, 255, 255)","textDecorationColor":"rgb(255, 255, 255)","borderTopColor":"rgb(87, 87, 87)","borderRightColor":"rgb(255, 255, 255)","borderBottomColor":"rgb(255, 255, 255)","borderLeftColor":"rgb(255, 255, 255)"}}
         }
+      },
+      "1920x1080/light": {
+        "document": {"htmlFontSize":"17px","scrollWidth":1920},
+        "roles": {
+          "landingHeader": {"style":{"paddingRight":"192px"}},
+          "main": {"box":{"x":544,"width":1375}},
+          "onThisPage": {"visible":true,"style":{"display":"block"}}
+        }
       }
     },
     "module": {
@@ -327,6 +335,20 @@
           "topicLink": {"style":{"color":"rgb(0, 153, 255)","textDecorationColor":"rgb(0, 153, 255)","borderTopColor":"rgb(0, 153, 255)","borderRightColor":"rgb(0, 153, 255)","borderBottomColor":"rgb(0, 153, 255)","borderLeftColor":"rgb(0, 153, 255)"}},
           "topicName": {"style":{"color":"rgb(0, 153, 255)","textDecorationColor":"rgb(0, 153, 255)","borderTopColor":"rgb(0, 153, 255)","borderRightColor":"rgb(0, 153, 255)","borderBottomColor":"rgb(0, 153, 255)","borderLeftColor":"rgb(0, 153, 255)"}},
           "topicsSectionTitle": {"style":{"fontSize":"24px","lineHeight":"28px","color":"rgb(255, 255, 255)","textDecorationColor":"rgb(255, 255, 255)","borderTopColor":"rgb(87, 87, 87)","borderRightColor":"rgb(255, 255, 255)","borderBottomColor":"rgb(255, 255, 255)","borderLeftColor":"rgb(255, 255, 255)"}}
+        }
+      },
+      "1920x1080/light": {
+        "document": {"htmlFontSize":"17px","scrollWidth":1920},
+        "roles": {
+          "contentColumn": {"style":{"marginRight":"0px","marginLeft":"0px","maxWidth":"1080px"},"box":{"x":595.5,"width":1080}},
+          "headerBar": {"box":{"width":1920}},
+          "hero": {"style":{"paddingRight":"192px"},"box":{"x":544,"width":1375}},
+          "heroContent": {"style":{"marginRight":"51.5px","marginLeft":"51.5px","maxWidth":"1080px"},"box":{"x":595.5,"width":1080}},
+          "layout": {"style":{"borderRightWidth":"1px","borderRightStyle":"solid","borderRightColor":"rgb(204, 204, 204)","borderLeftWidth":"1px","borderLeftStyle":"solid","borderLeftColor":"rgb(204, 204, 204)"},"box":{"width":1920}},
+          "main": {"box":{"x":544,"width":1375}},
+          "onThisPage": {"visible":true,"style":{"display":"block"}},
+          "onThisPageLink": {"visible":true},
+          "sidebar": {"box":{"x":1,"width":543}}
         }
       }
     },
@@ -571,6 +593,28 @@
           "topicName": {"style":{"color":"rgb(0, 153, 255)","textDecorationColor":"rgb(0, 153, 255)","borderTopColor":"rgb(0, 153, 255)","borderRightColor":"rgb(0, 153, 255)","borderBottomColor":"rgb(0, 153, 255)","borderLeftColor":"rgb(0, 153, 255)"}},
           "topicsSectionTitle": {"style":{"fontSize":"24px","lineHeight":"28px","color":"rgb(255, 255, 255)","textDecorationColor":"rgb(255, 255, 255)","borderTopColor":"rgb(87, 87, 87)","borderRightColor":"rgb(255, 255, 255)","borderBottomColor":"rgb(255, 255, 255)","borderLeftColor":"rgb(255, 255, 255)"}}
         }
+      },
+      "1920x1080/light": {
+        "document": {"htmlFontSize":"17px","scrollWidth":1920},
+        "roles": {
+          "contentColumn": {"style":{"marginRight":"0px","marginLeft":"0px","maxWidth":"1080px"},"box":{"x":595.5,"width":1080}},
+          "declaration": {"box":{"x":675.5,"width":920}},
+          "headerBar": {"box":{"width":1920}},
+          "hero": {"style":{"paddingRight":"192px"},"box":{"x":544,"width":1375}},
+          "heroContent": {"style":{"marginRight":"51.5px","marginLeft":"51.5px","maxWidth":"1080px"},"box":{"x":595.5,"width":1080}},
+          "layout": {"style":{"borderRightWidth":"1px","borderRightStyle":"solid","borderRightColor":"rgb(204, 204, 204)","borderLeftWidth":"1px","borderLeftStyle":"solid","borderLeftColor":"rgb(204, 204, 204)"},"box":{"width":1920}},
+          "main": {"box":{"x":544,"width":1375}},
+          "onThisPage": {"visible":true,"style":{"display":"block"}},
+          "onThisPageLink": {"visible":true},
+          "sidebar": {"box":{"x":1,"width":543}},
+          "sidebarArticleIcon": {"found":20},
+          "sidebarChevron": {"found":10},
+          "sidebarGroupTitle": {"found":13},
+          "sidebarRowDepth0": {"found":8},
+          "sidebarRowDepth0Link": {"found":8},
+          "sidebarRowDepth1": {"box":{"x":1,"width":542}},
+          "sidebarSymbolBadge": {"found":20}
+        }
       }
     },
     "class": {
@@ -803,6 +847,22 @@
           "topicLink": {"style":{"color":"rgb(0, 153, 255)","textDecorationColor":"rgb(0, 153, 255)","borderTopColor":"rgb(0, 153, 255)","borderRightColor":"rgb(0, 153, 255)","borderBottomColor":"rgb(0, 153, 255)","borderLeftColor":"rgb(0, 153, 255)"}},
           "topicName": {"style":{"color":"rgb(0, 153, 255)","textDecorationColor":"rgb(0, 153, 255)","borderTopColor":"rgb(0, 153, 255)","borderRightColor":"rgb(0, 153, 255)","borderBottomColor":"rgb(0, 153, 255)","borderLeftColor":"rgb(0, 153, 255)"}},
           "topicsSectionTitle": {"style":{"fontSize":"24px","lineHeight":"28px","color":"rgb(255, 255, 255)","textDecorationColor":"rgb(255, 255, 255)","borderTopColor":"rgb(87, 87, 87)","borderRightColor":"rgb(255, 255, 255)","borderBottomColor":"rgb(255, 255, 255)","borderLeftColor":"rgb(255, 255, 255)"}}
+        }
+      },
+      "1920x1080/light": {
+        "document": {"htmlFontSize":"17px","scrollWidth":1920},
+        "roles": {
+          "contentColumn": {"style":{"marginRight":"0px","marginLeft":"0px","maxWidth":"1080px"},"box":{"x":595.5,"width":1080}},
+          "declaration": {"box":{"x":675.5,"width":920}},
+          "headerBar": {"box":{"width":1920}},
+          "hero": {"style":{"paddingRight":"192px"},"box":{"x":544,"width":1375}},
+          "heroContent": {"style":{"marginRight":"51.5px","marginLeft":"51.5px","maxWidth":"1080px"},"box":{"x":595.5,"width":1080}},
+          "layout": {"style":{"borderRightWidth":"1px","borderRightStyle":"solid","borderRightColor":"rgb(204, 204, 204)","borderLeftWidth":"1px","borderLeftStyle":"solid","borderLeftColor":"rgb(204, 204, 204)"},"box":{"width":1920}},
+          "main": {"box":{"x":544,"width":1375}},
+          "onThisPage": {"visible":true,"style":{"display":"block"}},
+          "onThisPageLink": {"visible":true},
+          "sidebar": {"box":{"x":1,"width":543}},
+          "sidebarRowDepth1": {"box":{"x":1,"width":542}}
         }
       }
     },
@@ -1041,6 +1101,22 @@
           "topicLink": {"style":{"color":"rgb(0, 153, 255)","textDecorationColor":"rgb(0, 153, 255)","borderTopColor":"rgb(0, 153, 255)","borderRightColor":"rgb(0, 153, 255)","borderBottomColor":"rgb(0, 153, 255)","borderLeftColor":"rgb(0, 153, 255)"}},
           "topicName": {"style":{"color":"rgb(0, 153, 255)","textDecorationColor":"rgb(0, 153, 255)","borderTopColor":"rgb(0, 153, 255)","borderRightColor":"rgb(0, 153, 255)","borderBottomColor":"rgb(0, 153, 255)","borderLeftColor":"rgb(0, 153, 255)"}},
           "topicsSectionTitle": {"style":{"fontSize":"24px","lineHeight":"28px","color":"rgb(255, 255, 255)","textDecorationColor":"rgb(255, 255, 255)","borderTopColor":"rgb(87, 87, 87)","borderRightColor":"rgb(255, 255, 255)","borderBottomColor":"rgb(255, 255, 255)","borderLeftColor":"rgb(255, 255, 255)"}}
+        }
+      },
+      "1920x1080/light": {
+        "document": {"htmlFontSize":"17px","scrollWidth":1920},
+        "roles": {
+          "contentColumn": {"style":{"marginRight":"0px","marginLeft":"0px","maxWidth":"1080px"},"box":{"x":595.5,"width":1080}},
+          "declaration": {"box":{"x":675.5,"width":920}},
+          "headerBar": {"box":{"width":1920}},
+          "hero": {"style":{"paddingRight":"192px"},"box":{"x":544,"width":1375}},
+          "heroContent": {"style":{"marginRight":"51.5px","marginLeft":"51.5px","maxWidth":"1080px"},"box":{"x":595.5,"width":1080}},
+          "layout": {"style":{"borderRightWidth":"1px","borderRightStyle":"solid","borderRightColor":"rgb(204, 204, 204)","borderLeftWidth":"1px","borderLeftStyle":"solid","borderLeftColor":"rgb(204, 204, 204)"},"box":{"width":1920}},
+          "main": {"box":{"x":544,"width":1375}},
+          "onThisPage": {"visible":true,"style":{"display":"block"}},
+          "onThisPageLink": {"visible":true},
+          "sidebar": {"box":{"x":1,"width":543}},
+          "sidebarRowDepth1": {"box":{"x":1,"width":542}}
         }
       }
     },
@@ -1291,6 +1367,22 @@
           "topicName": {"style":{"color":"rgb(0, 153, 255)","textDecorationColor":"rgb(0, 153, 255)","borderTopColor":"rgb(0, 153, 255)","borderRightColor":"rgb(0, 153, 255)","borderBottomColor":"rgb(0, 153, 255)","borderLeftColor":"rgb(0, 153, 255)"}},
           "topicsSectionTitle": {"style":{"fontSize":"24px","lineHeight":"28px","color":"rgb(255, 255, 255)","textDecorationColor":"rgb(255, 255, 255)","borderTopColor":"rgb(87, 87, 87)","borderRightColor":"rgb(255, 255, 255)","borderBottomColor":"rgb(255, 255, 255)","borderLeftColor":"rgb(255, 255, 255)"}}
         }
+      },
+      "1920x1080/light": {
+        "document": {"htmlFontSize":"17px","scrollWidth":1920},
+        "roles": {
+          "contentColumn": {"style":{"marginRight":"0px","marginLeft":"0px","maxWidth":"1080px"},"box":{"x":595.5,"width":1080}},
+          "declaration": {"box":{"x":675.5,"width":920}},
+          "headerBar": {"box":{"width":1920}},
+          "hero": {"style":{"paddingRight":"192px"},"box":{"x":544,"width":1375}},
+          "heroContent": {"style":{"marginRight":"51.5px","marginLeft":"51.5px","maxWidth":"1080px"},"box":{"x":595.5,"width":1080}},
+          "layout": {"style":{"borderRightWidth":"1px","borderRightStyle":"solid","borderRightColor":"rgb(204, 204, 204)","borderLeftWidth":"1px","borderLeftStyle":"solid","borderLeftColor":"rgb(204, 204, 204)"},"box":{"width":1920}},
+          "main": {"box":{"x":544,"width":1375}},
+          "onThisPage": {"visible":true,"style":{"display":"block"}},
+          "onThisPageLink": {"visible":true},
+          "sidebar": {"box":{"x":1,"width":543}},
+          "sidebarRowDepth1": {"box":{"x":1,"width":542}}
+        }
       }
     },
     "defaultImplementations": {
@@ -1505,6 +1597,21 @@
           "topicLink": {"style":{"color":"rgb(0, 153, 255)","textDecorationColor":"rgb(0, 153, 255)","borderTopColor":"rgb(0, 153, 255)","borderRightColor":"rgb(0, 153, 255)","borderBottomColor":"rgb(0, 153, 255)","borderLeftColor":"rgb(0, 153, 255)"}},
           "topicName": {"style":{"color":"rgb(0, 153, 255)","textDecorationColor":"rgb(0, 153, 255)","borderTopColor":"rgb(0, 153, 255)","borderRightColor":"rgb(0, 153, 255)","borderBottomColor":"rgb(0, 153, 255)","borderLeftColor":"rgb(0, 153, 255)"}},
           "topicsSectionTitle": {"style":{"fontSize":"24px","lineHeight":"28px","color":"rgb(255, 255, 255)","textDecorationColor":"rgb(255, 255, 255)","borderTopColor":"rgb(87, 87, 87)","borderRightColor":"rgb(255, 255, 255)","borderBottomColor":"rgb(255, 255, 255)","borderLeftColor":"rgb(255, 255, 255)"}}
+        }
+      },
+      "1920x1080/light": {
+        "document": {"htmlFontSize":"17px","scrollWidth":1920},
+        "roles": {
+          "contentColumn": {"style":{"marginRight":"0px","marginLeft":"0px","maxWidth":"1080px"},"box":{"x":595.5,"width":1080}},
+          "headerBar": {"box":{"width":1920}},
+          "hero": {"style":{"paddingRight":"192px"},"box":{"x":544,"width":1375}},
+          "heroContent": {"style":{"marginRight":"51.5px","marginLeft":"51.5px","maxWidth":"1080px"},"box":{"x":595.5,"width":1080}},
+          "layout": {"style":{"borderRightWidth":"1px","borderRightStyle":"solid","borderRightColor":"rgb(204, 204, 204)","borderLeftWidth":"1px","borderLeftStyle":"solid","borderLeftColor":"rgb(204, 204, 204)"},"box":{"width":1920}},
+          "main": {"box":{"x":544,"width":1375}},
+          "onThisPage": {"visible":true,"style":{"display":"block"}},
+          "sidebar": {"box":{"x":1,"width":543}},
+          "sidebarRowDepth1": {"box":{"x":1,"width":542}},
+          "sidebarRowDepth2": {"box":{"x":1,"width":542}}
         }
       }
     },
@@ -1746,6 +1853,28 @@
           "sidebarSelectedRow": {"visible":false,"style":{"color":"rgb(255, 255, 255)","textDecorationColor":"rgb(255, 255, 255)","borderTopColor":"rgb(255, 255, 255)","borderRightColor":"rgb(255, 255, 255)","borderBottomColor":"rgb(255, 255, 255)","borderLeftColor":"rgb(255, 255, 255)"}},
           "sidebarSymbolBadge": {"found":19,"visible":null,"style":null}
         }
+      },
+      "1920x1080/light": {
+        "document": {"htmlFontSize":"17px","scrollWidth":1920},
+        "roles": {
+          "contentColumn": {"style":{"marginRight":"0px","marginLeft":"0px","maxWidth":"1080px"},"box":{"x":595.5,"width":1080}},
+          "declaration": {"box":{"x":675.5,"width":920}},
+          "headerBar": {"box":{"width":1920}},
+          "hero": {"style":{"paddingRight":"192px"},"box":{"x":544,"width":1375}},
+          "heroContent": {"style":{"marginRight":"51.5px","marginLeft":"51.5px","maxWidth":"1080px"},"box":{"x":595.5,"width":1080}},
+          "layout": {"style":{"borderRightWidth":"1px","borderRightStyle":"solid","borderRightColor":"rgb(204, 204, 204)","borderLeftWidth":"1px","borderLeftStyle":"solid","borderLeftColor":"rgb(204, 204, 204)"},"box":{"width":1920}},
+          "main": {"box":{"x":544,"width":1375}},
+          "onThisPage": {"visible":true,"style":{"display":"block"}},
+          "onThisPageLink": {"visible":true},
+          "sidebar": {"box":{"x":1,"width":543}},
+          "sidebarArticleIcon": {"found":20},
+          "sidebarChevron": {"found":10},
+          "sidebarGroupTitle": {"found":13},
+          "sidebarRowDepth0": {"found":8},
+          "sidebarRowDepth0Link": {"found":8},
+          "sidebarRowDepth1": {"box":{"x":1,"width":542}},
+          "sidebarSymbolBadge": {"found":20}
+        }
       }
     },
     "property": {
@@ -1956,6 +2085,26 @@
           "sidebarSelectedLink": {"visible":false,"style":{"color":"rgb(255, 255, 255)","textDecorationColor":"rgb(255, 255, 255)","borderTopColor":"rgb(255, 255, 255)","borderRightColor":"rgb(255, 255, 255)","borderBottomColor":"rgb(255, 255, 255)","borderLeftColor":"rgb(255, 255, 255)"}},
           "sidebarSelectedRow": {"visible":false,"style":{"color":"rgb(255, 255, 255)","textDecorationColor":"rgb(255, 255, 255)","borderTopColor":"rgb(255, 255, 255)","borderRightColor":"rgb(255, 255, 255)","borderBottomColor":"rgb(255, 255, 255)","borderLeftColor":"rgb(255, 255, 255)"}},
           "sidebarSymbolBadge": {"visible":null,"style":null}
+        }
+      },
+      "1920x1080/light": {
+        "document": {"htmlFontSize":"17px","scrollWidth":1920},
+        "roles": {
+          "declaration": {"box":{"x":675.5,"width":920}},
+          "headerBar": {"box":{"width":1920}},
+          "hero": {"style":{"paddingRight":"192px"},"box":{"x":544,"width":1375}},
+          "heroContent": {"style":{"marginRight":"51.5px","marginLeft":"51.5px","maxWidth":"1080px"},"box":{"x":595.5,"width":1080}},
+          "layout": {"style":{"borderRightWidth":"1px","borderRightStyle":"solid","borderRightColor":"rgb(204, 204, 204)","borderLeftWidth":"1px","borderLeftStyle":"solid","borderLeftColor":"rgb(204, 204, 204)"},"box":{"width":1920}},
+          "main": {"box":{"x":544,"width":1375}},
+          "onThisPage": {"visible":true,"style":{"display":"block"}},
+          "sidebar": {"box":{"x":1,"width":543}},
+          "sidebarArticleIcon": {"found":20},
+          "sidebarChevron": {"found":10},
+          "sidebarGroupTitle": {"found":13},
+          "sidebarRowDepth0": {"found":8},
+          "sidebarRowDepth0Link": {"found":8},
+          "sidebarRowDepth1": {"box":{"x":1,"width":542}},
+          "sidebarSymbolBadge": {"found":20}
         }
       }
     },
@@ -2184,6 +2333,28 @@
           "sidebarSelectedLink": {"visible":false,"style":{"color":"rgb(255, 255, 255)","textDecorationColor":"rgb(255, 255, 255)","borderTopColor":"rgb(255, 255, 255)","borderRightColor":"rgb(255, 255, 255)","borderBottomColor":"rgb(255, 255, 255)","borderLeftColor":"rgb(255, 255, 255)"}},
           "sidebarSelectedRow": {"visible":false,"style":{"color":"rgb(255, 255, 255)","textDecorationColor":"rgb(255, 255, 255)","borderTopColor":"rgb(255, 255, 255)","borderRightColor":"rgb(255, 255, 255)","borderBottomColor":"rgb(255, 255, 255)","borderLeftColor":"rgb(255, 255, 255)"}},
           "sidebarSymbolBadge": {"visible":null,"style":null}
+        }
+      },
+      "1920x1080/light": {
+        "document": {"htmlFontSize":"17px","scrollWidth":1920},
+        "roles": {
+          "contentColumn": {"style":{"marginRight":"0px","marginLeft":"0px","maxWidth":"1080px"},"box":{"x":595.5,"width":1080}},
+          "declaration": {"box":{"x":675.5,"width":920}},
+          "headerBar": {"box":{"width":1920}},
+          "hero": {"style":{"paddingRight":"192px"},"box":{"x":544,"width":1375}},
+          "heroContent": {"style":{"marginRight":"51.5px","marginLeft":"51.5px","maxWidth":"1080px"},"box":{"x":595.5,"width":1080}},
+          "layout": {"style":{"borderRightWidth":"1px","borderRightStyle":"solid","borderRightColor":"rgb(204, 204, 204)","borderLeftWidth":"1px","borderLeftStyle":"solid","borderLeftColor":"rgb(204, 204, 204)"},"box":{"width":1920}},
+          "main": {"box":{"x":544,"width":1375}},
+          "onThisPage": {"visible":true,"style":{"display":"block"}},
+          "onThisPageLink": {"visible":true},
+          "sidebar": {"box":{"x":1,"width":543}},
+          "sidebarArticleIcon": {"found":20},
+          "sidebarChevron": {"found":10},
+          "sidebarGroupTitle": {"found":13},
+          "sidebarRowDepth0": {"found":8},
+          "sidebarRowDepth0Link": {"found":8},
+          "sidebarRowDepth1": {"box":{"x":1,"width":542}},
+          "sidebarSymbolBadge": {"found":20}
         }
       }
     },
@@ -2420,6 +2591,29 @@
           "topicLink": {"style":{"color":"rgb(0, 153, 255)","textDecorationColor":"rgb(0, 153, 255)","borderTopColor":"rgb(0, 153, 255)","borderRightColor":"rgb(0, 153, 255)","borderBottomColor":"rgb(0, 153, 255)","borderLeftColor":"rgb(0, 153, 255)"}},
           "topicName": {"style":{"color":"rgb(0, 153, 255)","textDecorationColor":"rgb(0, 153, 255)","borderTopColor":"rgb(0, 153, 255)","borderRightColor":"rgb(0, 153, 255)","borderBottomColor":"rgb(0, 153, 255)","borderLeftColor":"rgb(0, 153, 255)"}},
           "topicsSectionTitle": {"style":{"fontSize":"24px","lineHeight":"28px","color":"rgb(255, 255, 255)","textDecorationColor":"rgb(255, 255, 255)","borderTopColor":"rgb(87, 87, 87)","borderRightColor":"rgb(255, 255, 255)","borderBottomColor":"rgb(255, 255, 255)","borderLeftColor":"rgb(255, 255, 255)"}}
+        }
+      },
+      "1920x1080/light": {
+        "document": {"htmlFontSize":"17px","scrollWidth":1920},
+        "roles": {
+          "breadcrumbLink": {"found":6},
+          "contentColumn": {"style":{"marginRight":"0px","marginLeft":"0px","maxWidth":"1080px"},"box":{"x":595.5,"width":1080}},
+          "declaration": {"box":{"x":675.5,"width":920}},
+          "headerBar": {"box":{"width":1920}},
+          "hero": {"style":{"paddingRight":"192px"},"box":{"x":544,"width":1375}},
+          "heroContent": {"style":{"marginRight":"51.5px","marginLeft":"51.5px","maxWidth":"1080px"},"box":{"x":595.5,"width":1080}},
+          "layout": {"style":{"borderRightWidth":"1px","borderRightStyle":"solid","borderRightColor":"rgb(204, 204, 204)","borderLeftWidth":"1px","borderLeftStyle":"solid","borderLeftColor":"rgb(204, 204, 204)"},"box":{"width":1920}},
+          "main": {"box":{"x":544,"width":1375}},
+          "onThisPage": {"visible":true,"style":{"display":"block"}},
+          "onThisPageLink": {"visible":true},
+          "sidebar": {"box":{"x":1,"width":543}},
+          "sidebarArticleIcon": {"found":21},
+          "sidebarGroupTitle": {"found":14},
+          "sidebarRowDepth0": {"found":6},
+          "sidebarRowDepth0Link": {"found":6},
+          "sidebarRowDepth1": {"found":4,"box":{"x":1,"width":542}},
+          "sidebarRowDepth2": {"box":{"x":1,"width":542}},
+          "sidebarSymbolBadge": {"found":21}
         }
       }
     },
@@ -2698,6 +2892,22 @@
           "topicsSectionTitle": {"style":{"fontSize":"24px","lineHeight":"28px","color":"rgb(255, 255, 255)","textDecorationColor":"rgb(255, 255, 255)","borderTopColor":"rgb(87, 87, 87)","borderRightColor":"rgb(255, 255, 255)","borderBottomColor":"rgb(255, 255, 255)","borderLeftColor":"rgb(255, 255, 255)"}},
           "unorderedList": {"style":{"color":"rgb(255, 255, 255)","textDecorationColor":"rgb(255, 255, 255)","borderTopColor":"rgb(255, 255, 255)","borderRightColor":"rgb(255, 255, 255)","borderBottomColor":"rgb(255, 255, 255)","borderLeftColor":"rgb(255, 255, 255)","marginLeft":"21.25px"}}
         }
+      },
+      "1920x1080/light": {
+        "document": {"htmlFontSize":"17px","scrollWidth":1920},
+        "roles": {
+          "codeListing": {"box":{"x":675.5,"width":920}},
+          "contentColumn": {"style":{"marginRight":"0px","marginLeft":"0px","maxWidth":"1080px"},"box":{"x":595.5,"width":1080}},
+          "headerBar": {"box":{"width":1920}},
+          "hero": {"style":{"paddingRight":"192px"},"box":{"x":544,"width":1375}},
+          "heroContent": {"style":{"marginRight":"51.5px","marginLeft":"51.5px","maxWidth":"1080px"},"box":{"x":595.5,"width":1080}},
+          "image": {"style":{"marginRight":"428px","marginLeft":"428px"}},
+          "layout": {"style":{"borderRightWidth":"1px","borderRightStyle":"solid","borderRightColor":"rgb(204, 204, 204)","borderLeftWidth":"1px","borderLeftStyle":"solid","borderLeftColor":"rgb(204, 204, 204)"},"box":{"width":1920}},
+          "main": {"box":{"x":544,"width":1375}},
+          "onThisPage": {"visible":true,"style":{"display":"block"}},
+          "onThisPageLink": {"visible":true},
+          "sidebar": {"box":{"x":1,"width":543}}
+        }
       }
     },
     "tutorial": {
@@ -2845,6 +3055,14 @@
           "tutorialStepCode": {"found":0,"visible":null,"style":null},
           "tutorialTitle": {"style":{"fontSize":"32px","lineHeight":"36px"}}
         }
+      },
+      "1920x1080/light": {
+        "document": {"htmlFontSize":"17px","scrollWidth":1920},
+        "roles": {
+          "codeListing": {"box":{"x":878.33,"width":921}},
+          "main": {"box":{"width":1920}},
+          "tutorialHero": {"box":{"width":1920}}
+        }
       }
     },
     "tutorialsOverview": {
@@ -2963,6 +3181,13 @@
           "tutorialAbstract": {"style":{"fontSize":"19px","lineHeight":"27px","marginTop":"15px"}},
           "tutorialNavTitle": {"style":{"display":"block","maxWidth":"none","verticalAlign":"baseline"}},
           "tutorialTitle": {"style":{"fontSize":"32px","lineHeight":"36px"}}
+        }
+      },
+      "1920x1080/light": {
+        "document": {"htmlFontSize":"17px","scrollWidth":1920},
+        "roles": {
+          "main": {"box":{"width":1920}},
+          "overviewHero": {"style":{"marginRight":"470px","marginLeft":"470px"}}
         }
       }
     }

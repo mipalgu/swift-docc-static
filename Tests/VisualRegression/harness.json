@@ -3,13 +3,12 @@
     "default": "vue",
     "docc-static-classic": "main"
   },
-  "viewports": [
-    "1440x900",
-    "390x844"
-  ],
-  "schemes": [
-    "light",
-    "dark"
+  "variants": [
+    "1440x900/light",
+    "1440x900/dark",
+    "390x844/light",
+    "390x844/dark",
+    "1920x1080/light"
   ],
   "settleMilliseconds": {
     "static": 300,

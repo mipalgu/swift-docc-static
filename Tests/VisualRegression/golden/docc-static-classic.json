@@ -93,6 +93,10 @@
           "moduleCard": {"style":{"color":"rgb(245, 245, 247)","backgroundColor":"rgb(29, 29, 31)","textDecorationColor":"rgb(245, 245, 247)","borderTopColor":"rgb(66, 66, 69)","borderRightColor":"rgb(66, 66, 69)","borderBottomColor":"rgb(66, 66, 69)","borderLeftColor":"rgb(66, 66, 69)"}},
           "moduleCardAbstract": {"style":{"color":"rgb(161, 161, 166)","textDecorationColor":"rgb(161, 161, 166)","borderTopColor":"rgb(161, 161, 166)","borderRightColor":"rgb(161, 161, 166)","borderBottomColor":"rgb(161, 161, 166)","borderLeftColor":"rgb(161, 161, 166)"}}
         }
+      },
+      "1920x1080/light": {
+        "document": {"htmlFontSize":"16px","scrollWidth":1920},
+        "roles": {}
       }
     },
     "module": {
@@ -289,6 +293,17 @@
           "topicLink": {"visible":false},
           "topicName": {"visible":false},
           "topicsSectionTitle": {"visible":false,"style":{"color":"rgb(245, 245, 247)","textDecorationColor":"rgb(245, 245, 247)","borderTopColor":"rgb(245, 245, 247)","borderRightColor":"rgb(245, 245, 247)","borderBottomColor":"rgb(66, 66, 69)","borderLeftColor":"rgb(245, 245, 247)"}}
+        }
+      },
+      "1920x1080/light": {
+        "document": {"htmlFontSize":"16px","scrollWidth":1920},
+        "roles": {
+          "contentColumn": {"box":{"width":1600}},
+          "headerBar": {"box":{"width":1920}},
+          "hero": {"box":{"width":1600}},
+          "heroContent": {"box":{"width":1052.8}},
+          "layout": {"box":{"width":1920}},
+          "main": {"box":{"width":1600}}
         }
       }
     },
@@ -513,6 +528,18 @@
           "topicName": {"visible":false},
           "topicsSectionTitle": {"visible":false,"style":{"color":"rgb(245, 245, 247)","textDecorationColor":"rgb(245, 245, 247)","borderTopColor":"rgb(245, 245, 247)","borderRightColor":"rgb(245, 245, 247)","borderBottomColor":"rgb(66, 66, 69)","borderLeftColor":"rgb(245, 245, 247)"}}
         }
+      },
+      "1920x1080/light": {
+        "document": {"htmlFontSize":"16px","scrollWidth":1920},
+        "roles": {
+          "contentColumn": {"box":{"width":1600}},
+          "declaration": {"box":{"width":1600}},
+          "headerBar": {"box":{"width":1920}},
+          "hero": {"box":{"width":1600}},
+          "heroContent": {"box":{"width":1052.8}},
+          "layout": {"box":{"width":1920}},
+          "main": {"box":{"width":1600}}
+        }
       }
     },
     "class": {
@@ -725,6 +752,18 @@
           "topicLink": {"visible":false},
           "topicName": {"visible":false},
           "topicsSectionTitle": {"visible":false,"style":{"color":"rgb(245, 245, 247)","textDecorationColor":"rgb(245, 245, 247)","borderTopColor":"rgb(245, 245, 247)","borderRightColor":"rgb(245, 245, 247)","borderBottomColor":"rgb(66, 66, 69)","borderLeftColor":"rgb(245, 245, 247)"}}
+        }
+      },
+      "1920x1080/light": {
+        "document": {"htmlFontSize":"16px","scrollWidth":1920},
+        "roles": {
+          "contentColumn": {"box":{"width":1600}},
+          "declaration": {"box":{"width":1600}},
+          "headerBar": {"box":{"width":1920}},
+          "hero": {"box":{"width":1600}},
+          "heroContent": {"box":{"width":1052.8}},
+          "layout": {"box":{"width":1920}},
+          "main": {"box":{"width":1600}}
         }
       }
     },
@@ -941,6 +980,18 @@
           "topicLink": {"visible":false},
           "topicName": {"visible":false},
           "topicsSectionTitle": {"visible":false,"style":{"color":"rgb(245, 245, 247)","textDecorationColor":"rgb(245, 245, 247)","borderTopColor":"rgb(245, 245, 247)","borderRightColor":"rgb(245, 245, 247)","borderBottomColor":"rgb(66, 66, 69)","borderLeftColor":"rgb(245, 245, 247)"}}
+        }
+      },
+      "1920x1080/light": {
+        "document": {"htmlFontSize":"16px","scrollWidth":1920},
+        "roles": {
+          "contentColumn": {"box":{"width":1600}},
+          "declaration": {"box":{"width":1600}},
+          "headerBar": {"box":{"width":1920}},
+          "hero": {"box":{"width":1600}},
+          "heroContent": {"box":{"width":1052.8}},
+          "layout": {"box":{"width":1920}},
+          "main": {"box":{"width":1600}}
         }
       }
     },
@@ -1165,6 +1216,18 @@
           "topicName": {"visible":false},
           "topicsSectionTitle": {"visible":false,"style":{"color":"rgb(245, 245, 247)","textDecorationColor":"rgb(245, 245, 247)","borderTopColor":"rgb(245, 245, 247)","borderRightColor":"rgb(245, 245, 247)","borderBottomColor":"rgb(66, 66, 69)","borderLeftColor":"rgb(245, 245, 247)"}}
         }
+      },
+      "1920x1080/light": {
+        "document": {"htmlFontSize":"16px","scrollWidth":1920},
+        "roles": {
+          "contentColumn": {"box":{"width":1600}},
+          "declaration": {"box":{"width":1600}},
+          "headerBar": {"box":{"width":1920}},
+          "hero": {"box":{"width":1600}},
+          "heroContent": {"box":{"width":1052.8}},
+          "layout": {"box":{"width":1920}},
+          "main": {"box":{"width":1600}}
+        }
       }
     },
     "defaultImplementations": {
@@ -1362,6 +1425,17 @@
           "topicLink": {"visible":false},
           "topicName": {"visible":false},
           "topicsSectionTitle": {"visible":false,"style":{"color":"rgb(245, 245, 247)","textDecorationColor":"rgb(245, 245, 247)","borderTopColor":"rgb(245, 245, 247)","borderRightColor":"rgb(245, 245, 247)","borderBottomColor":"rgb(66, 66, 69)","borderLeftColor":"rgb(245, 245, 247)"}}
+        }
+      },
+      "1920x1080/light": {
+        "document": {"htmlFontSize":"16px","scrollWidth":1920},
+        "roles": {
+          "contentColumn": {"box":{"width":1600}},
+          "headerBar": {"box":{"width":1920}},
+          "hero": {"box":{"width":1600}},
+          "heroContent": {"box":{"width":1052.8}},
+          "layout": {"box":{"width":1920}},
+          "main": {"box":{"width":1600}}
         }
       }
     },
@@ -1575,6 +1649,18 @@
           "sidebarSelectedRow": {"style":{"color":"rgb(161, 161, 166)","textDecorationColor":"rgb(161, 161, 166)","borderTopColor":"rgb(161, 161, 166)","borderRightColor":"rgb(161, 161, 166)","borderBottomColor":"rgb(161, 161, 166)","borderLeftColor":"rgb(161, 161, 166)"}},
           "sidebarSymbolBadge": {"style":{"color":"rgb(161, 161, 166)","backgroundColor":"rgb(44, 44, 46)","textDecorationColor":"rgb(161, 161, 166)","borderTopColor":"rgb(66, 66, 69)","borderRightColor":"rgb(66, 66, 69)","borderBottomColor":"rgb(66, 66, 69)","borderLeftColor":"rgb(66, 66, 69)"}}
         }
+      },
+      "1920x1080/light": {
+        "document": {"htmlFontSize":"16px","scrollWidth":1920},
+        "roles": {
+          "contentColumn": {"box":{"width":1600}},
+          "declaration": {"box":{"width":1600}},
+          "headerBar": {"box":{"width":1920}},
+          "hero": {"box":{"width":1600}},
+          "heroContent": {"box":{"width":1052.8}},
+          "layout": {"box":{"width":1920}},
+          "main": {"box":{"width":1600}}
+        }
       }
     },
     "property": {
@@ -1766,6 +1852,18 @@
           "sidebarRowDepth2": {"style":{"color":"rgb(161, 161, 166)","textDecorationColor":"rgb(161, 161, 166)","borderTopColor":"rgb(161, 161, 166)","borderRightColor":"rgb(161, 161, 166)","borderBottomColor":"rgb(161, 161, 166)","borderLeftColor":"rgb(161, 161, 166)"}},
           "sidebarSelectedRow": {"style":{"color":"rgb(161, 161, 166)","textDecorationColor":"rgb(161, 161, 166)","borderTopColor":"rgb(161, 161, 166)","borderRightColor":"rgb(161, 161, 166)","borderBottomColor":"rgb(161, 161, 166)","borderLeftColor":"rgb(161, 161, 166)"}},
           "sidebarSymbolBadge": {"style":{"color":"rgb(161, 161, 166)","backgroundColor":"rgb(44, 44, 46)","textDecorationColor":"rgb(161, 161, 166)","borderTopColor":"rgb(66, 66, 69)","borderRightColor":"rgb(66, 66, 69)","borderBottomColor":"rgb(66, 66, 69)","borderLeftColor":"rgb(66, 66, 69)"}}
+        }
+      },
+      "1920x1080/light": {
+        "document": {"htmlFontSize":"16px","scrollWidth":1920},
+        "roles": {
+          "contentColumn": {"box":{"width":1600}},
+          "declaration": {"box":{"width":1600}},
+          "headerBar": {"box":{"width":1920}},
+          "hero": {"box":{"width":1600}},
+          "heroContent": {"box":{"width":1052.8}},
+          "layout": {"box":{"width":1920}},
+          "main": {"box":{"width":1600}}
         }
       }
     },
@@ -1971,6 +2069,18 @@
           "sidebarRowDepth2": {"style":{"color":"rgb(161, 161, 166)","textDecorationColor":"rgb(161, 161, 166)","borderTopColor":"rgb(161, 161, 166)","borderRightColor":"rgb(161, 161, 166)","borderBottomColor":"rgb(161, 161, 166)","borderLeftColor":"rgb(161, 161, 166)"}},
           "sidebarSelectedRow": {"style":{"color":"rgb(161, 161, 166)","textDecorationColor":"rgb(161, 161, 166)","borderTopColor":"rgb(161, 161, 166)","borderRightColor":"rgb(161, 161, 166)","borderBottomColor":"rgb(161, 161, 166)","borderLeftColor":"rgb(161, 161, 166)"}},
           "sidebarSymbolBadge": {"style":{"color":"rgb(161, 161, 166)","backgroundColor":"rgb(44, 44, 46)","textDecorationColor":"rgb(161, 161, 166)","borderTopColor":"rgb(66, 66, 69)","borderRightColor":"rgb(66, 66, 69)","borderBottomColor":"rgb(66, 66, 69)","borderLeftColor":"rgb(66, 66, 69)"}}
+        }
+      },
+      "1920x1080/light": {
+        "document": {"htmlFontSize":"16px","scrollWidth":1920},
+        "roles": {
+          "contentColumn": {"box":{"width":1600}},
+          "declaration": {"box":{"width":1600}},
+          "headerBar": {"box":{"width":1920}},
+          "hero": {"box":{"width":1600}},
+          "heroContent": {"box":{"width":1052.8}},
+          "layout": {"box":{"width":1920}},
+          "main": {"box":{"width":1600}}
         }
       }
     },
@@ -2184,6 +2294,18 @@
           "topicLink": {"visible":false},
           "topicName": {"visible":false},
           "topicsSectionTitle": {"visible":false,"style":{"color":"rgb(245, 245, 247)","textDecorationColor":"rgb(245, 245, 247)","borderTopColor":"rgb(245, 245, 247)","borderRightColor":"rgb(245, 245, 247)","borderBottomColor":"rgb(66, 66, 69)","borderLeftColor":"rgb(245, 245, 247)"}}
+        }
+      },
+      "1920x1080/light": {
+        "document": {"htmlFontSize":"16px","scrollWidth":1920},
+        "roles": {
+          "contentColumn": {"box":{"width":1600}},
+          "declaration": {"box":{"width":1600}},
+          "headerBar": {"box":{"width":1920}},
+          "hero": {"box":{"width":1600}},
+          "heroContent": {"box":{"width":1052.8}},
+          "layout": {"box":{"width":1920}},
+          "main": {"box":{"width":1600}}
         }
       }
     },
@@ -2435,6 +2557,18 @@
           "topicName": {"visible":false},
           "unorderedList": {"style":{"color":"rgb(245, 245, 247)","textDecorationColor":"rgb(245, 245, 247)","borderTopColor":"rgb(245, 245, 247)","borderRightColor":"rgb(245, 245, 247)","borderBottomColor":"rgb(245, 245, 247)","borderLeftColor":"rgb(245, 245, 247)"}}
         }
+      },
+      "1920x1080/light": {
+        "document": {"htmlFontSize":"16px","scrollWidth":1920},
+        "roles": {
+          "codeListing": {"box":{"width":1552}},
+          "contentColumn": {"box":{"width":1600}},
+          "headerBar": {"box":{"width":1920}},
+          "hero": {"box":{"width":1600}},
+          "heroContent": {"box":{"width":1052.8}},
+          "layout": {"box":{"width":1920}},
+          "main": {"box":{"width":1600}}
+        }
       }
     },
     "tutorial": {
@@ -2556,6 +2690,12 @@
           "tutorialStepCode": {"style":{"color":"rgb(245, 245, 247)","backgroundColor":"rgb(44, 44, 46)","textDecorationColor":"rgb(245, 245, 247)","borderTopColor":"rgb(66, 66, 69)","borderRightColor":"rgb(66, 66, 69)","borderBottomColor":"rgb(66, 66, 69)","borderLeftColor":"rgb(66, 66, 69)"}},
           "tutorialTitle": {"style":{"fontSize":"28px","lineHeight":"30.8px"}}
         }
+      },
+      "1920x1080/light": {
+        "document": {"htmlFontSize":"16px","scrollWidth":1920},
+        "roles": {
+          "tutorialHero": {"box":{"width":1920}}
+        }
       }
     },
     "tutorialsOverview": {
@@ -2661,6 +2801,10 @@
           "overviewHero": {"style":{"color":"rgb(245, 245, 247)","textDecorationColor":"rgb(245, 245, 247)","borderTopColor":"rgb(245, 245, 247)","borderRightColor":"rgb(245, 245, 247)","borderBottomColor":"rgb(66, 66, 69)","borderLeftColor":"rgb(245, 245, 247)"}},
           "overviewTitle": {"style":{"color":"rgb(245, 245, 247)","textDecorationColor":"rgb(245, 245, 247)","borderTopColor":"rgb(245, 245, 247)","borderRightColor":"rgb(245, 245, 247)","borderBottomColor":"rgb(245, 245, 247)","borderLeftColor":"rgb(245, 245, 247)"}}
         }
+      },
+      "1920x1080/light": {
+        "document": {"htmlFontSize":"16px","scrollWidth":1920},
+        "roles": {}
       }
     }
   }

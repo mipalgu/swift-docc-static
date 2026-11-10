@@ -312,6 +312,8 @@
   "moduleCardName.fontSize",
   "moduleCardName.lineHeight",
   "moduleCardName.marginBottom",
+  "onThisPage.presence",
+  "onThisPageLink.presence",
   "orderedList.marginBottom",
   "orderedList.marginLeft",
   "orderedList.marginTop",

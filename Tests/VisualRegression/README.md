@@ -96,8 +96,9 @@ measures an already rendered reference site.
 
 ## Files
 
-- `harness.json`: references per theme, viewports (1440x900 and 390x844), colour
-  schemes, settle times, ready selectors, the geometry tolerance and the computed
+- `harness.json`: references per theme, the measured variants (1440x900 and 390x844
+  in light and dark, and 1920x1080 in light, where the "On This Page" column appears),
+  settle times, ready selectors, the geometry tolerance and the computed
   style properties that are recorded and compared.
 - `pages.json`: the measured pages with their path in each renderer's output.
 - `roles.json`: the semantic roles with one selector per DOM (`static` for
