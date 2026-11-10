@@ -238,8 +238,7 @@ public struct StaticDocumentationGenerator: Sendable {
         }
 
         // Parse the JSON to extract target names (preserving Package.swift order)
-        guard let outputString = result.standardOutput,
-            let data = outputString.data(using: .utf8),
+        guard let data = result.standardOutput.data(using: .utf8),
             let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
             let targets = json["targets"] as? [[String: Any]]
         else {
@@ -597,12 +596,10 @@ public struct StaticDocumentationGenerator: Sendable {
                 )
 
                 if result.terminationStatus.isSuccess {
-                    if let output = result.standardOutput {
-                        let path = output.trimmingCharacters(
-                            in: CharacterSet.whitespacesAndNewlines)
-                        if !path.isEmpty && fileManager.fileExists(atPath: path) {
-                            return path
-                        }
+                    let path = result.standardOutput.trimmingCharacters(
+                        in: CharacterSet.whitespacesAndNewlines)
+                    if !path.isEmpty && fileManager.fileExists(atPath: path) {
+                        return path
                     }
                 }
             }
@@ -629,11 +626,10 @@ public struct StaticDocumentationGenerator: Sendable {
         )
 
         if whichResult.terminationStatus.isSuccess {
-            if let output = whichResult.standardOutput {
-                let path = output.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
-                if !path.isEmpty && fileManager.fileExists(atPath: path) {
-                    return path
-                }
+            let path = whichResult.standardOutput.trimmingCharacters(
+                in: CharacterSet.whitespacesAndNewlines)
+            if !path.isEmpty && fileManager.fileExists(atPath: path) {
+                return path
             }
         }
 

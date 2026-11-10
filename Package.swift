@@ -81,7 +81,7 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.5.0"),
 
         // Subprocess handling
-        .package(url: "https://github.com/swiftlang/swift-subprocess.git", from: "0.1.0"),
+        .package(url: "https://github.com/swiftlang/swift-subprocess.git", from: "1.0.0"),
 
         // System types (for Linux compatibility)
         .package(url: "https://github.com/apple/swift-system.git", from: "1.4.0"),
