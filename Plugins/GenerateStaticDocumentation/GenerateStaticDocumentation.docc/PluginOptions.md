@@ -71,6 +71,23 @@ Disable client-side search (reduces output size):
 swift package generate-static-documentation --disable-search
 ```
 
+### Theme
+
+Choose a built-in theme by name (`default`, `docc-static-classic` or its alias
+`classic`), or pass a `theme-settings.json` file or a theme directory:
+
+```bash
+swift package generate-static-documentation --theme classic
+swift package generate-static-documentation --theme ./MyTheme
+```
+
+Add a stylesheet on top of the theme, or leave out dark mode styles:
+
+```bash
+swift package generate-static-documentation --custom-css ./tweaks.css
+swift package generate-static-documentation --disable-dark-mode
+```
+
 ### Custom Footer
 
 Add a custom footer to all pages:

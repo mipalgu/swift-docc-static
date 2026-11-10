@@ -1,2 +1,2 @@
 # Generate documentation with the classic theme
-docc-static generate --theme classic -i ./MyPackage -o ./docs
+docc-static generate --theme classic --package-path ./MyPackage --output ./docs

@@ -1,8 +1,7 @@
 import DocCStatic
 
 let theme = ThemeConfiguration(
-    accentColour: "#6366f1",
-    includeDarkMode: true,
+    builtInTheme: .default,
     customCSS: """
     /* Custom header styling */
     h1 {

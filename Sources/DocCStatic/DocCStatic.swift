@@ -48,6 +48,8 @@
 /// - ``Configuration``
 /// - ``DependencyInclusionPolicy``
 /// - ``ThemeConfiguration``
+/// - ``ThemeSettings``
+/// - ``StylesheetLayer``
 ///
 /// ### Generation
 ///

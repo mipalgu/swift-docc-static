@@ -1,2 +1,2 @@
-# Copy an existing theme as a starting point
-cp Themes/default.theme-settings.json my-theme.theme-settings.json
+# Copy a built-in theme directory from a swift-docc-static checkout as a starting point
+cp -R swift-docc-static/Themes/default MyTheme

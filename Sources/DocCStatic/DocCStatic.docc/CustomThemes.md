@@ -4,30 +4,43 @@ Customise the appearance of your documentation.
 
 ## Overview
 
-DocCStatic generates documentation styled to match DocC appearance by default. You can customise the theme through built-in themes, custom theme files, or programmatic configuration.
+A theme determines the complete look of the generated pages.  It consists of
+up to three parts:
 
-Theme customisation is available through:
-- **Built-in themes**: Pre-configured themes included with DocCStatic
-- **Custom theme files**: JSON files following the swift-docc-render `theme-settings.json` format
-- **Programmatic configuration**: Direct ``ThemeConfiguration`` customisation in Swift code
+- **Settings** in the swift-docc-render `theme-settings.json` format.  They
+  define CSS custom properties (colours, fonts, spacing) and feature switches,
+  so theme settings files can be shared between swift-docc and DocCStatic.
+- **Stylesheets** (`*.css`) that are layered after the base stylesheet and can
+  change any rule.
+- **Custom CSS** supplied when generating, layered last.
+
+Every page has the same HTML structure, whatever the theme: element and class
+names mirror those of swift-docc-render, so a theme changes the look through
+CSS.  Where a difference cannot be expressed in CSS, a theme uses one of the
+feature switches described in <doc:CustomThemes#Feature-Switches>.
 
 ## Using Built-in Themes
 
 DocCStatic includes two built-in themes:
 
-| Theme | Description | Accent Colour |
-|-------|-------------|---------------|
-| `default` | Matches swift-docc-render's appearance | `#36f` |
-| `classic` | Original swift-docc-static style with SF Pro fonts | `#0066cc` |
+| Theme | Alias | Description |
+|-------|-------|-------------|
+| `default` | | The appearance of swift-docc-render |
+| `docc-static-classic` | `classic` | The original swift-docc-static appearance |
+
+Themes are selected by their exact name or alias; any other name is an error
+that lists the available themes.
 
 ### Via Command Line
 
-```bash
-# Use the default theme (swift-docc compatible)
-docc-static generate -i ./MyPackage -o ./docs
+The `generate`, `render` and `preview` commands accept the same theme options:
 
-# Use the classic theme (SF Pro fonts, original swift-docc-static appearance)
-docc-static generate --theme classic -i ./MyPackage -o ./docs
+```bash
+# Use the default theme
+docc-static generate --package-path ./MyPackage --output ./docs
+
+# Use the classic theme
+docc-static generate --package-path ./MyPackage --output ./docs --theme classic
 ```
 
 ### Via SPM Plugin
@@ -43,26 +56,18 @@ swift package generate-static-documentation --theme classic
 ### Via Swift API
 
 ```swift
-// Default theme (explicit)
-let theme = ThemeConfiguration(builtInTheme: .default)
-
-// Classic theme
-let theme = ThemeConfiguration(builtInTheme: .classic)
-
 let configuration = Configuration(
     packageDirectory: packageURL,
     outputDirectory: outputURL,
-    theme: theme
+    theme: ThemeConfiguration(builtInTheme: .classic)
 )
 ```
 
 ## Creating a Custom Theme
 
-Custom themes use the swift-docc-render `theme-settings.json` format, allowing themes to be shared between swift-docc and DocCStatic.
+### Theme Settings Files
 
-### Theme File Format
-
-A theme settings file has the following structure:
+The simplest custom theme is a single `theme-settings.json` file:
 
 ```json
 {
@@ -78,287 +83,159 @@ A theme settings file has the following structure:
 }
 ```
 
-Colour values can be either:
-- A single string value (used for both light and dark modes)
-- An object with `light` and `dark` keys for mode-specific values
+Pass the file's path to `--theme`:
 
-### Creating a Theme File
-
-1. Copy an existing theme as a starting point:
-   ```bash
-   cp Themes/default.theme-settings.json my-theme.theme-settings.json
-   ```
-
-2. Edit the colour and typography values in your theme file
-
-3. Use your custom theme:
-   ```bash
-   # Via command line
-   docc-static generate --theme-settings ./my-theme.theme-settings.json \
-       -i ./MyPackage -o ./docs
-
-   # Via SPM plugin
-   swift package generate-static-documentation \
-       --theme-settings ./my-theme.theme-settings.json
-   ```
-
-### Loading Custom Themes Programmatically
-
-```swift
-// Load from a theme-settings.json file
-let themeData = try Data(contentsOf: themeFileURL)
-let themeSettings = try ThemeSettingsParser.parse(themeData)
-let theme = ThemeConfiguration(themeSettings: themeSettings, includeDarkMode: true)
-
-let configuration = Configuration(
-    packageDirectory: packageURL,
-    outputDirectory: outputURL,
-    theme: theme
-)
+```bash
+docc-static generate --package-path ./MyPackage --output ./docs \
+    --theme ./my-theme.json
 ```
 
-## Available Theme Variables
+Every leaf of the `theme` section becomes a CSS custom property whose name joins
+the keys with `-`, exactly as in swift-docc-render: `color.link` becomes
+`--color-link`, `code.border-width` becomes `--code-border-width`.  A value can
+be a single string (used in light and dark mode) or an object with `light` and
+`dark` values.  The sections of the swift-docc-render specification (`aside`,
+`badge`, `border-radius`, `button`, `code`, `color`, `icons`, `tutorial-step`,
+`typography` and `device-frames`) are accepted, together with the DocCStatic
+`spacing` section, whose keys become `--spacing-*` properties for margins,
+paddings, font sizes and widths.
 
-### Colour Variables
+Unknown keys are reported as warnings rather than silently ignored, so a
+misspelt key is easy to find.
 
-| Variable | Description | Default (Light) | Default (Dark) |
-|----------|-------------|-----------------|----------------|
-| `fill` | Page background | `#fff` | `#000` |
-| `fill-secondary` | Secondary background (code blocks, declarations) | `#f7f7f7` | `#161616` |
-| `fill-tertiary` | Tertiary background | `#f0f0f0` | `#2a2a2a` |
-| `figure-gray` | Primary text | `#000` | `#fff` |
-| `figure-gray-secondary` | Secondary text | `#6e6e73` | `#a1a1a6` |
-| `figure-gray-tertiary` | Tertiary text | `#b0b0b5` | `#6c6c70` |
-| `link` | Link and accent colour | `#36f` | `#36f` |
-| `fill-gray` | Border colour | `#d2d2d7` | `#424245` |
-| `fill-gray-secondary` | Secondary border | `#b0b0b5` | `#5a5a5d` |
-| `fill-gray-tertiary` | Tertiary border | `#e0e0e5` | `#3a3a3d` |
-| `fill-gray-quaternary` | Active/selected navigator background | `#f0f0f0` | `#424242` |
-| `navigator-item-hover` | Navigator item hover background | `rgba(51, 102, 255, 0.05)` | `rgba(0, 102, 255, 0.5)` |
-| `fill-blue` | Blue fill | `#36f` | `#36f` |
-| `documentation-intro-fill` | Hero section background | `transparent` | `transparent` |
-| `heading-link` | Heading anchor link colour | `inherit` | `inherit` |
-| `tutorials-teal` | Tutorial colour | `#000` | `#fff` |
-| `article-body-background` | Article background | `#fff` | `#161616` |
+### Theme Directories
 
-### Syntax Highlighting Variables
+A theme directory contains a `theme-settings.json` file and any number of
+stylesheets.  The stylesheets are applied after the base stylesheet in the order
+of their file names; a stylesheet whose name ends in `.dark.css` is only included
+when dark mode styles are enabled.
 
-| Variable | Description | Default (Light) | Default (Dark) |
-|----------|-------------|-----------------|----------------|
-| `syntax-keywords` | Swift keywords | `#ad3da4` | `#ff7ab2` |
-| `syntax-param-internal-name` | Parameter names | `#5d6c79` | `#a7b0b9` |
-| `syntax-other-type-names` | Type names | `#703daa` | `#dabaff` |
-| `syntax-other-preprocessor` | Preprocessor | `#78492a` | `#ffa14f` |
-| `syntax-other-constants` | Constants | `#4b21b0` | `#a79df7` |
-| `syntax-strings` | String literals | `#d12f1b` | `#ff8170` |
-| `syntax-numbers` | Numeric literals | `#1c00cf` | `#d9c97c` |
-| `syntax-plain` | Plain text | `#000` | `#fff` |
-| `syntax-comments` | Comments | `#5d6c79` | `#7f8c98` |
-
-### Typography Variables
-
-| Variable | Description | Default Value |
-|----------|-------------|---------------|
-| `html-font` | Body text font | System font stack |
-| `html-font-mono` | Monospace font | Menlo, monospace |
-
-### Spacing Variables
-
-| Variable | Description | Default Value |
-|----------|-------------|---------------|
-| `sidebar-width` | Width of the navigation sidebar | `400px` (default), `320px` (classic) |
-
-## Customising the Accent Colour
-
-Change the primary accent colour used for links and highlights:
-
-```swift
-let configuration = Configuration(
-    packageDirectory: packageURL,
-    outputDirectory: outputURL,
-    theme: ThemeConfiguration(
-        accentColour: "#ff5500",  // Orange accent
-        includeDarkMode: true
-    )
-)
+```
+MyTheme/
+├── theme-settings.json
+├── theme.css
+└── theme.dark.css
 ```
 
-The accent colour is used for:
-- Link text
-- Declaration highlights
-- Symbol card borders
-- Interactive element focus states
+```bash
+docc-static generate --package-path ./MyPackage --output ./docs --theme ./MyTheme
+```
 
-### Choosing Colours
+The built-in themes are theme directories too: they live in the `Themes`
+directory of the swift-docc-static package and are compiled into the binary.
+Copying one is a good starting point for a custom theme.
 
-Consider accessibility when selecting an accent colour:
-- Ensure sufficient contrast against both light and dark backgrounds
-- Test with colour vision deficiency simulators
-- Avoid colours that blend with syntax highlighting
+### Custom CSS
 
-## Dark Mode Support
+Add a stylesheet on top of any theme, built-in or custom, with `--custom-css`:
 
-By default, the documentation respects the user's system preference for light or dark mode. Disable dark mode if your custom styling doesn't support it:
+```bash
+docc-static generate --package-path ./MyPackage --output ./docs \
+    --theme classic --custom-css ./tweaks.css
+```
+
+### Stylesheet Layers
+
+The generated `css/main.css` consists of the following layers, each starting
+with a comment such as `/* docc-static layer: theme/theme */`, and each layer
+can override the layers before it:
+
+1. the base stylesheet shared by all themes, whose visual values are read
+   from custom properties with the swift-docc-render values as fallbacks;
+2. the rules for the embedded navigation sidebar;
+3. the accent colour, when a configuration sets one without theme settings;
+4. the custom properties defined by the theme settings;
+5. the theme's stylesheets;
+6. the custom CSS.
+
+## Feature Switches
+
+The `features` section of a theme settings file turns parts of the page on or
+off.  DocCStatic accepts the switches of swift-docc-render:
+
+| Switch | Effect in DocCStatic |
+|--------|----------------------|
+| `docs.onThisPageNavigator.disable` | Leaves the "On This Page" column out of every page |
+| `docs.quickNavigation.enable` | Accepted without effect; the sidebar filter provides search |
+| `docs.i18n.enable` | Accepted without effect |
+
+```json
+{
+  "theme": {},
+  "features": {
+    "docs": {
+      "onThisPageNavigator": { "disable": true }
+    }
+  }
+}
+```
+
+The "On This Page" column is a switch rather than CSS because leaving it out
+also removes it from every page's markup, reading order and keyboard navigation.
+
+## Theming in Swift
 
 ```swift
+// A built-in theme with additional CSS
 let theme = ThemeConfiguration(
-    accentColour: "#007aff",
-    includeDarkMode: false  // Always light mode
+    builtInTheme: .classic,
+    customCSS: try ThemeConfiguration.loadCustomCSS(from: "tweaks.css")
+)
+
+// A theme name, settings file or theme directory, resolved like --theme
+let custom = try ThemeConfiguration.resolveTheme("MyTheme")
+
+// Settings and stylesheets assembled in code
+let settings = try ThemeSettingsParser.parse(contentsOf: settingsURL)
+let assembled = ThemeConfiguration(
+    themeSettings: settings,
+    stylesheets: [ThemeSettings.Stylesheet(name: "theme", css: ".documentation-hero { border-radius: 12px; }")]
 )
 ```
 
-### Dark Mode Colour Variables
+### Accent Colour
 
-When dark mode is enabled, colours with separate light/dark values change automatically based on the `prefers-color-scheme` media query or the `data-color-scheme` attribute on the body element.
-
-## Custom CSS
-
-Append additional CSS to the generated stylesheet:
+Without theme settings, a configuration can set just the accent colour used for
+links and highlights:
 
 ```swift
-let theme = ThemeConfiguration(
-    accentColour: "#36f",
-    includeDarkMode: true,
-    customCSS: """
-    /* Custom header styling */
-    h1 {
-        border-bottom: 2px solid var(--color-link);
-        padding-bottom: 0.5rem;
-    }
-
-    /* Custom module card hover effect */
-    .module-card:hover {
-        transform: translateY(-2px);
-    }
-    """
-)
+let theme = ThemeConfiguration(accentColour: "#ff5500", includeDarkMode: true)
 ```
 
-### CSS Variable Naming
+## Dark Mode
 
-CSS variables are prefixed based on their category:
-- `--color-*` for colour variables (e.g., `--color-fill`, `--color-link`)
-- `--typography-*` for typography variables (e.g., `--typography-html-font`)
-- `--spacing-*` for spacing and layout variables (e.g., `--spacing-sidebar-width`)
-
-### Overriding Variables
-
-Override CSS variables in your custom CSS:
+By default, the documentation follows the reader's light or dark preference,
+which the reader can also choose with the appearance selector.  Disable dark
+mode styles with `--disable-dark-mode`, or in Swift:
 
 ```swift
-let theme = ThemeConfiguration(
-    accentColour: "#36f",
-    includeDarkMode: true,
-    customCSS: """
-    :root {
-        --typography-html-font: 'Inter', -apple-system, sans-serif;
-        --typography-html-font-mono: 'Fira Code', monospace;
-    }
-    """
-)
+let theme = ThemeConfiguration(builtInTheme: .default, includeDarkMode: false)
 ```
 
-## Styling Specific Elements
+## Common Variables
 
-### Declaration Blocks
+Some of the variables that themes commonly set:
 
-```css
-.declaration {
-    background: linear-gradient(135deg, #f5f5f7, #e0e0e5);
-    border-left-width: 4px;
-}
-```
+| Variable | Description |
+|----------|-------------|
+| `--color-fill` | Page background |
+| `--color-fill-secondary` | Secondary background (code listings, declarations) |
+| `--color-figure-gray` | Primary text |
+| `--color-figure-gray-secondary` | Secondary text |
+| `--color-link` | Links and accents |
+| `--color-documentation-intro-fill` | Background of the page header |
+| `--color-syntax-keywords` | Swift keywords in code |
+| `--typography-html-font` | Body text font |
+| `--typography-html-font-mono` | Code font |
+| `--spacing-html-font-size` | Root font size that `rem` values are based on |
+| `--spacing-sidebar-width` | Width of the navigation sidebar |
 
-### Topic Links (Symbol Cards)
-
-```css
-.topic-link-container {
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-```
-
-### Asides (Notes, Warnings)
-
-```css
-.aside.note {
-    background: #e8f4fd;
-    border-left-color: #2196f3;
-}
-
-.aside.warning {
-    background: #fff8e1;
-    border-left-color: #ffc107;
-}
-```
-
-### Search Results
-
-```css
-.search-result-item {
-    transition: background 0.2s;
-}
-
-.result-type-symbol {
-    background: #e3f2fd;
-    color: #1565c0;
-}
-```
-
-## Full Theme Example
-
-A complete custom theme:
-
-```swift
-let theme = ThemeConfiguration(
-    accentColour: "#6366f1",  // Indigo
-    includeDarkMode: true,
-    customCSS: """
-    /* Custom font */
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
-
-    :root {
-        --typography-html-font: 'Inter', -apple-system, sans-serif;
-    }
-
-    /* Rounded corners throughout */
-    .declaration,
-    .topic-link-container,
-    .module-card,
-    .aside,
-    pre {
-        border-radius: 12px;
-    }
-
-    /* Subtle shadows */
-    .module-card {
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
-    }
-
-    .module-card:hover {
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    }
-
-    /* Custom header */
-    .index-header h1 {
-        background: linear-gradient(135deg, #6366f1, #8b5cf6);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-    }
-    """
-)
-
-let configuration = Configuration(
-    packageDirectory: packageURL,
-    outputDirectory: outputURL,
-    theme: theme
-)
-```
+The built-in themes' `theme-settings.json` files list many more.
 
 ## See Also
 
 - ``ThemeConfiguration``
 - ``ThemeSettings``
 - ``ThemeSettingsParser``
+- ``StylesheetLayer``
 - <doc:Configuration>

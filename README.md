@@ -259,24 +259,47 @@ docc-static generate --footer '<a href="https://example.com">My Company</a>'
 
 ### Theming
 
-The generated CSS uses CSS custom properties for theming. Override these in your own stylesheet to customise colours:
+Choose a built-in theme with `--theme`: `default` (the appearance of
+swift-docc-render) or `docc-static-classic` (alias `classic`, the original
+swift-docc-static appearance):
 
-```css
-:root {
-    --docc-bg: #ffffff;
-    --docc-fg: #1d1d1f;
-    --docc-accent: #0066cc;
-    /* ... */
-}
-
-@media (prefers-color-scheme: dark) {
-    :root {
-        --docc-bg: #1d1d1f;
-        --docc-fg: #f5f5f7;
-        /* ... */
-    }
-}
+```bash
+docc-static generate -p ./MyPackage -o ./docs --theme classic
 ```
+
+`--theme` also accepts a swift-docc-render compatible `theme-settings.json` file,
+or a theme directory containing `theme-settings.json` and optional `*.css`
+stylesheets that are applied after the base stylesheet.  Add your own CSS on top
+of any theme with `--custom-css`, and leave out dark mode styles with
+`--disable-dark-mode`.  The `generate`, `render` and `preview` commands and the
+plugin accept the same theme options:
+
+```bash
+docc-static generate -p ./MyPackage -o ./docs --theme ./MyTheme --custom-css ./tweaks.css
+swift package generate-static-documentation --theme classic --custom-css ./tweaks.css
+```
+
+See the Custom Themes article in the DocCStatic documentation for the theme
+format, feature switches and the stylesheet layers.
+
+### Built-in Themes and Visual Regression Tests
+
+The built-in themes are the theme directories in `Themes/`; the base stylesheet
+shared by all themes is split into the files in `Stylesheets/`.  Both are
+compiled into the binary when the package is built, so adding a directory with a
+`theme-settings.json` file to `Themes/` adds a built-in theme.
+
+`Tests/VisualRegression` contains a browser-based regression harness that
+compares the rendered fixture package with golden data recorded from
+swift-docc-render (for `default`) and from the `main` branch (for
+`docc-static-classic`).  Print the current differences of a theme with:
+
+```bash
+node Tests/VisualRegression/run.mjs --theme docc-static-classic
+```
+
+See `Tests/VisualRegression/README.md` for its requirements, the known-issue
+lists and how to regenerate the golden data.
 
 ## Architecture
 

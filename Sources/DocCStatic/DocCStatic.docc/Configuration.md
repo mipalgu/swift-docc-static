@@ -112,7 +112,32 @@ When search is enabled, the generator:
 
 ## Theme Configuration
 
-Customise the visual appearance with ``ThemeConfiguration``:
+Customise the visual appearance with ``ThemeConfiguration``.  See
+<doc:CustomThemes> for theme files, theme directories and feature switches.
+
+### Built-in Themes
+
+```swift
+let configuration = Configuration(
+    packageDirectory: packageURL,
+    outputDirectory: outputURL,
+    theme: ThemeConfiguration(builtInTheme: .classic)
+)
+```
+
+### Theme Names, Files and Directories
+
+``ThemeConfiguration/resolveTheme(_:includeDarkMode:customCSS:warningHandler:)``
+resolves a string the same way as the `--theme` option: a theme directory, a
+`theme-settings.json` file, or the exact name or alias of a built-in theme.
+
+```swift
+let configuration = Configuration(
+    packageDirectory: packageURL,
+    outputDirectory: outputURL,
+    theme: try ThemeConfiguration.resolveTheme("MyTheme")
+)
+```
 
 ### Custom Accent Colour
 
@@ -133,24 +158,20 @@ let configuration = Configuration(
 let configuration = Configuration(
     packageDirectory: packageURL,
     outputDirectory: outputURL,
-    theme: ThemeConfiguration(
-        accentColour: "#0066cc",
-        includeDarkMode: false
-    )
+    theme: ThemeConfiguration(builtInTheme: .default, includeDarkMode: false)
 )
 ```
 
 ### Custom CSS
 
-Append custom CSS to the generated stylesheet:
+Append custom CSS after the theme's own stylesheets:
 
 ```swift
 let configuration = Configuration(
     packageDirectory: packageURL,
     outputDirectory: outputURL,
     theme: ThemeConfiguration(
-        accentColour: "#0066cc",
-        includeDarkMode: true,
+        builtInTheme: .default,
         customCSS: """
         .my-custom-class {
             font-weight: bold;

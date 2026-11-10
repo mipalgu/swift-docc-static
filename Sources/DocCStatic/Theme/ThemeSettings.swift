@@ -50,6 +50,9 @@ import Foundation
 /// - ``ColorValue``
 /// - ``Value``
 /// - ``FeatureFlag``
+/// - ``Stylesheet``
+/// - ``WarningHandler``
+/// - ``StandardErrorWarningHandler``
 ///
 /// ### Built-in Themes
 /// - ``BuiltInTheme``
@@ -68,6 +71,15 @@ public enum ThemeSettings {
 
     /// A feature switch in the `features` section.
     public typealias FeatureFlag = ThemeFeatureFlag
+
+    /// A stylesheet of a theme or of the base stylesheet.
+    public typealias Stylesheet = ThemeStylesheet
+
+    /// A receiver of warnings about unknown keys in theme files.
+    public typealias WarningHandler = ThemeParsingWarningHandler
+
+    /// A warning handler that prints warnings to the standard error stream.
+    public typealias StandardErrorWarningHandler = StderrWarningHandler
 }
 
 // MARK: - Built-in Theme Lookup

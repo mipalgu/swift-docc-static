@@ -1,0 +1,12 @@
+/* MyTheme/theme.css: applied after the base stylesheet */
+
+/* Rounded page header */
+.documentation-hero {
+    border-radius: 12px;
+}
+
+/* Topic items with a subtle shadow */
+.link-block.topic {
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
