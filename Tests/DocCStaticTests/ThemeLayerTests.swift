@@ -220,6 +220,21 @@ struct RuntimeThemeLoadingTests {
         }
     }
 
+    @Test("A custom CSS file is read for the custom layer")
+    func customCSSFile() throws {
+        let directory = try temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let file = directory.appendingPathComponent("extra.css")
+        try ".extra-rule { color: red; }".write(to: file, atomically: true, encoding: .utf8)
+        let css = try ThemeConfiguration.loadCustomCSS(from: file.path)
+        let theme = try ThemeConfiguration.resolveTheme("classic", customCSS: css, warningHandler: nil)
+        let stylesheet = DocCStylesheet.generate(theme: theme)
+        #expect(stylesheet.hasSuffix(StylesheetLayer.custom.marker() + "\n.extra-rule { color: red; }\n\n"))
+        #expect(throws: ThemeResolutionError.self) {
+            try ThemeConfiguration.loadCustomCSS(from: directory.appendingPathComponent("missing.css").path)
+        }
+    }
+
     @Test("Feature switches default to off for built-in themes without them")
     func builtInFeatureDefaults() {
         #expect(!ThemeConfiguration.default.isEnabled(.onThisPageNavigatorDisabled))

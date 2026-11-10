@@ -41,6 +41,55 @@ struct DocCStaticCommand: AsyncParsableCommand {
     )
 }
 
+// MARK: - Theme Options
+
+/// The command line options that select and customise the theme.
+///
+/// These options are shared by the `generate`, `render` and `preview` commands.
+struct ThemeOptions: ParsableArguments {
+    @Option(
+        name: .long,
+        help: ArgumentHelp(
+            "Built-in theme name, theme-settings.json file, or theme directory.",
+            discussion: """
+                A built-in theme is selected by its exact name or alias (for example \
+                'default', 'docc-static-classic' or 'classic').  A theme directory \
+                contains theme-settings.json and optional *.css stylesheets.
+                """,
+            valueName: "theme"
+        ))
+    var theme: String?
+
+    @Option(
+        name: .customLong("custom-css"),
+        help: ArgumentHelp(
+            "CSS file appended after the theme's stylesheets.",
+            valueName: "file"
+        ))
+    var customCSS: String?
+
+    @Flag(
+        name: .long,
+        help: "Disable dark mode styles in the generated documentation.")
+    var disableDarkMode: Bool = false
+
+    /// Resolves the options to a theme configuration.
+    ///
+    /// - Returns: The theme configuration.
+    /// - Throws: A `ValidationError` if the theme or the custom CSS file cannot be read.
+    func themeConfiguration() throws -> ThemeConfiguration {
+        do {
+            return try ThemeConfiguration.resolveTheme(
+                theme,
+                includeDarkMode: !disableDarkMode,
+                customCSS: try customCSS.map(ThemeConfiguration.loadCustomCSS(from:))
+            )
+        } catch let error as ThemeResolutionError {
+            throw ValidationError(error.description)
+        }
+    }
+}
+
 // MARK: - Generate Command
 
 struct Generate: AsyncParsableCommand {
@@ -102,15 +151,8 @@ struct Generate: AsyncParsableCommand {
     @Option(name: .long, help: "Custom HTML for the page footer.")
     var footer: String?
 
-    @Option(
-        name: .long,
-        help: "Theme name or path to theme-settings.json file (e.g., 'default', 'classic', or '/path/to/custom.json').")
-    var theme: String?
-
-    @Flag(
-        name: .long,
-        help: "Disable dark mode styles in the generated documentation.")
-    var disableDarkMode: Bool = false
+    @OptionGroup(title: "Theme Options")
+    var themeOptions: ThemeOptions
 
     mutating func run() async throws {
         let packageDirectory = URL(fileURLWithPath: packagePath).standardizedFileURL
@@ -146,7 +188,7 @@ struct Generate: AsyncParsableCommand {
         }
 
         // Parse theme configuration
-        let themeConfig = try parseThemeConfiguration()
+        let themeConfig = try themeOptions.themeConfiguration()
 
         let configuration = Configuration(
             packageDirectory: packageDirectory,
@@ -189,18 +231,6 @@ struct Generate: AsyncParsableCommand {
             throw CleanExit.message("Error: \(error.localizedDescription)")
         }
     }
-
-    /// Parses the theme configuration from command line options.
-    private func parseThemeConfiguration() throws -> ThemeConfiguration {
-        do {
-            return try ThemeConfiguration.resolveTheme(
-                theme,
-                includeDarkMode: !disableDarkMode
-            )
-        } catch let error as ThemeResolutionError {
-            throw ValidationError(error.description)
-        }
-    }
 }
 
 // MARK: - Render Command
@@ -230,6 +260,9 @@ struct Render: AsyncParsableCommand {
     @Option(name: .long, help: "Custom HTML for the page footer.")
     var footer: String?
 
+    @OptionGroup(title: "Theme Options")
+    var themeOptions: ThemeOptions
+
     mutating func run() async throws {
         let archiveURL = URL(fileURLWithPath: archivePath).standardizedFileURL
         let outputDirectory = URL(fileURLWithPath: output).standardizedFileURL
@@ -245,6 +278,7 @@ struct Render: AsyncParsableCommand {
             dependencyPolicy: .none,
             externalDocumentationURLs: [:],
             includeSearch: !disableSearch,
+            theme: try themeOptions.themeConfiguration(),
             isVerbose: isVerbose,
             scratchPath: nil,
             symbolGraphDir: nil,
@@ -352,15 +386,8 @@ struct Preview: AsyncParsableCommand {
     @Option(name: .long, help: "Custom HTML for the page footer.")
     var footer: String?
 
-    @Option(
-        name: .long,
-        help: "Theme name or path to theme-settings.json file (e.g., 'default', 'classic', or '/path/to/custom.json').")
-    var theme: String?
-
-    @Flag(
-        name: .long,
-        help: "Disable dark mode styles in the generated documentation.")
-    var disableDarkMode: Bool = false
+    @OptionGroup(title: "Theme Options")
+    var themeOptions: ThemeOptions
 
     mutating func run() async throws {
         #if os(Windows)
@@ -433,7 +460,7 @@ struct Preview: AsyncParsableCommand {
         }
 
         // Parse theme configuration
-        let themeConfig = try parseThemeConfiguration()
+        let themeConfig = try themeOptions.themeConfiguration()
 
         let configuration = Configuration(
             packageDirectory: packageDirectory,
@@ -469,18 +496,6 @@ struct Preview: AsyncParsableCommand {
             for warning in result.warnings {
                 print("  \(warning)")
             }
-        }
-    }
-
-    /// Parses the theme configuration from command line options.
-    private func parseThemeConfiguration() throws -> ThemeConfiguration {
-        do {
-            return try ThemeConfiguration.resolveTheme(
-                theme,
-                includeDarkMode: !disableDarkMode
-            )
-        } catch let error as ThemeResolutionError {
-            throw ValidationError(error.description)
         }
     }
 

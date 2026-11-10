@@ -401,6 +401,19 @@ public struct ThemeConfiguration: Sendable, Equatable {
         throw ThemeResolutionError.themeNotFound(themeString, availableThemeNames)
     }
 
+    /// Reads a custom CSS file to be appended after the theme's stylesheets.
+    ///
+    /// - Parameter path: The path of the CSS file.
+    /// - Returns: The contents of the file.
+    /// - Throws: `ThemeResolutionError.invalidThemeFile` if the file cannot be read.
+    public static func loadCustomCSS(from path: String) throws -> String {
+        do {
+            return try String(contentsOf: URL(fileURLWithPath: path), encoding: .utf8)
+        } catch {
+            throw ThemeResolutionError.invalidThemeFile(path, error.localizedDescription)
+        }
+    }
+
     /// The names of the built-in themes, with their aliases, for error messages.
     static var availableThemeNames: String {
         ThemeSettings.BuiltInTheme.allCases.map { theme in

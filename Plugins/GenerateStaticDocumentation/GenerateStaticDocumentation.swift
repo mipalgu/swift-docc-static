@@ -27,10 +27,11 @@ struct GenerateStaticDocumentation: CommandPlugin {
         let includeDeps = argumentExtractor.extractOption(named: "include-dependency", allowMultiple: true)
         let excludeDeps = argumentExtractor.extractOption(named: "exclude-dependency", allowMultiple: true)
         let externalDocs = argumentExtractor.extractOption(named: "external-docs", allowMultiple: true)
-        let includeSearch = argumentExtractor.extractFlag(named: "include-search")
+        let disableSearch = argumentExtractor.extractFlag(named: "disable-search")
         let verbose = argumentExtractor.extractFlag(named: "verbose")
+        let footer = argumentExtractor.extractOption(named: "footer")
         let theme = argumentExtractor.extractOption(named: "theme")
-        let themeSettings = argumentExtractor.extractOption(named: "theme-settings")
+        let customCSS = argumentExtractor.extractOption(named: "custom-css")
         let disableDarkMode = argumentExtractor.extractFlag(named: "disable-dark-mode")
 
         // Determine which targets to document
@@ -115,8 +116,8 @@ struct GenerateStaticDocumentation: CommandPlugin {
             processArgs.append(contentsOf: ["--external-docs", ext])
         }
 
-        if includeSearch {
-            processArgs.append("--include-search")
+        if disableSearch {
+            processArgs.append("--disable-search")
         }
 
         if verbose {
@@ -127,8 +128,12 @@ struct GenerateStaticDocumentation: CommandPlugin {
             processArgs.append(contentsOf: ["--theme", theme])
         }
 
-        if let themeSettings = themeSettings {
-            processArgs.append(contentsOf: ["--theme-settings", themeSettings])
+        if let footer = footer {
+            processArgs.append(contentsOf: ["--footer", footer])
+        }
+
+        if let customCSS = customCSS {
+            processArgs.append(contentsOf: ["--custom-css", customCSS])
         }
 
         if disableDarkMode {
