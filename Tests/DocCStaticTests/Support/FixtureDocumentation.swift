@@ -75,7 +75,7 @@ struct GeneratedFixture: Sendable {
 
 /// Generates and caches documentation for the bundled fixture package.
 ///
-/// Each distinct variant (a theme plus a run number) is generated at most once per
+/// Each distinct variant (a theme configuration with a name) is generated at most once per
 /// test process; concurrent requests for the same variant share one generation task.
 /// All scratch and output directories live in the system temporary directory, so
 /// nothing is written into the repository.  The package build cache is kept between
@@ -102,15 +102,29 @@ actor FixtureDocumentation {
         theme: ThemeSettings.BuiltInTheme = .default,
         run: Int = 0
     ) async throws -> GeneratedFixture {
-        let key = "\(theme.rawValue)-\(run)"
-        if let task = tasks[key] {
+        try await output(
+            configuration: ThemeConfiguration(builtInTheme: theme, includeDarkMode: true, customCSS: nil),
+            variant: "\(theme.rawValue)-\(run)"
+        )
+    }
+
+    /// Returns documentation generated from the fixture package with any theme configuration.
+    ///
+    /// - Parameters:
+    ///   - configuration: The theme configuration to generate with.
+    ///   - variant: A name that identifies this configuration; requests with the
+    ///     same name share one generation.
+    /// - Returns: The generated fixture output.
+    /// - Throws: Any error raised while preparing the package or generating documentation.
+    func output(configuration: ThemeConfiguration, variant: String) async throws -> GeneratedFixture {
+        if let task = tasks[variant] {
             return try await task.value
         }
         let root = try prepareWorkspace()
         let task = Task {
-            try await Self.generate(in: root, theme: theme, outputName: "output-\(key)")
+            try await Self.generate(in: root, theme: configuration, outputName: "output-\(variant)")
         }
-        tasks[key] = task
+        tasks[variant] = task
         return try await task.value
     }
 
@@ -137,13 +151,13 @@ actor FixtureDocumentation {
     ///
     /// - Parameters:
     ///   - root: The workspace root prepared by ``prepareWorkspace()``.
-    ///   - theme: The built-in theme to use.
+    ///   - theme: The theme configuration to use.
     ///   - outputName: The name of the output directory below the workspace.
     /// - Returns: The generated fixture output.
     /// - Throws: Any generation error.
     private static func generate(
         in root: URL,
-        theme: ThemeSettings.BuiltInTheme,
+        theme: ThemeConfiguration,
         outputName: String
     ) async throws -> GeneratedFixture {
         let output = root.appendingPathComponent("outputs").appendingPathComponent(outputName)
@@ -151,7 +165,7 @@ actor FixtureDocumentation {
             packageDirectory: root.appendingPathComponent("package"),
             outputDirectory: output,
             includeSearch: true,
-            theme: ThemeConfiguration(builtInTheme: theme, includeDarkMode: true, customCSS: nil),
+            theme: theme,
             scratchPath: root.appendingPathComponent("scratch")
         )
         let result = try await StaticDocumentationGenerator(configuration: configuration).generate()
@@ -159,7 +173,7 @@ actor FixtureDocumentation {
     }
 
     /// The location of the fixture package in the source tree.
-    private static var fixturePackageSource: URL {
+    static var fixturePackageSource: URL {
         URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()  // Support
             .deletingLastPathComponent()  // DocCStaticTests

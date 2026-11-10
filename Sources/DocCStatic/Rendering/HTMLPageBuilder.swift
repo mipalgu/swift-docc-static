@@ -5,6 +5,7 @@
 //  Created by Rene Hexel on 3/01/2026.
 //  Copyright © 2026 Rene Hexel. All rights reserved.
 //
+import DocCStaticThemes
 import Foundation
 import SwiftDocC
 
@@ -27,6 +28,19 @@ public struct HTMLPageBuilder: Sendable {
 
     /// The content renderer for converting render node content to HTML.
     private let contentRenderer: RenderContentHTMLRenderer
+}
+
+// MARK: - Shared Class Names
+
+public extension HTMLPageBuilder {
+    /// The class of the element that wraps a page's abstract in the hero.
+    ///
+    /// This mirrors swift-docc-render's `abstract content` wrapper and is also
+    /// used to read module abstracts back from generated module pages.
+    static let heroAbstractClass = "abstract content"
+
+    /// The class of the sticky "On This Page" navigator column.
+    static let onThisPageContainerClass = "OnThisPageStickyContainer"
 }
 
 // MARK: - Public Methods
@@ -767,12 +781,12 @@ private extension HTMLPageBuilder {
                             <h1>\(escapeHTML(title))</h1>
         """
 
-        // Abstract — uses <div class="abstract content"> wrapper matching docc-render
+        // Abstract, in the same wrapper as swift-docc-render
         if let abstract = renderNode.abstract {
             let abstractHTML = contentRenderer.renderInlineContent(abstract, references: references, depth: depth)
             html += """
 
-                            <div class="abstract content"><p>\(abstractHTML.html)</p></div>
+                            <div class="\(Self.heroAbstractClass)"><p>\(abstractHTML.html)</p></div>
             """
         }
 
@@ -901,8 +915,11 @@ private extension HTMLPageBuilder {
     ///   - renderNode: The render node for the current page.
     ///   - title: The page title (used as the first nav item label).
     /// - Returns: HTML string for the sticky container, or an empty string if there
-    ///   are no sections to navigate to.
+    ///   are no sections to navigate to or the theme disables the navigator
+    ///   (``ThemeFeatureFlag/onThisPageNavigatorDisabled``).
     func buildOnThisPageNav(for renderNode: RenderNode, title: String) -> String {
+        guard !configuration.theme.isEnabled(.onThisPageNavigatorDisabled) else { return "" }
+
         // Nav items carry both their anchor/label and whether they are a child (H3) or parent (H2).
         struct NavItem {
             let anchor: String
@@ -950,7 +967,7 @@ private extension HTMLPageBuilder {
 
         var html = """
 
-                        <div class="OnThisPageStickyContainer">
+                        <div class="\(Self.onThisPageContainerClass)">
                             <div class="OnThisPageNav">
                                 <ul class="items">
         """

@@ -1448,9 +1448,9 @@ public struct StaticDocumentationGenerator: Sendable {
             title = String(html[titleStart.upperBound..<titleEnd.lowerBound])
         }
 
-        // Extract abstract from <p class="abstract">
+        // Extract the abstract from the hero's abstract wrapper
         var abstract = "Documentation for \(title)"
-        if let abstractStart = html.range(of: "<p class=\"abstract\">"),
+        if let abstractStart = html.range(of: "<div class=\"\(HTMLPageBuilder.heroAbstractClass)\"><p>"),
             let abstractEnd = html.range(
                 of: "</p>", range: abstractStart.upperBound..<html.endIndex)
         {
