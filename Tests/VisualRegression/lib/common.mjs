@@ -103,6 +103,9 @@ export function expandMeasurement(pages) {
 }
 
 /** Whether a difference in `property` is irrelevant given both computed styles. */
+/** Removes the local server origin from URLs in a value, as each run serves on its own port. */
+const withoutOrigin = (value) => typeof value === 'string' ? value.replace(/http:\/\/127\.0\.0\.1:\d+/g, '') : value;
+
 function ignorable(property, expected, actual) {
   const sideOf = /^border(Top|Right|Bottom|Left)(Color|Style)$/.exec(property);
   if (sideOf) {
@@ -152,7 +155,8 @@ export function compareMeasurements(golden, actual, roles, config) {
         for (const property of config.properties) {
           const want = reference.style[property];
           const got = measured.style[property];
-          if (want === undefined || want === got || ignorable(property, reference.style, measured.style)) continue;
+          if (want === undefined || want === got || withoutOrigin(want) === withoutOrigin(got)
+            || ignorable(property, reference.style, measured.style)) continue;
           record(page, variant, role, property, want, got);
         }
         if (roles[role].geometry && reference.box && measured.box) {

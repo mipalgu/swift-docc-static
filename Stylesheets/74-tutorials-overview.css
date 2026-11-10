@@ -1,0 +1,582 @@
+/* ========================================
+   Tutorials overview page (swift-docc-render TutorialsOverview, Hero,
+   LearningPath, TutorialsNavigation, Volume, VolumeName, Chapter and
+   ChapterTopicList).  The page is always dark.
+   ======================================== */
+
+body.tutorial-overview-page {
+    --color-text-background: #000;
+}
+
+.tutorials-overview {
+    background: var(--color-tutorials-overview-fill, #000);
+    flex: 1;
+    height: 100%;
+}
+
+.tutorials-overview .radial-gradient {
+    margin-top: -3.0588235294rem;
+    padding-top: 3.0588235294rem;
+    background: var(--color-tutorials-overview-fill-secondary, var(--color-tutorials-overview-background, #161616));
+}
+
+/* Hero */
+.tutorials-overview .hero {
+    --color-fill: #000;
+    --color-fill-secondary: #161616;
+    --color-fill-tertiary: #2a2a2a;
+    --color-fill-blue: #06f;
+    --color-figure-gray: #fff;
+    --color-figure-gray-secondary: #ccc;
+    --color-figure-blue: #09f;
+    --color-link: var(--color-figure-blue);
+    --color-svg-icon: #b0b0b0;
+    --color-button-background-active: #06f;
+    margin-left: auto;
+    margin-right: auto;
+    width: var(--tutorial-content-width, 980px);
+    padding-bottom: 4.7058823529rem;
+    padding-top: 4.7058823529rem;
+}
+
+.tutorials-overview .hero .copy-container {
+    margin: 0 auto;
+    text-align: center;
+    width: 720px;
+}
+
+.tutorials-overview .hero .title {
+    font-size: 2.8235294118rem;
+    line-height: 1.0833333333;
+    font-weight: 400;
+    font-family: var(--typography-html-font, "Helvetica Neue", "Helvetica", "Arial", sans-serif);
+    color: var(--color-tutorials-overview-content, #fff);
+}
+
+.tutorials-overview .hero .content {
+    font-size: 1.2352941176rem;
+    line-height: 1.380952381;
+    font-weight: 400;
+    font-family: var(--typography-html-font, "Helvetica Neue", "Helvetica", "Arial", sans-serif);
+    color: var(--color-tutorials-overview-content, #fff);
+}
+
+.tutorials-overview .hero .meta {
+    color: var(--color-tutorials-overview-content-alt, #fff);
+    align-items: center;
+    display: flex;
+    justify-content: center;
+}
+
+.tutorials-overview .hero .meta-content {
+    font-size: 0.8235294118rem;
+    line-height: 1.4285714286;
+    font-weight: 400;
+    font-family: var(--typography-html-font, "Helvetica Neue", "Helvetica", "Arial", sans-serif);
+}
+
+.tutorials-overview .hero .meta .timer-icon {
+    display: block;
+    margin-right: 0.3529411765rem;
+    height: 16px;
+    width: 16px;
+    fill: var(--color-tutorials-overview-icon, #b0b0b0);
+}
+
+.tutorials-overview .hero .meta .time {
+    font-size: 1.1176470588rem;
+    line-height: 1.2105263158;
+    font-weight: 600;
+    font-family: var(--typography-html-font, "Helvetica Neue", "Helvetica", "Arial", sans-serif);
+}
+
+.tutorials-overview .hero .title + .content {
+    margin-top: 1.4705882353rem;
+}
+
+.tutorials-overview .hero .content + .meta {
+    margin-top: 1.1764705882rem;
+}
+
+.tutorials-overview .hero .button-cta {
+    margin-top: 1.7647058824rem;
+}
+
+.tutorials-overview .hero * + .asset {
+    margin-top: 4.1176470588rem;
+}
+
+/* Learning path */
+.tutorials-overview .learning-path {
+    background: var(--color-tutorials-overview-fill, #000);
+    padding: 4.7058823529rem 0;
+}
+
+.tutorials-overview .main-container {
+    margin-left: auto;
+    margin-right: auto;
+    width: var(--tutorial-content-width, 980px);
+    align-items: stretch;
+    display: flex;
+    justify-content: space-between;
+}
+
+.tutorials-overview .secondary-content-container {
+    flex: 0 0 200px;
+    width: 200px;
+}
+
+.tutorials-overview .secondary-content-container .tutorials-navigation {
+    position: sticky;
+    top: 7.7647058824rem;
+}
+
+.tutorials-overview .primary-content-container {
+    flex: 0 1 720px;
+    max-width: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+/* Clipping without a scroll container keeps the chapters on the page's scroll timeline */
+.tutorials-overview .content-sections-container .content-section {
+    border-radius: 12px;
+    overflow: clip;
+}
+
+.tutorials-overview .content-sections-container .content-section + .content-section {
+    margin-top: 1.1764705882rem;
+}
+
+/* In-page navigation: the chapter in view is highlighted */
+.tutorials-overview .tutorials-navigation {
+    font-size: 1rem;
+    line-height: 1.2352941176;
+    font-weight: 400;
+    font-family: var(--typography-html-font, "Helvetica Neue", "Helvetica", "Arial", sans-serif);
+}
+
+.tutorials-overview .tutorials-navigation-list {
+    list-style-type: none;
+    margin: 0;
+}
+
+.tutorials-overview .tutorials-navigation-list li + li:not(.volume--named) {
+    margin-top: 24px;
+}
+
+.tutorials-overview .tutorials-navigation-link {
+    color: var(--color-tutorials-overview-navigation-link, #ccc);
+    transition: color 0.3s linear;
+}
+
+.tutorials-overview .tutorials-navigation li:has(> .tutorials-navigation-link) {
+    animation: tutorial-current linear none;
+    animation-timeline: var(--tutorial-section-timeline, none);
+}
+
+.tutorials-overview .tutorials-navigation li:last-child:has(> .tutorials-navigation-link) {
+    animation-fill-mode: forwards;
+}
+
+@container style(--tutorial-current: 1) {
+    .tutorials-overview .tutorials-navigation-link {
+        color: var(--color-tutorials-overview-navigation-link-active, #fff);
+    }
+}
+
+.tutorials-overview .tutorials-navigation-link:hover {
+    text-decoration: none;
+    transition: none;
+    color: var(--color-tutorials-overview-navigation-link-hover, #fff);
+}
+
+/* Volumes and chapters */
+.tutorials-overview .volume-name {
+    padding: 50px 60px;
+    text-align: center;
+    background: var(--color-tutorials-overview-fill-secondary, #161616);
+    margin: 2px 0;
+}
+
+.tutorials-overview .volume-name .name {
+    font-size: 1.8823529412rem;
+    line-height: 1.125;
+    font-weight: 400;
+    font-family: var(--typography-html-font, "Helvetica Neue", "Helvetica", "Arial", sans-serif);
+    color: var(--color-tutorials-overview-header-text, #f0f0f0);
+    word-break: break-word;
+}
+
+.tutorials-overview .volume-name .content {
+    font-size: 1rem;
+    line-height: 1.2352941176;
+    font-weight: 400;
+    color: var(--color-tutorials-overview-content-alt, #fff);
+    margin-top: 10px;
+}
+
+.tutorials-overview .tile {
+    background: var(--color-tutorials-overview-fill-secondary, #161616);
+    margin: 2px 0;
+    padding: 50px 60px;
+}
+
+.tutorials-overview .chapter:focus {
+    outline: none !important;
+}
+
+.tutorials-overview .chapter .info {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+}
+
+.tutorials-overview .chapter .name {
+    font-size: 1.2352941176rem;
+    line-height: 1.1904761905;
+    font-weight: 600;
+    font-family: var(--typography-html-font, "Helvetica Neue", "Helvetica", "Arial", sans-serif);
+    color: var(--color-tutorials-overview-header-text, #f0f0f0);
+}
+
+.tutorials-overview .chapter .name-text {
+    word-break: break-word;
+}
+
+.tutorials-overview .chapter .eyebrow {
+    font-size: 1rem;
+    line-height: 1.2352941176;
+    font-family: var(--typography-html-font, "Helvetica Neue", "Helvetica", "Arial", sans-serif);
+    color: var(--color-tutorials-overview-eyebrow, #ccc);
+    display: block;
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+
+.tutorials-overview .chapter .intro .content {
+    font-size: 0.8235294118rem;
+    line-height: 1.4285714286;
+    font-weight: 400;
+    font-family: var(--typography-html-font, "Helvetica Neue", "Helvetica", "Arial", sans-serif);
+    color: var(--color-tutorials-overview-content-alt, #fff);
+}
+
+.tutorials-overview .chapter .asset {
+    flex: 0 0 190px;
+}
+
+.tutorials-overview .chapter .intro {
+    flex: 0 1 360px;
+}
+
+/* Topics of a chapter, joined by a line through their icons */
+.tutorials-overview .topic-list {
+    list-style-type: none;
+    margin: 50px 0 0 0;
+    position: relative;
+}
+
+.tutorials-overview .topic-list li::before {
+    content: "\200B";
+    position: absolute;
+}
+
+.tutorials-overview .topic-list::before {
+    content: "";
+    border-left: 1px solid var(--color-fill-quaternary, #282828);
+    display: block;
+    height: calc(100% - 0.88235rem);
+    left: 0.8823529412rem;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 0;
+}
+
+.tutorials-overview .topic {
+    font-size: 1rem;
+    line-height: 1.4705882353;
+    font-weight: 400;
+    font-family: var(--typography-html-font, "Helvetica Neue", "Helvetica", "Arial", sans-serif);
+    display: flex;
+    align-items: flex-start;
+}
+
+.tutorials-overview .topic + .topic {
+    margin-top: 0.5882352941rem;
+}
+
+.tutorials-overview .topic .topic-icon {
+    background-color: var(--color-fill-quaternary, #282828);
+    border-radius: 50%;
+    flex-shrink: 0;
+    height: 1.7647058824rem;
+    width: 1.7647058824rem;
+    margin-right: 1.1764705882rem;
+    position: relative;
+    text-align: center;
+    user-select: none;
+    padding: 0.4705882353rem;
+    box-sizing: border-box;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.tutorials-overview .topic .topic-icon svg {
+    fill: var(--color-tutorials-overview-icon, #b0b0b0);
+    max-width: 100%;
+    max-height: 100%;
+    width: 100%;
+}
+
+.tutorials-overview .topic .container {
+    max-width: none;
+    margin: 0;
+    padding: 0;
+    align-items: baseline;
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    padding-top: 0.1176470588rem;
+}
+
+.tutorials-overview .topic .container:hover {
+    text-decoration: none;
+}
+
+.tutorials-overview .topic .container:hover .link {
+    text-decoration: underline;
+}
+
+.tutorials-overview .topic .timer-icon {
+    margin-right: 0.2941176471rem;
+    height: 0.7058823529rem;
+    width: 0.7058823529rem;
+    fill: var(--color-tutorials-overview-icon, #b0b0b0);
+}
+
+.tutorials-overview .topic .time {
+    font-size: 0.8235294118rem;
+    line-height: 1.2857142857;
+    font-weight: 400;
+    font-family: var(--typography-html-font, "Helvetica Neue", "Helvetica", "Arial", sans-serif);
+    color: var(--color-tutorials-overview-content-alt, #fff);
+    align-items: center;
+    display: inline-flex;
+}
+
+.tutorials-overview .topic .link {
+    padding-right: 0.5882352941rem;
+    color: var(--colors-link, var(--color-tutorials-overview-link, #09f));
+}
+
+@media only screen and (min-width: 768px) and (max-width: 1250px) {
+    .tutorials-overview .learning-path {
+        padding: 2.3529411765rem 0;
+    }
+
+    .tutorials-overview .primary-content-container {
+        flex-basis: auto;
+        margin-left: 1.2941176471rem;
+    }
+
+    .tutorials-overview .secondary-content-container {
+        flex: 0 0 180px;
+        width: 180px;
+    }
+
+    .tutorials-overview .tile {
+        padding: 40px 30px;
+    }
+
+    .tutorials-overview .chapter .asset {
+        flex: 0 0 130px;
+    }
+
+    .tutorials-overview .chapter .intro {
+        flex: 0 1 260px;
+    }
+
+    .tutorials-overview .topic-list {
+        margin-top: 2.3529411765rem;
+    }
+}
+
+@media only screen and (max-width: 1250px) {
+    .tutorials-overview .hero,
+    .tutorials-overview .main-container {
+        width: var(--tutorial-content-width-medium, 692px);
+    }
+
+    .tutorials-overview .hero .copy-container {
+        width: 636px;
+    }
+
+    .tutorials-overview .hero .title {
+        font-size: 2.3529411765rem;
+        line-height: 1.1;
+    }
+
+    .tutorials-overview .volume-name .name {
+        font-size: 1.6470588235rem;
+        line-height: 1.1428571429;
+    }
+}
+
+@media only screen and (max-width: 767px) {
+    .tutorials-overview .secondary-content-container {
+        display: none;
+    }
+
+    .tutorials-overview .chapter .intro {
+        flex: 0 1 340px;
+    }
+}
+
+@media only screen and (max-width: 735px) {
+    .tutorials-overview .radial-gradient {
+        margin-top: -2.8235294118rem;
+        padding-top: 2.8235294118rem;
+    }
+
+    .tutorials-overview .hero {
+        width: var(--tutorial-content-width-small, 87.5%);
+        padding-bottom: 1.7647058824rem;
+        padding-top: 2.3529411765rem;
+    }
+
+    .tutorials-overview .hero .copy-container {
+        width: 100%;
+    }
+
+    .tutorials-overview .hero .title {
+        font-size: 1.8823529412rem;
+        line-height: 1.125;
+    }
+
+    .tutorials-overview .hero .content {
+        font-size: 1.1176470588rem;
+        line-height: 1.4210526316;
+    }
+
+    .tutorials-overview .hero .meta .timer-icon {
+        margin-right: 0.2941176471rem;
+        height: 0.8235294118rem;
+        width: 0.8235294118rem;
+    }
+
+    .tutorials-overview .hero .meta .time {
+        font-size: 1rem;
+        line-height: 1.1176470588;
+    }
+
+    .tutorials-overview .hero .title + .content {
+        margin-top: 0.8823529412rem;
+    }
+
+    .tutorials-overview .hero .button-cta {
+        margin-top: 1.4117647059rem;
+    }
+
+    .tutorials-overview .hero * + .asset {
+        margin-top: 2.2352941176rem;
+    }
+
+    .tutorials-overview .volume-name {
+        padding: 40px 20px;
+    }
+
+    .tutorials-overview .volume-name .name {
+        font-size: 1.4117647059rem;
+        line-height: 1.1666666667;
+    }
+
+    .tutorials-overview .content-sections-container .content-section {
+        border-radius: 0;
+    }
+
+    .tutorials-overview .content-sections-container .content-section.volume {
+        margin-top: 1.1764705882rem;
+    }
+
+    .tutorials-overview .learning-path {
+        padding: 0;
+    }
+
+    .tutorials-overview .main-container {
+        width: 100%;
+    }
+
+    .tutorials-overview .tile {
+        padding: 40px 20px;
+    }
+
+    .tutorials-overview .chapter .info {
+        display: block;
+        text-align: center;
+    }
+
+    .tutorials-overview .chapter .asset {
+        margin: 0 45px;
+    }
+
+    .tutorials-overview .chapter .eyebrow {
+        margin-bottom: 7px;
+    }
+
+    .tutorials-overview .chapter .intro {
+        margin-top: 40px;
+    }
+
+    .tutorials-overview .topic-list {
+        margin-top: 1.7647058824rem;
+    }
+
+    .tutorials-overview .topic {
+        font-size: 0.8235294118rem;
+        line-height: 1.2857142857;
+        height: auto;
+        align-items: flex-start;
+    }
+
+    .tutorials-overview .topic.no-time-estimate {
+        align-items: center;
+    }
+
+    .tutorials-overview .topic.no-time-estimate .topic-icon {
+        align-self: flex-start;
+        top: 0;
+    }
+
+    .tutorials-overview .topic + .topic {
+        margin-top: 1.1764705882rem;
+    }
+
+    .tutorials-overview .topic .topic-icon {
+        top: 0.2941176471rem;
+        margin-right: 0.7647058824rem;
+    }
+
+    .tutorials-overview .topic .container {
+        flex-wrap: wrap;
+        padding-top: 0;
+    }
+
+    .tutorials-overview .topic .link,
+    .tutorials-overview .topic .time {
+        flex-basis: 100%;
+    }
+
+    .tutorials-overview .topic .time {
+        margin-top: 0.2941176471rem;
+    }
+}
+
+@media only screen and (max-width: 320px) {
+    .tutorials-overview .hero {
+        width: 215px;
+    }
+}

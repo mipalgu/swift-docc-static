@@ -139,8 +139,13 @@ struct ThemeDOMStructureTests {
             "class=\"code-listing\"", "<table", "<img", "<ol", "<ul", "<code>",
             "aside note", "aside tip", "aside important", "aside warning", "aside experiment",
         ],
-        "tutorial-page": ["class=\"tutorial-hero\"", "class=\"tutorial-section\"", "class=\"step-card\"", "class=\"tutorial-assessments\""],
-        "tutorialsOverview": ["class=\"overview-hero\"", "class=\"tutorial-card\""],
+        "tutorial-page": [
+            "class=\"\(TutorialDocument.heroClass)\"", "class=\"\(TutorialDocument.sectionClass)\"",
+            "class=\"\(TutorialDocument.stepClass)\"", "class=\"\(TutorialDocument.assessmentsClass)\"",
+        ],
+        "tutorialsOverview": [
+            "class=\"\(TutorialDocument.overviewHeroClass)\"", "class=\"\(TutorialDocument.chapterClass) tile\"",
+        ],
     ]
 
     @Test("The fixture page list covers every page kind")

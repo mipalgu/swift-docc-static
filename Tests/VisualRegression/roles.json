@@ -194,7 +194,7 @@
   ]
  },
  "main": {
-  "static": "main.doc-topic",
+  "static": "main.doc-topic, main#app-main",
   "main": "main.doc-main",
   "vue": "main#app-main, #app-main",
   "geometry": true
@@ -413,7 +413,7 @@
   "vue": ".primary-content ul > li"
  },
  "orderedList": {
-  "static": ".primary-content-container ol",
+  "static": ".primary-content-container:not(.learning-path *) ol",
   "main": "main.doc-main ol",
   "vue": ".primary-content ol"
  },
@@ -469,7 +469,7 @@
   "vue": ".primary-content td"
  },
  "image": {
-  "static": ".primary-content-container img",
+  "static": ".primary-content-container:not(.learning-path *) img",
   "main": "main.doc-main img",
   "vue": ".primary-content img"
  },
@@ -569,7 +569,7 @@
   ]
  },
  "tutorialNav": {
-  "static": "nav.tutorial-nav",
+  "static": "nav.nav",
   "main": "nav.tutorial-nav",
   "vue": "nav.nav",
   "kinds": [
@@ -577,7 +577,7 @@
   ]
  },
  "tutorialNavTitle": {
-  "static": ".tutorial-nav-title",
+  "static": ".nav-title-content .title",
   "main": ".tutorial-nav-title",
   "vue": ".nav-title-content .title",
   "kinds": [
@@ -585,7 +585,7 @@
   ]
  },
  "tutorialHero": {
-  "static": "section.tutorial-hero",
+  "static": ".tutorial-hero .hero",
   "main": ".tutorial-hero",
   "vue": ".tutorial-hero .hero",
   "geometry": true,
@@ -602,7 +602,7 @@
   ]
  },
  "tutorialChapter": {
-  "static": ".tutorial-chapter",
+  "static": ".tutorial-hero .eyebrow",
   "main": ".tutorial-chapter",
   "vue": ".tutorial-hero .eyebrow",
   "kinds": [
@@ -610,7 +610,7 @@
   ]
  },
  "tutorialAbstract": {
-  "static": ".tutorial-abstract",
+  "static": ".tutorial-hero .intro",
   "main": ".tutorial-abstract",
   "vue": ".tutorial-hero .intro",
   "kinds": [
@@ -618,7 +618,7 @@
   ]
  },
  "tutorialSection": {
-  "static": ".tutorial-section",
+  "static": ".sections .section",
   "main": ".tutorial-section",
   "vue": ".sections .section",
   "kinds": [
@@ -626,7 +626,7 @@
   ]
  },
  "tutorialSectionTitle": {
-  "static": ".tutorial-section .section-title",
+  "static": ".section .intro h2",
   "main": ".tutorial-section .section-title",
   "vue": ".section .intro h2",
   "kinds": [
@@ -634,7 +634,7 @@
   ]
  },
  "tutorialStep": {
-  "static": ".step-card",
+  "static": ".step",
   "main": ".step-card",
   "vue": ".step",
   "kinds": [
@@ -642,7 +642,7 @@
   ]
  },
  "tutorialStepCode": {
-  "static": ".step-code-panel",
+  "static": ".asset-container .code-preview",
   "main": ".step-code-panel",
   "vue": ".asset-container .code-preview",
   "kinds": [
@@ -650,7 +650,7 @@
   ]
  },
  "tutorialAssessments": {
-  "static": ".tutorial-assessments",
+  "static": ".assessments-wrapper",
   "main": ".tutorial-assessments",
   "vue": ".assessments-wrapper",
   "kinds": [
@@ -658,7 +658,7 @@
   ]
  },
  "tutorialChoice": {
-  "static": ".choice",
+  "static": "label.choice",
   "main": ".choice",
   "vue": "label.choice",
   "kinds": [
@@ -666,7 +666,7 @@
   ]
  },
  "overviewHero": {
-  "static": ".overview-hero",
+  "static": ".tutorials-overview .hero",
   "main": ".overview-hero",
   "vue": ".tutorials-overview .hero",
   "kinds": [
@@ -674,7 +674,7 @@
   ]
  },
  "overviewTitle": {
-  "static": ".overview-hero h1, .overview-title",
+  "static": ".tutorials-overview .hero h1",
   "main": ".overview-hero h1, .overview-title",
   "vue": ".tutorials-overview .hero h1",
   "kinds": [
@@ -682,7 +682,7 @@
   ]
  },
  "overviewCard": {
-  "static": ".tutorial-card",
+  "static": ".chapter.tile",
   "main": ".tutorial-card",
   "vue": ".chapter.tile",
   "kinds": [
@@ -690,7 +690,7 @@
   ]
  },
  "overviewCardTitle": {
-  "static": ".tutorial-card-title",
+  "static": ".chapter .name",
   "main": ".tutorial-card-title",
   "vue": ".chapter .name",
   "kinds": [
@@ -1225,7 +1225,7 @@
   ]
  },
  "tutorialMobileFileName": {
-  "static": ".mobile-code-preview .code-listing-preview .filename a",
+  "static": ".mobile-code-preview .code-listing-preview .filename .filename-link",
   "main": null,
   "vue": ".mobile-code-preview .code-listing-preview .filename a",
   "kinds": [
