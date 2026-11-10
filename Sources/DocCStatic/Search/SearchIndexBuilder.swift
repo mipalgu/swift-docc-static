@@ -100,11 +100,13 @@ public extension SearchIndexBuilder {
     /// Returns  the complete search index.
     ///
     /// This builds and returns the complete search index
-    /// for the indexed documents.
+    /// for the indexed documents.  Documents are ordered by their
+    /// identifier, so the index does not depend on the order in
+    /// which pages were processed.
     ///
     /// - Returns: The search index ready for serialisation.
     var index: SearchIndex {
-        SearchIndex(documents: documents)
+        SearchIndex(documents: documents.sorted { $0.id < $1.id })
     }
 
     /// Adds a render node to the search index.
@@ -398,7 +400,9 @@ private extension SearchIndexBuilder {
             }
         }
 
-        return Array(Set(keywords)).filter { !$0.isEmpty }
+        // Remove duplicates while keeping the first occurrence, so the order is stable
+        var seen: Set<String> = []
+        return keywords.filter { !$0.isEmpty && seen.insert($0).inserted }
     }
 
     func extractModule(from renderNode: RenderNode) -> String? {
