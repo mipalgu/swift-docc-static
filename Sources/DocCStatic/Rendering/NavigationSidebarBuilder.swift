@@ -228,7 +228,15 @@ public extension NavigationSidebarBuilder {
                     for (var i = 0; i < marked.length; i++) {
                         marked[i].removeAttribute('aria-current');
                     }
-                    var target = document.querySelector(':target');
+                    var fragment = window.location.hash.slice(1);
+                    var target = fragment ? document.getElementById(fragment) : null;
+                    if (!target && fragment) {
+                        try {
+                            target = document.getElementById(decodeURIComponent(fragment));
+                        } catch (error) {
+                            target = null;
+                        }
+                    }
                     var link = target ? (target.tagName === 'A' ? target : target.querySelector('a')) : null;
                     if (link) {
                         link.setAttribute('aria-current', 'page');
