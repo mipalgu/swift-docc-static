@@ -14,6 +14,34 @@
 
                 @Code(name: "main.swift", file: "drawing-01.swift")
             }
+
+            @Step {
+                Add a second point and find the midpoint.
+
+                @Code(name: "main.swift", file: "drawing-02.swift")
+            }
+        }
+    }
+
+    @Assessments {
+        @MultipleChoice {
+            Which type stores the points you draw?
+
+            @Choice(isCorrect: true) {
+                `Canvas`
+
+                @Justification(reaction: "That's right!") {
+                    A canvas collects the points added to it.
+                }
+            }
+
+            @Choice(isCorrect: false) {
+                `Point`
+
+                @Justification(reaction: "Try again!") {
+                    A point is a single position in the plane.
+                }
+            }
         }
     }
 }
