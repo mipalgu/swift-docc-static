@@ -95,6 +95,12 @@ For HTTPS and better performance:
 
 ## Generic Static Servers
 
+Documentation pages show the navigation sidebar by embedding `sidebar.html`
+from the root of the output directory in a frame.  If your server adds
+security headers, allow pages to be framed by the same site, for example with
+`X-Frame-Options: SAMEORIGIN` or `Content-Security-Policy: frame-ancestors 'self'`
+rather than `DENY` or `'none'`.
+
 ### Nginx
 
 Example Nginx configuration:

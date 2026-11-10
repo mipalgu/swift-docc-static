@@ -89,6 +89,7 @@ The generator creates the following structure:
 ```
 docs/
 ├── index.html              # Combined landing page
+├── sidebar.html            # Navigation sidebar shared by all documentation pages
 ├── css/
 │   └── main.css           # Stylesheet
 ├── js/
@@ -101,6 +102,14 @@ docs/
 │           └── index.html # Symbol documentation
 └── search-index.json      # Search index (if enabled)
 ```
+
+The navigation tree of all modules is written once, to `sidebar.html`.  Each
+documentation page embeds it in a frame and selects its own entry through the
+URL fragment, so the current page is highlighted and its ancestors are expanded
+by the stylesheet alone.  Readers can still expand and collapse every entry,
+with or without JavaScript.  When JavaScript is available, the sidebar also
+offers a filter field, content search results (if search is enabled), and
+follows the appearance chosen on the page.
 
 ## Rendering from Archives
 

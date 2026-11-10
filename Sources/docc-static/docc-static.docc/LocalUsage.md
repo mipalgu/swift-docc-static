@@ -124,7 +124,9 @@ xdg-open ./docs/index.html
 # Or just drag index.html into your browser
 ```
 
-All links use relative paths, so navigation works correctly with `file://` URLs.
+All links use relative paths, so navigation works correctly with `file://` URLs,
+including the navigation sidebar that every documentation page embeds from
+`sidebar.html` at the root of the output directory.
 
 ## Customising Output
 

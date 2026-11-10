@@ -25,6 +25,9 @@ without requiring JavaScript for core functionality.
 - **Interactive tutorials** - Display step-by-step tutorials with code examples and quizzes
 - **Cross-package linking** - Relative links work with `file://` URLs for testing
 - **Multi-target support** - Document all targets in a package and create a common index page
+- **Compact navigation** - The navigation sidebar is written once and shared by every page, so
+  the output stays small even for large packages; highlighting the current page and expanding or
+  collapsing the tree work without JavaScript
 - **Optional search** - Client-side search using Lunr.js (requires JavaScript)
 - **SPM plugin** - Integrate documentation generation into your build process
 
@@ -214,11 +217,17 @@ Then configure GitHub Pages in your repository settings:
 
 Your documentation will be deployed to `https://<username>.github.io/<repository>/`.
 
+Documentation pages show the navigation sidebar by embedding `sidebar.html` in a frame.
+If your web server adds security headers, allow pages to be framed by the same site
+(for example `X-Frame-Options: SAMEORIGIN` or `Content-Security-Policy: frame-ancestors 'self'`
+rather than `DENY` or `'none'`).
+
 ## Output Structure
 
 ```
 docs/
 ├── index.html              # Main landing page
+├── sidebar.html            # Navigation sidebar shared by all documentation pages
 ├── css/
 │   └── main.css            # Stylesheet
 ├── js/                     # Optional JavaScript (search)
