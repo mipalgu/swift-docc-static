@@ -6,6 +6,7 @@
 //  Copyright © 2026 Rene Hexel. All rights reserved.
 //
 
+import DocCStaticThemes
 import Foundation
 
 /// Parses theme-settings.json files and generates CSS variable overrides.
@@ -49,22 +50,73 @@ public enum ThemeSettingsParser {
 
     /// Parses theme settings from JSON data.
     ///
-    /// - Parameter data: The JSON data to parse.
+    /// This uses the same parser and validation as the build-time theme
+    /// compiler: unknown keys and feature switches are reported to the warning
+    /// handler.
+    ///
+    /// - Parameters:
+    ///   - data: The JSON data to parse.
+    ///   - warningHandler: Receives warnings about unknown keys, or `nil` to ignore them.
     /// - Returns: The parsed theme settings.
     /// - Throws: An error if the JSON is invalid.
-    public static func parse(_ data: Data) throws -> ThemeSettings.Root {
-        let decoder = JSONDecoder()
-        return try decoder.decode(ThemeSettings.Root.self, from: data)
+    public static func parse(
+        _ data: Data,
+        warningHandler: (any ThemeParsingWarningHandler)? = nil
+    ) throws -> ThemeSettings.Root {
+        try ThemeSettingsInput.parse(data, warningHandler: warningHandler)
     }
 
     /// Parses theme settings from a file URL.
     ///
-    /// - Parameter url: The URL of the theme-settings.json file.
+    /// - Parameters:
+    ///   - url: The URL of the theme-settings.json file.
+    ///   - warningHandler: Receives warnings about unknown keys, or `nil` to ignore them.
     /// - Returns: The parsed theme settings.
     /// - Throws: An error if the file cannot be read or parsed.
-    public static func parse(contentsOf url: URL) throws -> ThemeSettings.Root {
-        let data = try Data(contentsOf: url)
-        return try parse(data)
+    public static func parse(
+        contentsOf url: URL,
+        warningHandler: (any ThemeParsingWarningHandler)? = nil
+    ) throws -> ThemeSettings.Root {
+        try ThemeSettingsInput.parse(contentsOf: url, warningHandler: warningHandler)
+    }
+
+    // MARK: - Custom Properties
+
+    /// Returns the custom properties a theme defines for one colour scheme.
+    ///
+    /// The properties are listed section by section (`badge`, `color`,
+    /// `typography`, `spacing`, then the remaining sections of the
+    /// specification), each sorted by name.  Names follow swift-docc-render:
+    /// nested keys are joined with `-` and prefixed with `--`.
+    ///
+    /// - Parameters:
+    ///   - settings: The theme settings.
+    ///   - dark: Whether to use the dark values of light and dark pairs.
+    /// - Returns: The custom property names (including `--`) and values.
+    public static func customProperties(
+        from settings: ThemeSettings.Root,
+        dark: Bool
+    ) -> [(name: String, value: String)] {
+        var properties: [(name: String, value: String)] = []
+        let theme = settings.theme
+        for (key, value) in (theme.badge ?? [:]).sorted(by: { $0.key < $1.key }) {
+            properties.append(("--badge-\(key)", value))
+        }
+        for (key, value) in (theme.color ?? [:]).sorted(by: { $0.key < $1.key }) {
+            properties.append(("--color-\(key)", dark ? value.dark : value.light))
+        }
+        for (key, value) in (theme.typography ?? [:]).sorted(by: { $0.key < $1.key }) {
+            properties.append(("--typography-\(key)", value))
+        }
+        for (key, value) in (theme.spacing ?? [:]).sorted(by: { $0.key < $1.key }) {
+            properties.append(("--spacing-\(key)", value))
+        }
+        for (key, value) in (theme.other ?? [:]).sorted(by: { $0.key < $1.key }) {
+            for entry in value.flattened(prefix: key, dark: dark) {
+                properties.append(("--\(entry.name)", entry.value))
+            }
+        }
+        return properties
     }
 
     // MARK: - CSS Generation
@@ -100,39 +152,7 @@ public enum ThemeSettingsParser {
     /// - Parameter settings: The theme settings.
     /// - Returns: CSS for light mode variables.
     public static func generateLightModeCSS(from settings: ThemeSettings.Root) -> String {
-        var variables: [String] = []
-
-        // Badge variables
-        if let badge = settings.theme.badge {
-            for (key, value) in badge.sorted(by: { $0.key < $1.key }) {
-                let variableName = "--badge-\(key)"
-                variables.append("    \(variableName): \(value);")
-            }
-        }
-
-        // Color variables
-        if let colors = settings.theme.color {
-            for (key, value) in colors.sorted(by: { $0.key < $1.key }) {
-                let variableName = "--color-\(key)"
-                variables.append("    \(variableName): \(value.light);")
-            }
-        }
-
-        // Typography variables
-        if let typography = settings.theme.typography {
-            for (key, value) in typography.sorted(by: { $0.key < $1.key }) {
-                let variableName = "--typography-\(key)"
-                variables.append("    \(variableName): \(value);")
-            }
-        }
-
-        // Spacing variables (docc-static extension)
-        if let spacing = settings.theme.spacing {
-            for (key, value) in spacing.sorted(by: { $0.key < $1.key }) {
-                let variableName = "--spacing-\(key)"
-                variables.append("    \(variableName): \(value);")
-            }
-        }
+        let variables = customProperties(from: settings, dark: false).map { "    \($0.name): \($0.value);" }
 
         guard !variables.isEmpty else { return "" }
 
@@ -155,39 +175,7 @@ public enum ThemeSettingsParser {
     /// - Parameter settings: The theme settings.
     /// - Returns: CSS for explicit light mode variables.
     public static func generateLightModeExplicitCSS(from settings: ThemeSettings.Root) -> String {
-        var variables: [String] = []
-
-        // Badge variables
-        if let badge = settings.theme.badge {
-            for (key, value) in badge.sorted(by: { $0.key < $1.key }) {
-                let variableName = "--badge-\(key)"
-                variables.append("    \(variableName): \(value);")
-            }
-        }
-
-        // Color variables
-        if let colors = settings.theme.color {
-            for (key, value) in colors.sorted(by: { $0.key < $1.key }) {
-                let variableName = "--color-\(key)"
-                variables.append("    \(variableName): \(value.light);")
-            }
-        }
-
-        // Typography variables
-        if let typography = settings.theme.typography {
-            for (key, value) in typography.sorted(by: { $0.key < $1.key }) {
-                let variableName = "--typography-\(key)"
-                variables.append("    \(variableName): \(value);")
-            }
-        }
-
-        // Spacing variables (docc-static extension)
-        if let spacing = settings.theme.spacing {
-            for (key, value) in spacing.sorted(by: { $0.key < $1.key }) {
-                let variableName = "--spacing-\(key)"
-                variables.append("    \(variableName): \(value);")
-            }
-        }
+        let variables = customProperties(from: settings, dark: false).map { "    \($0.name): \($0.value);" }
 
         guard !variables.isEmpty else { return "" }
 
@@ -205,18 +193,12 @@ public enum ThemeSettingsParser {
     /// - Parameter settings: The theme settings.
     /// - Returns: CSS for dark mode variables.
     public static func generateDarkModeCSS(from settings: ThemeSettings.Root) -> String {
-        var variables: [String] = []
-
-        // Color variables - only include those with different dark values
-        if let colors = settings.theme.color {
-            for (key, value) in colors.sorted(by: { $0.key < $1.key }) {
-                // Only include if dark value differs from light value
-                if case .lightDark(let light, let dark) = value, light != dark {
-                    let variableName = "--color-\(key)"
-                    variables.append("        \(variableName): \(dark);")
-                }
-            }
-        }
+        // Only properties whose dark value differs from the light value
+        let light = customProperties(from: settings, dark: false)
+        let dark = customProperties(from: settings, dark: true)
+        let variables = zip(light, dark)
+            .filter { $0.value != $1.value }
+            .map { "        \($1.name): \($1.value);" }
 
         guard !variables.isEmpty else { return "" }
 
@@ -302,6 +284,13 @@ public enum ThemeSettingsParser {
             for (key, value) in spacing {
                 let variableName = "--spacing-\(key)"
                 variables[variableName] = value
+            }
+        }
+
+        // Remaining sections of the specification
+        for (key, value) in settings.theme.other ?? [:] {
+            for entry in value.flattened(prefix: key, dark: colorScheme != .light) {
+                variables["--\(entry.name)"] = entry.value
             }
         }
 

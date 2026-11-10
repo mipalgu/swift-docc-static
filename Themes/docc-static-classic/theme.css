@@ -1,0 +1,7 @@
+/*
+ * Theme stylesheet of the `docc-static-classic` theme.
+ *
+ * The classic theme reproduces the appearance of the original swift-docc-static
+ * output.  Its custom property values live in `theme-settings.json`; this file
+ * holds the rules that differ from the base stylesheet.
+ */

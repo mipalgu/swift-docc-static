@@ -1,0 +1,129 @@
+/* Spotlight search overlay */
+.search-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding-top: 15vh;
+    z-index: 10000;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.15s, visibility 0.15s;
+}
+
+.search-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.search-overlay-container {
+    width: 90%;
+    max-width: 600px;
+    background: var(--color-fill);
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+    transform: translateY(-20px);
+    transition: transform 0.15s;
+}
+
+.search-overlay.active .search-overlay-container {
+    transform: translateY(0);
+}
+
+.search-overlay-input-wrapper {
+    padding: 1rem;
+    border-bottom: 1px solid var(--color-fill-gray);
+}
+
+.search-overlay-input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    font-size: 1.125rem;
+    border: 1px solid var(--color-fill-gray);
+    border-radius: 8px;
+    background: var(--color-fill-secondary);
+    color: var(--color-figure-gray);
+    outline: none;
+}
+
+.search-overlay-input:focus {
+    border-color: var(--color-link);
+}
+
+.search-overlay-input::placeholder {
+    color: var(--color-figure-gray-secondary);
+}
+
+.search-overlay-results {
+    max-height: 60vh;
+    overflow-y: auto;
+}
+
+.search-overlay-empty {
+    padding: 2rem;
+    text-align: center;
+    color: var(--color-figure-gray-secondary);
+}
+
+.search-overlay-section {
+    padding: 0.5rem 0;
+}
+
+.search-overlay-section-title {
+    padding: 0.5rem 1rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-figure-gray-secondary);
+}
+
+.search-overlay-item {
+    display: block;
+    padding: 0.75rem 1rem;
+    text-decoration: none;
+    color: var(--color-figure-gray);
+    cursor: pointer;
+}
+
+.search-overlay-item:hover,
+.search-overlay-item.selected {
+    background: var(--color-fill-secondary);
+}
+
+.search-overlay-item-title {
+    display: block;
+    font-weight: 500;
+}
+
+.search-overlay-item-path {
+    display: block;
+    font-size: 0.8rem;
+    color: var(--color-figure-gray-secondary);
+    margin-top: 0.25rem;
+}
+
+.search-overlay-hint {
+    padding: 0.75rem 1rem;
+    border-top: 1px solid var(--color-fill-gray);
+    font-size: 0.75rem;
+    color: var(--color-figure-gray-secondary);
+    display: flex;
+    gap: 1rem;
+}
+
+.search-overlay-hint kbd {
+    display: inline-block;
+    padding: 0.125rem 0.375rem;
+    background: var(--color-fill-secondary);
+    border: 1px solid var(--color-fill-gray);
+    border-radius: 4px;
+    font-family: var(--typography-html-font-mono);
+    font-size: 0.7rem;
+}

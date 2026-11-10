@@ -137,6 +137,7 @@ let package = Package(
         .target(
             name: "DocCStatic",
             dependencies: [
+                "DocCStaticThemes",
                 .product(name: "SwiftDocC", package: "swift-docc"),
                 .product(name: "Subprocess", package: "swift-subprocess"),
                 .product(name: "SystemPackage", package: "swift-system"),

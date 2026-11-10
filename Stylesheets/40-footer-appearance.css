@@ -1,0 +1,63 @@
+/* Footer - accounts for fixed sidebar */
+.documentation-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    margin-left: var(--sidebar-width);
+    border-top: 1px solid var(--color-fill-gray);
+    background: var(--color-fill);
+    font-size: 0.8125rem;
+    color: var(--color-figure-gray-secondary);
+    transition: margin-left 0.3s ease;
+}
+
+/* Footer expands when sidebar is collapsed */
+.sidebar-toggle-checkbox:checked ~ .documentation-footer {
+    margin-left: 0;
+}
+
+.footer-content {
+    flex: 1;
+}
+
+.footer-content a {
+    color: var(--color-link);
+}
+
+/* Appearance selector */
+.appearance-selector {
+    display: inline-flex;
+    border: 1px solid var(--color-link);
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.appearance-btn {
+    padding: 0.25rem 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    border: none;
+    background: transparent;
+    color: var(--color-link);
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.appearance-btn:not(:last-child) {
+    border-right: 1px solid var(--color-link);
+}
+
+.appearance-btn:hover {
+    background: rgba(0, 102, 204, 0.1);
+}
+
+.appearance-btn.active {
+    background: var(--color-link);
+    color: white;
+}
+
+/* Hide appearance selector until JS runs (shows noscript fallback) */
+.appearance-selector {
+    visibility: hidden;
+}

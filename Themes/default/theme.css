@@ -1,0 +1,8 @@
+/*
+ * Theme stylesheet of the `default` theme.
+ *
+ * The default theme reproduces the appearance of swift-docc-render.  Rules that
+ * every theme shares belong in the base stylesheet, whose custom property
+ * fallbacks are the swift-docc-render values; this file holds the rules that
+ * only the default theme needs.
+ */

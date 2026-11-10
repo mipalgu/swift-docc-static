@@ -189,8 +189,7 @@ struct ThemeCodeGeneratorTests {
 
     @Test("Generate header contains expected elements")
     func testGenerateHeader() {
-        let date = Date()
-        let header = generator.generateHeader(date: date)
+        let header = generator.generateHeader()
 
         #expect(header.contains("GeneratedThemes.swift"))
         #expect(header.contains("DocCStatic"))

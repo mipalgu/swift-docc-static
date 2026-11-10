@@ -1,0 +1,257 @@
+/* Index page styles */
+.index-header {
+    text-align: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--color-fill-gray);
+}
+
+.index-header .subtitle {
+    color: var(--color-figure-gray-secondary);
+    font-size: 1.1rem;
+}
+
+.index-intro {
+    max-width: 800px;
+    margin: 0 auto 2rem;
+    padding: 1rem 0;
+    line-height: 1.6;
+}
+
+.index-intro p {
+    margin-bottom: 1rem;
+}
+
+.index-intro h2 {
+    font-size: 1.5rem;
+    margin: 1.5rem 0 1rem;
+    color: var(--color-figure-gray);
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.index-intro h3 {
+    font-size: 1.25rem;
+    margin: 1.25rem 0 0.75rem;
+    color: var(--color-figure-gray);
+}
+
+.index-intro ul, .index-intro ol {
+    margin: 1rem 0;
+    padding-left: 1.5rem;
+}
+
+.index-intro li {
+    margin-bottom: 0.5rem;
+}
+
+.index-intro code {
+    background: var(--color-fill-secondary);
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    font-family: var(--typography-html-font-mono);
+    font-size: 0.9em;
+}
+
+.index-intro pre {
+    background: var(--color-fill-secondary);
+    padding: 1rem 1.25rem;
+    border-radius: 12px;
+    overflow-x: auto;
+    margin: 1rem 0;
+    font-family: var(--typography-html-font-mono);
+    font-size: 0.8125rem;
+    line-height: 1.6;
+}
+
+.index-intro pre code {
+    background: none;
+    padding: 0;
+    position: static;
+    left: 0;
+}
+
+.index-intro a {
+    color: var(--color-link);
+}
+
+.index-intro a:hover {
+    text-decoration: underline;
+}
+
+.search-form {
+    max-width: 500px;
+    margin: 0 auto 2rem;
+}
+
+.search-form input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    border: 1px solid var(--color-fill-gray);
+    border-radius: 8px;
+    background: var(--color-fill);
+    color: var(--color-figure-gray);
+}
+
+.search-results {
+    margin-top: 1rem;
+    background: var(--color-fill);
+    border: 1px solid var(--color-fill-gray);
+    border-radius: 8px;
+    max-height: 400px;
+    overflow-y: auto;
+    display: none;
+}
+
+.search-results-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.search-result-item {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--color-fill-gray);
+}
+
+.search-result-item:last-child {
+    border-bottom: none;
+}
+
+.search-result-item:hover {
+    background: var(--color-fill-secondary);
+}
+
+.result-link {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.result-title {
+    font-weight: 500;
+}
+
+.result-type {
+    font-size: 0.75rem;
+    padding: 0.1rem 0.4rem;
+    border-radius: 4px;
+    background: var(--color-fill-secondary);
+    color: var(--color-figure-gray-secondary);
+}
+
+.result-type-symbol {
+    background: #e3f2fd;
+    color: #1565c0;
+}
+
+.result-type-article {
+    background: #e8f5e9;
+    color: #2e7d32;
+}
+
+.result-type-tutorial {
+    background: #fff3e0;
+    color: #ef6c00;
+}
+
+.result-summary {
+    font-size: 0.875rem;
+    color: var(--color-figure-gray-secondary);
+    margin-top: 0.25rem;
+}
+
+.no-results {
+    padding: 1rem;
+    color: var(--color-figure-gray-secondary);
+    text-align: center;
+}
+
+.search-unavailable {
+    color: var(--color-figure-gray-secondary);
+    font-size: 0.875rem;
+}
+
+.module-list {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+}
+
+.module-card {
+    padding: 1.25rem;
+    border: 1px solid var(--color-fill-gray);
+    border-radius: 12px;
+    background: var(--color-fill);
+    transition: box-shadow 0.2s, border-color 0.2s;
+}
+
+.module-card:hover {
+    border-color: var(--color-link);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+}
+
+.module-name {
+    font-family: var(--typography-html-font-mono);
+    font-size: 1.1rem;
+    font-weight: 600;
+    display: block;
+    margin-bottom: 0.5rem;
+}
+
+.module-abstract {
+    color: var(--color-figure-gray-secondary);
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+}
+
+.module-stats {
+    color: var(--color-figure-gray-secondary);
+    font-size: 0.8rem;
+}
+
+/* Tutorials section on index page */
+.tutorials-section {
+    margin-top: 2.5rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--color-fill-gray);
+}
+
+.tutorials-section h2 {
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.tutorial-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1rem;
+}
+
+.tutorial-collection-card {
+    padding: 1.25rem;
+    border: 1px solid var(--color-fill-gray);
+    border-radius: 12px;
+    background: var(--color-fill);
+    transition: box-shadow 0.2s, border-color 0.2s;
+}
+
+.tutorial-collection-card:hover {
+    border-color: var(--color-link);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+}
+
+.tutorial-collection-name {
+    font-size: 1.0625rem;
+    font-weight: 600;
+    display: block;
+    margin-bottom: 0.5rem;
+}
+
+.tutorial-collection-stats {
+    color: var(--color-figure-gray-secondary);
+    font-size: 0.8rem;
+}

@@ -1,0 +1,246 @@
+html {
+    font-size: var(--spacing-html-font-size, 17px);
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: var(--typography-html-font, 'Helvetica Neue', Helvetica, Arial, sans-serif);
+    font-size: var(--spacing-body-font-size, 17px);
+    background: var(--color-fill);
+    color: var(--color-figure-gray);
+    line-height: var(--spacing-body-line-height, 25px);
+    font-weight: var(--spacing-body-font-weight, 400);
+    -webkit-font-smoothing: antialiased;
+
+    /* Spacing variables matching swift-docc-render */
+    --spacing-stacked-margin-small: 0.4em;
+    --spacing-stacked-margin-large: 0.8em;
+    --spacing-stacked-margin-xlarge: 1.6em;
+
+    /* Default padding for code blocks (matches swift-docc-render) */
+    --code-block-style-elements-padding: 8px 14px;
+}
+
+a {
+    color: var(--color-link);
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+code {
+    font-family: var(--typography-html-font-mono, Menlo, monospace);
+    font-size: var(--spacing-code-font-size, inherit);
+    background: var(--color-code-inline-background, transparent);
+    padding: var(--spacing-code-padding, 0);
+    border-radius: var(--spacing-code-border-radius, 0);
+}
+
+pre {
+    font-family: var(--typography-html-font-mono, Menlo, monospace);
+    font-size: var(--spacing-pre-font-size, 17px);
+    line-height: var(--spacing-pre-line-height, 25px);
+    background: var(--color-pre-background, transparent);
+    border: var(--spacing-pre-border, none);
+    border-radius: var(--spacing-pre-border-radius, 0px);
+    /* Use swift-docc-render variable name, fallback to legacy for classic theme */
+    padding: var(--code-block-style-elements-padding, var(--spacing-pre-padding, 8px 14px));
+    /* Individual padding properties allow themes to override horizontal padding */
+    padding-left: var(--spacing-pre-padding-left, 14px);
+    padding-right: var(--spacing-pre-padding-right, 14px);
+    overflow-x: auto;
+    margin: var(--spacing-pre-margin, 0);
+    max-width: var(--spacing-pre-max-width, none);
+    box-sizing: border-box;
+    position: var(--spacing-pre-code-position, static);
+    display: var(--spacing-pre-display, block);
+}
+
+pre code {
+    display: block;
+    background: none;
+    padding: var(--spacing-pre-code-padding, 0);
+    font-size: var(--spacing-pre-code-font-size, 15px);
+    font-family: var(--typography-html-font-mono, Menlo, monospace);
+    position: var(--spacing-pre-code-position, static);
+    left: var(--spacing-pre-code-left, 0);
+}
+
+/* Code listing wrapper (matches swift-docc-render structure) */
+.code-listing {
+    display: block;
+    background-color: var(--color-code-background, #f7f7f7);
+    border: 1px solid var(--color-grid, #ccc);
+    border-radius: var(--code-border-radius, 4px);
+    margin-top: 1.6rem;
+    padding: 0;
+}
+
+.container-general {
+    /* Container for code blocks within code-listing */
+    margin: 0;
+    padding: 0;
+}
+
+table {
+    border-collapse: collapse;
+    margin: var(--spacing-table-margin, 1rem 0);
+    font-size: var(--spacing-table-font-size, 17px);
+    line-height: var(--spacing-table-line-height, 25px);
+}
+
+th, td {
+    padding: var(--spacing-table-cell-padding, 0.75rem 1rem);
+    text-align: left;
+    border-bottom: 1px solid var(--color-fill-gray);
+}
+
+th {
+    font-weight: var(--spacing-table-header-font-weight, 600);
+    color: var(--color-figure-gray-secondary);
+}
+
+tr:last-child td {
+    border-bottom: none;
+}
+
+/* Syntax highlighting */
+.syntax-keyword {
+    color: var(--color-syntax-keywords);
+    font-weight: 500;
+}
+
+.syntax-string {
+    color: var(--color-syntax-strings);
+}
+
+.syntax-number {
+    color: var(--color-syntax-numbers);
+}
+
+.syntax-comment {
+    color: var(--color-syntax-comments);
+    font-style: italic;
+}
+
+.syntax-type {
+    color: var(--color-syntax-other-type-names);
+}
+
+.syntax-attribute {
+    color: var(--color-syntax-keywords);
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: var(--typography-html-font, 'Helvetica Neue', Helvetica, Arial, sans-serif);
+    margin: 0;
+    padding: 0;
+}
+
+/* Content section headings - matches swift-docc-render exactly */
+/* H3 content headings: 44.8px matches docc-render exactly */
+/* Only direct child H3s of .doc-topic (content headings like "Quick Start") */
+.doc-topic > h3 {
+    margin-top: var(--spacing-content-heading-margin-top, 44.8px);
+    margin-bottom: 0;
+}
+
+/* Topic group headings (Essentials, Guides, etc.) have NO top margin */
+/* These are inside .contenttable-section with class .contenttable-title */
+/* Uses "label" font style from swift-docc-render: 24px/28px vs H3's 28px/32px */
+.contenttable-title,
+.contenttable-section h3 {
+    margin-top: 0;
+    margin-bottom: var(--spacing-contenttable-title-margin-bottom, 0);
+    font-size: var(--spacing-contenttable-title-font-size, 24px);
+    line-height: var(--spacing-contenttable-title-line-height, 28px);
+    font-weight: var(--spacing-contenttable-title-font-weight, 400);
+}
+
+/* Topic group sections need top padding for separation (matches swift-docc-render).
+   margin-top: 0 prevents adjacent-sibling rules (h2 + *) from adding extra spacing. */
+.contenttable-section {
+    padding-top: var(--spacing-contenttable-section-padding-top, 2.353rem);
+    margin-top: 0;
+}
+
+
+h1 {
+    font-size: var(--spacing-h1-font-size, 40px);
+    line-height: var(--spacing-h1-line-height, 44px);
+    font-weight: var(--spacing-h1-font-weight, 400);
+}
+h2 {
+    font-size: var(--spacing-h2-font-size, 32px);
+    line-height: var(--spacing-h2-line-height, 36px);
+    font-weight: var(--spacing-h2-font-weight, 400);
+    border-bottom: var(--spacing-h2-border-bottom, none);
+    padding-bottom: var(--spacing-h2-padding-bottom, 0);
+}
+h3 {
+    font-size: var(--spacing-h3-font-size, 28px);
+    line-height: var(--spacing-h3-line-height, 32px);
+    font-weight: var(--spacing-h3-font-weight, 400);
+}
+h4 {
+    font-size: var(--spacing-h4-font-size, 24px);
+    line-height: var(--spacing-h4-line-height, 28px);
+    font-weight: var(--spacing-h4-font-weight, 600);
+}
+h5 {
+    font-size: var(--spacing-h5-font-size, 22px);
+    line-height: var(--spacing-h5-line-height, 26px);
+    font-weight: var(--spacing-h5-font-weight, 600);
+}
+h6 {
+    font-size: var(--spacing-h6-font-size, 17px);
+    line-height: var(--spacing-h6-line-height, 25px);
+    font-weight: var(--spacing-h6-font-weight, 600);
+}
+
+/* Heading anchor links - configurable via --color-heading-link variable */
+h1 a, h2 a, h3 a, h4 a, h5 a, h6 a {
+    color: var(--color-heading-link, inherit);
+    text-decoration: none;
+}
+h1 a:hover, h2 a:hover, h3 a:hover, h4 a:hover, h5 a:hover, h6 a:hover {
+    color: var(--color-heading-link, inherit);
+    text-decoration: underline;
+}
+
+/* Adjacent sibling margin rules: matches swift-docc-render _typography.scss */
+h1 + *, h2 + *, h3 + *, h4 + *, h5 + *, h6 + * {
+    margin-top: var(--spacing-stacked-margin-large, 0.8em);
+}
+p + h1, p + h2, p + h3, p + h4, p + h5, p + h6,
+ul + h1, ul + h2, ul + h3, ul + h4, ul + h5, ul + h6,
+ol + h1, ol + h2, ol + h3, ol + h4, ol + h5, ol + h6 {
+    margin-top: var(--spacing-stacked-margin-xlarge, 1.6em);
+}
+p + *, ul + *, ol + * {
+    margin-top: var(--spacing-stacked-margin-large, 0.8em);
+}
+ul, ol {
+    margin-inline-start: var(--spacing-list-indent, 1.176em);
+}
+li { margin-bottom: 0; }
+
+/* Syntax highlighting - token-* classes match swift-docc-render */
+.token-keyword { color: var(--color-syntax-keywords); font-weight: 500; }
+.token-type { color: var(--color-syntax-other-type-names); }
+.token-identifier { color: var(--color-figure-gray); }
+.token-param { color: var(--color-figure-gray-secondary); }
+.token-string { color: var(--color-syntax-strings); }
+.token-number { color: var(--color-syntax-numbers); }
+.token-attribute { color: var(--color-syntax-keywords); }
+.token-label { color: var(--color-figure-gray); }
+/* Legacy class names for backward compatibility */
+.keyword { color: var(--color-syntax-keywords); font-weight: 500; }
+.comment { color: var(--color-syntax-comments); font-style: italic; }

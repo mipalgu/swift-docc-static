@@ -71,6 +71,44 @@ public extension SidebarDocument {
     /// The `localStorage` key that stores the colour scheme chosen by the reader.
     static let colourSchemeStorageKey = "docc-color-scheme"
 
+    /// The stylesheet rules that size the embedded frame and lay out the shared document.
+    ///
+    /// These rules are part of every theme's stylesheet.  They are kept here, next
+    /// to the class names they use, so that the names are defined in one place.
+    static var stylesheet: String {
+        """
+        /* Embedded navigation document fills the sidebar container */
+        .\(frameClass) {
+            flex: 1;
+            display: block;
+            width: 100%;
+            height: 100%;
+            border: 0;
+            background: var(--color-fill);
+        }
+
+        /* Standalone navigation document shown inside the embedded frame */
+        body.\(documentClass) {
+            margin: 0;
+            overflow: hidden;
+            background: var(--color-fill);
+        }
+
+        body.\(documentClass) .sidebar {
+            position: fixed;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            width: auto;
+            border-right: none;
+            transform: none;
+            transition: none;
+        }
+
+        """
+    }
+
     /// Returns whether a shared sidebar document is generated for a navigation index.
     ///
     /// A shared document is only generated when the index contains at least one module.

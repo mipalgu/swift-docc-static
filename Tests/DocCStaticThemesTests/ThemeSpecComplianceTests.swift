@@ -22,7 +22,7 @@ struct ThemeSpecComplianceTests {
             .deletingLastPathComponent()
             .appendingPathComponent("Themes")
 
-        let defaultThemePath = themesDir.appendingPathComponent("default.theme-settings.json")
+        let defaultThemePath = themesDir.appendingPathComponent("default").appendingPathComponent(ThemeBundleLayout.settingsFileName)
 
         #expect(FileManager.default.fileExists(atPath: defaultThemePath.path),
                 "default.theme-settings.json must exist at \(defaultThemePath.path)")
@@ -99,7 +99,7 @@ struct ThemeSpecComplianceTests {
             .deletingLastPathComponent()
             .appendingPathComponent("Themes")
 
-        let defaultThemePath = themesDir.appendingPathComponent("default.theme-settings.json")
+        let defaultThemePath = themesDir.appendingPathComponent("default").appendingPathComponent(ThemeBundleLayout.settingsFileName)
         let jsonData = try Data(contentsOf: defaultThemePath)
 
         let settings = try ThemeSettingsInput.parse(jsonData)
@@ -134,7 +134,7 @@ struct ThemeSpecComplianceTests {
             .deletingLastPathComponent()
             .appendingPathComponent("Themes")
 
-        let defaultThemePath = themesDir.appendingPathComponent("default.theme-settings.json")
+        let defaultThemePath = themesDir.appendingPathComponent("default").appendingPathComponent(ThemeBundleLayout.settingsFileName)
         let jsonData = try Data(contentsOf: defaultThemePath)
 
         let settings = try ThemeSettingsInput.parse(jsonData)

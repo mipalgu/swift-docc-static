@@ -8,21 +8,22 @@
 
 import Foundation
 
-/// Generates Swift code from theme settings.
+/// Generates Swift code from theme bundles and stylesheets.
 ///
-/// This type converts parsed theme settings into Swift source code that can
-/// be compiled directly into the binary, eliminating the need for runtime
-/// file loading.
+/// This type converts parsed theme bundles and the base stylesheet into Swift
+/// source code that is compiled directly into the binary, eliminating the need
+/// for runtime file loading.  The generated file defines the
+/// `ThemeSettings.BuiltInTheme` enumeration, so adding a theme bundle to the
+/// `Themes` directory is all it takes to add a built-in theme.  The output
+/// depends only on its input, so repeated builds produce identical files.
 ///
 /// ## Example
 ///
 /// ```swift
 /// let generator = ThemeCodeGenerator()
-/// let themes = [
-///     ("default", defaultThemeSettings),
-///     ("classic", classicThemeSettings)
-/// ]
-/// let swiftCode = generator.generateFile(themes: themes)
+/// let bundles = try ThemeBundleSource.loadAll(in: themesDirectory)
+/// let base = try ThemeBundleLayout.stylesheets(in: stylesheetsDirectory)
+/// let swiftCode = generator.generateFile(bundles: bundles, baseStylesheets: base)
 /// try swiftCode.write(toFile: "GeneratedThemes.swift", atomically: true, encoding: .utf8)
 /// ```
 public struct ThemeCodeGenerator: Sendable {
@@ -38,52 +39,136 @@ public struct ThemeCodeGenerator: Sendable {
 
     // MARK: - File Generation
 
-    /// Generates a complete Swift file containing theme data.
+    /// Generates a complete Swift file containing theme settings only.
+    ///
+    /// This is a convenience for bundles without stylesheets and without a base
+    /// stylesheet.
+    ///
+    /// - Parameter themes: The theme names and their settings.
+    /// - Returns: The generated Swift source code.
+    public func generateFile(themes: [(name: String, settings: ThemeSettingsInput)]) -> String {
+        generateFile(
+            bundles: themes.map { ThemeBundleSource(name: $0.name, settings: $0.settings) },
+            baseStylesheets: []
+        )
+    }
+
+    /// Generates a complete Swift file containing the built-in themes and the base stylesheet.
     ///
     /// - Parameters:
-    ///   - themes: An array of tuples containing theme names and their settings.
-    ///   - date: The date to use in the file header (defaults to current date).
+    ///   - bundles: The built-in theme bundles, in the order their cases should appear.
+    ///   - baseStylesheets: The parts of the base stylesheet in application order.
     /// - Returns: The generated Swift source code.
-    public func generateFile(
-        themes: [(name: String, settings: ThemeSettingsInput)],
-        date: Date = Date()
-    ) -> String {
-        var output = generateHeader(date: date)
+    public func generateFile(bundles: [ThemeBundleSource], baseStylesheets: [ThemeStylesheet]) -> String {
+        var output = generateHeader()
+        output += "import DocCStaticThemes\n"
+        output += "\n// MARK: - Built-in Themes\n\n"
+        output += generateBuiltInThemeEnum(names: bundles.map(\.name))
+        output += "\n// MARK: - Base Stylesheet\n\n"
+        output += "/// The base stylesheet shared by all themes, compiled from the package's stylesheet sources.\n"
+        output += "enum BaseStylesheet {\n"
+        output += "\(indentation)/// The parts of the base stylesheet in application order.\n"
+        output += "\(indentation)static let parts: [ThemeStylesheet] = \(generateStylesheetArray(baseStylesheets, baseIndent: 1))\n"
+        output += "}\n"
         output += "\n// MARK: - Generated Theme Data\n\n"
         output += "extension ThemeSettings.BuiltInTheme {\n\n"
 
-        for (name, settings) in themes {
-            let propertyName = swiftPropertyName(for: name)
-            output += generateThemeProperty(settings: settings, propertyName: propertyName)
+        for bundle in bundles {
+            let propertyName = swiftPropertyName(for: bundle.name)
+            output += generateThemeProperty(settings: bundle.settings, propertyName: propertyName)
+            output += "\n"
+            output += generateStylesheetProperty(bundle.stylesheets, propertyName: stylesheetPropertyName(for: bundle.name))
             output += "\n"
         }
 
+        output += generateAccessor(
+            name: "settings",
+            type: "ThemeSettings.Root",
+            summary: "The theme settings of this built-in theme.",
+            names: bundles.map(\.name),
+            property: swiftPropertyName(for:)
+        )
+        output += "\n"
+        output += generateAccessor(
+            name: "stylesheets",
+            type: "[ThemeStylesheet]",
+            summary: "The stylesheets of this built-in theme, in application order.",
+            names: bundles.map(\.name),
+            property: stylesheetPropertyName(for:)
+        )
         output += "}\n"
         return output
     }
 
-    /// Generates the file header with copyright and generation notice.
+    /// Generates the file header with the generation notice.
     ///
-    /// - Parameter date: The date to use in the header.
+    /// The header contains no date or other varying information, so that
+    /// generated files are reproducible.
+    ///
     /// - Returns: The header string.
-    public func generateHeader(date: Date = Date()) -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "dd/MM/yyyy"
-        let dateString = formatter.string(from: date)
+    public func generateHeader() -> String {
+        """
+        //
+        // GeneratedThemes.swift
+        // DocCStatic
+        //
+        // AUTO-GENERATED FILE - DO NOT EDIT
+        // Generated by theme-codegen from the theme bundles in Themes/
+        // and the base stylesheet in Stylesheets/.
+        //
+        //  Copyright © 2026 Rene Hexel. All rights reserved.
+        //
 
-        return """
-            //
-            // GeneratedThemes.swift
-            // DocCStatic
-            //
-            // AUTO-GENERATED FILE - DO NOT EDIT
-            // Generated from JSON theme files in Themes/
-            //
-            //  Created by theme-codegen on \(dateString).
-            //  Copyright © 2026 Rene Hexel. All rights reserved.
-            //
+        """
+    }
 
-            """
+    /// Generates the `ThemeSettings.BuiltInTheme` enumeration.
+    ///
+    /// - Parameter names: The names of the built-in themes.
+    /// - Returns: The Swift code for the enumeration.
+    public func generateBuiltInThemeEnum(names: [String]) -> String {
+        var code = "extension ThemeSettings {\n"
+        code += "\(indentation)/// The themes compiled into swift-docc-static.\n"
+        code += "\(indentation)///\n"
+        code += "\(indentation)/// Each case corresponds to a theme bundle in the package's `Themes`\n"
+        code += "\(indentation)/// directory; the raw value is the name of the bundle's directory.\n"
+        code += "\(indentation)public enum BuiltInTheme: String, CaseIterable, Sendable {\n"
+        for name in names {
+            code += "\(indentation)\(indentation)/// The `\(name)` built-in theme.\n"
+            code += "\(indentation)\(indentation)case `\(swiftCaseName(for: name))` = \(swiftStringLiteral(name))\n"
+        }
+        code += "\(indentation)}\n"
+        code += "}\n"
+        return code
+    }
+
+    /// Generates a computed property that switches over the built-in themes.
+    ///
+    /// - Parameters:
+    ///   - name: The name of the computed property.
+    ///   - type: The type of the computed property.
+    ///   - summary: The documentation summary of the property.
+    ///   - names: The names of the built-in themes.
+    ///   - property: Maps a theme name to the stored property holding its value.
+    /// - Returns: The Swift code for the computed property.
+    func generateAccessor(
+        name: String,
+        type: String,
+        summary: String,
+        names: [String],
+        property: (String) -> String
+    ) -> String {
+        let i1 = indentation
+        let i2 = indentation + indentation
+        var code = "\(i1)/// \(summary)\n"
+        code += "\(i1)public var \(name): \(type) {\n"
+        code += "\(i2)switch self {\n"
+        for theme in names {
+            code += "\(i2)case .\(swiftCaseName(for: theme)): return Self.\(property(theme))\n"
+        }
+        code += "\(i2)}\n"
+        code += "\(i1)}\n"
+        return code
     }
 
     // MARK: - Property Generation
@@ -107,8 +192,9 @@ public struct ThemeCodeGenerator: Sendable {
         let hasColours = settings.theme.color != nil && !settings.theme.color!.isEmpty
         let hasTypography = settings.theme.typography != nil && !settings.theme.typography!.isEmpty
         let hasSpacing = settings.theme.spacing != nil && !settings.theme.spacing!.isEmpty
+        let hasOther = settings.theme.other != nil && !settings.theme.other!.isEmpty
 
-        if hasBadge || hasColours || hasTypography || hasSpacing {
+        if hasBadge || hasColours || hasTypography || hasSpacing || hasOther {
             code += "\n"
 
             var sections: [String] = []
@@ -129,10 +215,19 @@ public struct ThemeCodeGenerator: Sendable {
                 sections.append(generateSpacingDictionary(settings.theme.spacing!, baseIndent: 3))
             }
 
+            if let other = settings.theme.other, hasOther {
+                let indent = String(repeating: indentation, count: 3)
+                sections.append("\(indent)other: \(generateValueDictionary(other, baseIndent: 3))")
+            }
+
             code += sections.joined(separator: ",\n")
             code += "\n\(indentation)\(indentation))"
         } else {
             code += ")"
+        }
+
+        if let features = settings.features, !features.isEmpty {
+            code += ",\n\(indentation)\(indentation)features: \(generateValueDictionary(features, baseIndent: 2))"
         }
 
         code += "\n\(indentation))\n"
@@ -160,7 +255,7 @@ public struct ThemeCodeGenerator: Sendable {
         for (index, (key, value)) in sortedColours.enumerated() {
             let colourCode = generateColourValue(value)
             let separator = index < sortedColours.count - 1 ? "," : ""
-            code += "\(entryIndent)\"\(key)\": \(colourCode)\(separator)\n"
+            code += "\(entryIndent)\(swiftStringLiteral(key)): \(colourCode)\(separator)\n"
         }
 
         code += "\(indent)]"
@@ -174,9 +269,9 @@ public struct ThemeCodeGenerator: Sendable {
     public func generateColourValue(_ value: ColorValueInput) -> String {
         switch value {
         case .single(let colour):
-            return "ThemeSettings.ColorValue.single(\"\(colour)\")"
+            return "ThemeSettings.ColorValue.single(\(swiftStringLiteral(colour)))"
         case .lightDark(let light, let dark):
-            return "ThemeSettings.ColorValue.lightDark(light: \"\(light)\", dark: \"\(dark)\")"
+            return "ThemeSettings.ColorValue.lightDark(light: \(swiftStringLiteral(light)), dark: \(swiftStringLiteral(dark)))"
         }
     }
 
@@ -197,10 +292,8 @@ public struct ThemeCodeGenerator: Sendable {
 
         let sortedBadge = badge.sorted { $0.key < $1.key }
         for (index, (key, value)) in sortedBadge.enumerated() {
-            // Escape quotes in the value
-            let escapedValue = value.replacingOccurrences(of: "\"", with: "\\\"")
             let separator = index < sortedBadge.count - 1 ? "," : ""
-            code += "\(entryIndent)\"\(key)\": \"\(escapedValue)\"\(separator)\n"
+            code += "\(entryIndent)\(swiftStringLiteral(key)): \(swiftStringLiteral(value))\(separator)\n"
         }
 
         code += "\(indent)]"
@@ -224,10 +317,8 @@ public struct ThemeCodeGenerator: Sendable {
 
         let sortedTypography = typography.sorted { $0.key < $1.key }
         for (index, (key, value)) in sortedTypography.enumerated() {
-            // Escape quotes in the value
-            let escapedValue = value.replacingOccurrences(of: "\"", with: "\\\"")
             let separator = index < sortedTypography.count - 1 ? "," : ""
-            code += "\(entryIndent)\"\(key)\": \"\(escapedValue)\"\(separator)\n"
+            code += "\(entryIndent)\(swiftStringLiteral(key)): \(swiftStringLiteral(value))\(separator)\n"
         }
 
         code += "\(indent)]"
@@ -251,36 +342,163 @@ public struct ThemeCodeGenerator: Sendable {
 
         let sortedSpacing = spacing.sorted { $0.key < $1.key }
         for (index, (key, value)) in sortedSpacing.enumerated() {
-            // Escape quotes in the value
-            let escapedValue = value.replacingOccurrences(of: "\"", with: "\\\"")
             let separator = index < sortedSpacing.count - 1 ? "," : ""
-            code += "\(entryIndent)\"\(key)\": \"\(escapedValue)\"\(separator)\n"
+            code += "\(entryIndent)\(swiftStringLiteral(key)): \(swiftStringLiteral(value))\(separator)\n"
         }
 
         code += "\(indent)]"
         return code
     }
 
+    /// Generates Swift code for a dictionary of generic theme values.
+    ///
+    /// - Parameters:
+    ///   - values: The values keyed by name.
+    ///   - baseIndent: The indentation level of the line the dictionary starts on.
+    /// - Returns: The Swift code for the dictionary literal.
+    public func generateValueDictionary(_ values: [String: ThemeSettingValue], baseIndent: Int) -> String {
+        guard !values.isEmpty else { return "[:]" }
+        let indent = String(repeating: indentation, count: baseIndent)
+        let entryIndent = String(repeating: indentation, count: baseIndent + 1)
+        let entries = values.sorted { $0.key < $1.key }.map { key, value in
+            "\(entryIndent)\(swiftStringLiteral(key)): \(generateValue(value, baseIndent: baseIndent + 1))"
+        }
+        return "[\n" + entries.joined(separator: ",\n") + "\n\(indent)]"
+    }
+
+    /// Generates Swift code for a single generic theme value.
+    ///
+    /// - Parameters:
+    ///   - value: The value to convert.
+    ///   - baseIndent: The indentation level of the line the value starts on.
+    /// - Returns: The Swift code for the value.
+    public func generateValue(_ value: ThemeSettingValue, baseIndent: Int) -> String {
+        switch value {
+        case .value(let string):
+            return ".value(\(swiftStringLiteral(string)))"
+        case .lightDark(let light, let dark):
+            return ".lightDark(light: \(swiftStringLiteral(light)), dark: \(swiftStringLiteral(dark)))"
+        case .object(let entries):
+            return ".object(\(generateValueDictionary(entries, baseIndent: baseIndent)))"
+        }
+    }
+
+    // MARK: - Stylesheet Generation
+
+    /// Generates a stored property holding a theme's stylesheets.
+    ///
+    /// - Parameters:
+    ///   - stylesheets: The stylesheets in application order.
+    ///   - propertyName: The name of the generated property.
+    /// - Returns: The Swift code for the property.
+    public func generateStylesheetProperty(_ stylesheets: [ThemeStylesheet], propertyName: String) -> String {
+        var code = "\(indentation)/// Generated stylesheets of the \(humanReadableName(from: propertyName)) theme.\n"
+        code += "\(indentation)static let \(propertyName): [ThemeStylesheet] = "
+        code += generateStylesheetArray(stylesheets, baseIndent: 1)
+        code += "\n"
+        return code
+    }
+
+    /// Generates an array literal of stylesheets.
+    ///
+    /// The CSS text is embedded as a raw multi-line string literal, so it needs
+    /// no escaping and stays readable in the generated file.
+    ///
+    /// - Parameters:
+    ///   - stylesheets: The stylesheets in application order.
+    ///   - baseIndent: The indentation level of the line the array starts on.
+    /// - Returns: The Swift code for the array literal.
+    public func generateStylesheetArray(_ stylesheets: [ThemeStylesheet], baseIndent: Int) -> String {
+        guard !stylesheets.isEmpty else { return "[]" }
+        let indent = String(repeating: indentation, count: baseIndent)
+        let entryIndent = String(repeating: indentation, count: baseIndent + 1)
+        let argumentIndent = String(repeating: indentation, count: baseIndent + 2)
+        let entries = stylesheets.map { stylesheet in
+            """
+            \(entryIndent)ThemeStylesheet(
+            \(argumentIndent)name: \(swiftStringLiteral(stylesheet.name)),
+            \(argumentIndent)isDarkModeOnly: \(stylesheet.isDarkModeOnly),
+            \(argumentIndent)css: \(rawStringLiteral(stylesheet.css))
+            \(entryIndent))
+            """
+        }
+        return "[\n" + entries.joined(separator: ",\n") + "\n\(indent)]"
+    }
+
+    // MARK: - Literal Helpers
+
+    /// Returns a Swift string literal for a single-line value.
+    ///
+    /// - Parameter value: The string to encode.
+    /// - Returns: The quoted literal with backslashes, quotes and control characters escaped.
+    public func swiftStringLiteral(_ value: String) -> String {
+        var literal = "\""
+        for character in value.unicodeScalars {
+            switch character {
+            case "\\": literal += "\\\\"
+            case "\"": literal += "\\\""
+            case "\n": literal += "\\n"
+            case "\r": literal += "\\r"
+            case "\t": literal += "\\t"
+            default: literal.unicodeScalars.append(character)
+            }
+        }
+        return literal + "\""
+    }
+
+    /// Returns a raw multi-line Swift string literal for arbitrary text.
+    ///
+    /// The number of `#` delimiters is chosen so that nothing in the text can
+    /// end the literal early or start an interpolation.  The closing delimiter
+    /// starts in the first column, so the text keeps its indentation.
+    ///
+    /// - Parameter text: The text to embed.
+    /// - Returns: The raw string literal.
+    public func rawStringLiteral(_ text: String) -> String {
+        var hashes = "#"
+        while text.contains("\"\"\"" + hashes) || text.contains("\\" + hashes) {
+            hashes += "#"
+        }
+        // A multi-line literal drops the line break before its closing delimiter,
+        // so one is always added to keep the text exactly as it is.
+        let body = text.replacingOccurrences(of: "\r\n", with: "\n")
+        return "\(hashes)\"\"\"\n\(body)\n\"\"\"\(hashes)"
+    }
+
     // MARK: - Naming Helpers
 
-    /// Converts a theme file name to a Swift property name.
+    /// Converts a theme name to the name of its enumeration case.
+    ///
+    /// The built-in name prefix (`docc-static-`) is dropped and the remaining
+    /// kebab-case name is converted to lower camel case, so `docc-static-classic`
+    /// becomes `classic` and `my-custom-theme` becomes `myCustomTheme`.
+    ///
+    /// - Parameter themeName: The theme name.
+    /// - Returns: The Swift identifier of the case (without back-ticks).
+    public func swiftCaseName(for themeName: String) -> String {
+        let shortName = ThemeBundleLayout.aliases(forBuiltInTheme: themeName).first ?? themeName
+        let parts = shortName.split(whereSeparator: { !$0.isLetter && !$0.isNumber })
+        let camelCase = parts.enumerated().map { index, part in
+            index == 0 ? part.lowercased() : part.prefix(1).uppercased() + part.dropFirst().lowercased()
+        }.joined()
+        guard let first = camelCase.first, !first.isNumber else { return "theme" + camelCase }
+        return camelCase
+    }
+
+    /// Converts a theme name to the name of the property holding its settings.
     ///
     /// - Parameter themeName: The theme name (e.g., "default", "docc-static-classic").
     /// - Returns: The Swift property name (e.g., "defaultThemeData", "classicThemeData").
     public func swiftPropertyName(for themeName: String) -> String {
-        switch themeName {
-        case "default":
-            return "defaultThemeData"
-        case "docc-static-classic":
-            return "classicThemeData"
-        default:
-            // Convert kebab-case to camelCase and append "ThemeData"
-            let parts = themeName.split(separator: "-")
-            let camelCase = parts.enumerated().map { index, part in
-                index == 0 ? String(part) : part.capitalized
-            }.joined()
-            return camelCase + "ThemeData"
-        }
+        swiftCaseName(for: themeName) + "ThemeData"
+    }
+
+    /// Converts a theme name to the name of the property holding its stylesheets.
+    ///
+    /// - Parameter themeName: The theme name.
+    /// - Returns: The Swift property name (e.g., "classicThemeStylesheets").
+    public func stylesheetPropertyName(for themeName: String) -> String {
+        swiftCaseName(for: themeName) + "ThemeStylesheets"
     }
 
     /// Extracts a human-readable theme name from a property name.
@@ -288,13 +506,9 @@ public struct ThemeCodeGenerator: Sendable {
     /// - Parameter propertyName: The Swift property name.
     /// - Returns: The human-readable name.
     public func humanReadableName(from propertyName: String) -> String {
-        switch propertyName {
-        case "defaultThemeData":
-            return "default"
-        case "classicThemeData":
-            return "classic"
-        default:
-            return propertyName.replacingOccurrences(of: "ThemeData", with: "")
+        for suffix in ["ThemeData", "ThemeStylesheets"] where propertyName.hasSuffix(suffix) {
+            return String(propertyName.dropLast(suffix.count))
         }
+        return propertyName
     }
 }

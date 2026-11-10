@@ -1,0 +1,515 @@
+/* Main content */
+.doc-topic {
+    flex: 1;
+    margin-left: var(--sidebar-width);
+    padding: 0;
+    max-width: calc(100% - var(--sidebar-width));
+    transition: margin-left 0.3s ease, max-width 0.3s ease;
+}
+
+/* Main content expanded when sidebar is collapsed */
+.sidebar-toggle-checkbox:checked ~ .documentation-layout .doc-topic {
+    margin-left: 0;
+    max-width: 100%;
+}
+
+/* Breadcrumbs - matches swift-docc-render hierarchy (ul inside hero) */
+.hierarchy {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    list-style: none;
+    padding: 0;
+    margin: 0 0 var(--spacing-hierarchy-margin-bottom, 20px) 0;
+    font-size: var(--spacing-hierarchy-font-size, 14px);
+    line-height: var(--spacing-hierarchy-line-height, 20px);
+    color: var(--color-figure-gray);
+}
+
+.hierarchy li + li::before {
+    content: "/";
+    margin: 0 0.5rem;
+    color: var(--color-figure-gray-secondary);
+}
+
+.hierarchy a {
+    color: var(--color-link);
+    text-decoration: none;
+}
+
+.hierarchy a:hover {
+    text-decoration: underline;
+}
+
+/* Hero section */
+.documentation-hero {
+    color: var(--color-figure-gray);
+    overflow: hidden;
+    text-align: left;
+    position: relative;
+    padding-right: 0;
+    margin-bottom: var(--spacing-hero-margin-bottom, 0);
+}
+
+.documentation-hero::before {
+    content: "";
+    background: var(--color-documentation-intro-fill, var(--color-fill-secondary));
+    position: absolute;
+    width: 100%;
+    height: 100%;
+}
+
+/* Symbol pages (non-module) get no background fill: matches docc-render
+   DocumentationHero.vue `documentation-hero--disabled` logic. */
+.documentation-hero--disabled {
+    background: none;
+}
+
+.documentation-hero--disabled::before,
+.documentation-hero--disabled::after {
+    content: none;
+}
+
+.documentation-hero__content {
+    padding-top: var(--spacing-hero-padding-top, 40px);
+    padding-bottom: var(--spacing-hero-padding-bottom, 40px);
+    position: relative;
+    z-index: 1;
+    max-width: var(--spacing-hero-max-width, 980px);
+    margin-left: var(--spacing-hero-margin-left, auto);
+    margin-right: var(--spacing-hero-margin-right, auto);
+    padding-left: var(--spacing-hero-padding-left, 80px);
+    padding-right: var(--spacing-hero-padding-right, 80px);
+    box-sizing: border-box;
+}
+
+/* Technology icon for modules - background decoration */
+.documentation-hero .icon {
+    position: absolute;
+    margin-top: 10px;
+    margin-right: 25px;
+    right: 0;
+    width: 250px;
+    height: calc(100% - 20px);
+    box-sizing: border-box;
+}
+
+.background-icon {
+    color: var(--color-figure-gray-secondary);
+    display: block;
+    width: 250px;
+    height: auto;
+    opacity: 0.15;
+    mix-blend-mode: normal;
+    position: absolute;
+    top: 50%;
+    left: 0;
+    transform: translateY(-50%);
+    max-height: 100%;
+}
+
+.background-icon img,
+.background-icon svg {
+    width: 100%;
+    height: 100%;
+}
+
+@media only screen and (max-width: 735px) {
+    .documentation-hero .icon {
+        display: none;
+    }
+}
+
+.eyebrow,
+.doc-topic .eyebrow {
+    display: block;
+    font-size: var(--spacing-eyebrow-font-size, 21px);
+    line-height: var(--spacing-eyebrow-line-height, 25px);
+    color: var(--color-figure-gray-secondary);
+    margin-bottom: var(--spacing-eyebrow-margin-bottom, 15px);
+}
+
+.documentation-hero h1 {
+    margin-top: 0;
+    margin-bottom: var(--spacing-hero-title-margin-bottom, 12px);
+}
+
+/* Reset margins on hero content elements: prevents adjacent-sibling
+   rules from adding unwanted margin-top to <p> eyebrow/abstract tags.
+   Uses .doc-topic prefix for specificity (0-2-1) to beat .doc-topic p (0-1-1). */
+.doc-topic .documentation-hero__content > p,
+.doc-topic .documentation-hero__content > div,
+.doc-topic .documentation-hero__content > span,
+.documentation-hero__content > * {
+    margin-top: 0;
+}
+
+/* Hero abstract uses font-styles(intro) from docc-render: 21px/29px at large viewport */
+.documentation-hero .abstract {
+    font-size: var(--spacing-hero-abstract-font-size, 21px);
+    line-height: var(--spacing-hero-abstract-line-height, 29px);
+    color: var(--color-figure-gray);
+    margin-bottom: 0;
+}
+
+.documentation-hero .abstract p {
+    margin: 0;
+}
+
+.abstract {
+    font-size: var(--spacing-abstract-font-size, 17px);
+    line-height: var(--spacing-abstract-line-height, 25px);
+    color: var(--color-figure-gray-secondary);
+    margin-bottom: var(--spacing-abstract-margin-bottom, 1.5rem);
+}
+
+/* Topic link items within content table sections */
+.link-block.topic {
+    margin-top: var(--spacing-link-block-topic-margin-top, 15px);
+}
+
+.no-title .link-block.topic:first-child {
+    margin-top: 0;
+}
+
+/* Topic link styling - matches swift-docc-render inline display with vertical padding */
+.link-block a.link {
+    display: var(--spacing-topic-link-display, inline);
+    padding: var(--spacing-topic-link-padding, 5px 0);
+}
+
+/* Topic icon wrapper - matches swift-docc-render inline-flex display with right margin */
+.topic-icon-wrapper {
+    display: var(--spacing-topic-icon-display, inline-flex);
+    vertical-align: middle;
+    margin-right: var(--spacing-topic-icon-margin-right, 17px);
+}
+
+/* Topic abstracts inside content table sections use body font, not hero font */
+.contenttable-section .section-content .abstract,
+.link-block .abstract {
+    font-size: var(--spacing-topic-abstract-font-size, 17px);
+    line-height: var(--spacing-topic-abstract-line-height, 25px);
+    color: var(--color-figure-gray);
+    margin-inline-start: var(--spacing-topic-abstract-margin-start, calc(1rem + 1.294rem));
+    margin-bottom: 0;
+}
+
+/* When link-block has no icon, remove the abstract indent */
+.link-block.no-icon .abstract {
+    margin-inline-start: 0;
+}
+
+/* Decorated topic title - matches swift-docc-render DecoratedTopicTitle */
+.decorated-title {
+    display: inline;
+    font-family: var(--typography-html-font-mono, monospace);
+    font-size: var(--spacing-decorated-title-font-size, 16px);
+    line-height: var(--spacing-decorated-title-line-height, 25px);
+    font-weight: var(--spacing-decorated-title-font-weight, 400);
+    background: transparent;
+    padding: 0;
+}
+.decorated-title .decorator,
+.decorated-title .label {
+    color: var(--color-secondary-label, var(--color-figure-gray-secondary));
+}
+.decorated-title .identifier {
+    color: var(--color-link);
+    font-weight: var(--spacing-decorated-title-identifier-font-weight, 600);
+}
+
+/* Fallback width constraint for any content elements that appear directly
+   inside .doc-topic outside of .primary-content-container (e.g. on edge-case
+   page types). Uses direct-child (>) combinators to avoid matching nested
+   content that already has padding via .primary-content-container or
+   .documentation-hero__content. */
+.doc-topic > ul,
+.doc-topic > ol,
+.doc-topic > p,
+.doc-topic > h2,
+.doc-topic > h3,
+.doc-topic > h4,
+.doc-topic > h5,
+.doc-topic > h6,
+.doc-topic > .aside {
+    max-width: var(--spacing-content-max-width, 980px);
+    padding-left: var(--spacing-content-padding-horizontal, 80px);
+    padding-right: var(--spacing-content-padding-horizontal, 80px);
+    margin-left: var(--spacing-content-margin-left, auto);
+    margin-right: var(--spacing-content-margin-right, auto);
+}
+
+/* Content list items: margin-left creates the indent for list text
+   while bullets (list-style-position: outside) sit in the margin space,
+   aligning with paragraph text. Matches docc-render's
+   ul { margin-inline-start: em(20px) } model. */
+.doc-topic > ul > li,
+.doc-topic > ol > li {
+    margin-left: var(--spacing-list-indent, 1.176em);
+    margin-top: var(--spacing-content-list-item-margin-top, 0.5em);
+}
+
+/* First list item has no top margin to avoid extra space at list start */
+.doc-topic > ul > li:first-child,
+.doc-topic > ol > li:first-child {
+    margin-top: 0;
+}
+
+/* Main content layout: doc-content (flex: 1) + OnThisPageStickyContainer (right) */
+.doc-content-wrapper {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: flex-start;
+}
+
+.doc-content {
+    flex: 1 1 auto;
+    min-width: 0;
+    width: 100%;
+    overflow: hidden;
+}
+
+/* Primary content container: constrains paragraph/heading width with 80px gutters,
+   matching docc-render's inner .container inside .doc-content */
+.primary-content-container {
+    max-width: var(--spacing-content-max-width, 980px);
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: var(--spacing-content-padding-horizontal, 80px);
+    padding-right: var(--spacing-content-padding-horizontal, 80px);
+    padding-top: 40px;
+    box-sizing: border-box;
+}
+
+/* On-this-page sticky navigation sidebar: matches docc-render OnThisPageStickyContainer */
+.OnThisPageStickyContainer {
+    position: sticky;
+    top: 3.82353rem;
+    align-self: flex-start;
+    flex: 0 0 auto;
+    width: 192px;
+    padding-inline-end: 22px;
+    box-sizing: border-box;
+    padding-bottom: var(--spacing-stacked-margin-small);
+    max-height: calc(100vh - 3.82353rem);
+    margin-top: 2.353rem;
+}
+
+.OnThisPageNav ul.items {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.OnThisPageNav .base-link {
+    color: var(--color-figure-gray-secondary);
+    font-size: 14px;
+    line-height: 18px;
+    display: inline-block;
+    margin: 5px 0;
+    text-decoration: none;
+}
+
+.OnThisPageNav .parent-item .base-link {
+    font-weight: 700;
+}
+
+.OnThisPageNav .child-item .base-link {
+    padding-inline-start: 0.8rem;
+}
+
+.OnThisPageNav .active .base-link {
+    color: var(--color-figure-gray);
+}
+
+/* Hide on-this-page nav when viewport is too narrow.
+   docc-render uses JS to check contentWidth > 1050px; with a ~432px left
+   sidebar the threshold is ~1482px total viewport width. */
+@media only screen and (max-width: 1480px) {
+    .OnThisPageStickyContainer {
+        display: none;
+    }
+}
+
+/* contenttable sections (Topics, Relationships, See Also): matches docc-render ContentTable.vue.
+   The section itself spans full width with no background; only its inner .container constrains
+   the content width. The alt-light class is a modifier in docc-render but carries no background. */
+.contenttable.alt-light .container {
+    max-width: var(--spacing-content-max-width, 980px);
+    margin-left: auto;
+    margin-right: auto;
+    padding-top: 0;
+    padding-left: var(--spacing-content-padding-horizontal, 80px);
+    padding-right: var(--spacing-content-padding-horizontal, 80px);
+    padding-bottom: var(--spacing-section-spacing-single-side, 40px);
+    box-sizing: border-box;
+}
+
+.contenttable.alt-light .title {
+    font-size: 32px;
+    line-height: 36px;
+    padding-top: 40px;
+    border-top: 1px solid var(--color-fill-gray);
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+/* Overview separator: first h2 in primary content (after declaration in hero) */
+.primary-content-container > h2:first-child,
+.primary-content-container > .mentions + h2,
+.primary-content-container > .mentions + p + h2 {
+    border-top: 1px solid var(--color-fill-gray);
+    padding-top: 40px;
+    margin-top: -40px;
+}
+
+/* Module pages: first h2 has no border (no declaration preceding it in hero) */
+.doc-topic > .doc-content-wrapper > .doc-content > .primary-content-container > h2:first-child {
+    border-top: none;
+    padding-top: 0;
+    margin-top: 0;
+}
+
+/* Prevent margin stacking on top-level content sections */
+.doc-content > section,
+.doc-topic > section {
+    margin-top: 0;
+}
+
+/* Code listings fill the available content width: no max-width constraint,
+   matching docc-render which lets code blocks span the full content area. */
+.doc-topic .code-listing {
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* Paragraph spacing - matches swift-docc-render exactly (0.8rem × 17px root = 13.6px) */
+main p, article p, .doc-topic p {
+    margin-top: var(--spacing-paragraph-margin-top, 0.8rem);
+    margin-bottom: 0;
+}
+
+/* List items have no top margin (inside ul/ol) - matches swift-docc-render */
+main li p,
+article li p,
+.doc-topic li p,
+main ul li p,
+main ol li p,
+article ul li p,
+article ol li p,
+.doc-topic ul li p,
+.doc-topic ol li p {
+    margin-top: 0;
+}
+
+.discussion,
+.parameters {
+    padding-bottom: 1rem;
+}
+
+/* Mentions section (matched to vue.js .mentions class) */
+.mentions {
+    padding-bottom: 1rem;
+}
+
+/* Legacy single-column layout (for index page) */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+/* Declaration section - matches swift-docc-render structure */
+.declaration {
+    margin: var(--spacing-declaration-margin, 0);
+}
+
+/* Declaration rendered inside the hero (symbol pages) needs top margin
+   matching docc-render's spacing above the declarations-container */
+.documentation-hero .declaration {
+    margin-top: var(--spacing-hero-declaration-margin-top, 40px);
+}
+.declaration .source {
+    background: var(--color-code-background, var(--color-fill-secondary));
+    border: var(--spacing-declaration-border, 1px solid var(--color-grid, var(--color-fill-gray)));
+    border-bottom: none;
+    padding: var(--spacing-declaration-padding, 8px 14px);
+    border-radius: var(--spacing-declaration-border-radius, 4px);
+    line-height: var(--spacing-declaration-line-height, 25px);
+    margin: var(--spacing-declaration-source-margin, 0);
+    overflow-x: auto;
+}
+.declaration .source code {
+    white-space: pre;
+}
+
+/* Symbol cards in Topics section */
+.symbol-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.topic-link-container {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0.75rem 0;
+}
+
+.topic-link-container .badge {
+    margin-top: 0.125rem;
+}
+
+.symbol-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.symbol-name {
+    font-family: var(--typography-html-font);
+    font-weight: 400;
+    display: block;
+    margin-bottom: 0.25rem;
+}
+
+.symbol-summary {
+    color: var(--color-figure-gray-secondary);
+    font-size: 0.875rem;
+    margin: 0;
+    line-height: 1.4;
+}
+
+/* Aside boxes: border-radius, padding, and border-width match docc-render */
+.aside {
+    padding: 1rem;
+    border-radius: 4px;
+    margin: 1rem 1.5rem;
+}
+
+.aside.tip {
+    background: var(--color-aside-tip-background);
+    border-left: 6px solid var(--color-aside-tip-border);
+}
+
+.aside.note {
+    background: var(--color-aside-note-background);
+    border-left: 6px solid var(--color-aside-note-border);
+}
+
+.aside.warning {
+    background: var(--color-aside-warning-background);
+    border-left: 6px solid var(--color-aside-warning-border);
+}
+
+.aside.important {
+    background: var(--color-aside-important-background);
+    border-left: 6px solid var(--color-aside-important-border);
+}
+
+.aside .label {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}

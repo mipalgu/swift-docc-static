@@ -10,25 +10,32 @@ import ArgumentParser
 import DocCStaticThemes
 import Foundation
 
-/// Theme code generator that converts JSON theme files to Swift constants.
+/// Theme code generator that compiles theme bundles and the base stylesheet into Swift.
 ///
-/// This build tool reads `*.theme-settings.json` files from a themes directory
-/// and generates Swift code that can be compiled directly into the binary,
-/// eliminating the need for runtime file loading.
+/// This build tool reads every theme bundle (a directory containing
+/// `theme-settings.json` and optional `*.css` files) from a themes directory,
+/// together with the base stylesheet parts from a stylesheets directory, and
+/// generates Swift code that is compiled directly into the binary, eliminating
+/// the need for runtime file loading.  Any warning about a built-in theme, such
+/// as an unknown key, fails the build.
 @main
 struct ThemeCodeGeneratorCommand: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "theme-codegen",
-        abstract: "Generate Swift code from JSON theme files.",
+        abstract: "Generate Swift code from theme bundles and the base stylesheet.",
         discussion: """
-            Reads all *.theme-settings.json files from the themes directory
-            and generates Swift code containing the theme data as constants.
-            This allows themes to be compiled directly into the binary.
+            Reads every theme bundle below the themes directory and the base
+            stylesheet parts in the stylesheets directory, and generates Swift
+            code containing them as constants.  This allows themes to be
+            compiled directly into the binary.
             """
     )
 
-    @Argument(help: "Directory containing theme-settings.json files.")
+    @Argument(help: "Directory containing one theme bundle directory per built-in theme.")
     var themesDirectory: String
+
+    @Argument(help: "Directory containing the base stylesheet parts (*.css).")
+    var stylesheetsDirectory: String
 
     @Argument(help: "Output Swift file path.")
     var outputFile: String
@@ -38,64 +45,47 @@ struct ThemeCodeGeneratorCommand: AsyncParsableCommand {
 
     func run() async throws {
         let themesURL = URL(fileURLWithPath: themesDirectory)
+        let stylesheetsURL = URL(fileURLWithPath: stylesheetsDirectory)
         let outputURL = URL(fileURLWithPath: outputFile)
 
-        // Read all theme JSON files
-        let fileManager = FileManager.default
-        let themeFiles = try fileManager.contentsOfDirectory(
-            at: themesURL,
-            includingPropertiesForKeys: nil
-        ).filter { $0.pathExtension == "json" && $0.lastPathComponent.contains("theme-settings") }
-
-        guard !themeFiles.isEmpty else {
-            throw ValidationError("No theme-settings.json files found in \(themesURL.path)")
+        let warnings = CollectingWarningHandler()
+        let bundles: [ThemeBundleSource]
+        do {
+            bundles = try ThemeBundleSource.loadAll(in: themesURL, warningHandler: warnings)
+        } catch {
+            throw ValidationError("Failed to read the theme bundles in \(themesURL.path): \(error)")
+        }
+        guard !bundles.isEmpty else {
+            throw ValidationError("No theme bundles found in \(themesURL.path)")
+        }
+        guard warnings.warnings.isEmpty else {
+            throw ValidationError(
+                "Built-in themes must not produce warnings:\n" + warnings.warnings.joined(separator: "\n")
+            )
+        }
+        let baseStylesheets = try ThemeBundleLayout.stylesheets(in: stylesheetsURL)
+        guard !baseStylesheets.isEmpty else {
+            throw ValidationError("No base stylesheet parts found in \(stylesheetsURL.path)")
         }
 
         if verbose {
-            print("Found \(themeFiles.count) theme file(s):")
-            for file in themeFiles {
-                print("  - \(file.lastPathComponent)")
+            print("Found \(bundles.count) theme bundle(s) and \(baseStylesheets.count) base stylesheet part(s):")
+            for bundle in bundles {
+                print("  - \(bundle.name) (\(bundle.stylesheets.count) stylesheet(s))")
             }
         }
 
-        // Parse all theme files
-        var themes: [(name: String, settings: ThemeSettingsInput)] = []
-        let warningHandler = StderrWarningHandler()
+        let swiftCode = ThemeCodeGenerator().generateFile(bundles: bundles, baseStylesheets: baseStylesheets)
 
-        for themeFile in themeFiles.sorted(by: { $0.lastPathComponent < $1.lastPathComponent }) {
-            let themeName = themeFile.deletingPathExtension().lastPathComponent
-                .replacingOccurrences(of: ".theme-settings", with: "")
-
-            do {
-                let settings = try ThemeSettingsInput.parse(
-                    contentsOf: themeFile,
-                    warningHandler: warningHandler
-                )
-                themes.append((name: themeName, settings: settings))
-
-                if verbose {
-                    print("Parsed theme: \(themeName)")
-                }
-            } catch {
-                throw ValidationError("Failed to parse \(themeFile.lastPathComponent): \(error)")
-            }
-        }
-
-        // Generate Swift code
-        let generator = ThemeCodeGenerator()
-        let swiftCode = generator.generateFile(themes: themes)
-
-        // Create output directory if needed
-        let outputDir = outputURL.deletingLastPathComponent()
-        try fileManager.createDirectory(at: outputDir, withIntermediateDirectories: true)
-
-        // Write the output file
+        // Create the output directory if needed and write the file
+        try FileManager.default.createDirectory(
+            at: outputURL.deletingLastPathComponent(),
+            withIntermediateDirectories: true
+        )
         try swiftCode.write(to: outputURL, atomically: true, encoding: .utf8)
 
         if verbose {
             print("Generated \(outputURL.path)")
-        } else {
-            print("Generated \(outputURL.lastPathComponent)")
         }
     }
 }

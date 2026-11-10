@@ -61,6 +61,7 @@
 
 // MARK: - Configuration
 
+import DocCStaticThemes
 import Foundation
 
 /// Configuration for static documentation generation.
@@ -198,30 +199,37 @@ public enum DependencyInclusionPolicy: Sendable, Equatable, Hashable {
 
 /// Configuration for the documentation theme.
 ///
-/// Themes can be configured in two ways:
-/// 1. Using the built-in accent colour and dark mode settings
-/// 2. Using a theme-settings.json file compatible with swift-docc-render
+/// A theme consists of three parts, all optional:
+///
+/// 1. **Settings** in the swift-docc-render `theme-settings.json` format, which
+///    define custom properties (colours, fonts, spacing) and feature switches;
+/// 2. **Stylesheets** that are layered after the base stylesheet and can change
+///    any rule;
+/// 3. **Custom CSS** supplied by the user, layered last.
+///
+/// Built-in themes are compiled into the binary; custom themes are read from a
+/// `theme-settings.json` file or from a theme directory containing that file
+/// and optional stylesheets.
 ///
 /// ## Using Theme Settings
 ///
 /// ```swift
-/// // Load a theme from a file
-/// let settings = try ThemeSettingsParser.parse(contentsOf: themeURL)
-/// let theme = ThemeConfiguration(themeSettings: settings)
-///
 /// // Use a built-in theme
-/// let theme = ThemeConfiguration(builtInTheme: .classic)
+/// let classic = ThemeConfiguration(builtInTheme: .classic)
+///
+/// // Resolve a theme name, settings file or theme directory
+/// let custom = try ThemeConfiguration.resolveTheme("MyTheme")
 /// ```
 public struct ThemeConfiguration: Sendable, Equatable {
     /// The accent colour used for links and highlights.
     ///
-    /// This is only used when `themeSettings` is `nil`.
+    /// This is only used when the theme settings do not define the `link` colour.
     public var accentColour: String
 
     /// Whether to include dark mode styles.
     public var includeDarkMode: Bool
 
-    /// Custom CSS to append to the generated stylesheet.
+    /// Custom CSS to append to the generated stylesheet, after the theme's own stylesheets.
     public var customCSS: String?
 
     /// Theme settings loaded from a theme-settings.json file.
@@ -229,6 +237,12 @@ public struct ThemeConfiguration: Sendable, Equatable {
     /// When set, these settings override the default CSS variable values.
     /// The settings are compatible with swift-docc-render themes.
     public var themeSettings: ThemeSettings.Root?
+
+    /// The theme's own stylesheets, layered after the base stylesheet in this order.
+    public var stylesheets: [ThemeStylesheet]
+
+    /// The accent colour used when neither the configuration nor the settings provide one.
+    public static let defaultAccentColour = "#0066cc"
 
     /// The default theme configuration matching swift-docc-render's appearance.
     public static let `default` = ThemeConfiguration(
@@ -244,16 +258,19 @@ public struct ThemeConfiguration: Sendable, Equatable {
     ///   - includeDarkMode: Whether to generate dark mode styles.
     ///   - customCSS: Optional custom CSS to append.
     ///   - themeSettings: Optional theme settings from a theme-settings.json file.
+    ///   - stylesheets: The theme's own stylesheets in application order.
     public init(
         accentColour: String,
         includeDarkMode: Bool,
         customCSS: String? = nil,
-        themeSettings: ThemeSettings.Root? = nil
+        themeSettings: ThemeSettings.Root? = nil,
+        stylesheets: [ThemeStylesheet] = []
     ) {
         self.accentColour = accentColour
         self.includeDarkMode = includeDarkMode
         self.customCSS = customCSS
         self.themeSettings = themeSettings
+        self.stylesheets = stylesheets
     }
 
     /// Creates a theme configuration from a built-in theme.
@@ -267,83 +284,106 @@ public struct ThemeConfiguration: Sendable, Equatable {
         includeDarkMode: Bool = true,
         customCSS: String? = nil
     ) {
-        let settings = builtInTheme.settings
-        self.accentColour = settings.theme.color?["link"]?.light ?? "#0066cc"
-        self.includeDarkMode = includeDarkMode
-        self.customCSS = customCSS
-        self.themeSettings = settings
+        self.init(
+            themeSettings: builtInTheme.settings,
+            stylesheets: builtInTheme.stylesheets,
+            includeDarkMode: includeDarkMode,
+            customCSS: customCSS
+        )
     }
 
     /// Creates a theme configuration from theme settings.
     ///
     /// - Parameters:
     ///   - themeSettings: The theme settings to use.
+    ///   - stylesheets: The theme's own stylesheets in application order.
     ///   - includeDarkMode: Whether to include dark mode styles.
     ///   - customCSS: Optional custom CSS to append.
     public init(
         themeSettings: ThemeSettings.Root,
+        stylesheets: [ThemeStylesheet] = [],
         includeDarkMode: Bool = true,
         customCSS: String? = nil
     ) {
-        self.accentColour = themeSettings.theme.color?["link"]?.light ?? "#0066cc"
+        self.accentColour = themeSettings.theme.color?["link"]?.light ?? Self.defaultAccentColour
         self.includeDarkMode = includeDarkMode
         self.customCSS = customCSS
         self.themeSettings = themeSettings
+        self.stylesheets = stylesheets
+    }
+
+    /// Returns whether a feature switch is on for this theme.
+    ///
+    /// - Parameter flag: The feature switch to query.
+    /// - Returns: The value set by the theme settings, or the switch's default value.
+    public func isEnabled(_ flag: ThemeSettings.FeatureFlag) -> Bool {
+        themeSettings?.isEnabled(flag) ?? flag.defaultValue
     }
 
     /// Resolves a theme string to a theme configuration.
     ///
-    /// This method provides smart theme resolution with the following logic:
-    /// 1. If `themeString` is `nil`, returns the default theme
-    /// 2. If the string is a path to an existing file, loads it as a custom theme
-    /// 3. If the string matches a built-in theme name exactly, uses that theme
-    /// 4. If the string fuzzy-matches a built-in theme name, uses that theme
-    /// 5. Otherwise, throws an error
+    /// The string is resolved as follows:
+    /// 1. If `themeString` is `nil`, the default theme is used.
+    /// 2. If the string is the path of an existing directory, it is read as a
+    ///    theme directory: a `theme-settings.json` file plus optional
+    ///    stylesheets (`*.css`, applied in file name order; files ending in
+    ///    `.dark.css` only when dark mode styles are enabled).
+    /// 3. If the string is the path of an existing file, it is read as a
+    ///    `theme-settings.json` file.
+    /// 4. If the string is the exact name of a built-in theme, or one of its
+    ///    aliases (the name without the `docc-static-` prefix, such as
+    ///    `classic`), that theme is used.
+    /// 5. Otherwise, an error is thrown.
     ///
-    /// Fuzzy matching allows shortcuts like "classic" to match "docc-static-classic".
+    /// Custom theme files are validated like the built-in themes: unknown keys
+    /// and feature switches are reported to `warningHandler`.
     ///
     /// ## Example
     ///
     /// ```swift
-    /// // Default theme
-    /// let theme1 = try ThemeConfiguration.resolveTheme(nil)
-    ///
-    /// // Custom theme file
-    /// let theme2 = try ThemeConfiguration.resolveTheme("/path/to/custom.json")
-    ///
-    /// // Exact match
-    /// let theme3 = try ThemeConfiguration.resolveTheme("default")
-    ///
-    /// // Fuzzy match
-    /// let theme4 = try ThemeConfiguration.resolveTheme("classic") // matches "docc-static-classic"
+    /// let defaultTheme = try ThemeConfiguration.resolveTheme(nil)
+    /// let classic = try ThemeConfiguration.resolveTheme("classic")
+    /// let custom = try ThemeConfiguration.resolveTheme("MyTheme/theme-settings.json")
+    /// let bundle = try ThemeConfiguration.resolveTheme("MyTheme")
     /// ```
     ///
     /// - Parameters:
-    ///   - themeString: The theme string to resolve (file path or theme name).
+    ///   - themeString: The theme to resolve (theme name, settings file or theme directory).
     ///   - includeDarkMode: Whether to include dark mode styles.
-    ///   - customCSS: Optional custom CSS to append.
+    ///   - customCSS: Optional custom CSS to append after the theme's stylesheets.
+    ///   - warningHandler: Receives warnings about custom theme files.
     /// - Returns: A theme configuration for the resolved theme.
     /// - Throws: `ThemeResolutionError` if the theme cannot be resolved.
     public static func resolveTheme(
         _ themeString: String?,
         includeDarkMode: Bool = true,
-        customCSS: String? = nil
+        customCSS: String? = nil,
+        warningHandler: (any ThemeParsingWarningHandler)? = StderrWarningHandler()
     ) throws -> ThemeConfiguration {
-        // 1. No theme specified - use default
         guard let themeString = themeString else {
-            return ThemeConfiguration(
-                builtInTheme: .default,
-                includeDarkMode: includeDarkMode,
-                customCSS: customCSS
-            )
+            return ThemeConfiguration(builtInTheme: .default, includeDarkMode: includeDarkMode, customCSS: customCSS)
         }
 
-        // 2. Check if it's a file path that exists
-        let fileManager = FileManager.default
-        if fileManager.fileExists(atPath: themeString) {
+        var isDirectory: ObjCBool = false
+        if FileManager.default.fileExists(atPath: themeString, isDirectory: &isDirectory) {
             let url = URL(fileURLWithPath: themeString).standardizedFileURL
             do {
-                let settings = try ThemeSettingsParser.parse(contentsOf: url)
+                if isDirectory.boolValue {
+                    guard ThemeBundleSource.isBundle(url) else {
+                        throw CocoaError(.fileReadNoSuchFile, userInfo: [
+                            NSLocalizedDescriptionKey:
+                                "The directory does not contain \(ThemeBundleLayout.settingsFileName)"
+                        ])
+                    }
+                    let bundle = try ThemeBundleSource.load(from: url, warningHandler: warningHandler)
+                    return ThemeConfiguration(
+                        themeSettings: bundle.settings,
+                        stylesheets: bundle.stylesheets,
+                        includeDarkMode: includeDarkMode,
+                        customCSS: customCSS
+                    )
+                }
+                let settings = try ThemeSettingsParser.parse(contentsOf: url, warningHandler: warningHandler)
                 return ThemeConfiguration(
                     themeSettings: settings,
                     includeDarkMode: includeDarkMode,
@@ -354,30 +394,20 @@ public struct ThemeConfiguration: Sendable, Equatable {
             }
         }
 
-        // 3. Try exact match with built-in themes
-        if let builtIn = ThemeSettings.BuiltInTheme(rawValue: themeString) {
-            return ThemeConfiguration(
-                builtInTheme: builtIn,
-                includeDarkMode: includeDarkMode,
-                customCSS: customCSS
-            )
+        if let builtIn = ThemeSettings.BuiltInTheme.named(themeString) {
+            return ThemeConfiguration(builtInTheme: builtIn, includeDarkMode: includeDarkMode, customCSS: customCSS)
         }
 
-        // 4. Try fuzzy/containment match
-        let allThemes = ThemeSettings.BuiltInTheme.allCases
-        if let fuzzyMatch = allThemes.first(where: {
-            $0.rawValue.contains(themeString) || themeString.contains($0.rawValue)
-        }) {
-            return ThemeConfiguration(
-                builtInTheme: fuzzyMatch,
-                includeDarkMode: includeDarkMode,
-                customCSS: customCSS
-            )
-        }
+        throw ThemeResolutionError.themeNotFound(themeString, availableThemeNames)
+    }
 
-        // 5. Not found - throw error
-        let available = allThemes.map(\.rawValue).joined(separator: ", ")
-        throw ThemeResolutionError.themeNotFound(themeString, available)
+    /// The names of the built-in themes, with their aliases, for error messages.
+    static var availableThemeNames: String {
+        ThemeSettings.BuiltInTheme.allCases.map { theme in
+            theme.aliases.isEmpty
+                ? theme.rawValue
+                : "\(theme.rawValue) (\(theme.aliases.joined(separator: ", ")))"
+        }.joined(separator: ", ")
     }
 }
 
@@ -386,17 +416,22 @@ public struct ThemeConfiguration: Sendable, Equatable {
 /// Errors that can occur during theme resolution.
 public enum ThemeResolutionError: Error, CustomStringConvertible {
     /// The specified theme was not found.
+    ///
+    /// The associated values are the requested name and the list of available themes.
     case themeNotFound(String, String)
 
-    /// The theme file exists but could not be parsed.
+    /// The theme file or directory exists but could not be read.
+    ///
+    /// The associated values are the path and the reason.
     case invalidThemeFile(String, String)
 
+    /// A description suitable for showing to the user.
     public var description: String {
         switch self {
         case .themeNotFound(let name, let available):
             return "Theme '\(name)' not found. Available themes: \(available)"
         case .invalidThemeFile(let path, let reason):
-            return "Failed to parse theme file '\(path)': \(reason)"
+            return "Failed to read theme '\(path)': \(reason)"
         }
     }
 }

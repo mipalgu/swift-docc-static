@@ -1,0 +1,551 @@
+/* Sidebar toggle (hidden checkbox) */
+.sidebar-toggle-checkbox {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* Two-column layout */
+.documentation-layout {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* Sidebar */
+.sidebar {
+    width: var(--sidebar-width);
+    flex-shrink: 0;
+    border-right: 1px solid var(--color-fill-gray);
+    background: var(--color-fill);
+    position: fixed;
+    top: var(--header-height);
+    left: 0;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.3s ease, width 0.3s ease;
+    will-change: transform;
+}
+
+/* Sidebar collapsed state */
+.sidebar-toggle-checkbox:checked ~ .documentation-layout .sidebar {
+    transform: translateX(-100%);
+}
+
+.sidebar-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1rem 0;
+}
+
+/* Module title inside technology-title link */
+.card-link {
+    font-weight: var(--spacing-card-link-font-weight, 600);
+    font-size: var(--spacing-card-link-font-size, 19px);
+    line-height: var(--spacing-card-link-line-height, 23px);
+    padding: var(--spacing-card-link-padding, 0);
+    margin: var(--spacing-card-link-margin, 0);
+    border: none;
+    color: var(--color-card-link, var(--color-figure-gray));
+}
+
+.sidebar-section {
+    margin-bottom: 0.5rem;
+}
+
+/* Module section in multi-module sidebar */
+.module-section {
+    position: relative;
+    padding-left: 0;
+}
+
+.module-section .module-header {
+    display: flex;
+    align-items: center;
+    padding: var(--spacing-module-header-padding, 0.5rem 1rem);
+    scroll-margin-top: var(--spacing-sidebar-target-scroll-margin, 30vh);
+}
+
+.module-section .module-header .disclosure-chevron {
+    position: static;
+    margin-right: 0.5rem;
+}
+
+.module-section .module-name {
+    font-size: var(--spacing-module-name-font-size, 17px);
+    line-height: var(--spacing-module-name-line-height, 25px);
+    font-weight: var(--spacing-module-name-font-weight, 600);
+    color: var(--color-figure-gray);
+    margin: 0;
+    padding: 0;
+    text-transform: none;
+}
+
+.module-section .module-contents {
+    display: none;
+    padding-left: 0;
+    margin: 0;
+}
+
+/* A module expands when its checkbox is checked.  The module containing the
+   current page (the :target row) is expanded by default instead, so for it the
+   checkbox collapses it when checked.  The rules using :has() are kept separate
+   so that browsers without :has() support still honour the checkbox. */
+.module-section > .disclosure-checkbox:checked ~ .module-contents {
+    display: block;
+}
+
+.module-section:has(:target) > .disclosure-checkbox:checked ~ .module-contents {
+    display: none;
+}
+
+.module-section:has(:target) > .disclosure-checkbox:not(:checked) ~ .module-contents {
+    display: block;
+}
+
+.module-section.filter-open > .module-contents {
+    display: block;
+}
+
+.module-section > .disclosure-checkbox:checked ~ .module-header .disclosure-chevron svg {
+    transform: rotate(90deg);
+}
+
+.module-section:has(:target) > .disclosure-checkbox:checked ~ .module-header .disclosure-chevron svg {
+    transform: none;
+}
+
+.module-section:has(:target) > .disclosure-checkbox:not(:checked) ~ .module-header .disclosure-chevron svg {
+    transform: rotate(90deg);
+}
+
+/* Section headings and article links (matches swift-docc .leaf-link) */
+.leaf-link {
+    font-size: var(--spacing-leaf-link-font-size, 17px);
+    line-height: var(--spacing-leaf-link-line-height, 25px);
+    font-weight: var(--spacing-leaf-link-font-weight, 600);
+    color: var(--color-leaf-link, var(--color-figure-gray-secondary-alt));
+    padding: var(--spacing-leaf-link-padding, 0);
+    margin: var(--spacing-leaf-link-margin, 0);
+    border: none;
+    text-transform: var(--spacing-leaf-link-text-transform, none);
+    letter-spacing: var(--spacing-leaf-link-letter-spacing, normal);
+}
+
+/* Sidebar section group headings: matches swift-docc-render .leaf-link H3 */
+.sidebar-section > h3.leaf-link,
+.sidebar-section > .leaf-link {
+    padding-left: var(--spacing-sidebar-section-heading-indent, 40px);
+    margin-top: var(--spacing-sidebar-section-heading-margin-top, 0.75rem);
+    margin-bottom: var(--spacing-sidebar-section-heading-margin-bottom, 0.25rem);
+    font-size: var(--spacing-sidebar-heading-font-size, 17px);
+    text-transform: var(--spacing-sidebar-heading-text-transform, none);
+    letter-spacing: var(--spacing-sidebar-heading-letter-spacing, normal);
+}
+
+.sidebar-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+/* Nested sidebar ul elements: depth-spacer handles all nesting indentation
+   (matches docc-render model where UL padding is zero) */
+.sidebar ul ul {
+    padding-left: 0;
+}
+
+.navigator-card {
+    --nesting-index: 0;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-navigator-card-gap, 0);
+    padding: var(--spacing-navigator-card-padding, 0);
+    padding-left: var(--spacing-navigator-card-padding-left, 20px);
+    padding-right: var(--spacing-navigator-card-padding-right, 20px);
+    font-size: var(--spacing-navigator-card-font-size, 17px);
+    line-height: var(--spacing-navigator-card-line-height, 25px);
+    min-height: var(--spacing-navigator-card-min-height, 35px);
+    box-sizing: border-box;
+    /* Leave some context above the current row when the browser scrolls to it */
+    scroll-margin-top: var(--spacing-sidebar-target-scroll-margin, 30vh);
+}
+
+/* Depth spacer for nesting indentation (matches swift-docc-render)
+   Defaults: nesting-spacing = 15px, nav-depth-spacer = 20px (from swift-docc-render)
+   These can be overridden via --spacing-nesting-spacing and --spacing-nav-depth-spacer */
+.depth-spacer {
+    width: calc(var(--nesting-index) * var(--spacing-nesting-spacing, 15px) + var(--spacing-nav-depth-spacer, 20px));
+    height: 100%;
+    position: relative;
+    flex: 0 0 auto;
+}
+
+/* Disclosure checkbox and chevron inside depth-spacer */
+.depth-spacer .disclosure-checkbox {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.depth-spacer .disclosure-chevron {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    padding-right: var(--spacing-nav-chevron-padding, 5px);
+    box-sizing: border-box;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+.navigator-card .badge {
+    margin-right: var(--spacing-navigator-card-badge-margin-right, 7px);
+}
+
+.navigator-card a {
+    color: var(--color-figure-gray);
+    text-decoration: none;
+    font-weight: 400;
+}
+
+.navigator-card:hover {
+    background: var(--color-navigator-item-hover);
+}
+
+.navigator-card a:hover {
+    text-decoration: none;
+}
+
+/* The current page is the row selected by the URL fragment of the sidebar */
+.navigator-card:target,
+.navigator-card.active,
+.navigator-card.selected {
+    background: var(--color-fill-gray-quaternary);
+}
+
+.navigator-card:target a,
+.navigator-card.active a,
+.navigator-card.selected a {
+    font-weight: 600;
+}
+
+/* Module link (matches swift-docc .technology-title) */
+.technology-title {
+    display: var(--spacing-technology-title-display, flex);
+    width: 100%;
+    justify-content: var(--spacing-technology-title-justify-content, normal);
+    align-items: var(--spacing-technology-title-align-items, center);
+    text-decoration: none;
+    color: var(--color-technology-title, var(--color-link));
+    background: var(--color-technology-title-background, var(--color-fill-gray-quaternary));
+    padding: var(--spacing-technology-title-padding, 8px 10px 8px 20px);
+    margin: var(--spacing-technology-title-margin, 0 20px);
+    border-radius: var(--spacing-technology-title-border-radius, 4px);
+    scroll-margin-top: var(--spacing-sidebar-target-scroll-margin, 30vh);
+}
+
+.technology-title:hover {
+    text-decoration: none;
+    background: var(--color-technology-title-background-hover, var(--color-navigator-item-hover));
+}
+
+.technology-title.active,
+.technology-title:target {
+    background: var(--color-fill-gray-quaternary);
+}
+
+.module-section:has(:target) .technology-title {
+    background: var(--color-fill-gray-quaternary);
+}
+
+/* Chevron inside .technology-title: margin-top: 0 overrides
+   h2 + * { margin-top: 0.8em } which otherwise pushes the chevron down */
+.technology-title .disclosure-chevron {
+    order: var(--spacing-disclosure-chevron-order, 2);
+    margin-left: var(--spacing-disclosure-chevron-margin-left, auto);
+    margin-right: var(--spacing-disclosure-chevron-margin-right, 0);
+    margin-top: 0;
+    align-self: var(--spacing-disclosure-chevron-align-self, center);
+}
+
+/* Disclosure chevron for expandable items */
+.disclosure-checkbox {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.disclosure-chevron {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 14px;
+    height: 14px;
+    cursor: pointer;
+    flex-shrink: 0;
+    color: var(--color-figure-gray-secondary);
+}
+
+.disclosure-chevron svg {
+    width: 8px;
+    height: 8px;
+    transform: rotate(0deg);
+    transition: transform 0.15s ease;
+}
+
+/* Item chevrons follow the effective disclosure state (see the children wrapper
+   rules below); the checkbox precedes the depth spacer that holds the chevron. */
+.navigator-card.expandable:not(:target):not(:has(+ .nav-children-wrapper :target)) > .disclosure-checkbox:checked ~ .depth-spacer .disclosure-chevron svg,
+.navigator-card.expandable:is(:target, :has(+ .nav-children-wrapper :target)) > .disclosure-checkbox:not(:checked) ~ .depth-spacer .disclosure-chevron svg {
+    transform: rotate(90deg);
+}
+
+/* Flat list disclosure mechanism (simplified with wrappers)
+   Children are wrapped in .nav-children-wrapper for easy CSS hiding/showing.
+   This avoids complex sibling selectors while maintaining flat visual structure. */
+
+/* Children wrapper - hidden by default */
+.nav-children-wrapper {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.15s ease, visibility 0.15s;
+}
+
+/* Show children when the parent item's checkbox is checked.  The current page
+   (the :target row) and its ancestors are expanded by default instead, so for
+   them the checkbox collapses the children when checked. */
+.navigator-card.expandable:not(:target):not(:has(+ .nav-children-wrapper :target)):has(> .disclosure-checkbox:checked) + .nav-children-wrapper,
+.navigator-card.expandable:is(:target, :has(+ .nav-children-wrapper :target)):has(> .disclosure-checkbox:not(:checked)) + .nav-children-wrapper {
+    max-height: none;
+    overflow: visible;
+    opacity: 1;
+    visibility: inherit;
+}
+
+/* Rows on the path to a filter match are shown while filtering */
+.nav-children-wrapper.filter-open {
+    max-height: none;
+    overflow: visible;
+    opacity: 1;
+    visibility: inherit;
+}
+
+/* Group markers are always-visible flat headers (no disclosure toggle),
+   matching swift-docc-render: children of .is-group are always shown */
+.navigator-card.is-group + .nav-children-wrapper {
+    max-height: none;
+    overflow: visible;
+    opacity: 1;
+    visibility: inherit;
+}
+
+/* Group markers (.is-group class): plain non-interactive section headers,
+   same font size as regular items (1rem/17px), bold, gray, matching
+   swift-docc-render's navigator-card-item.is-group style */
+.navigator-card.is-group {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--color-figure-gray-secondary);
+    cursor: default;
+}
+
+.navigator-card.is-group .group-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--color-figure-gray-secondary);
+    flex: 1;
+}
+
+.navigator-card.is-group:hover {
+    background: transparent;
+}
+
+/* Expandable items - position checkbox absolutely for sibling selector */
+.navigator-card.expandable > .disclosure-checkbox {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* Symbol icon for articles/tutorials: matches docc-render
+   .navigator-icon-wrapper (17x17 with 7px margin-right) */
+.symbol-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--spacing-symbol-icon-width, 17px);
+    height: var(--spacing-symbol-icon-height, 17px);
+    flex-shrink: 0;
+    margin-right: var(--spacing-symbol-icon-margin-right, 7px);
+    color: var(--color-figure-gray-secondary);
+}
+
+.symbol-icon svg {
+    width: 14px;
+    height: 14px;
+}
+
+/* Filter with shortcut indicator - hidden by default, shown via JS */
+.sidebar-filter {
+    display: none;  /* JS sets to flex when available */
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    border-top: 1px solid var(--color-fill-gray);
+    background: var(--color-fill);
+    flex-shrink: 0;
+}
+
+.filter-icon {
+    display: flex;
+    align-items: center;
+    color: var(--color-figure-gray-secondary);
+}
+
+.filter-shortcut {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    border: 1px solid var(--color-fill-gray);
+    border-radius: 4px;
+    color: var(--color-figure-gray-secondary);
+}
+
+/* Symbol type badges - HTML badges with filled backgrounds */
+.badge,
+.symbol-badge {
+    width: 16px;
+    height: 16px;
+    border-radius: var(--badge-border-radius, 1px);
+    border-style: var(--badge-border-style, solid);
+    border-width: var(--badge-border-width, 1px);
+    border-color: var(--color-badge-border);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: bold;
+    flex-shrink: 0;
+    background: var(--color-badge-default);
+    color: var(--color-badge-text);
+}
+
+.badge-article,
+.badge-tutorial {
+    background: transparent;
+    border: none;
+    width: auto;
+    height: auto;
+}
+
+.filter-input {
+    flex: 1;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    border: 1px solid var(--color-fill-gray);
+    border-radius: 6px;
+    background: var(--color-fill-secondary);
+}
+
+.filter-input:focus {
+    outline: none;
+    border-color: var(--color-link);
+    box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.15);
+}
+
+/* Filter hidden state for navigation items */
+.filter-hidden {
+    display: none !important;
+}
+
+/* Highlight matching items during filter */
+.filter-match > a {
+    background: rgba(0, 102, 204, 0.1);
+    border-radius: 4px;
+}
+
+/* Search results sections in sidebar */
+.search-results-sections {
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--color-fill-gray);
+}
+
+.search-result-section {
+    margin-bottom: 0.75rem;
+}
+
+.search-result-heading {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--color-figure-gray-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin: 0 0 0.5rem 0;
+    padding: 0.5rem 0.75rem 0;
+}
+
+.search-result-subheading {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    color: var(--color-figure-gray-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin: 0.5rem 0 0.25rem 0;
+    padding: 0 0.75rem;
+}
+
+.search-result-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.search-result-item {
+    padding: 0.375rem 0.75rem;
+    border-radius: 4px;
+    margin-bottom: 2px;
+}
+
+.search-result-item:hover {
+    background: var(--color-fill-secondary);
+}
+
+.search-result-link {
+    display: block;
+    color: var(--color-figure-gray);
+    text-decoration: none;
+    font-size: 0.875rem;
+}
+
+.search-result-link:hover {
+    color: var(--color-link);
+}
+
+.search-result-title {
+    display: block;
+    font-weight: 500;
+}
+
+.search-result-summary {
+    margin: 0.25rem 0 0 0;
+    font-size: 0.75rem;
+    color: var(--color-figure-gray-secondary);
+    line-height: 1.4;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}

@@ -9,56 +9,76 @@
 import Foundation
 import PackagePlugin
 
-/// A build tool plugin that generates Swift code from JSON theme files.
+/// A build tool plugin that compiles the built-in themes into Swift code.
 ///
-/// This plugin runs the `theme-codegen` tool before each build to convert
-/// theme-settings.json files into Swift constants that can be compiled
-/// directly into the binary.
+/// This plugin runs the `theme-codegen` tool to convert the theme bundles in
+/// the package's `Themes` directory and the base stylesheet parts in its
+/// `Stylesheets` directory into Swift constants that are compiled directly into
+/// the binary.  Every file in both directories is an input, so editing a theme
+/// or a stylesheet regenerates the code.
 @main
 struct GenerateThemeCode: BuildToolPlugin {
+    /// The package directory holding one bundle directory per built-in theme.
+    static let themesDirectoryName = "Themes"
+
+    /// The package directory holding the base stylesheet parts.
+    static let stylesheetsDirectoryName = "Stylesheets"
+
+    /// Creates the build command that generates the theme code.
+    ///
+    /// - Parameters:
+    ///   - context: The plugin context.
+    ///   - target: The target being built; only `DocCStatic` gets a command.
+    /// - Returns: The build commands.
+    /// - Throws: An error if the tool or the input directories cannot be found.
     func createBuildCommands(context: PluginContext, target: Target) throws -> [Command] {
-        // Only run for the DocCStatic target
         guard target.name == "DocCStatic" else {
             return []
         }
 
-        // Locate the theme-codegen executable
         let tool = try context.tool(named: "theme-codegen")
+        let themesDirectory = context.package.directoryURL.appending(path: Self.themesDirectoryName)
+        let stylesheetsDirectory = context.package.directoryURL.appending(path: Self.stylesheetsDirectoryName)
+        let inputFiles = files(below: themesDirectory) + files(below: stylesheetsDirectory)
 
-        // Find the Themes directory in the package root
-        let themesDir = context.package.directoryURL.appending(path: "Themes")
-
-        // Check if themes directory exists
-        guard FileManager.default.fileExists(atPath: themesDir.path()) else {
-            Diagnostics.warning("Themes directory not found at \(themesDir.path())")
+        guard !inputFiles.isEmpty else {
+            Diagnostics.warning("No theme bundles or stylesheets found in \(context.package.directoryURL.path())")
             return []
         }
 
-        // Get list of theme files for input tracking
-        let themeFiles = try FileManager.default.contentsOfDirectory(
-            at: themesDir,
-            includingPropertiesForKeys: nil
-        ).filter { $0.pathExtension == "json" && $0.lastPathComponent.contains("theme-settings") }
-
-        guard !themeFiles.isEmpty else {
-            Diagnostics.warning("No theme-settings.json files found in \(themesDir.path())")
-            return []
-        }
-
-        // Output file in the plugin work directory
         let outputFile = context.pluginWorkDirectoryURL.appending(path: "GeneratedThemes.swift")
 
         return [
             .buildCommand(
-                displayName: "Generate Swift code from theme JSON files",
+                displayName: "Generate Swift code from theme bundles and stylesheets",
                 executable: tool.url,
                 arguments: [
-                    themesDir.path(),
+                    themesDirectory.path(),
+                    stylesheetsDirectory.path(),
                     outputFile.path(),
                 ],
-                inputFiles: themeFiles,
+                inputFiles: inputFiles,
                 outputFiles: [outputFile]
             )
         ]
+    }
+
+    /// Lists the regular files below a directory.
+    ///
+    /// - Parameter directory: The directory to search.
+    /// - Returns: The files, or an empty array if the directory does not exist.
+    func files(below directory: URL) -> [URL] {
+        guard let enumerator = FileManager.default.enumerator(
+            at: directory,
+            includingPropertiesForKeys: [.isRegularFileKey]
+        ) else {
+            return []
+        }
+        var files: [URL] = []
+        while let url = enumerator.nextObject() as? URL {
+            let isFile = (try? url.resourceValues(forKeys: [.isRegularFileKey]).isRegularFile) ?? false
+            if isFile { files.append(url) }
+        }
+        return files.sorted { $0.path() < $1.path() }
     }
 }

@@ -1,0 +1,85 @@
+@media (prefers-color-scheme: dark) {
+    :root {
+        --color-fill: #1d1d1f;
+        --color-fill-secondary: #2c2c2e;
+        --color-figure-gray: #f5f5f7;
+        --color-figure-gray-secondary: #a1a1a6;
+        --color-fill-gray: #424245;
+        --color-fill-gray-quaternary: #424242;
+        --color-navigator-item-hover: rgba(0, 102, 255, 0.5);
+
+        /* Syntax highlighting colours - dark mode */
+        --color-syntax-keywords: #ff7ab2;
+        --color-syntax-other-type-names: #dabaff;
+        --color-syntax-strings: #ff8170;
+        --color-syntax-comments: #7f8c8d;
+        --color-syntax-numbers: #d9c97c;
+
+        /* Symbol badge colours - dark mode - using filled backgrounds for HTML badges */
+        --color-badge-default: #2c2c2e;
+        --color-badge-text: #a1a1a6;
+        --color-badge-border: #424245;
+
+        /* Badge border properties remain same in dark mode (inherit from light mode defaults) */
+
+        /* Code listing colours - dark mode */
+        --color-code-background: #2c2c2e;
+        --color-grid: #424245;
+
+        /* Aside colours - dark mode */
+        --color-aside-tip-background: rgba(102, 102, 102, 0.2);
+        --color-aside-tip-border: #888888;
+        --color-aside-note-background: rgba(59, 130, 246, 0.15);
+        --color-aside-note-border: #3b82f6;
+        --color-aside-warning-background: rgba(245, 158, 11, 0.15);
+        --color-aside-warning-border: #f59e0b;
+        --color-aside-important-background: rgba(239, 68, 68, 0.15);
+        --color-aside-important-border: #ef4444;
+
+        /* Decorative colours - dark mode */
+        --color-documentation-intro-fill: #4a4a4a;
+    }
+}
+
+/* Explicit theme selection via data-color-scheme attribute */
+body[data-color-scheme="light"] {
+    --color-fill: #fff;
+    --color-fill-secondary: #f7f7f7;
+    --color-fill-tertiary: #f0f0f0;
+    --color-figure-gray: #000;
+    --color-figure-gray-secondary: #666;
+    --color-fill-gray: #ccc;
+    --color-fill-gray-secondary: #f5f5f5;
+    --color-fill-gray-quaternary: #f0f0f0;
+    --color-navigator-item-hover: rgba(51, 102, 255, 0.05);
+    --color-syntax-keywords: #ad3da4;
+    --color-syntax-other-type-names: #703daa;
+    --color-syntax-strings: #d12f1b;
+    --color-syntax-comments: #707f8c;
+    --color-syntax-numbers: #272ad8;
+    --color-badge-default: #f5f5f7;
+    --color-badge-text: #6e6e73;
+    --color-badge-border: #d2d2d7;
+    --color-documentation-intro-fill: #f0f0f0;
+}
+
+body[data-color-scheme="dark"] {
+    --color-fill: #1d1d1f;
+    --color-fill-secondary: #2c2c2e;
+    --color-figure-gray: #f5f5f7;
+    --color-figure-gray-secondary: #a1a1a6;
+    --color-fill-gray: #424245;
+    --color-fill-gray-quaternary: #424242;
+    --color-navigator-item-hover: rgba(0, 102, 255, 0.5);
+    --color-syntax-keywords: #ff7ab2;
+    --color-syntax-other-type-names: #dabaff;
+    --color-syntax-strings: #ff8170;
+    --color-syntax-comments: #7f8c8d;
+    --color-syntax-numbers: #d9c97c;
+    --color-badge-default: #2c2c2e;
+    --color-badge-text: #a1a1a6;
+    --color-badge-border: #424245;
+    --color-code-background: #2c2c2e;
+    --color-grid: #424245;
+    --color-documentation-intro-fill: #4a4a4a;
+}

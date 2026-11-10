@@ -85,33 +85,56 @@ public struct DynamicCodingKey: CodingKey {
 
 /// Root structure of a theme-settings.json file.
 ///
-/// This type is used for parsing theme files and validating their structure.
-/// Unknown keys at any level will trigger warnings through the current
-/// warning handler.
+/// This is the single model of the swift-docc-render theme format used by both
+/// the build-time theme compiler and the runtime theme loader.  Unknown keys at
+/// any level trigger warnings through the current warning handler, so that a
+/// misspelt key is reported instead of being silently ignored.
 public struct ThemeSettingsInput: Codable, Equatable, Sendable {
     /// The theme configuration.
-    public let theme: ThemeInput
+    public var theme: ThemeInput
 
     /// Optional metadata (preserved but not used).
-    public let meta: [String: AnyCodable]?
+    public var meta: [String: AnyCodable]?
+
+    /// Optional feature switches, keyed like swift-docc-render's `features` section.
+    ///
+    /// Use ``isEnabled(_:)`` to query a switch rather than reading this tree directly.
+    public var features: [String: ThemeSettingValue]?
 
     /// Known top-level keys.
-    private static let knownKeys: Set<String> = ["theme", "meta"]
+    private static let knownKeys: Set<String> = Set(CodingKeys.allCases.map(\.rawValue))
 
-    enum CodingKeys: String, CodingKey {
+    enum CodingKeys: String, CodingKey, CaseIterable {
         case theme
         case meta
+        case features
     }
 
-    public init(theme: ThemeInput, meta: [String: AnyCodable]? = nil) {
+    /// Creates theme settings.
+    ///
+    /// - Parameters:
+    ///   - theme: The theme configuration.
+    ///   - meta: Optional metadata.
+    ///   - features: Optional feature switches.
+    public init(
+        theme: ThemeInput,
+        meta: [String: AnyCodable]? = nil,
+        features: [String: ThemeSettingValue]? = nil
+    ) {
         self.theme = theme
         self.meta = meta
+        self.features = features
     }
 
+    /// Decodes theme settings, warning about unknown keys and feature switches.
+    ///
+    /// - Parameter decoder: The decoder to read from.
+    /// - Throws: A decoding error if a known section has the wrong shape.
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         theme = try container.decode(ThemeInput.self, forKey: .theme)
         meta = try container.decodeIfPresent([String: AnyCodable].self, forKey: .meta)
+        features = try container.decodeIfPresent([String: ThemeSettingValue].self, forKey: .features)
 
         // Warn about unknown top-level keys
         let allKeys = try decoder.container(keyedBy: DynamicCodingKey.self)
@@ -120,6 +143,30 @@ public struct ThemeSettingsInput: Codable, Equatable, Sendable {
                 emitWarning("Unknown top-level key '\(key.stringValue)' in theme file")
             }
         }
+
+        // Warn about feature switches that neither swift-docc-render nor docc-static know
+        if let features {
+            let known = Set(ThemeFeatureFlag.all.map(\.description))
+            for path in ThemeSettingValue.object(features).leafPaths {
+                let dotted = path.joined(separator: ".")
+                if !known.contains(dotted) {
+                    emitWarning("Unknown feature switch 'features.\(dotted)' - will be ignored")
+                }
+            }
+        }
+    }
+
+    /// Returns whether a feature switch is on.
+    ///
+    /// - Parameter flag: The feature switch to query.
+    /// - Returns: The value set by the theme, or the switch's default value.
+    public func isEnabled(_ flag: ThemeFeatureFlag) -> Bool {
+        guard let features,
+            case .value(let value)? = ThemeSettingValue.object(features).value(at: flag.path)
+        else {
+            return flag.defaultValue
+        }
+        return value == "true"
     }
 
     /// Parses theme settings from JSON data.
@@ -157,42 +204,72 @@ public struct ThemeSettingsInput: Codable, Equatable, Sendable {
 
 // MARK: - Theme Input
 
-/// Theme configuration containing colour and typography settings.
+/// The `theme` section of a theme-settings.json file.
+///
+/// The sections most themes use (`badge`, `color`, `typography` and the
+/// docc-static `spacing` extension) are modelled explicitly.  The remaining
+/// sections defined by the swift-docc-render specification (`aside`,
+/// `border-radius`, `button`, `code`, `icons`, `tutorial-step` and
+/// `device-frames`) are kept as generic values in ``other`` and become custom
+/// properties in the same way.
 public struct ThemeInput: Codable, Equatable, Sendable {
     /// Badge settings for the theme.
-    public let badge: [String: String]?
+    public var badge: [String: String]?
 
     /// Colour settings for the theme.
-    public let color: [String: ColorValueInput]?
+    public var color: [String: ColorValueInput]?
 
     /// Typography settings for the theme.
-    public let typography: [String: String]?
+    public var typography: [String: String]?
 
     /// Spacing settings for the theme (docc-static extension).
-    public let spacing: [String: String]?
+    public var spacing: [String: String]?
+
+    /// The other sections of the swift-docc-render specification, keyed by section name.
+    public var other: [String: ThemeSettingValue]?
+
+    /// The sections of the specification that are kept in ``other``.
+    public static let genericSectionKeys: Set<String> = [
+        "aside", "border-radius", "button", "code", "icons", "tutorial-step", "device-frames",
+    ]
 
     /// Known theme keys.
-    private static let knownKeys: Set<String> = ["badge", "color", "typography", "spacing"]
+    private static let knownKeys: Set<String> = Set(CodingKeys.allCases.map(\.rawValue))
+        .union(genericSectionKeys)
 
-    enum CodingKeys: String, CodingKey {
+    enum CodingKeys: String, CodingKey, CaseIterable {
         case badge
         case color
         case typography
         case spacing
     }
 
+    /// Creates a theme section.
+    ///
+    /// - Parameters:
+    ///   - badge: Badge settings.
+    ///   - color: Colour settings.
+    ///   - typography: Typography settings.
+    ///   - spacing: Spacing settings (docc-static extension).
+    ///   - other: The other sections of the specification, keyed by section name.
     public init(
         badge: [String: String]? = nil,
         color: [String: ColorValueInput]? = nil,
         typography: [String: String]? = nil,
-        spacing: [String: String]? = nil
+        spacing: [String: String]? = nil,
+        other: [String: ThemeSettingValue]? = nil
     ) {
         self.badge = badge
         self.color = color
         self.typography = typography
         self.spacing = spacing
+        self.other = other
     }
 
+    /// Decodes the theme section, warning about unknown keys.
+    ///
+    /// - Parameter decoder: The decoder to read from.
+    /// - Throws: A decoding error if a section has the wrong shape.
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         badge = try container.decodeIfPresent([String: String].self, forKey: .badge)
@@ -200,11 +277,34 @@ public struct ThemeInput: Codable, Equatable, Sendable {
         typography = try container.decodeIfPresent([String: String].self, forKey: .typography)
         spacing = try container.decodeIfPresent([String: String].self, forKey: .spacing)
 
-        // Warn about unknown keys
+        // Keep the generic sections and warn about unknown keys
         let allKeys = try decoder.container(keyedBy: DynamicCodingKey.self)
+        var other: [String: ThemeSettingValue] = [:]
         for key in allKeys.allKeys {
-            if !Self.knownKeys.contains(key.stringValue) {
+            if Self.genericSectionKeys.contains(key.stringValue) {
+                other[key.stringValue] = try allKeys.decode(ThemeSettingValue.self, forKey: key)
+            } else if !Self.knownKeys.contains(key.stringValue) {
                 emitWarning("Unknown theme key '\(key.stringValue)' - will be ignored")
+            }
+        }
+        self.other = other.isEmpty ? nil : other
+    }
+
+    /// Encodes the theme section in the shape it was decoded from.
+    ///
+    /// - Parameter encoder: The encoder to write to.
+    /// - Throws: An encoding error.
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encodeIfPresent(badge, forKey: .badge)
+        try container.encodeIfPresent(color, forKey: .color)
+        try container.encodeIfPresent(typography, forKey: .typography)
+        try container.encodeIfPresent(spacing, forKey: .spacing)
+        if let other {
+            var generic = encoder.container(keyedBy: DynamicCodingKey.self)
+            for (key, value) in other {
+                guard let codingKey = DynamicCodingKey(stringValue: key) else { continue }
+                try generic.encode(value, forKey: codingKey)
             }
         }
     }
