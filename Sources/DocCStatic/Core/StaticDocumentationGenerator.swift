@@ -1236,7 +1236,7 @@ public struct StaticDocumentationGenerator: Sendable {
                     const body = document.body;
 
                     // Load saved preference
-                    const saved = localStorage.getItem('docc-color-scheme') || 'auto';
+                    const saved = localStorage.getItem('\(SidebarDocument.colourSchemeStorageKey)') || 'auto';
                     applyTheme(saved);
                     updateButtons(saved);
 
@@ -1244,7 +1244,7 @@ public struct StaticDocumentationGenerator: Sendable {
                     buttons.forEach(btn => {
                         btn.addEventListener('click', () => {
                             const scheme = btn.dataset.colorScheme;
-                            localStorage.setItem('docc-color-scheme', scheme);
+                            localStorage.setItem('\(SidebarDocument.colourSchemeStorageKey)', scheme);
                             applyTheme(scheme);
                             updateButtons(scheme);
                         });
@@ -2267,14 +2267,32 @@ enum DocCStylesheet {
 
             /* A module expands when its checkbox is checked.  The module containing the
                current page (the :target row) is expanded by default instead, so for it the
-               checkbox collapses it when checked. */
-            .module-section:not(:has(:target)) > .disclosure-checkbox:checked ~ .module-contents,
-            .module-section:has(:target) > .disclosure-checkbox:not(:checked) ~ .module-contents,
+               checkbox collapses it when checked.  The rules using :has() are kept separate
+               so that browsers without :has() support still honour the checkbox. */
+            .module-section > .disclosure-checkbox:checked ~ .module-contents {
+                display: block;
+            }
+
+            .module-section:has(:target) > .disclosure-checkbox:checked ~ .module-contents {
+                display: none;
+            }
+
+            .module-section:has(:target) > .disclosure-checkbox:not(:checked) ~ .module-contents {
+                display: block;
+            }
+
             .module-section.filter-open > .module-contents {
                 display: block;
             }
 
-            .module-section:not(:has(:target)) > .disclosure-checkbox:checked ~ .module-header .disclosure-chevron svg,
+            .module-section > .disclosure-checkbox:checked ~ .module-header .disclosure-chevron svg {
+                transform: rotate(90deg);
+            }
+
+            .module-section:has(:target) > .disclosure-checkbox:checked ~ .module-header .disclosure-chevron svg {
+                transform: none;
+            }
+
             .module-section:has(:target) > .disclosure-checkbox:not(:checked) ~ .module-header .disclosure-chevron svg {
                 transform: rotate(90deg);
             }
@@ -2412,7 +2430,10 @@ enum DocCStylesheet {
             }
 
             .technology-title.active,
-            .technology-title:target,
+            .technology-title:target {
+                background: var(--color-fill-gray-quaternary);
+            }
+
             .module-section:has(:target) .technology-title {
                 background: var(--color-fill-gray-quaternary);
             }
@@ -2479,7 +2500,14 @@ enum DocCStylesheet {
                (the :target row) and its ancestors are expanded by default instead, so for
                them the checkbox collapses the children when checked. */
             .navigator-card.expandable:not(:target):not(:has(+ .nav-children-wrapper :target)):has(> .disclosure-checkbox:checked) + .nav-children-wrapper,
-            .navigator-card.expandable:is(:target, :has(+ .nav-children-wrapper :target)):has(> .disclosure-checkbox:not(:checked)) + .nav-children-wrapper,
+            .navigator-card.expandable:is(:target, :has(+ .nav-children-wrapper :target)):has(> .disclosure-checkbox:not(:checked)) + .nav-children-wrapper {
+                max-height: none;
+                overflow: visible;
+                opacity: 1;
+                visibility: inherit;
+            }
+
+            /* Rows on the path to a filter match are shown while filtering */
             .nav-children-wrapper.filter-open {
                 max-height: none;
                 overflow: visible;

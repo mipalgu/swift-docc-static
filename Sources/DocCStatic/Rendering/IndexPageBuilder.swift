@@ -323,7 +323,7 @@ private extension IndexPageBuilder {
                 const body = document.body;
 
                 // Load saved preference
-                const saved = localStorage.getItem('docc-color-scheme') || 'auto';
+                const saved = localStorage.getItem('\(SidebarDocument.colourSchemeStorageKey)') || 'auto';
                 applyTheme(saved);
                 updateButtons(saved);
 
@@ -331,7 +331,7 @@ private extension IndexPageBuilder {
                 buttons.forEach(btn => {
                     btn.addEventListener('click', () => {
                         const scheme = btn.dataset.colorScheme;
-                        localStorage.setItem('docc-color-scheme', scheme);
+                        localStorage.setItem('\(SidebarDocument.colourSchemeStorageKey)', scheme);
                         applyTheme(scheme);
                         updateButtons(scheme);
                     });
