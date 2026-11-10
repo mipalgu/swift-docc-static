@@ -1,0 +1,700 @@
+{
+ "body": {
+  "static": "body",
+  "main": "body",
+  "vue": "body"
+ },
+ "headerBar": {
+  "static": ".documentation-nav",
+  "main": ".doc-header",
+  "vue": ".documentation-nav, nav.nav",
+  "geometry": true,
+  "kinds": [
+   "documentation"
+  ]
+ },
+ "headerTitle": {
+  "static": ".documentation-nav .header-title",
+  "main": ".doc-header .header-title",
+  "vue": ".documentation-nav h2.nav-title",
+  "kinds": [
+   "documentation"
+  ]
+ },
+ "headerIcon": {
+  "static": ".documentation-nav .header-icon",
+  "main": ".doc-header .header-icon",
+  "vue": ".documentation-nav .nav-title .header-icon",
+  "kinds": [
+   "documentation"
+  ]
+ },
+ "headerLanguage": {
+  "static": ".documentation-nav .header-language",
+  "main": ".doc-header .header-language",
+  "vue": ".documentation-nav .language-container",
+  "kinds": [
+   "documentation"
+  ]
+ },
+ "headerSidebarToggle": {
+  "static": ".documentation-nav .sidenav-toggle",
+  "main": ".doc-header .sidebar-toggle-button",
+  "vue": "#nav-open-navigator, .documentation-nav .sidenav-toggle",
+  "kinds": [
+   "documentation"
+  ]
+ },
+ "layout": {
+  "static": ".documentation-layout",
+  "main": ".doc-layout",
+  "vue": ".adjustable-sidebar-width",
+  "geometry": true,
+  "kinds": [
+   "documentation"
+  ]
+ },
+ "sidebar": {
+  "static": "nav.sidebar",
+  "main": "nav.doc-sidebar",
+  "vue": ".adjustable-sidebar-width > .sidebar",
+  "geometry": true,
+  "kinds": [
+   "documentation"
+  ]
+ },
+ "sidebarContent": {
+  "static": "iframe.sidebar-frame >>> .sidebar-content",
+  "main": "nav.doc-sidebar .sidebar-content",
+  "vue": "nav.navigator",
+  "kinds": [
+   "documentation"
+  ]
+ },
+ "sidebarModuleLink": {
+  "static": "iframe.sidebar-frame >>> .technology-title",
+  "main": ".sidebar-module-link",
+  "vue": ".navigator .technology-title",
+  "kinds": [
+   "documentation"
+  ]
+ },
+ "sidebarModuleName": {
+  "static": "iframe.sidebar-frame >>> .technology-title .card-link",
+  "main": ".module-header .module-name",
+  "vue": ".navigator .technology-title .card-link",
+  "kinds": [
+   "documentation"
+  ]
+ },
+ "sidebarGroupTitle": {
+  "static": "iframe.sidebar-frame >>> .navigator-card.is-group .group-title",
+  "main": ".sidebar-section > h3.sidebar-heading:not(.module-name)",
+  "vue": ".navigator-card-item.is-group .leaf-link",
+  "pick": "in-viewport",
+  "kinds": [
+   "documentation"
+  ]
+ },
+ "sidebarRowDepth0": {
+  "static": "iframe.sidebar-frame >>> .navigator-card:not(.is-group)[style*='nesting-index: 2']",
+  "main": "li.sidebar-item",
+  "vue": ".navigator-card-item[data-nesting-index='0']:not(.is-group)",
+  "pick": "in-viewport",
+  "kinds": [
+   "documentation"
+  ]
+ },
+ "sidebarRowDepth0Link": {
+  "static": "iframe.sidebar-frame >>> .navigator-card:not(.is-group)[style*='nesting-index: 2'] > a.leaf-link",
+  "main": "li.sidebar-item > a.nav-link",
+  "vue": ".navigator-card-item[data-nesting-index='0']:not(.is-group) .leaf-link",
+  "pick": "in-viewport",
+  "kinds": [
+   "documentation"
+  ]
+ },
+ "sidebarRowDepth1": {
+  "static": "iframe.sidebar-frame >>> .navigator-card:not(.is-group)[style*='nesting-index: 5']",
+  "main": "li.sidebar-item > ul.nav-children > li > ul.nav-children > li",
+  "vue": ".navigator-card-item[data-nesting-index='1']:not(.is-group)",
+  "pick": "in-viewport",
+  "geometry": true,
+  "kinds": [
+   "documentation"
+  ]
+ },
+ "sidebarRowDepth2": {
+  "static": "iframe.sidebar-frame >>> .navigator-card:not(.is-group)[style*='nesting-index: 8']",
+  "main": "li.sidebar-item > ul.nav-children > li > ul.nav-children > li > ul.nav-children > li > ul.nav-children > li",
+  "vue": ".navigator-card-item[data-nesting-index='2']:not(.is-group)",
+  "pick": "in-viewport",
+  "geometry": true,
+  "kinds": [
+   "documentation"
+  ]
+ },
+ "sidebarSelectedRow": {
+  "static": "iframe.sidebar-frame >>> .navigator-card:target",
+  "main": ".nav-child-item.selected, .sidebar-item.selected",
+  "vue": ".navigator-card-item.active",
+  "kinds": [
+   "documentation"
+  ]
+ },
+ "sidebarSelectedLink": {
+  "static": "iframe.sidebar-frame >>> .navigator-card:target > a.leaf-link",
+  "main": ".nav-child-item.selected > a, .sidebar-item.selected > a",
+  "vue": ".navigator-card-item.active .leaf-link",
+  "kinds": [
+   "documentation"
+  ]
+ },
+ "sidebarSymbolBadge": {
+  "static": "iframe.sidebar-frame >>> .navigator-card .badge",
+  "main": "nav.doc-sidebar .symbol-badge",
+  "vue": ".navigator-card-item .navigator-icon",
+  "pick": "in-viewport",
+  "kinds": [
+   "documentation"
+  ]
+ },
+ "sidebarArticleIcon": {
+  "static": "iframe.sidebar-frame >>> .navigator-card .symbol-icon",
+  "main": "nav.doc-sidebar .symbol-icon",
+  "vue": ".navigator-card-item .navigator-icon",
+  "pick": "in-viewport",
+  "kinds": [
+   "documentation"
+  ]
+ },
+ "sidebarChevron": {
+  "static": "iframe.sidebar-frame >>> .navigator-card .disclosure-chevron",
+  "main": "nav.doc-sidebar .sidebar-item .disclosure-chevron",
+  "vue": ".navigator-card-item .tree-toggle",
+  "pick": "in-viewport",
+  "kinds": [
+   "documentation"
+  ]
+ },
+ "sidebarFilter": {
+  "static": "iframe.sidebar-frame >>> .sidebar-filter",
+  "main": ".sidebar-filter",
+  "vue": ".navigator .filter-wrapper",
+  "kinds": [
+   "documentation"
+  ]
+ },
+ "sidebarFilterInput": {
+  "static": "iframe.sidebar-frame >>> .sidebar-filter .filter-input",
+  "main": ".sidebar-filter .filter-input",
+  "vue": ".navigator-filter input",
+  "kinds": [
+   "documentation"
+  ]
+ },
+ "main": {
+  "static": "main.doc-topic",
+  "main": "main.doc-main",
+  "vue": "main#app-main, #app-main",
+  "geometry": true
+ },
+ "contentColumn": {
+  "static": ".primary-content-container",
+  "main": "main.doc-main",
+  "vue": ".primary-content, .container:not(.minimized-container)",
+  "geometry": true,
+  "kinds": [
+   "documentation"
+  ]
+ },
+ "hero": {
+  "static": ".documentation-hero",
+  "main": ".hero-section",
+  "vue": ".documentation-hero",
+  "geometry": true,
+  "kinds": [
+   "documentation"
+  ]
+ },
+ "heroContent": {
+  "static": ".documentation-hero__content",
+  "main": ".hero-content",
+  "vue": ".documentation-hero__content",
+  "geometry": true,
+  "kinds": [
+   "documentation"
+  ]
+ },
+ "breadcrumbs": {
+  "static": "ul.hierarchy",
+  "main": "nav.breadcrumbs",
+  "vue": ".documentation-hero ul.hierarchy, nav.hierarchy, .hierarchy",
+  "kinds": [
+   "documentation"
+  ]
+ },
+ "breadcrumbLink": {
+  "static": "ul.hierarchy a",
+  "main": "nav.breadcrumbs a",
+  "vue": ".hierarchy a",
+  "kinds": [
+   "documentation"
+  ]
+ },
+ "eyebrow": {
+  "static": ".documentation-hero .eyebrow",
+  "main": ".hero-content .eyebrow",
+  "vue": ".documentation-hero .eyebrow",
+  "kinds": [
+   "documentation"
+  ]
+ },
+ "pageTitle": {
+  "static": ".documentation-hero h1",
+  "main": ".hero-content h1",
+  "vue": ".documentation-hero h1",
+  "kinds": [
+   "documentation"
+  ]
+ },
+ "abstract": {
+  "static": ".documentation-hero .abstract",
+  "main": ".hero-content .abstract",
+  "vue": ".documentation-hero .abstract",
+  "kinds": [
+   "documentation"
+  ]
+ },
+ "declaration": {
+  "static": "section.declaration",
+  "main": "main .declaration",
+  "vue": ".declarations-container",
+  "geometry": true
+ },
+ "declarationBox": {
+  "static": ".declaration-group",
+  "main": "main .declaration",
+  "vue": ".declaration-group"
+ },
+ "declarationSource": {
+  "static": ".declaration-group pre.source",
+  "main": "main .declaration pre",
+  "vue": ".declaration-group pre.source"
+ },
+ "declarationKeyword": {
+  "static": ".declaration-group .token-keyword",
+  "main": "main .declaration .keyword",
+  "vue": ".declaration-group .token-keyword"
+ },
+ "declarationIdentifier": {
+  "static": ".declaration-group .token-identifier",
+  "main": "main .declaration .identifier",
+  "vue": ".declaration-group .token-identifier"
+ },
+ "declarationType": {
+  "static": ".declaration-group .token-typeIdentifier, .declaration-group .token-type",
+  "main": "main .declaration .type",
+  "vue": ".declaration-group .token-typeIdentifier, .declaration-group .token-type"
+ },
+ "topicsSectionTitle": {
+  "static": "section.contenttable h2.title",
+  "main": "section.topics > h2",
+  "vue": "section.contenttable h2.title"
+ },
+ "topicGroupTitle": {
+  "static": ".contenttable-title",
+  "main": "section.topics > h3",
+  "vue": ".contenttable-title"
+ },
+ "topicItem": {
+  "static": ".link-block.topic",
+  "main": ".symbol-card",
+  "vue": ".link-block.topic"
+ },
+ "topicLink": {
+  "static": ".link-block.topic a.link",
+  "main": ".symbol-card a.symbol-name",
+  "vue": ".link-block.topic a.link"
+ },
+ "topicName": {
+  "static": ".link-block.topic a.link .decorated-title, .link-block.topic a.link > span",
+  "main": ".symbol-card a.symbol-name",
+  "vue": ".link-block.topic a.link .decorated-title, .link-block.topic a.link > span"
+ },
+ "topicKindBadge": {
+  "static": ".link-block.topic .topic-kind-badge",
+  "main": ".symbol-card .symbol-badge",
+  "vue": ".link-block.topic .topic-kind-badge"
+ },
+ "topicIcon": {
+  "static": ".link-block.topic .topic-icon-wrapper",
+  "main": ".symbol-card .topic-icon-wrapper",
+  "vue": ".link-block.topic .topic-icon-wrapper"
+ },
+ "topicAbstract": {
+  "static": ".link-block.topic .abstract",
+  "main": ".symbol-card .symbol-summary",
+  "vue": ".link-block.topic .abstract"
+ },
+ "relationshipsTitle": {
+  "static": "h2#relationships",
+  "main": "section.relationships > h2, h2#relationships",
+  "vue": "section.relationships h2, h2#relationships"
+ },
+ "relationshipsItem": {
+  "static": ".relationships-list li",
+  "main": ".relationships-list li",
+  "vue": ".relationships-list li, .relationships-item"
+ },
+ "seeAlsoTitle": {
+  "static": "h2#see-also",
+  "main": "section.see-also > h2, h2#see-also",
+  "vue": "h2#see-also, section.see-also h2"
+ },
+ "mentionedIn": {
+  "static": "section.mentions, .mentions",
+  "main": "section.mentions, .mentions",
+  "vue": "section.mentions, .mentions"
+ },
+ "parametersTitle": {
+  "static": "section.parameters h2, h2#parameters",
+  "main": "section.parameters > h2, h2#parameters",
+  "vue": "section.parameters h2, h2#parameters"
+ },
+ "parameterName": {
+  "static": "section.parameters dt",
+  "main": "section.parameters dt",
+  "vue": ".parameters dt, .parameters-table dt"
+ },
+ "parameterDescription": {
+  "static": "section.parameters dd",
+  "main": "section.parameters dd",
+  "vue": ".parameters dd, .parameters-table dd"
+ },
+ "contentHeading2": {
+  "static": ".primary-content-container > h2",
+  "main": "main.doc-main > h2",
+  "vue": ".primary-content h2"
+ },
+ "contentHeading3": {
+  "static": ".primary-content-container > h3",
+  "main": "main.doc-main > h3",
+  "vue": ".primary-content h3"
+ },
+ "paragraph": {
+  "static": ".primary-content-container > p",
+  "main": "main.doc-main > p",
+  "vue": ".primary-content p"
+ },
+ "inlineCode": {
+  "static": ".primary-content-container p code",
+  "main": "main.doc-main > p code",
+  "vue": ".primary-content p code"
+ },
+ "inlineLink": {
+  "static": ".primary-content-container p a",
+  "main": "main.doc-main > p a",
+  "vue": ".primary-content p a"
+ },
+ "inlineCodeInLink": {
+  "static": ".primary-content-container p a code",
+  "main": "main.doc-main > p a code",
+  "vue": ".primary-content p a code"
+ },
+ "unorderedList": {
+  "static": ".primary-content-container > ul",
+  "main": "main.doc-main > ul",
+  "vue": ".primary-content ul"
+ },
+ "listItem": {
+  "static": ".primary-content-container > ul > li",
+  "main": "main.doc-main > ul > li",
+  "vue": ".primary-content ul > li"
+ },
+ "orderedList": {
+  "static": ".primary-content-container ol",
+  "main": "main.doc-main ol",
+  "vue": ".primary-content ol"
+ },
+ "codeListing": {
+  "static": ".code-listing",
+  "main": "main.doc-main > pre[class*='language-']",
+  "vue": ".code-listing",
+  "geometry": true
+ },
+ "codeListingPre": {
+  "static": ".code-listing pre",
+  "main": "main.doc-main > pre[class*='language-']",
+  "vue": ".code-listing pre"
+ },
+ "codeListingCode": {
+  "static": ".code-listing pre code",
+  "main": "main.doc-main > pre[class*='language-'] code",
+  "vue": ".code-listing pre code"
+ },
+ "syntaxKeyword": {
+  "static": ".code-listing .syntax-keyword, .code-listing .token-keyword",
+  "main": "pre .syntax-keyword",
+  "vue": ".code-listing .syntax-keyword"
+ },
+ "syntaxString": {
+  "static": ".code-listing .syntax-string, .code-listing .token-string",
+  "main": "pre .syntax-string",
+  "vue": ".code-listing .syntax-string"
+ },
+ "syntaxComment": {
+  "static": ".code-listing .syntax-comment, .code-listing .token-comment",
+  "main": "pre .syntax-comment",
+  "vue": ".code-listing .syntax-comment"
+ },
+ "syntaxType": {
+  "static": ".code-listing .syntax-type, .code-listing .token-type",
+  "main": "pre .syntax-type",
+  "vue": ".code-listing .syntax-type"
+ },
+ "table": {
+  "static": ".primary-content-container table",
+  "main": "main.doc-main table",
+  "vue": ".primary-content table"
+ },
+ "tableHeaderCell": {
+  "static": ".primary-content-container th",
+  "main": "main.doc-main th",
+  "vue": ".primary-content th"
+ },
+ "tableCell": {
+  "static": ".primary-content-container td",
+  "main": "main.doc-main td",
+  "vue": ".primary-content td"
+ },
+ "image": {
+  "static": ".primary-content-container img",
+  "main": "main.doc-main img",
+  "vue": ".primary-content img"
+ },
+ "asideNote": {
+  "static": "aside.note",
+  "main": "aside.aside.note",
+  "vue": "aside.note"
+ },
+ "asideTip": {
+  "static": "aside.tip",
+  "main": "aside.aside.tip",
+  "vue": "aside.tip"
+ },
+ "asideImportant": {
+  "static": "aside.important",
+  "main": "aside.aside.important",
+  "vue": "aside.important"
+ },
+ "asideWarning": {
+  "static": "aside.warning",
+  "main": "aside.aside.warning",
+  "vue": "aside.warning"
+ },
+ "asideExperiment": {
+  "static": "aside.experiment",
+  "main": "aside.aside.experiment",
+  "vue": "aside.experiment"
+ },
+ "asideLabel": {
+  "static": "aside.note .label",
+  "main": "aside.aside.note .label",
+  "vue": "aside.note .label"
+ },
+ "onThisPage": {
+  "static": ".OnThisPageStickyContainer",
+  "main": ".OnThisPageStickyContainer",
+  "vue": ".OnThisPageStickyContainer"
+ },
+ "onThisPageLink": {
+  "static": ".OnThisPageNav li.parent-item a",
+  "main": ".OnThisPageNav li.parent-item a",
+  "vue": ".OnThisPageNav li.parent-item a"
+ },
+ "footer": {
+  "static": "footer",
+  "main": "footer",
+  "vue": "footer"
+ },
+ "appearanceSelector": {
+  "static": ".appearance-selector",
+  "main": ".appearance-selector",
+  "vue": ".color-scheme-toggle"
+ },
+ "appearanceOption": {
+  "static": ".appearance-btn",
+  "main": ".appearance-btn",
+  "vue": ".color-scheme-toggle label"
+ },
+ "landingHeader": {
+  "static": ".index-header",
+  "main": ".index-header",
+  "vue": ".documentation-hero",
+  "kinds": [
+   "landing"
+  ]
+ },
+ "landingTitle": {
+  "static": ".index-header h1",
+  "main": ".index-header h1",
+  "vue": ".documentation-hero h1",
+  "kinds": [
+   "landing"
+  ]
+ },
+ "moduleCard": {
+  "static": ".module-card",
+  "main": ".module-card",
+  "vue": "a.card.reference-card-grid-item",
+  "kinds": [
+   "landing"
+  ]
+ },
+ "moduleCardName": {
+  "static": ".module-card .module-name",
+  "main": ".module-card .module-name",
+  "vue": "a.card .details .title",
+  "kinds": [
+   "landing"
+  ]
+ },
+ "moduleCardAbstract": {
+  "static": ".module-card .module-abstract",
+  "main": ".module-card .module-abstract",
+  "vue": "a.card .details .card-content",
+  "kinds": [
+   "landing"
+  ]
+ },
+ "tutorialNav": {
+  "static": "nav.tutorial-nav",
+  "main": "nav.tutorial-nav",
+  "vue": "nav.nav",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialNavTitle": {
+  "static": ".tutorial-nav-title",
+  "main": ".tutorial-nav-title",
+  "vue": ".nav-title-content .title",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialHero": {
+  "static": "section.tutorial-hero",
+  "main": ".tutorial-hero",
+  "vue": ".tutorial-hero .hero, .tutorial-hero",
+  "geometry": true,
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialTitle": {
+  "static": ".tutorial-hero h1",
+  "main": ".tutorial-hero h1",
+  "vue": ".tutorial-hero h1, .hero h1",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialChapter": {
+  "static": ".tutorial-chapter",
+  "main": ".tutorial-chapter",
+  "vue": ".tutorial-hero .eyebrow",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialAbstract": {
+  "static": ".tutorial-abstract",
+  "main": ".tutorial-abstract",
+  "vue": ".tutorial-hero .intro, .hero .content",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialSection": {
+  "static": ".tutorial-section",
+  "main": ".tutorial-section",
+  "vue": ".sections .section",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialSectionTitle": {
+  "static": ".tutorial-section .section-title",
+  "main": ".tutorial-section .section-title",
+  "vue": ".section .intro h2",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialStep": {
+  "static": ".step-card",
+  "main": ".step-card",
+  "vue": ".step",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialStepCode": {
+  "static": ".step-code-panel",
+  "main": ".step-code-panel",
+  "vue": ".asset-container .code-preview",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialAssessments": {
+  "static": ".tutorial-assessments",
+  "main": ".tutorial-assessments",
+  "vue": ".assessments-wrapper",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialChoice": {
+  "static": ".choice",
+  "main": ".choice",
+  "vue": "label.choice",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "overviewHero": {
+  "static": ".overview-hero",
+  "main": ".overview-hero",
+  "vue": ".tutorials-overview .hero",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "overviewTitle": {
+  "static": ".overview-hero h1, .overview-title",
+  "main": ".overview-hero h1, .overview-title",
+  "vue": ".tutorials-overview .hero h1",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "overviewCard": {
+  "static": ".tutorial-card",
+  "main": ".tutorial-card",
+  "vue": ".chapter.tile, .tutorials-overview .topic",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "overviewCardTitle": {
+  "static": ".tutorial-card-title",
+  "main": ".tutorial-card-title",
+  "vue": ".chapter .name, .chapter h3",
+  "kinds": [
+   "tutorial"
+  ]
+ }
+}
