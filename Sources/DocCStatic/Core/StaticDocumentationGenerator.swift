@@ -67,6 +67,7 @@ public enum GenerationError: Error, LocalizedError {
 /// ```
 /// output/
 /// ├── index.html              # Combined landing page
+/// ├── sidebar.html            # Navigation tree shared by all documentation pages
 /// ├── css/
 /// │   └── main.css           # Stylesheet
 /// ├── js/
