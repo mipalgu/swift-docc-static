@@ -5,3 +5,12 @@
  * output.  Its custom property values live in `theme-settings.json`; this file
  * holds the rules that differ from the base stylesheet.
  */
+
+/* Inline code in running text sits on a filled background */
+.primary-content-container p code,
+.primary-content-container li code,
+.primary-content-container td code,
+.documentation-hero .abstract code,
+aside code {
+    background: var(--color-fill-secondary);
+}
