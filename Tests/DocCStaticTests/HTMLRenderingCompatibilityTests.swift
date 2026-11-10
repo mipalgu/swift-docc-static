@@ -68,11 +68,7 @@ struct HTMLRenderingCompatibilityTests {
     func singleModuleSidebar_noDocumentationHeading() async throws {
         var builder = NavigationSidebarBuilder(navigationIndex: createTestNavigationIndex())
 
-        let html = builder.buildSidebar(
-            moduleName: "TestModule",
-            currentPath: "/documentation/testmodule",
-            depth: 0
-        )
+        let html = builder.buildNavigationTree()
 
         // Single module view should NOT have "Documentation" heading
         // (it already has the module title as h2)
@@ -86,11 +82,7 @@ struct HTMLRenderingCompatibilityTests {
         let multiModuleIndex = createMultiModuleNavigationIndex()
         var builder = NavigationSidebarBuilder(navigationIndex: multiModuleIndex)
 
-        let html = builder.buildSidebar(
-            moduleName: "ModuleA",
-            currentPath: "/documentation/modulea",
-            depth: 0
-        )
+        let html = builder.buildNavigationTree()
 
         // Should contain current module
         #expect(html.contains("ModuleA"),
@@ -106,11 +98,7 @@ struct HTMLRenderingCompatibilityTests {
         let multiModuleIndex = createMultiModuleNavigationIndex()
         var builder = NavigationSidebarBuilder(navigationIndex: multiModuleIndex)
 
-        let html = builder.buildSidebar(
-            moduleName: "ModuleA",
-            currentPath: "/documentation/modulea",
-            depth: 0
-        )
+        let html = builder.buildNavigationTree()
 
         // Count occurrences of "Documentation" heading
         let documentationHeadingCount = html.components(separatedBy: "<h2 class=\"nav-title\">Documentation</h2>").count - 1
@@ -123,11 +111,7 @@ struct HTMLRenderingCompatibilityTests {
     func documentLinks_useLeafLinkClass() async throws {
         var builder = NavigationSidebarBuilder(navigationIndex: createTestNavigationIndex())
 
-        let html = builder.buildSidebar(
-            moduleName: "TestModule",
-            currentPath: "/documentation/testmodule",
-            depth: 0
-        )
+        let html = builder.buildNavigationTree()
 
         #expect(html.contains("class=\"leaf-link\""),
                 "Document links must use .leaf-link class to match swift-docc-render")

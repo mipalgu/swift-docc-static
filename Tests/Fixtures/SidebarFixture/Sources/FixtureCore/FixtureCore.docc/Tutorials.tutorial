@@ -1,0 +1,11 @@
+@Tutorials(name: "Fixture Tutorials") {
+    @Intro(title: "Drawing with FixtureCore") {
+        Learn to draw points on a canvas.
+    }
+
+    @Chapter(name: "Basics") {
+        Draw your first point.
+
+        @TutorialReference(tutorial: "doc:DrawingPoints")
+    }
+}

@@ -1,0 +1,19 @@
+@Tutorial(time: 5) {
+    @Intro(title: "Drawing Points") {
+        Create a canvas and add a point to it.
+    }
+
+    @Section(title: "Create a Canvas") {
+        @ContentAndMedia {
+            Start with an empty canvas.
+        }
+
+        @Steps {
+            @Step {
+                Create the canvas.
+
+                @Code(name: "main.swift", file: "drawing-01.swift")
+            }
+        }
+    }
+}

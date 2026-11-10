@@ -179,6 +179,9 @@ public struct StaticDocumentationGenerator: Sendable {
             log("Merged navigation index with \(moduleCount) modules")
         }
 
+        // Write the navigation tree once; pages embed it rather than repeating it
+        try writeSidebarDocument(for: mergedNavigationIndex)
+
         // Second pass: Render pages from all archives using the merged index
         for archiveDir in archives {
             try await renderFromArchive(
@@ -972,6 +975,25 @@ public struct StaticDocumentationGenerator: Sendable {
         return ""
     }
 
+    /// Writes the shared sidebar document to the root of the output directory.
+    ///
+    /// Nothing is written if the navigation index lists no modules; pages then fall
+    /// back to an inline sidebar.
+    ///
+    /// - Parameter navigationIndex: The merged navigation index of all modules.
+    /// - Throws: An error if the document cannot be written.
+    private func writeSidebarDocument(for navigationIndex: NavigationIndex?) throws {
+        guard let navigationIndex, SidebarDocument.isAvailable(for: navigationIndex) else { return }
+        var builder = NavigationSidebarBuilder(navigationIndex: navigationIndex)
+        let html = builder.buildSidebarDocument(includeSearch: configuration.includeSearch)
+        let path = configuration.outputDirectory.appendingPathComponent(SidebarDocument.fileName)
+        try html.write(to: path, atomically: true, encoding: .utf8)
+
+        if configuration.isVerbose {
+            log("Wrote shared sidebar: \(path.path) (\(html.utf8.count) bytes)")
+        }
+    }
+
     /// Writes the search index JSON file.
     private func writeSearchIndex(_ builder: SearchIndexBuilder) throws {
         let indexPath = configuration.outputDirectory
@@ -1510,6 +1532,7 @@ public struct StaticDocumentationGenerator: Sendable {
                 of: configuration.outputDirectory.path + "/",
                 with: ""
             )
+            guard DocLinkPostProcessor.shouldProcess(relativePath: relativePath) else { continue }
             let depth = relativePath.components(separatedBy: "/").count - 1
             htmlFiles.append((fileURL, depth))
         }
@@ -2157,6 +2180,36 @@ enum DocCStylesheet {
                 transform: translateX(-100%);
             }
 
+            /* Embedded navigation document fills the sidebar container */
+            .\(SidebarDocument.frameClass) {
+                flex: 1;
+                display: block;
+                width: 100%;
+                height: 100%;
+                border: 0;
+                background: var(--color-fill);
+            }
+
+            /* Standalone navigation document shown inside the embedded frame */
+            body.\(SidebarDocument.documentClass) {
+                margin: 0;
+                overflow: hidden;
+                background: var(--color-fill);
+            }
+
+            body.\(SidebarDocument.documentClass) .sidebar {
+                position: fixed;
+                top: 0;
+                right: 0;
+                bottom: 0;
+                left: 0;
+                width: auto;
+                border-right: none;
+                transform: none;
+                transition: none;
+            }
+
+
             .sidebar-content {
                 flex: 1;
                 overflow-y: auto;
@@ -2188,6 +2241,7 @@ enum DocCStylesheet {
                 display: flex;
                 align-items: center;
                 padding: var(--spacing-module-header-padding, 0.5rem 1rem);
+                scroll-margin-top: var(--spacing-sidebar-target-scroll-margin, 30vh);
             }
 
             .module-section .module-header .disclosure-chevron {
@@ -2211,11 +2265,17 @@ enum DocCStylesheet {
                 margin: 0;
             }
 
-            .module-section > .disclosure-checkbox:checked ~ .module-contents {
+            /* A module expands when its checkbox is checked.  The module containing the
+               current page (the :target row) is expanded by default instead, so for it the
+               checkbox collapses it when checked. */
+            .module-section:not(:has(:target)) > .disclosure-checkbox:checked ~ .module-contents,
+            .module-section:has(:target) > .disclosure-checkbox:not(:checked) ~ .module-contents,
+            .module-section.filter-open > .module-contents {
                 display: block;
             }
 
-            .module-section > .disclosure-checkbox:checked ~ .module-header .disclosure-chevron svg {
+            .module-section:not(:has(:target)) > .disclosure-checkbox:checked ~ .module-header .disclosure-chevron svg,
+            .module-section:has(:target) > .disclosure-checkbox:not(:checked) ~ .module-header .disclosure-chevron svg {
                 transform: rotate(90deg);
             }
 
@@ -2267,6 +2327,8 @@ enum DocCStylesheet {
                 line-height: var(--spacing-navigator-card-line-height, 25px);
                 min-height: var(--spacing-navigator-card-min-height, 35px);
                 box-sizing: border-box;
+                /* Leave some context above the current row when the browser scrolls to it */
+                scroll-margin-top: var(--spacing-sidebar-target-scroll-margin, 30vh);
             }
 
             /* Depth spacer for nesting indentation (matches swift-docc-render)
@@ -2316,11 +2378,14 @@ enum DocCStylesheet {
                 text-decoration: none;
             }
 
+            /* The current page is the row selected by the URL fragment of the sidebar */
+            .navigator-card:target,
             .navigator-card.active,
             .navigator-card.selected {
                 background: var(--color-fill-gray-quaternary);
             }
 
+            .navigator-card:target a,
             .navigator-card.active a,
             .navigator-card.selected a {
                 font-weight: 600;
@@ -2338,6 +2403,7 @@ enum DocCStylesheet {
                 padding: var(--spacing-technology-title-padding, 8px 10px 8px 20px);
                 margin: var(--spacing-technology-title-margin, 0 20px);
                 border-radius: var(--spacing-technology-title-border-radius, 4px);
+                scroll-margin-top: var(--spacing-sidebar-target-scroll-margin, 30vh);
             }
 
             .technology-title:hover {
@@ -2345,7 +2411,9 @@ enum DocCStylesheet {
                 background: var(--color-technology-title-background-hover, var(--color-navigator-item-hover));
             }
 
-            .technology-title.active {
+            .technology-title.active,
+            .technology-title:target,
+            .module-section:has(:target) .technology-title {
                 background: var(--color-fill-gray-quaternary);
             }
 
@@ -2384,7 +2452,10 @@ enum DocCStylesheet {
                 transition: transform 0.15s ease;
             }
 
-            .disclosure-checkbox:checked + .disclosure-chevron svg {
+            /* Item chevrons follow the effective disclosure state (see the children wrapper
+               rules below); the checkbox precedes the depth spacer that holds the chevron. */
+            .navigator-card.expandable:not(:target):not(:has(+ .nav-children-wrapper :target)) > .disclosure-checkbox:checked ~ .depth-spacer .disclosure-chevron svg,
+            .navigator-card.expandable:is(:target, :has(+ .nav-children-wrapper :target)) > .disclosure-checkbox:not(:checked) ~ .depth-spacer .disclosure-chevron svg {
                 transform: rotate(90deg);
             }
 
@@ -2400,20 +2471,29 @@ enum DocCStylesheet {
                 max-height: 0;
                 overflow: hidden;
                 opacity: 0;
-                transition: max-height 0.2s ease, opacity 0.15s ease;
+                visibility: hidden;
+                transition: opacity 0.15s ease, visibility 0.15s;
             }
 
-            /* Show children when parent expandable item's checkbox is checked */
-            .navigator-card.expandable:has(.disclosure-checkbox:checked) + .nav-children-wrapper {
-                max-height: 5000px;
+            /* Show children when the parent item's checkbox is checked.  The current page
+               (the :target row) and its ancestors are expanded by default instead, so for
+               them the checkbox collapses the children when checked. */
+            .navigator-card.expandable:not(:target):not(:has(+ .nav-children-wrapper :target)):has(> .disclosure-checkbox:checked) + .nav-children-wrapper,
+            .navigator-card.expandable:is(:target, :has(+ .nav-children-wrapper :target)):has(> .disclosure-checkbox:not(:checked)) + .nav-children-wrapper,
+            .nav-children-wrapper.filter-open {
+                max-height: none;
+                overflow: visible;
                 opacity: 1;
+                visibility: inherit;
             }
 
             /* Group markers are always-visible flat headers (no disclosure toggle),
                matching swift-docc-render: children of .is-group are always shown */
             .navigator-card.is-group + .nav-children-wrapper {
-                max-height: 5000px;
+                max-height: none;
+                overflow: visible;
                 opacity: 1;
+                visibility: inherit;
             }
 
             /* Group markers (.is-group class) — plain non-interactive section headers,
@@ -2540,8 +2620,7 @@ enum DocCStylesheet {
             }
 
             /* Highlight matching items during filter */
-            .filter-match > a,
-            .filter-match > .nav-link {
+            .filter-match > a {
                 background: rgba(0, 102, 204, 0.1);
                 border-radius: 4px;
             }
@@ -4791,7 +4870,6 @@ enum SearchScript {
             let searchIndex = null;
             let searchData = null;
             let searchResultsContainer = null;
-            let originalExpandedStates = new Map();
 
             // Calculate the base path for relative URLs by examining the CSS link
             function getBasePath() {
@@ -4847,88 +4925,6 @@ enum SearchScript {
                 } catch (error) {
                     console.warn('Search not available:', error.message);
                 }
-            }
-
-            // Save the current expanded states of disclosure checkboxes
-            function saveExpandedStates() {
-                if (originalExpandedStates.size > 0) return; // Already saved
-                const checkboxes = document.querySelectorAll('.disclosure-checkbox');
-                checkboxes.forEach(cb => {
-                    originalExpandedStates.set(cb.id, cb.checked);
-                });
-            }
-
-            // Restore the original expanded states
-            function restoreExpandedStates() {
-                originalExpandedStates.forEach((wasChecked, id) => {
-                    const cb = document.getElementById(id);
-                    if (cb) cb.checked = wasChecked;
-                });
-                originalExpandedStates.clear();
-            }
-
-            // Filter navigation items based on query (title-only filtering)
-            function filterNavigation(query) {
-                if (!sidebarContent) return;
-
-                const normalizedQuery = query.toLowerCase().trim();
-
-                // Get all navigation items
-                const allItems = sidebarContent.querySelectorAll('.navigator-card, .nav-child-item');
-
-                if (!normalizedQuery) {
-                    // No query - show everything and restore original states
-                    allItems.forEach(item => {
-                        item.classList.remove('filter-hidden', 'filter-match');
-                    });
-                    restoreExpandedStates();
-                    return;
-                }
-
-                // Save current states before filtering
-                saveExpandedStates();
-
-                // First pass: mark items that match directly
-                const matchingItems = new Set();
-                allItems.forEach(item => {
-                    const link = item.querySelector('a, .nav-link');
-                    const text = link ? link.textContent.toLowerCase() : '';
-                    if (text.includes(normalizedQuery)) {
-                        matchingItems.add(item);
-                        item.classList.add('filter-match');
-                        item.classList.remove('filter-hidden');
-                    } else {
-                        item.classList.remove('filter-match');
-                    }
-                });
-
-                // Second pass: show parents of matching items and expand them
-                allItems.forEach(item => {
-                    if (matchingItems.has(item)) {
-                        // Show all ancestors
-                        let parent = item.parentElement;
-                        while (parent && parent !== sidebarContent) {
-                            // Show parent list items
-                            if (parent.classList.contains('navigator-card') || parent.classList.contains('nav-child-item')) {
-                                parent.classList.remove('filter-hidden');
-                                matchingItems.add(parent);
-                            }
-                            // Expand disclosure checkboxes in the path
-                            const checkbox = parent.querySelector(':scope > .disclosure-checkbox');
-                            if (checkbox) {
-                                checkbox.checked = true;
-                            }
-                            parent = parent.parentElement;
-                        }
-                    }
-                });
-
-                // Third pass: hide non-matching items that aren't parents of matches
-                allItems.forEach(item => {
-                    if (!matchingItems.has(item)) {
-                        item.classList.add('filter-hidden');
-                    }
-                });
             }
 
             // Search content using Lunr.js and display results
@@ -5054,36 +5050,16 @@ enum SearchScript {
                 }
             }
 
-            // Combined filter and search
-            function performFilterAndSearch(query) {
-                filterNavigation(query);
-                searchContent(query);
-            }
-
-            // Event listeners for filter input (sidebar search)
-            if (filterInput) {
+            // Show content matches below the navigation tree while the sidebar filter
+            // is in use; filtering the tree itself is done by the sidebar's own script,
+            // which also handles the keyboard shortcuts of the filter field.
+            if (filterInput && sidebarContent) {
                 let debounceTimer;
                 filterInput.addEventListener('input', (e) => {
                     clearTimeout(debounceTimer);
                     debounceTimer = setTimeout(() => {
-                        performFilterAndSearch(e.target.value);
+                        searchContent(e.target.value);
                     }, 150);
-                });
-
-                filterInput.addEventListener('keydown', (e) => {
-                    if (e.key === 'Escape') {
-                        filterInput.value = '';
-                        performFilterAndSearch('');
-                        filterInput.blur();
-                    }
-                });
-
-                // Keyboard shortcut: "/" to focus filter
-                document.addEventListener('keydown', (e) => {
-                    if (e.key === '/' && document.activeElement !== filterInput) {
-                        e.preventDefault();
-                        filterInput.focus();
-                    }
                 });
             }
 
@@ -5285,8 +5261,8 @@ enum SearchScript {
                 }
             }
 
-            // Keyboard shortcut: "/" to open spotlight (only if no sidebar filter)
-            if (!filterInput) {
+            // Keyboard shortcut: "/" to open spotlight (only on pages without a sidebar)
+            if (!filterInput && !document.querySelector('iframe.\(SidebarDocument.frameClass)')) {
                 document.addEventListener('keydown', (e) => {
                     // Handle Escape and navigation when overlay is active
                     if (isSpotlightActive()) {

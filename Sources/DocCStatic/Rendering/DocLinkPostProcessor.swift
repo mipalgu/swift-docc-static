@@ -61,6 +61,7 @@ public struct DocLinkPostProcessor: Sendable {
     ///   - currentDepth: The depth of the current page for calculating relative URLs.
     /// - Returns: The processed HTML content with resolved links.
     public func process(_ html: String, currentDepth: Int) -> String {
+        guard html.contains("doc://") else { return html }
         var result = html
 
         // Find all matches and collect them with their ranges
@@ -90,6 +91,19 @@ public struct DocLinkPostProcessor: Sendable {
         }
 
         return result
+    }
+
+    /// Returns whether a generated HTML file needs doc link post-processing.
+    ///
+    /// Only rendered pages can contain unresolved `doc://` links.  The shared sidebar
+    /// document is generated from the navigation index, whose links are already
+    /// resolved relative to the output root, so it is skipped.
+    ///
+    /// - Parameter relativePath: The path of the file relative to the output root,
+    ///   using `/` as the separator.
+    /// - Returns: `true` if the file should be processed.
+    public static func shouldProcess(relativePath: String) -> Bool {
+        relativePath != SidebarDocument.fileName
     }
 
     /// Resolves a `doc://` link to an actual URL.

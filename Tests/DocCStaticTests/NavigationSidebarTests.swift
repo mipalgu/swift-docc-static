@@ -107,12 +107,8 @@ struct NavigationSidebarBuilderTests {
             interfaceLanguages: ["swift": []]
         )
 
-        var builder = NavigationSidebarBuilder(navigationIndex: navigationIndex)
-        let html = builder.buildSidebar(
-            moduleName: "nonexistent",
-            currentPath: "/documentation/nonexistent",
-            depth: 1
-        )
+        _ = navigationIndex
+        let html = NavigationSidebarBuilder.buildFallbackSidebar()
 
         // Should contain basic sidebar structure
         #expect(html.contains("<nav class=\"sidebar\">"))
@@ -164,11 +160,7 @@ struct NavigationSidebarBuilderTests {
         )
 
         var builder = NavigationSidebarBuilder(navigationIndex: navigationIndex)
-        let html = builder.buildSidebar(
-            moduleName: "test",
-            currentPath: "/documentation/test",
-            depth: 1
-        )
+        let html = builder.buildNavigationTree()
 
         // Should contain depth-spacer div
         #expect(html.contains("<div class=\"depth-spacer\">"))
@@ -213,11 +205,7 @@ struct NavigationSidebarBuilderTests {
         )
 
         var builder = NavigationSidebarBuilder(navigationIndex: navigationIndex)
-        let html = builder.buildSidebar(
-            moduleName: "test",
-            currentPath: "/documentation/test",
-            depth: 1
-        )
+        let html = builder.buildNavigationTree()
 
         // Should contain nesting-index CSS variable
         #expect(html.contains("--nesting-index:"))
@@ -262,11 +250,7 @@ struct NavigationSidebarBuilderTests {
         )
 
         var builder = NavigationSidebarBuilder(navigationIndex: navigationIndex)
-        let html = builder.buildSidebar(
-            moduleName: "test",
-            currentPath: "/documentation/test",
-            depth: 1
-        )
+        let html = builder.buildNavigationTree()
 
         // Should contain disclosure chevron elements
         #expect(html.contains("disclosure-checkbox"))
@@ -303,11 +287,7 @@ struct NavigationSidebarBuilderTests {
         )
 
         var builder = NavigationSidebarBuilder(navigationIndex: navigationIndex)
-        let html = builder.buildSidebar(
-            moduleName: "test",
-            currentPath: "/documentation/test",
-            depth: 1
-        )
+        let html = builder.buildNavigationTree()
 
         // Should contain badge with correct class
         #expect(html.contains("class=\"badge"))
@@ -363,11 +343,7 @@ struct NavigationSidebarBuilderTests {
         )
 
         var builder = NavigationSidebarBuilder(navigationIndex: navigationIndex)
-        let html = builder.buildSidebar(
-            moduleName: "test",
-            currentPath: "/documentation/test",
-            depth: 1
-        )
+        let html = builder.buildNavigationTree()
 
         // Should contain different nesting levels
         #expect(html.contains("--nesting-index: 0"))

@@ -19,6 +19,12 @@ public struct HTMLPageBuilder: Sendable {
     /// The navigation index for building the sidebar.
     public let navigationIndex: NavigationIndex?
 
+    /// The shared sidebar document embedded by documentation pages.
+    ///
+    /// This is `nil` when the navigation index is missing or lists no modules, in
+    /// which case pages render a small inline fallback sidebar instead.
+    public let sidebarDocument: SidebarDocument?
+
     /// The content renderer for converting render node content to HTML.
     private let contentRenderer: RenderContentHTMLRenderer
 }
@@ -34,6 +40,9 @@ public extension HTMLPageBuilder {
     init(configuration: Configuration, navigationIndex: NavigationIndex? = nil) {
         self.configuration = configuration
         self.navigationIndex = navigationIndex
+        self.sidebarDocument = SidebarDocument.isAvailable(for: navigationIndex)
+            ? navigationIndex.map { SidebarDocument(navigationIndex: $0) }
+            : nil
         self.contentRenderer = RenderContentHTMLRenderer()
     }
 
@@ -115,14 +124,18 @@ public extension HTMLPageBuilder {
         // Add footer
         html += buildFooter()
 
-        // Add search scripts if enabled
-        if configuration.includeSearch {
-            let lunrPath = String(repeating: "../", count: depth) + "js/lunr.min.js"
-            html += """
+        // The shared sidebar document loads the search and filter scripts itself;
+        // pages with an inline fallback sidebar load them directly.
+        if sidebarDocument == nil {
+            if configuration.includeSearch {
+                let lunrPath = String(repeating: "../", count: depth) + "js/lunr.min.js"
+                html += """
 
-            <script src="\(lunrPath)" defer></script>
-            <script src="\(jsPath)" defer></script>
-            """
+                <script src="\(lunrPath)" defer></script>
+                <script src="\(jsPath)" defer></script>
+                """
+            }
+            html += "\n    <script>\(NavigationSidebarBuilder.sidebarScript)</script>"
         }
 
         // Add appearance selector script
@@ -428,21 +441,31 @@ private extension HTMLPageBuilder {
         """
     }
 
-    /// Builds the sidebar navigation.
+    /// Builds the sidebar navigation of a page.
+    ///
+    /// Pages embed the shared sidebar document when one is available, selecting their
+    /// own row through the URL fragment.  Otherwise a small inline sidebar is built.
+    ///
+    /// - Parameters:
+    ///   - renderNode: The render node of the page.
+    ///   - references: The references used to build the inline fallback sidebar.
+    ///   - depth: The number of directories between the output root and the page.
+    ///   - moduleName: The module name shown by the inline fallback sidebar.
+    /// - Returns: The sidebar HTML.
     func buildSidebar(
         for renderNode: RenderNode,
         references: [String: any RenderReference],
         depth: Int,
         moduleName: String
     ) -> String {
-        // Use NavigationSidebarBuilder if navigation index is available
-        if let navIndex = navigationIndex {
-            var sidebarBuilder = NavigationSidebarBuilder(navigationIndex: navIndex)
-            return sidebarBuilder.buildSidebar(
-                moduleName: moduleName,
-                currentPath: renderNode.identifier.path,
-                depth: depth
-            )
+        // Embed the shared sidebar document if there is one
+        if let sidebarDocument {
+            return sidebarDocument.embeddingMarkup(forPagePath: renderNode.identifier.path, depth: depth)
+        }
+
+        // A navigation index without modules yields an empty inline sidebar
+        if navigationIndex != nil {
+            return NavigationSidebarBuilder.buildFallbackSidebar()
         }
 
         // Fallback to building sidebar from current page's topic sections
@@ -1859,94 +1882,98 @@ private extension HTMLPageBuilder {
         """
     }
 
-    /// JavaScript for the appearance selector and sidebar filter.
+    /// JavaScript for the appearance selector and the embedded sidebar.
+    ///
+    /// The script restores and stores the reader's colour scheme, forwards it to the
+    /// embedded sidebar document, and forwards the keyboard shortcuts that focus the
+    /// sidebar filter (`/`, and Command-F or Control-F while the sidebar is shown) to
+    /// the embedded sidebar document using `postMessage`, which also works for pages
+    /// opened from local files.
     var appearanceSelectorScript: String {
         """
 
             <script>
             (function() {
+                var storageKey = '\(SidebarDocument.colourSchemeStorageKey)';
+                var schemeMessage = '\(SidebarDocument.colourSchemeMessage)';
+                var focusMessage = '\(SidebarDocument.focusFilterMessage)';
+                var readyMessage = '\(SidebarDocument.readyMessage)';
+                var body = document.body;
+                var frame = document.querySelector('iframe.\(SidebarDocument.frameClass)');
+
+                function postToSidebar(message) {
+                    if (frame && frame.contentWindow) {
+                        frame.contentWindow.postMessage(message, '*');
+                    }
+                }
+
+                function currentScheme() {
+                    return body.getAttribute('data-color-scheme') || 'auto';
+                }
+
                 // --- Appearance Selector ---
-                const selector = document.getElementById('appearance-selector');
+                var selector = document.getElementById('appearance-selector');
                 if (selector) {
                     // Show the selector (hidden by default for no-JS fallback)
                     selector.style.visibility = 'visible';
 
-                    const buttons = selector.querySelectorAll('.appearance-btn');
-                    const body = document.body;
-
-                    // Load saved preference
-                    const saved = localStorage.getItem('docc-color-scheme') || 'auto';
-                    applyColorScheme(saved);
-                    updateButtons(saved);
-
-                    // Add click handlers
-                    buttons.forEach(btn => {
-                        btn.addEventListener('click', () => {
-                            const scheme = btn.dataset.colorScheme;
-                            localStorage.setItem('docc-color-scheme', scheme);
-                            applyColorScheme(scheme);
-                            updateButtons(scheme);
-                        });
-                    });
+                    var buttons = selector.querySelectorAll('.appearance-btn');
 
                     function applyColorScheme(scheme) {
                         body.setAttribute('data-color-scheme', scheme);
-                    }
-
-                    function updateButtons(scheme) {
-                        buttons.forEach(btn => {
+                        buttons.forEach(function (btn) {
                             btn.classList.toggle('active', btn.dataset.colorScheme === scheme);
                         });
+                        postToSidebar({ type: schemeMessage, scheme: scheme });
                     }
+
+                    var saved = 'auto';
+                    try {
+                        saved = localStorage.getItem(storageKey) || 'auto';
+                    } catch (error) {
+                        // Storage may be unavailable, for example for local files.
+                    }
+                    applyColorScheme(saved);
+
+                    buttons.forEach(function (btn) {
+                        btn.addEventListener('click', function () {
+                            var scheme = btn.dataset.colorScheme;
+                            try {
+                                localStorage.setItem(storageKey, scheme);
+                            } catch (error) {
+                                // The choice then only applies to this page.
+                            }
+                            applyColorScheme(scheme);
+                        });
+                    });
                 }
 
-                // --- Sidebar Filter ---
-                const sidebarFilter = document.getElementById('sidebar-filter');
-                if (sidebarFilter) {
-                    // Show the filter (hidden by default for no-JS fallback)
-                    sidebarFilter.style.display = 'flex';
+                // --- Embedded Sidebar ---
+                if (frame) {
+                    window.addEventListener('message', function (event) {
+                        var data = event.data;
+                        if (event.source === frame.contentWindow && data && data.type === readyMessage) {
+                            postToSidebar({ type: schemeMessage, scheme: currentScheme() });
+                        }
+                    });
 
-                    const filterInput = sidebarFilter.querySelector('.filter-input');
-                    const sidebarItems = document.querySelectorAll('.navigator-card, .nav-link');
+                    var toggle = document.getElementById('sidebar-toggle');
 
-                    // Filter functionality
-                    if (filterInput) {
-                        filterInput.addEventListener('input', () => {
-                            const query = filterInput.value.toLowerCase();
-                            sidebarItems.forEach(item => {
-                                const text = item.textContent.toLowerCase();
-                                item.style.display = text.includes(query) ? '' : 'none';
-                            });
-                        });
-
-                        // Keyboard shortcut: / or Cmd+F (Mac) / Ctrl+F (Windows)
-                        document.addEventListener('keydown', (e) => {
-                            // Forward slash when not in an input
-                            if (e.key === '/' && !isInputFocused()) {
-                                e.preventDefault();
-                                filterInput.focus();
+                    document.addEventListener('keydown', function (e) {
+                        var focused = document.activeElement;
+                        var editing = focused && (focused.tagName === 'INPUT' || focused.tagName === 'TEXTAREA' || focused.isContentEditable);
+                        var hidden = toggle && toggle.checked;
+                        var slash = e.key === '/' && !editing;
+                        var find = (e.metaKey || e.ctrlKey) && e.key === 'f' && !hidden;
+                        if (slash || find) {
+                            e.preventDefault();
+                            if (hidden) {
+                                toggle.checked = false;
                             }
-                            // Cmd+F or Ctrl+F
-                            if ((e.metaKey || e.ctrlKey) && e.key === 'f') {
-                                // Only if sidebar is visible
-                                if (sidebarFilter.offsetParent !== null) {
-                                    e.preventDefault();
-                                    filterInput.focus();
-                                }
-                            }
-                            // Escape to clear and blur
-                            if (e.key === 'Escape' && document.activeElement === filterInput) {
-                                filterInput.value = '';
-                                filterInput.dispatchEvent(new Event('input'));
-                                filterInput.blur();
-                            }
-                        });
-                    }
-                }
-
-                function isInputFocused() {
-                    const active = document.activeElement;
-                    return active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.isContentEditable);
+                            frame.focus();
+                            postToSidebar({ type: focusMessage });
+                        }
+                    });
                 }
             })();
             </script>

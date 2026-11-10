@@ -173,16 +173,12 @@ public extension StaticHTMLConsumer {
 
 private extension StaticHTMLConsumer {
     func outputPath(for renderNode: RenderNode) -> URL {
-        // Convert the reference path to a file system path
-        let referencePath = renderNode.identifier.path
-        let components = referencePath
-            .trimmingCharacters(in: CharacterSet(charactersIn: "/"))
-            .components(separatedBy: "/")
-            .filter { !$0.isEmpty }
+        // Convert the reference path to a file system path (shared with sidebar row identifiers)
+        let pageKey = SidebarDocument.pagePathKey(renderNode.identifier.path)
 
         var path = outputDirectory
-        for component in components {
-            path = path.appendingPathComponent(component.lowercased())
+        for component in pageKey.split(separator: "/") {
+            path = path.appendingPathComponent(String(component))
         }
         path = path.appendingPathComponent("index.html")
 

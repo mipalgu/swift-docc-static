@@ -66,6 +66,20 @@ struct StaticFileHandlerTests {
         #expect(response.body != nil)
     }
 
+    @Test("HTML documents can be embedded in frames of the same site")
+    func htmlIsFrameable() async throws {
+        let testDir = try createTestDirectory()
+        defer { try? cleanupTestDirectory(testDir) }
+
+        let handler = StaticFileHandler(rootDirectory: testDir)
+        let response = await handler.handleRequest(uri: "/index.html", includeBody: true)
+
+        #expect(response.head.status == .ok)
+        #expect(response.head.headers["content-type"].first == "text/html; charset=utf-8")
+        #expect(response.head.headers["x-frame-options"].isEmpty)
+        #expect(response.head.headers["content-security-policy"].isEmpty)
+    }
+
     @Test("Handler returns 404 for non-existent file")
     func nonExistentFile() async throws {
         let testDir = try createTestDirectory()
