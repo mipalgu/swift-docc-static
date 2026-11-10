@@ -13,7 +13,8 @@
  * A role definition may set `pick` to `"in-viewport"` (the first match that is visible
  * inside the viewport) or leave it unset (the first visible match anywhere, or the
  * first match if none is visible).  Roles with `geometry: true` also record their
- * horizontal position and width.
+ * horizontal position and width.  Roles with `pseudo` (for example `"::before"`)
+ * record the computed style of that pseudo-element of the matched element.
  *
  * The result is plain JSON with deterministic key order.
  */
@@ -65,7 +66,7 @@
     const inViewport = definition.pick === 'in-viewport';
     const element = nodes.find((el) => visible(el, view, inViewport)) || (inViewport ? null : nodes[0]);
     if (element) {
-      const cs = view.getComputedStyle(element);
+      const cs = view.getComputedStyle(element, definition.pseudo || null);
       entry.visible = visible(element, view, false);
       entry.style = {};
       for (const property of properties) entry.style[property] = cs[property];
