@@ -120,7 +120,7 @@ extension HTMLPageBuilder {
         var title: String
         /// The anchor of the section, without `#`.
         var anchor: String
-        /// The one-based section number, or `nil` for the introduction and the assessments.
+        /// The one-based number shown in the section tracker, or `nil` for the introduction.
         var number: Int?
     }
 
@@ -189,7 +189,8 @@ extension HTMLPageBuilder {
                     sections.append(.init(title: task.title, anchor: task.anchor, number: index + 1))
                 }
             } else if let assessments = section as? TutorialAssessmentsRenderSection {
-                sections.append(.init(title: TutorialDocument.Text.checkYourUnderstanding, anchor: assessments.anchor))
+                let number = (sections.compactMap(\.number).max() ?? 0) + 1
+                sections.append(.init(title: TutorialDocument.Text.checkYourUnderstanding, anchor: assessments.anchor, number: number))
             }
         }
         return sections
@@ -414,7 +415,7 @@ extension HTMLPageBuilder {
             }
         }
         if chapters.isEmpty { chapters = [("", [(title, "index.html", true)])] }
-        let numbered = sections.compactMap(\.number).count
+        let numbered = sections.count - 1
 
         func sectionTitle(_ index: Int, _ section: TutorialPageSection) -> String {
             "<span class=\"tracked\" style=\"\(TutorialDocument.sectionTimelineProperty): \(TutorialDocument.sectionTimeline(index))\">\(escapeHTML(section.title))</span>"

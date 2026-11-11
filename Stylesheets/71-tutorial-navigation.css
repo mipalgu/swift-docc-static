@@ -620,7 +620,7 @@
 .tutorial .assessments-wrapper,
 .tutorials-overview .chapter {
     view-timeline-name: var(--tutorial-section-timeline, none);
-    view-timeline-inset: 50% 50%;
+    view-timeline-inset: 15% 85%;
 }
 
 .tutorials-overview .chapter {
@@ -639,13 +639,20 @@
     display: grid;
 }
 
-@keyframes tutorial-displayed {
-    from, to { display: inline; }
+@keyframes tutorial-expanded {
+    from, to {
+        max-width: none;
+        visibility: visible;
+    }
 }
 
 .tutorial .secondary-dropdown .section-tracker .tracked {
-    display: none;
-    animation: tutorial-displayed linear none;
+    display: inline-block;
+    vertical-align: top;
+    overflow: hidden;
+    max-width: 0;
+    visibility: hidden;
+    animation: tutorial-expanded linear none;
     animation-timeline: var(--tutorial-section-timeline, none);
 }
 
@@ -664,13 +671,13 @@
     animation-timeline: var(--tutorial-section-timeline, none);
 }
 
-.tutorial .secondary-dropdown .tracked:first-child,
+.tutorial .secondary-dropdown .form-dropdown-toggle :is(.form-dropdown-title, .section-tracker) .tracked:first-child,
 .tutorial .secondary-dropdown .option:first-child,
 .tutorial .mobile-dropdown .section-list li:first-child .option {
     animation-fill-mode: backwards;
 }
 
-.tutorial .secondary-dropdown .tracked:last-child,
+.tutorial .secondary-dropdown .form-dropdown-toggle :is(.form-dropdown-title, .section-tracker) .tracked:last-child,
 .tutorial .secondary-dropdown .option:last-child,
 .tutorial .mobile-dropdown .section-list li:last-child .option {
     animation-fill-mode: forwards;

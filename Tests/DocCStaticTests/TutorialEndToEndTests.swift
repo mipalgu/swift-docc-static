@@ -55,7 +55,8 @@ struct TutorialEndToEndTests {
         #expect(html.contains("<a href=\"#Check-Your-Understanding\">\(TutorialDocument.Text.checkYourUnderstanding)</a>"))
         #expect(html.contains("class=\"\(TutorialDocument.menuToggleClass)\" id=\"\(TutorialDocument.menuToggleClass)\""))
         #expect(html.contains("<label class=\"nav-menucta\" for=\"\(TutorialDocument.menuToggleClass)\""))
-        #expect(html.contains(TutorialDocument.Text.sectionTracker(2, of: 2)))
+        #expect(html.contains(TutorialDocument.Text.sectionTracker(2, of: 3)))
+        #expect(html.contains(TutorialDocument.Text.sectionTracker(3, of: 3)))
     }
 
     @Test("The hero shows the chapter, title, introduction, time and Xcode requirement",

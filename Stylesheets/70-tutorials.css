@@ -200,3 +200,10 @@ body > .tutorial {
 .tutorials-overview main :is(h1, h2, h3, h4, h5, h6, p, ul, ol) + p {
     margin-top: var(--spacing-stacked-margin-large, 0.8em);
 }
+
+/* Pages without a navigation sidebar do not offset the footer */
+body.tutorial-page .documentation-footer,
+body.tutorial-overview-page .documentation-footer,
+body.index-page .documentation-footer {
+    margin-left: 0;
+}
