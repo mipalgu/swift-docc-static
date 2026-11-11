@@ -17,11 +17,18 @@ public struct IndexPageBuilder: Sendable {
     /// The configuration for page building.
     public let configuration: Configuration
 
+    /// Whether the shared navigation sidebar document exists and is embedded.
+    public let embedsSidebar: Bool
+
     /// Creates a new index page builder.
     ///
-    /// - Parameter configuration: The generation configuration.
-    public init(configuration: Configuration) {
+    /// - Parameters:
+    ///   - configuration: The generation configuration.
+    ///   - embedsSidebar: Whether to embed the shared navigation sidebar document
+    ///     (see ``SidebarDocument``), which must then exist in the output directory.
+    public init(configuration: Configuration, embedsSidebar: Bool = false) {
         self.configuration = configuration
+        self.embedsSidebar = embedsSidebar
     }
 
     /// The standard filename for the index page introduction content.
@@ -163,87 +170,55 @@ public extension IndexPageBuilder {
             <link rel="stylesheet" href="css/main.css">
         </head>
         <body class="index-page" \(ColourSchemeToggle.bodyAttribute)>
-            <div class="container">
-                <header class="index-header">
-                    <h1>\(escapeHTML(title))</h1>
+            <div id="app">
+            <div id="app-top"></div>
+            <a href="#app-main" id="skip-nav">Skip Navigation</a>
+            \(HTMLPageBuilder.chromeToggles)
+            <div class="documentation-layout">
         """
+        html += HTMLPageBuilder.navigationBarMarkup(depth: 0)
+        html += "\n<div class=\"adjustable-sidebar-width full-width-container topic-wrapper\">"
+        if embedsSidebar {
+            html += SidebarDocument.containerMarkup(
+                content: "<iframe class=\"\(SidebarDocument.frameClass)\" title=\"\(escapeHTML(SidebarDocument.frameTitle))\" src=\"\(SidebarDocument.fileName)\"></iframe>"
+            )
+        }
+        html += "\n<div class=\"content\"><div class=\"doc-topic\"><main class=\"main\" id=\"app-main\">"
 
-        // Add either the custom intro content or the default subtitle
+        // Hero, like the root page of a swift-docc-render site
+        html += "\n<div class=\"documentation-hero index-header\"><div class=\"icon\">"
+        html += TopicTypeIcon.markup(for: "module", additionalClass: "background-icon first-icon")
+        html += "</div><div class=\"documentation-hero__above-content\"></div>"
+        html += "\n<div class=\"documentation-hero__content\"><div class=\"topictitle\"><span class=\"eyebrow\">Package</span>"
+        html += "<h1 class=\"title\">\(escapeHTML(title))</h1></div>"
+        if indexContent == nil {
+            html += "<div class=\"\(HTMLPageBuilder.heroAbstractClass) subtitle\"><p>API Reference Documentation</p></div>"
+        }
+        html += "</div></div>"
+
+        html += "\n<div class=\"doc-content-wrapper\"><div class=\"doc-content\(indexContent == nil ? " no-primary-content" : "")\">"
         if let indexContent {
-            html += """
-
-                </header>
-                <section class="index-intro">
-                    \(indexContent.bodyHTML)
-                </section>
-
-            """
-        } else {
-            html += """
-
-                    <p class="subtitle">API Reference Documentation</p>
-                </header>
-
-            """
+            html += "\n<div class=\"container\"><div class=\"primary-content index-intro\"><div class=\"content\">"
+            html += indexContent.bodyHTML
+            html += "</div></div></div>"
         }
 
-        // Module list - only add heading if no custom index content
-        // (INDEX.md should provide its own "## Modules" heading)
-        if indexContent != nil {
-            html += """
-
-                    <section class="modules">
-                        <div class="module-list">
-            """
-        } else {
-            html += """
-
-                    <section class="modules">
-                        <h2>Modules</h2>
-                        <div class="module-list">
-            """
-        }
-
-        // Modules are already in Package.swift order from filterNavigationIndex
-        for module in modules {
-            html += buildModuleCard(module)
-        }
-
-        html += """
-
-                    </div>
-                </section>
-
-        """
-
-        // Tutorials section if available
+        // Modules and tutorial collections as cards, like swift-docc-render's topic card grids
+        html += "\n<section class=\"contenttable alt-light topics\"><div class=\"container\">"
+        html += "<h2 id=\"topics\" class=\"title\">\(RenderContentHTMLRenderer.headerAnchor(anchor: "topics", title: "Topics"))</h2>"
+        html += buildCardSection(title: "Modules", anchor: "modules", listClass: "module-list", cards: modules.map(buildModuleCard))
         if !tutorials.isEmpty {
-            html += """
-
-                <section class="tutorials-section">
-                    <h2>Tutorials</h2>
-                    <div class="tutorial-list">
-            """
-
-            for tutorial in tutorials {
-                html += buildTutorialCard(tutorial)
-            }
-
-            html += """
-
-                    </div>
-                </section>
-
-            """
+            html += buildCardSection(title: "Tutorials", anchor: "tutorials", listClass: "tutorial-list", cards: tutorials.map(buildTutorialCard))
         }
-
-        html += """
-
-            </div>
-        """
+        html += "\n</div></section>\n</div>"
+        if !configuration.theme.isEnabled(.onThisPageNavigatorDisabled) {
+            html += "<div class=\"\(HTMLPageBuilder.onThisPageContainerClass)\"></div>"
+        }
+        html += "</div>\n</main></div></div>\n</div>\n</div>"
 
         // Footer with configurable content and appearance selector
         html += buildFooter()
+        html += "\n    </div>"
 
         // Add search scripts if enabled
         if configuration.includeSearch {
@@ -269,26 +244,67 @@ public extension IndexPageBuilder {
 
 // MARK: - Private
 private extension IndexPageBuilder {
-    func buildModuleCard(_ module: ModuleEntry) -> String {
-        """
-
-                        <div class="module-card">
-                            <a href="\(escapeHTML(module.path))" class="module-name">\(escapeHTML(module.name))</a>
-                            <p class="module-abstract">\(escapeHTML(module.abstract))</p>
-                            <p class="module-stats">\(module.symbolCount) symbols</p>
-                        </div>
-        """
+    /// Builds a group of cards in the topics section.
+    ///
+    /// - Parameters:
+    ///   - title: The group title.
+    ///   - anchor: The identifier of the group heading.
+    ///   - listClass: An additional class naming the kind of cards.
+    ///   - cards: The cards.
+    /// - Returns: The `.contenttable-section` element with a two-column card grid.
+    func buildCardSection(title: String, anchor: String, listClass: String, cards: [String]) -> String {
+        var html = "\n<div class=\"contenttable-section\"><div class=\"section-title\">"
+        html += "<h3 id=\"\(anchor)\" class=\"contenttable-title\">\(RenderContentHTMLRenderer.headerAnchor(anchor: anchor, title: title))</h3></div>"
+        html += "<div class=\"section-content\"><div class=\"TopicsLinkCardGrid \(listClass)\">"
+        html += "<div class=\"row with-columns\" style=\"--col-count-large: 2; --col-count-medium: 2; --col-count-small: 1;\">"
+        html += cards.map { "<div class=\"column\">\($0)</div>" }.joined()
+        html += "</div></div></div></div>"
+        return html
     }
 
+    /// Builds a card (swift-docc-render's reference card grid item).
+    ///
+    /// - Parameters:
+    ///   - path: The link target.
+    ///   - title: The card title.
+    ///   - abstract: The card text, or `nil`.
+    ///   - iconType: The topic type whose icon fills the card cover.
+    ///   - linkText: The call to action at the bottom of the card.
+    ///   - classes: Additional classes of the card, of its title and of its text.
+    /// - Returns: The `a.card` element.
+    func buildCard(
+        path: String, title: String, abstract: String?, iconType: String, linkText: String,
+        classes: (card: String, title: String, text: String)
+    ) -> String {
+        var html = "<a href=\"\(escapeHTML(path))\" class=\"card reference-card-grid-item large floating-style \(classes.card)\">"
+        html += "<div class=\"card-cover-wrap rounded\" aria-hidden=\"true\"><div class=\"reference-card-grid-item__image card-cover\">"
+        html += TopicTypeIcon.markup(for: iconType, additionalClass: "reference-card-grid-item__icon") + "</div></div>"
+        html += "<div class=\"details\"><div class=\"title \(classes.title)\">\(escapeHTML(title))</div>"
+        if let abstract, !abstract.isEmpty {
+            html += "<div class=\"card-content \(classes.text)\"><div class=\"content\">\(escapeHTML(abstract))</div></div>"
+        }
+        html += "<div class=\"link\">\(escapeHTML(linkText))"
+        html += "<svg class=\"svg-icon link-icon icon-inline inline-chevron-right-icon\" viewBox=\"0 0 14 14\" aria-hidden=\"true\"><path d=\"M2.964 1.366l0.649-0.76 7.426 6.343-7.423 6.445-0.655-0.755 6.545-5.683-6.542-5.59z\"></path></svg>"
+        html += "</div></div></a>"
+        return html
+    }
+
+    /// Builds the card of a module.
+    func buildModuleCard(_ module: ModuleEntry) -> String {
+        buildCard(
+            path: module.path, title: module.name, abstract: module.abstract, iconType: "collectionGroup",
+            linkText: "View API collection", classes: ("module-card", "module-name", "module-abstract")
+        )
+    }
+
+    /// Builds the card of a tutorial collection.
     func buildTutorialCard(_ tutorial: TutorialEntry) -> String {
         let tutorialText = tutorial.tutorialCount == 1 ? "tutorial" : "tutorials"
-        return """
-
-                        <div class="tutorial-collection-card">
-                            <a href="\(escapeHTML(tutorial.path))" class="tutorial-collection-name">\(escapeHTML(tutorial.title))</a>
-                            <p class="tutorial-collection-stats">\(tutorial.tutorialCount) \(tutorialText)</p>
-                        </div>
-        """
+        return buildCard(
+            path: tutorial.path, title: tutorial.title, abstract: "\(tutorial.tutorialCount) \(tutorialText)",
+            iconType: "tutorial", linkText: "Get started",
+            classes: ("tutorial-collection-card", "tutorial-collection-name", "tutorial-collection-stats")
+        )
     }
 
     /// Builds the page footer with the custom footer content and the colour scheme toggle.

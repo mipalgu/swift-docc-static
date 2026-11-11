@@ -117,10 +117,12 @@ struct SidebarEndToEndTests {
     func pagesWithoutSidebar() async throws {
         let fixture = try await FixtureDocumentation.shared.output()
         let pages = fixture.files(withExtension: "html").filter {
-            let relative = fixture.relativePath(of: $0)
-            return relative == "index.html" || relative.hasPrefix("tutorials/")
+            fixture.relativePath(of: $0).hasPrefix("tutorials/")
         }
-        #expect(pages.count >= 3)
+        #expect(pages.count >= 2)
+        // The index page shows the navigator like the root page of swift-docc-render
+        let index = try fixture.text(at: "index.html")
+        #expect(index.contains("src=\"\(SidebarDocument.fileName)\""))
         for page in pages {
             let html = try String(contentsOf: page, encoding: .utf8)
             #expect(!html.contains(SidebarDocument.fileName), "\(fixture.relativePath(of: page))")

@@ -119,7 +119,7 @@ struct FixturePage: Decodable, Sendable, CustomTestStringConvertible {
 struct ThemeDOMStructureTests {
     /// The markup every page of a kind must contain, and markup specific to some pages.
     static let required: [String: [String]] = [
-        "landing": ["class=\"index-header\"", "class=\"module-card\"", "<footer"],
+        "landing": ["index-header\"", "module-card\"", "<footer"],
         "documentation": [
             "documentation-nav", "<iframe class=\"\(SidebarDocument.frameClass)\"",
             "class=\"documentation-hero", "<h1 class=\"title\">", "class=\"doc-content", "<footer",

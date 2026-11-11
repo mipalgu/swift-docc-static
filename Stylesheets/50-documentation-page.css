@@ -313,7 +313,7 @@
         display: block;
     }
 
-    .hierarchy > .hierarchy-collapsed-items {
+    .hierarchy[data-parents] > .hierarchy-collapsed-items {
         display: inline-flex;
     }
 }
@@ -691,7 +691,7 @@
 }
 
 /* Content tables: Topics, Relationships and See Also */
-.contenttable .title {
+.contenttable > .container > .title {
     padding-top: var(--section-spacing-single-side);
     font-size: 1.8823529412rem;
     line-height: 1.125;
@@ -705,7 +705,7 @@
     --content-table-title-border-width: 0px;
 }
 
-.contenttable .title + .contenttable-section {
+.contenttable > .container > .title + .contenttable-section {
     margin-top: 0;
 }
 
@@ -730,7 +730,7 @@
 }
 
 @media only screen and (max-width: 1250px) {
-    .contenttable .title {
+    .contenttable > .container > .title {
         font-size: 1.6470588235rem;
         line-height: 1.1428571429;
     }
@@ -742,7 +742,7 @@
 }
 
 @media only screen and (max-width: 735px) {
-    .contenttable .title {
+    .contenttable > .container > .title {
         font-size: 1.4117647059rem;
         line-height: 1.1666666667;
     }
@@ -857,10 +857,6 @@
 }
 
 /* Parameters */
-.parameters dl {
-    margin: 0;
-}
-
 .param-name {
     font-weight: 600;
     padding-inline-start: 1rem;

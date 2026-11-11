@@ -1278,7 +1278,10 @@ public struct StaticDocumentationGenerator: Sendable {
             log("Generating index page...")
         }
 
-        let indexBuilder = IndexPageBuilder(configuration: configuration)
+        let indexBuilder = IndexPageBuilder(
+            configuration: configuration,
+            embedsSidebar: SidebarDocument.isAvailable(for: consumer.navigationIndex)
+        )
 
         // Collect module information from the consumer's generated pages
         var modules: [IndexPageBuilder.ModuleEntry] = []

@@ -91,9 +91,9 @@ struct StylesheetTests {
     func moduleCardStyles() {
         let css = DocCStylesheet.generate(theme: .default)
 
-        #expect(css.contains(".module-card"))
-        #expect(css.contains(".module-name"))
-        #expect(css.contains(".module-abstract"))
+        #expect(css.contains(".reference-card-grid-item"))
+        #expect(css.contains(".card .title"))
+        #expect(css.contains(".card .card-content"))
     }
 
     @Test("Default theme CSS includes code block padding variable")

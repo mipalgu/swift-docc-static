@@ -14,10 +14,6 @@ html[dir=rtl] {
     --scale-inline: -1;
 }
 
-* {
-    box-sizing: border-box;
-}
-
 abbr, blockquote, body, button, dd, dl, dt, fieldset, figure, form, h1, h2, h3, h4, h5, h6,
 hgroup, input, legend, li, ol, p, pre, ul {
     margin: 0;
@@ -159,6 +155,11 @@ code {
     font-weight: inherit;
     letter-spacing: 0;
     font-size: var(--spacing-code-font-size, 1em);
+}
+
+pre code {
+    background: none;
+    padding: var(--spacing-pre-code-padding, 0);
 }
 
 .inline-code {

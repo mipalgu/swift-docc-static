@@ -1,82 +1,187 @@
-/* Index page styles */
-.index-header {
-    text-align: center;
-    margin-bottom: 2rem;
-    padding-bottom: 1rem;
-    border-bottom: 1px solid var(--color-fill-gray);
-}
-
-.index-header .subtitle {
-    color: var(--color-figure-gray-secondary);
-    font-size: 1.1rem;
-}
-
+/*
+ * Index page: the root page of the site, which lists the documented modules and
+ * tutorial collections as cards like the root page of a swift-docc-render site
+ * (swift-docc-render Card and TopicsLinkCardGrid).
+ */
 .index-intro {
-    max-width: 800px;
-    margin: 0 auto 2rem;
-    padding: 1rem 0;
-    line-height: 1.6;
+    max-width: none;
 }
 
-.index-intro p {
-    margin-bottom: 1rem;
+.TopicsLinkCardGrid .row.with-columns {
+    --col-count: var(--col-count-large, 2);
+    display: grid;
+    grid-auto-flow: row;
+    grid-template-columns: repeat(var(--col-count), 1fr);
+    grid-gap: var(--col-gap, 20px);
+    box-sizing: border-box;
 }
 
-.index-intro h2 {
-    font-size: 1.5rem;
-    margin: 1.5rem 0 1rem;
-    color: var(--color-figure-gray);
-    border-bottom: none;
-    padding-bottom: 0;
+@media only screen and (max-width: 1250px) {
+    .TopicsLinkCardGrid .row.with-columns {
+        --col-count: var(--col-count-medium, var(--col-count-large, 2));
+    }
 }
 
-.index-intro h3 {
-    font-size: 1.25rem;
-    margin: 1.25rem 0 0.75rem;
-    color: var(--color-figure-gray);
+@media only screen and (max-width: 735px) {
+    .TopicsLinkCardGrid .row.with-columns {
+        --col-count: var(--col-count-small, 1);
+    }
 }
 
-.index-intro ul, .index-intro ol {
-    margin: 1rem 0;
-    padding-left: 1.5rem;
+.TopicsLinkCardGrid .column {
+    min-width: 0;
 }
 
-.index-intro li {
-    margin-bottom: 0.5rem;
+.TopicsLinkCardGrid {
+    margin-top: 15px;
 }
 
-.index-intro code {
-    background: var(--color-fill-secondary);
-    padding: 0.15rem 0.4rem;
-    border-radius: 4px;
-    font-family: var(--typography-html-font-mono);
-    font-size: 0.9em;
-}
-
-.index-intro pre {
-    background: var(--color-fill-secondary);
-    padding: 1rem 1.25rem;
-    border-radius: 12px;
-    overflow-x: auto;
-    margin: 1rem 0;
-    font-family: var(--typography-html-font-mono);
-    font-size: 0.8125rem;
-    line-height: 1.6;
-}
-
-.index-intro pre code {
-    background: none;
-    padding: 0;
-    position: static;
-    left: 0;
-}
-
-.index-intro a {
+.card {
+    --margin-link: 17px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: box-shadow, transform 0.16s ease-out;
+    will-change: box-shadow, transform;
+    backface-visibility: hidden;
+    border-radius: var(--border-radius, 4px);
     color: var(--color-link);
 }
 
-.index-intro a:hover {
+.card.large {
+    --margin-link: 25.5px;
+}
+
+.card.large.floating-style {
+    --margin-link: var(--spacing-stacked-margin-large);
+}
+
+.card:hover {
+    text-decoration: none;
+    transform: scale(1.007);
+}
+
+.card:hover .link {
     text-decoration: underline;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .card:hover {
+        transform: none;
+    }
+}
+
+.card-cover-wrap.rounded {
+    border-radius: var(--border-radius, 4px);
+    overflow: hidden;
+}
+
+.card-cover {
+    background-color: var(--color-card-background);
+    display: block;
+    height: var(--card-cover-height, 180px);
+}
+
+.reference-card-grid-item {
+    --card-cover-height: auto;
+}
+
+.reference-card-grid-item.card.large {
+    min-width: 0;
+    max-width: none;
+}
+
+.reference-card-grid-item .card-cover {
+    aspect-ratio: 16 / 9;
+}
+
+.reference-card-grid-item .card-cover-wrap {
+    border: 1px solid var(--color-link-block-card-border);
+}
+
+.reference-card-grid-item__image {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 80px;
+    background-color: var(--color-fill-gray-quaternary);
+}
+
+.reference-card-grid-item__icon {
+    margin: 0;
+    display: flex;
+    justify-content: center;
+}
+
+.card .details {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--color-card-background);
+    padding: 17px;
+    position: relative;
+    font-size: 1rem;
+    line-height: 1.4705882353;
+}
+
+.card.floating-style .details {
+    --color-card-background: transparent;
+    padding: 17px 0;
+}
+
+.card .title {
+    color: var(--color-card-content-text);
+    font-size: 1.2352941176rem;
+    line-height: 1.1904761905;
+    font-weight: 600;
+}
+
+.card .card-content {
+    flex-grow: 1;
+    color: var(--color-card-content-text);
+    margin-top: 4px;
+}
+
+.card .link {
+    margin-top: var(--margin-link);
+    display: flex;
+    align-items: center;
+}
+
+.card .link .link-icon {
+    height: 0.6em;
+    width: 0.6em;
+    margin-left: 0.3em;
+    fill: currentColor;
+}
+
+@media only screen and (max-width: 1250px) {
+    .card .details,
+    .card .title {
+        font-size: 1rem;
+        line-height: 1.2352941176;
+    }
+
+    .card .details {
+        font-size: 0.8235294118rem;
+        line-height: 1.2857142857;
+    }
+}
+
+@media only screen and (max-width: 735px) {
+    .card {
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .card.large {
+        min-width: 280px;
+    }
+
+    .card.large .link {
+        margin-top: 7px;
+        position: relative;
+    }
 }
 
 .search-form {
@@ -173,85 +278,3 @@
     font-size: 0.875rem;
 }
 
-.module-list {
-    display: grid;
-    gap: 1rem;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-}
-
-.module-card {
-    padding: 1.25rem;
-    border: 1px solid var(--color-fill-gray);
-    border-radius: 12px;
-    background: var(--color-fill);
-    transition: box-shadow 0.2s, border-color 0.2s;
-}
-
-.module-card:hover {
-    border-color: var(--color-link);
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-}
-
-.module-name {
-    font-family: var(--typography-html-font-mono);
-    font-size: 1.1rem;
-    font-weight: 600;
-    display: block;
-    margin-bottom: 0.5rem;
-}
-
-.module-abstract {
-    color: var(--color-figure-gray-secondary);
-    font-size: 0.9rem;
-    margin-bottom: 0.5rem;
-}
-
-.module-stats {
-    color: var(--color-figure-gray-secondary);
-    font-size: 0.8rem;
-}
-
-/* Tutorials section on index page */
-.tutorials-section {
-    margin-top: 2.5rem;
-    padding-top: 2rem;
-    border-top: 1px solid var(--color-fill-gray);
-}
-
-.tutorials-section h2 {
-    font-size: 1.5rem;
-    margin-bottom: 1.5rem;
-    border-bottom: none;
-    padding-bottom: 0;
-}
-
-.tutorial-list {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 1rem;
-}
-
-.tutorial-collection-card {
-    padding: 1.25rem;
-    border: 1px solid var(--color-fill-gray);
-    border-radius: 12px;
-    background: var(--color-fill);
-    transition: box-shadow 0.2s, border-color 0.2s;
-}
-
-.tutorial-collection-card:hover {
-    border-color: var(--color-link);
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-}
-
-.tutorial-collection-name {
-    font-size: 1.0625rem;
-    font-weight: 600;
-    display: block;
-    margin-bottom: 0.5rem;
-}
-
-.tutorial-collection-stats {
-    color: var(--color-figure-gray-secondary);
-    font-size: 0.8rem;
-}

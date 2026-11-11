@@ -488,43 +488,7 @@ private extension HTMLPageBuilder {
     /// - Parameter depth: The number of directories between the output root and the page.
     /// - Returns: The `<nav>` element.
     func buildHeader(depth: Int) -> String {
-        let homeURL = String(repeating: "../", count: depth) + "index.html"
-        return """
-
-            <nav class="nav documentation-nav nav--fullwidth-border nav--is-wide-format" aria-label="API Reference">
-                <div class="nav__wrapper">
-                    <div class="nav__background"></div>
-                    <div class="nav-content">
-                        <div class="pre-title">
-                            <div class="sidenav-toggle-wrapper">
-                                <label for="\(Self.sidebarToggleIdentifier)" class="sidenav-toggle" aria-hidden="true">
-                                    <span class="sidenav-icon-wrapper">
-                                        <svg class="sidenav-icon svg-icon" viewBox="0 0 14 14" width="19" height="19" fill="currentColor" aria-hidden="true">
-                                            <path d="M6.533 1.867h-6.533v10.267h14v-10.267zM0.933 11.2v-8.4h4.667v8.4zM13.067 11.2h-6.533v-8.4h6.533z"></path>
-                                            <path d="M1.867 5.133h2.8v0.933h-2.8z"></path>
-                                            <path d="M1.867 7.933h2.8v0.933h-2.8z"></path>
-                                        </svg>
-                                    </span>
-                                </label>
-                            </div>
-                        </div>
-                        <div class="nav-title"><h2 class="nav-title"><a href="\(homeURL)">Documentation</a></h2></div>
-                        <div class="nav-menu">
-                            <div class="nav-menu-tray">
-                                <ul class="nav-menu-items nav-menu-settings">
-                                    <li class="nav-menu-item nav-menu-setting language-container nav-menu-item--animated">
-                                        <div><span class="nav-menu-setting-label">Language: </span><span class="current-language" aria-current="page">Swift</span></div>
-                                    </li>
-                                </ul>
-                            </div>
-                        </div>
-                        <div class="nav-actions">
-                            <label for="\(Self.navigationMenuToggleIdentifier)" class="nav-menucta" aria-label="Toggle Menu"><span class="nav-menucta-chevron"></span></label>
-                        </div>
-                    </div>
-                </div>
-            </nav>
-        """
+        Self.navigationBarMarkup(depth: depth)
     }
 
     /// Builds the sidebar navigation of a page.
@@ -2508,6 +2472,54 @@ private extension HTMLPageBuilder {
                 document.addEventListener('click', closeAllDropdowns);
             })();
             </script>
+        """
+    }
+}
+
+// MARK: - Shared Page Chrome
+
+extension HTMLPageBuilder {
+    /// Builds the navigation bar shared by documentation pages and the index page.
+    ///
+    /// - Parameter depth: The number of directories between the output root and the page.
+    /// - Returns: The `<nav>` element (swift-docc-render's `DocumentationNav`).
+    static func navigationBarMarkup(depth: Int) -> String {
+        let homeURL = String(repeating: "../", count: depth) + "index.html"
+        return """
+
+            <nav class="nav documentation-nav nav--fullwidth-border nav--is-wide-format" aria-label="API Reference">
+                <div class="nav__wrapper">
+                    <div class="nav__background"></div>
+                    <div class="nav-content">
+                        <div class="pre-title">
+                            <div class="sidenav-toggle-wrapper">
+                                <label for="\(Self.sidebarToggleIdentifier)" class="sidenav-toggle" aria-hidden="true">
+                                    <span class="sidenav-icon-wrapper">
+                                        <svg class="sidenav-icon svg-icon" viewBox="0 0 14 14" width="19" height="19" fill="currentColor" aria-hidden="true">
+                                            <path d="M6.533 1.867h-6.533v10.267h14v-10.267zM0.933 11.2v-8.4h4.667v8.4zM13.067 11.2h-6.533v-8.4h6.533z"></path>
+                                            <path d="M1.867 5.133h2.8v0.933h-2.8z"></path>
+                                            <path d="M1.867 7.933h2.8v0.933h-2.8z"></path>
+                                        </svg>
+                                    </span>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="nav-title"><h2 class="nav-title"><a href="\(homeURL)">Documentation</a></h2></div>
+                        <div class="nav-menu">
+                            <div class="nav-menu-tray">
+                                <ul class="nav-menu-items nav-menu-settings">
+                                    <li class="nav-menu-item nav-menu-setting language-container nav-menu-item--animated">
+                                        <div><span class="nav-menu-setting-label">Language: </span><span class="current-language" aria-current="page">Swift</span></div>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="nav-actions">
+                            <label for="\(Self.navigationMenuToggleIdentifier)" class="nav-menucta" aria-label="Toggle Menu"><span class="nav-menucta-chevron"></span></label>
+                        </div>
+                    </div>
+                </div>
+            </nav>
         """
     }
 }
