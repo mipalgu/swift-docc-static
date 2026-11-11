@@ -589,6 +589,44 @@ public struct StaticDocumentationGenerator: Sendable {
         return nil
     }
 
+    /// The separator between the directories of the executable search path.
+    #if os(Windows)
+        static let searchPathSeparator: Character = ";"
+    #else
+        static let searchPathSeparator: Character = ":"
+    #endif
+
+    /// The file name extensions an executable may have.
+    #if os(Windows)
+        static let executableExtensions = [".exe", ""]
+    #else
+        static let executableExtensions = [""]
+    #endif
+
+    /// Returns the first executable with a name in the directories of a search path.
+    ///
+    /// - Parameters:
+    ///   - name: The name of the executable, without a file name extension.
+    ///   - searchPath: The directories to search, separated by
+    ///     ``searchPathSeparator``, such as the value of `PATH`.
+    /// - Returns: The path of the executable, or `nil` if no directory contains it.
+    static func executable(named name: String, searchPath: String?) -> String? {
+        guard let searchPath else { return nil }
+        let fileManager = FileManager.default
+        for directory in searchPath.split(separator: searchPathSeparator) where !directory.isEmpty {
+            for fileExtension in executableExtensions {
+                let candidate = URL(fileURLWithPath: String(directory), isDirectory: true)
+                    .appendingPathComponent(name + fileExtension).path
+                var isDirectory: ObjCBool = false
+                if fileManager.fileExists(atPath: candidate, isDirectory: &isDirectory), !isDirectory.boolValue,
+                   fileManager.isExecutableFile(atPath: candidate) {
+                    return candidate
+                }
+            }
+        }
+        return nil
+    }
+
     private func findDoccExecutable() async throws -> String {
         let fileManager = FileManager.default
 
@@ -625,19 +663,12 @@ public struct StaticDocumentationGenerator: Sendable {
             }
         #endif
 
-        // Cross-platform: try 'which docc' to find docc in PATH
-        let whichResult = try await run(
-            .path(FilePath("/usr/bin/which")),
-            arguments: Arguments(["docc"]),
-            output: .string(limit: 4096)
-        )
-
-        if whichResult.terminationStatus.isSuccess {
-            let path = whichResult.standardOutput.trimmingCharacters(
-                in: CharacterSet.whitespacesAndNewlines)
-            if !path.isEmpty && fileManager.fileExists(atPath: path) {
-                return path
-            }
+        // Cross-platform: find docc on the search path
+        if let path = Self.executable(
+            named: "docc",
+            searchPath: ProcessInfo.processInfo.environment["PATH"] ?? ProcessInfo.processInfo.environment["Path"]
+        ) {
+            return path
         }
 
         // Linux: check common Swift toolchain locations
