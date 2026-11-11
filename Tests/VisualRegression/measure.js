@@ -72,9 +72,10 @@
       entry.style = {};
       // URLs are recorded without the origin, which differs between runs
       for (const property of properties) entry.style[property] = String(cs[property]).split(location.origin).join('');
-      if (definition.geometry) {
+      if (definition.geometry || definition.height) {
         const r = element.getBoundingClientRect();
         entry.box = { x: round(r.x + offset.x), width: round(r.width) };
+        if (definition.height) entry.box.height = round(r.height);
       }
     }
     result.roles[name] = entry;

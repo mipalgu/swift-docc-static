@@ -334,6 +334,7 @@ public extension NavigationSidebarBuilder {
 
                 var rows = content.querySelectorAll('.navigator-card-item');
                 var wrappers = content.querySelectorAll('.nav-children-wrapper');
+                var groups = content.querySelectorAll('.\(groupWrapperClass)');
                 var sections = content.querySelectorAll('.module-section');
 
                 function reset(elements) {
@@ -358,6 +359,7 @@ public extension NavigationSidebarBuilder {
                     var needle = query.trim().toLowerCase();
                     reset(rows);
                     reset(wrappers);
+                    reset(groups);
                     reset(sections);
                     content.classList.toggle('filtering', needle !== '');
                     if (!needle) {
@@ -378,6 +380,8 @@ public extension NavigationSidebarBuilder {
                                 if (node.previousElementSibling) {
                                     shown.add(node.previousElementSibling);
                                 }
+                            } else if (node.classList.contains('\(groupWrapperClass)')) {
+                                node.classList.add('filter-open');
                             } else if (node.classList.contains('module-section')) {
                                 node.classList.add('filter-open');
                                 shown.add(node);
@@ -534,7 +538,9 @@ private extension NavigationSidebarBuilder {
     /// using `data-nesting-index` for visual hierarchy via CSS indentation.  Like
     /// swift-docc-render, a group heading has the same nesting index as the rows
     /// listed under it.  Children are wrapped in a `.nav-children-wrapper` list item
-    /// for CSS-based disclosure.
+    /// for CSS-based disclosure, and the rows of a group in a list item with the class
+    /// ``groupWrapperClass`` after its heading, so that a theme can let the reader
+    /// collapse the group.
     ///
     /// - Parameters:
     ///   - nodes: The navigation nodes to render.
@@ -542,26 +548,50 @@ private extension NavigationSidebarBuilder {
     /// - Returns: HTML string with flat list items.
     mutating func buildFlatNavigationList(_ nodes: [NavigationNode], nestingLevel: Int) -> String {
         var html = ""
-        for node in nodes {
-            html += node.isGroupMarker
-                ? buildGroupMarker(node, nestingLevel: nestingLevel)
-                : buildNavigatorItemWithChildren(node, nestingLevel: nestingLevel)
+        var index = nodes.startIndex
+        while index < nodes.endIndex {
+            let node = nodes[index]
+            index += 1
+            guard node.isGroupMarker else {
+                html += buildNavigatorItemWithChildren(node, nestingLevel: nestingLevel)
+                continue
+            }
+            let end = nodes[index...].firstIndex(where: \.isGroupMarker) ?? nodes.endIndex
+            let members = Array(nodes[index..<end])
+            index = end
+            html += buildGroupMarker(node, nestingLevel: nestingLevel, hasMembers: !members.isEmpty)
+            if !members.isEmpty {
+                html += "\n<li class=\"\(Self.groupWrapperClass)\"><ul class=\"navigator-tree\">"
+                html += buildFlatNavigationList(members, nestingLevel: nestingLevel)
+                html += "\n</ul></li>"
+            }
         }
         return html
     }
 
     /// Builds a group heading row.
     ///
-    /// Group headings are plain, non-interactive rows (swift-docc-render renders them
-    /// as `h3.leaf-link` in an `.is-group` row) followed by the rows they group.
+    /// Group headings are non-interactive rows in swift-docc-render (an `h3.leaf-link`
+    /// in an `.is-group` row), followed here by the wrapper of the rows they group.  A
+    /// heading with rows also has a disclosure checkbox and a chevron like an
+    /// expandable row, which the base stylesheet hides; a theme that shows them lets
+    /// the reader collapse the group.
     ///
     /// - Parameters:
     ///   - node: The group marker node.
     ///   - nestingLevel: The nesting level of the group and its rows.
+    ///   - hasMembers: Whether rows follow the heading.
     /// - Returns: The HTML for the group heading.
-    func buildGroupMarker(_ node: NavigationNode, nestingLevel: Int) -> String {
-        "\n<li class=\"navigator-card-item is-group\" data-nesting-index=\"\(nestingLevel)\">"
-            + "<div class=\"head-wrapper\"><div class=\"depth-spacer\"></div>"
+    mutating func buildGroupMarker(_ node: NavigationNode, nestingLevel: Int, hasMembers: Bool) -> String {
+        var html = "\n<li class=\"navigator-card-item is-group\" data-nesting-index=\"\(nestingLevel)\">"
+        var toggle = ""
+        if hasMembers {
+            let checkboxId = nextCheckboxId()
+            html += "<input type=\"checkbox\" id=\"\(checkboxId)\" class=\"disclosure-checkbox\">"
+            toggle = "<label for=\"\(checkboxId)\" class=\"tree-toggle\" aria-label=\"Toggle \(escapeHTML(node.title))\">"
+                + chevron() + "</label>"
+        }
+        return html + "<div class=\"head-wrapper\"><div class=\"depth-spacer\">\(toggle)</div>"
             + "<div class=\"title-container\"><h3 class=\"leaf-link\">\(escapeHTML(node.title))</h3></div></div></li>"
     }
 
@@ -638,6 +668,9 @@ private extension NavigationSidebarBuilder {
 // MARK: - Badges
 
 extension NavigationSidebarBuilder {
+    /// The class of the list item that holds the rows of a group, after its heading.
+    static let groupWrapperClass = "nav-group-wrapper"
+
     /// Returns the badge after the title of a deprecated or beta row, like
     /// swift-docc-render's `NavigatorCardItem`.
     ///

@@ -171,6 +171,22 @@ struct NavigatorRowTests {
         #expect(html.contains("class=\"navigator-card-item\" data-nesting-index=\"1\""))
     }
 
+    @Test("Groups hold their rows and carry a collapsed state of their own")
+    func collapsibleGroups() throws {
+        var builder = NavigationSidebarBuilder(navigationIndex: index())
+        let html = builder.buildNavigationTree()
+        // The heading has a checkbox and a chevron, followed by a wrapper with its rows
+        let heading = try #require(html.range(of: "<li class=\"navigator-card-item is-group\" data-nesting-index=\"0\">"))
+        let rest = String(html[heading.upperBound...])
+        #expect(rest.hasPrefix("<input type=\"checkbox\" id=\"nav-"))
+        #expect(rest.contains("class=\"disclosure-checkbox\"><div class=\"head-wrapper\"><div class=\"depth-spacer\"><label for=\"nav-"))
+        #expect(rest.contains("aria-label=\"Toggle Essentials\""))
+        let wrapper = try #require(rest.range(of: "</li>\n<li class=\"\(NavigationSidebarBuilder.groupWrapperClass)\"><ul class=\"navigator-tree\">"))
+        #expect(rest[..<wrapper.lowerBound].contains("<h3 class=\"leaf-link\">Essentials</h3>"))
+        // The grouped rows follow inside the wrapper
+        #expect(rest[wrapper.upperBound...].hasPrefix("\n<li class=\"navigator-card-item"))
+    }
+
     @Test("Chevrons are labels filling the depth spacer")
     func chevronLabel() {
         var builder = NavigationSidebarBuilder(navigationIndex: index())

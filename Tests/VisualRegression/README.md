@@ -83,7 +83,7 @@ example, an unreadable colour, or a narrow layout that hides the content).  Each
 entry in `deviations` names:
 
 - `role`: a role from `roles.json`, or `*` for every role;
-- `property`: a measured property, `presence`, `box.x`, `box.width`, or `*` for
+- `property`: a measured property, `presence`, `box.x`, `box.width`, `box.height`, or `*` for
   every property;
 - optionally `pages` (page identifiers from `pages.json`), `viewports` (such as
   `390x844`) and `schemes` (`light`, `dark`), which restrict the entry to those
@@ -141,7 +141,10 @@ measures an already rendered reference site.
   A selector may reach into the embedded sidebar with ` >>> ` (frame selector, then
   selector inside the frame).  `kinds` limits a role to page kinds, `pick:
   "in-viewport"` measures the first match visible in the viewport, `geometry:
-  true` also compares the horizontal position and width (within the tolerance),
+  true` also compares the horizontal position and width (within the tolerance), `height:
+  true` the height, `properties` limits the compared computed style properties
+  (for a role whose elements differ in structure between the renderers), `pages` limits
+  the role to some pages,
   and `pseudo` (for example `"::before"`) measures that pseudo-element of the match.
 - `measure.js`: the function evaluated in the page.
 - `measure.mjs`: measures a site (`--probe` prints how many elements each role

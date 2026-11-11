@@ -152,6 +152,32 @@ try {
           }
           return null;
         });
+        // A group heading whose chevron is shown collapses and expands its rows
+        const groupToggle = await frame.evaluateHandle(() => {
+          for (const heading of document.querySelectorAll('li.navigator-card-item.is-group')) {
+            const label = heading.querySelector('.tree-toggle');
+            const wrapper = heading.nextElementSibling;
+            if (!label || !wrapper || !wrapper.querySelector('.navigator-card-item')) continue;
+            const box = label.getBoundingClientRect();
+            const hit = box.height > 0 && document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2);
+            if (hit && label.contains(hit) && box.top >= 0 && box.bottom <= innerHeight) {
+              heading.setAttribute('data-nojs-group', '');
+              return label;
+            }
+          }
+          return null;
+        });
+        if (await groupToggle.evaluate((element) => element !== null)) {
+          const rowsShown = () => frame.evaluate(() =>
+            document.querySelector('[data-nojs-group]').nextElementSibling.querySelector('.navigator-card-item').getClientRects().length > 0);
+          const before = await rowsShown();
+          await groupToggle.asElement().click();
+          await waitForSettledPage(tab);
+          const collapsed = !(await rowsShown());
+          await groupToggle.asElement().click();
+          await waitForSettledPage(tab);
+          checks.groupCollapse = before && collapsed && (await rowsShown());
+        }
         if (await toggle.evaluate((element) => element !== null)) {
           const wrapperHeight = () => frame.evaluate(() =>
             document.querySelector('[data-nojs-check]').nextElementSibling.getBoundingClientRect().height);

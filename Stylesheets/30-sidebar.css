@@ -437,6 +437,26 @@
     transform: rotate(90deg);
 }
 
+/*
+ * The rows of a group follow its heading in a wrapper, which lays them out as rows of
+ * the list.  Like swift-docc-render, groups cannot be collapsed: the heading's
+ * checkbox and chevron are hidden.  A theme that shows them lets the reader collapse
+ * the group by checking the checkbox.
+ */
+.nav-group-wrapper,
+.nav-group-wrapper > .navigator-tree {
+    display: contents;
+}
+
+.navigator-card-item.is-group > .disclosure-checkbox,
+.navigator-card-item.is-group .tree-toggle {
+    display: none;
+}
+
+.navigator-card-item.is-group:has(> .disclosure-checkbox:checked) + .nav-group-wrapper:not(.filter-open) {
+    display: none;
+}
+
 /* Rows */
 .navigator-card-item {
     --nav-head-wrapper-left-space: 20px;

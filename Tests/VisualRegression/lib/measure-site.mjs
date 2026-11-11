@@ -48,7 +48,7 @@ export async function measureSite(siteDirectory, side, options = {}) {
         } catch { /* recorded as missing roles */ }
         await waitForSettledPage(tab, { minimum: config.settleMilliseconds[side] });
         const pageRoles = Object.fromEntries(
-          Object.entries(roles).filter(([, role]) => !role.kinds || role.kinds.includes(page.kind))
+          Object.entries(roles).filter(([, role]) => (!role.kinds || role.kinds.includes(page.kind)) && (!role.pages || role.pages.includes(page.id)))
         );
         const measurement = await tab.evaluate(
           `(${measureSource})(${JSON.stringify(pageRoles)}, ${JSON.stringify(side)}, ${JSON.stringify(config.properties)})`

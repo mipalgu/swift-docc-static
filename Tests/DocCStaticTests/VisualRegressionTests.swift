@@ -83,7 +83,7 @@ struct AcceptedDeviationTests {
         let measured = try #require(harness["properties"] as? [String])
         let variants = try #require(harness["variants"] as? [String])
         let pages = Set(FixturePage.all.map(\.id))
-        let properties = Set(measured + ["*", "presence", "box.x", "box.width"])
+        let properties = Set(measured + ["*", "presence", "box.x", "box.width", "box.height"])
         let viewports = Set(variants.compactMap { $0.split(separator: "/").first.map(String.init) })
         let schemes = Set(variants.compactMap { $0.split(separator: "/").last.map(String.init) })
         for deviation in try VisualRegressionHarness.acceptedDeviations(for: theme.rawValue) {
@@ -173,6 +173,10 @@ struct VisualRegressionTests {
                 )
             }
         }
+        // Like the main branch, classic lets the reader collapse nested groups; like
+        // swift-docc-render, the default theme shows no group chevrons
+        #expect(report.contains { $0.checks["groupCollapse"] != nil } == (theme == .classic),
+                "group headings of \(theme.rawValue) do not collapse as expected")
         let documentation = Set(FixturePage.all.filter { $0.kind == "documentation" }.map(\.id))
         for page in report where documentation.contains(page.page) {
             #expect(page.checks["sidebar"] == true, "\(page.page) has no working sidebar")

@@ -195,6 +195,54 @@
    "documentation"
   ]
  },
+ "sidebarExpandableRow": {
+  "static": "iframe.sidebar-frame >>> .navigator-card-item.expandable:not(:target):not(:has(+ .nav-children-wrapper :target))",
+  "main": ".sidebar-item.expandable:has(> .disclosure-checkbox:not(:checked))",
+  "vue": ".navigator-card-item:has(.tree-toggle)",
+  "pick": "in-viewport",
+  "height": true,
+  "kinds": [
+   "documentation"
+  ]
+ },
+ "sidebarCurrentChildren": {
+  "static": "iframe.sidebar-frame >>> .navigator-card-item:target + .nav-children-wrapper",
+  "main": ".sidebar-item.expandable.selected",
+  "vue": null,
+  "geometry": true,
+  "properties": [
+   "backgroundColor"
+  ],
+  "pages": [
+   "structure",
+   "class",
+   "enumeration",
+   "protocol"
+  ],
+  "kinds": [
+   "documentation"
+  ]
+ },
+ "sidebarGroupChevron": {
+  "static": "iframe.sidebar-frame >>> .navigator-card-item.is-group:not([data-nesting-index='0']) .tree-toggle",
+  "main": ".nav-group-header > .disclosure-chevron",
+  "vue": ".navigator-card-item.is-group .tree-toggle",
+  "pick": "in-viewport",
+  "geometry": true,
+  "kinds": [
+   "documentation"
+  ]
+ },
+ "sidebarNestedGroupTitle": {
+  "static": "iframe.sidebar-frame >>> .navigator-card-item.is-group:not([data-nesting-index='0']) .leaf-link",
+  "main": ".nav-group-header .group-title",
+  "vue": ".navigator-card-item.is-group:not([data-nesting-index='0']) .leaf-link",
+  "pick": "in-viewport",
+  "geometry": true,
+  "kinds": [
+   "documentation"
+  ]
+ },
  "sidebarFilter": {
   "static": "iframe.sidebar-frame >>> .navigator .filter-wrapper",
   "main": ".sidebar-filter",

@@ -174,14 +174,16 @@ export function compareMeasurements(golden, actual, roles, config) {
           continue;
         }
         if (!shownExpected) continue;
-        for (const property of config.properties) {
+        for (const property of roles[role].properties ?? config.properties) {
           const want = reference.style[property];
           const got = measured.style[property];
           if (want === undefined || want === got || ignorable(property, reference.style, measured.style)) continue;
           record(page, variant, role, property, want, got);
         }
-        if (roles[role].geometry && reference.box && measured.box) {
-          for (const key of ['x', 'width']) {
+        if ((roles[role].geometry || roles[role].height) && reference.box && measured.box) {
+          const keys = [...(roles[role].geometry ? ['x', 'width'] : []), ...(roles[role].height ? ['height'] : [])];
+          for (const key of keys) {
+            if (reference.box[key] === undefined || measured.box[key] === undefined) continue;
             if (Math.abs(reference.box[key] - measured.box[key]) > config.geometryTolerance) {
               record(page, variant, role, `box.${key}`, reference.box[key], measured.box[key]);
             }
