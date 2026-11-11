@@ -224,8 +224,9 @@ public extension IndexPageBuilder {
         html += buildFooter()
         html += "\n    </div>"
 
-        // Add search scripts if enabled
-        if configuration.includeSearch {
+        // The embedded sidebar document loads the search scripts for its filter field;
+        // without it, the scripts offer search on this page
+        if configuration.includeSearch && !embedsSidebar {
             html += """
 
             <script src="js/lunr.min.js" defer></script>

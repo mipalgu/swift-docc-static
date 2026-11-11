@@ -169,6 +169,22 @@ struct IndexPageBuilderTests {
         #expect(html.contains("js/search.js"))
     }
 
+    @Test("Index page with the shared sidebar leaves search to the sidebar document")
+    func indexPageWithSidebarLeavesSearchToSidebar() {
+        let config = Configuration(
+            packageDirectory: URL(fileURLWithPath: "/tmp/package"),
+            outputDirectory: URL(fileURLWithPath: "/tmp/docs"),
+            includeSearch: true
+        )
+        let builder = IndexPageBuilder(configuration: config, embedsSidebar: true)
+        let html = builder.buildIndexPage(modules: [])
+
+        // The embedded sidebar document loads the search scripts for its filter field
+        #expect(html.contains("class=\"\(SidebarDocument.frameClass)\""))
+        #expect(!html.contains("js/lunr.min.js"))
+        #expect(!html.contains("js/search.js"))
+    }
+
     @Test("Index page excludes search form when disabled")
     func indexPageWithoutSearch() {
         let config = Configuration(
