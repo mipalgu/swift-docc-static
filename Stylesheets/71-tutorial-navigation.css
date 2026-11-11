@@ -55,7 +55,7 @@
     width: 980px;
     height: 1px;
     z-index: 1;
-    background-color: var(--color-nav-keyline, rgba(0, 0, 0, 0.2));
+    background-color: var(--tutorial-nav-keyline, var(--color-nav-keyline, rgba(0, 0, 0, 0.2)));
 }
 
 .tutorial .nav--solid-background .nav__background {
@@ -68,7 +68,7 @@
 }
 
 .tutorials-overview .theme-dark .nav__background::after {
-    background-color: var(--color-nav-dark-keyline, rgba(66, 66, 66, 0.95));
+    --color-nav-keyline: var(--color-nav-dark-keyline, rgba(66, 66, 66, 0.95));
 }
 
 /* Once the page scrolls, the bar sticks: a blurred background and a full-width keyline */
@@ -83,7 +83,7 @@
 @keyframes tutorial-nav-keyline-stuck {
     to {
         width: 100%;
-        background-color: var(--tutorial-nav-stuck-keyline);
+        --tutorial-nav-keyline: var(--tutorial-nav-stuck-keyline);
     }
 }
 

@@ -58,7 +58,7 @@
     height: 100%;
     z-index: 1;
     transition: background-color 0s ease-in;
-    background-color: var(--color-nav-background, none);
+    background-color: var(--nav-sticking-background, var(--color-nav-background, none));
 }
 
 .nav__background::after {
@@ -71,7 +71,7 @@
     width: 980px;
     height: 1px;
     z-index: 1;
-    background-color: var(--color-nav-keyline);
+    background-color: var(--nav-sticking-keyline, var(--color-nav-keyline));
 }
 
 .nav--fullwidth-border .nav__background::after {
@@ -84,7 +84,11 @@
     }
 }
 
-/* Translucent background once the page has scrolled */
+/*
+ * Translucent background once the page has scrolled.  The animations set custom
+ * properties rather than the colours themselves, so that the light-dark() colours
+ * they name follow a colour scheme chosen after the page has loaded.
+ */
 @supports (animation-timeline: scroll()) {
     .nav__background {
         animation: nav-is-sticking linear both;
@@ -100,14 +104,14 @@
 
     @keyframes nav-is-sticking {
         to {
-            background-color: var(--color-nav-uiblur-stuck);
+            --nav-sticking-background: var(--color-nav-uiblur-stuck);
             backdrop-filter: saturate(180%) blur(20px);
         }
     }
 
     @keyframes nav-keyline-is-sticking {
         to {
-            background-color: var(--color-nav-sticking-expanded-keyline);
+            --nav-sticking-keyline: var(--color-nav-sticking-expanded-keyline);
         }
     }
 }

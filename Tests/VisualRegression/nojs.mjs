@@ -9,6 +9,10 @@
 // title is visible) and, for documentation pages, whether the embedded sidebar loads,
 // whether the current page's row is the highlighted target row and is visible, and
 // whether a collapsed row can be expanded and collapsed again by clicking its chevron.
+// On every page with a colour scheme toggle, the check also chooses Light while the
+// system appearance is dark (and Dark while it is light), scrolling to the toggle as a
+// reader would, and records whether the page then shows the same colours as when that
+// scheme is chosen under a matching system appearance.
 // The results are printed, and written as JSON with --json; the exit status is 1 if a
 // check fails.
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
@@ -28,6 +32,38 @@ const config = JSON.parse(readFileSync(join(here, 'harness.json'), 'utf8'));
 const pages = JSON.parse(readFileSync(join(here, 'pages.json'), 'utf8')).filter((page) => page.static);
 const [width, height] = config.variants[0].split('/')[0].split('x').map(Number);
 const titleSelector = 'main h1, .tutorial-hero h1, .overview-hero h1, .index-header h1';
+const schemeSelectors = ['body', 'nav', '.nav__background', '.nav__background::after', 'main', 'h1', '.hero',
+  '.code-listing', '.footer'];
+const toggleLabel = (scheme) => `.color-scheme-toggle label:has(input[value="${scheme}"])`;
+
+// Returns the colours of the first element matching each of the scheme selectors.
+async function sampleColours(tab) {
+  return tab.evaluate((selectors) => selectors.map((selector) => {
+    const [elementSelector, pseudo] = selector.split(/(?=::)/);
+    const element = document.querySelector(elementSelector);
+    if (!element) return null;
+    const style = getComputedStyle(element, pseudo);
+    return [style.color, style.backgroundColor, style.borderTopColor];
+  }), schemeSelectors);
+}
+
+// Loads a page in a context of the given system appearance, chooses a scheme with the
+// toggle and returns the colours (or undefined without a toggle).
+async function coloursOf(url, systemScheme, choice) {
+  const context = await browser.newContext({ viewport: { width, height }, javaScriptEnabled: false,
+    colorScheme: systemScheme, reducedMotion: 'reduce' });
+  try {
+    const tab = await context.newPage();
+    await tab.goto(url, { waitUntil: 'load' });
+    const label = tab.locator(toggleLabel(choice));
+    if ((await label.count()) === 0 || !(await label.first().isVisible())) return undefined;
+    await label.first().click();
+    await tab.waitForTimeout(600);
+    return await sampleColours(tab);
+  } finally {
+    await context.close();
+  }
+}
 
 const server = await serve(resolve(args.site));
 const browser = await launchBrowser();
@@ -86,8 +122,15 @@ try {
         }
       }
     }
-    results.push({ page: page.id, checks });
     await tab.close();
+    const url = server.base + page.static;
+    for (const [system, choice] of [['dark', 'light'], ['light', 'dark']]) {
+      const chosen = await coloursOf(url, system, choice);
+      if (chosen === undefined) continue;
+      const reference = await coloursOf(url, choice, choice);
+      checks[`${choice}Choice`] = JSON.stringify(chosen) === JSON.stringify(reference);
+    }
+    results.push({ page: page.id, checks });
   }
   await context.close();
 } finally {

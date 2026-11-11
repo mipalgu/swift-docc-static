@@ -113,7 +113,8 @@ measures an already rendered reference site.
   matches on each page, which helps when editing `roles.json`).
 - `run.mjs`, `references.mjs`, `nojs.mjs`, `check.mjs`: see above; `nojs.mjs`
   checks that every page type renders its content, the sidebar (with the current row
-  highlighted) and working expand and collapse with JavaScript disabled.
+  highlighted), working expand and collapse, and a Light or Dark choice in the footer
+  that overrides the system appearance, all with JavaScript disabled.
 - `lib/`: the static file server, browser launcher, comparison and storage helpers.
 - `golden/`: golden data, stored compactly (each page's first variant as differences
   from the first earlier page with the same role, other variants as differences from

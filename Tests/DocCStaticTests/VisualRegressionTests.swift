@@ -98,6 +98,14 @@ struct VisualRegressionTests {
                 #expect(passed, "\(check) fails on \(page.page) without JavaScript for \(theme.rawValue)")
             }
         }
+        for page in report {
+            for scheme in [ColourSchemeToggle.Scheme.light, .dark] {
+                #expect(
+                    page.checks["\(scheme.rawValue)Choice"] == true,
+                    "\(page.page) does not show the \(scheme.label) colours when chosen without JavaScript"
+                )
+            }
+        }
         let documentation = Set(FixturePage.all.filter { $0.kind == "documentation" }.map(\.id))
         for page in report where documentation.contains(page.page) {
             #expect(page.checks["sidebar"] == true, "\(page.page) has no working sidebar")
