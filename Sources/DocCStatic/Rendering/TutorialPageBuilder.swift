@@ -510,6 +510,10 @@ extension HTMLPageBuilder {
 extension HTMLPageBuilder {
     /// Builds the hero of a tutorial page.
     ///
+    /// The background shows the light variant of the background image, like
+    /// swift-docc-render; a dark variant is offered to themes in
+    /// ``TutorialDocument/heroBackgroundDarkProperty``.
+    ///
     /// - Parameters:
     ///   - hero: The hero section.
     ///   - renderNode: The render node of the tutorial.
@@ -531,9 +535,13 @@ extension HTMLPageBuilder {
         """
         if let background = hero.backgroundImage,
            let image = references[background.identifier] as? ImageReference {
-            let url = assetSourceSets(image.asset, depth: depth).light.components(separatedBy: " ").first ?? ""
+            let sourceSets = assetSourceSets(image.asset, depth: depth)
+            let url = sourceSets.light.components(separatedBy: " ").first ?? ""
+            let darkURL = sourceSets.dark?.components(separatedBy: " ").first ?? ""
+            let darkProperty = darkURL.isEmpty
+                ? "" : "; \(TutorialDocument.heroBackgroundDarkProperty): url(&quot;\(escapeHTML(darkURL))&quot;)"
             if !url.isEmpty {
-                html += "\n                <div class=\"bg\" style=\"background-image: url(&quot;\(escapeHTML(url))&quot;)\"></div>"
+                html += "\n                <div class=\"bg\" style=\"background-image: url(&quot;\(escapeHTML(url))&quot;)\(darkProperty)\"></div>"
             }
         }
         html += """

@@ -142,6 +142,23 @@
     background-position: right center;
 }
 
+/* The dark variant of the background image, where there is one, suits the dark panel */
+.tutorial .tutorial-hero .bg::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: var(--tutorial-hero-background-dark, none) right center / cover no-repeat var(--color-tutorial-hero-background);
+}
+
+.tutorial .tutorial-hero .bg:not([style*="--tutorial-hero-background-dark"])::before {
+    content: none;
+}
+
+.tutorial .tutorial-hero .col {
+    flex: 1 1 auto;
+    max-width: none;
+}
+
 .tutorial .tutorial-hero .row {
     position: relative;
     z-index: 2;
@@ -717,6 +734,10 @@
 
     .tutorial nav.nav .nav-title-content .title {
         font-size: 0.8125rem;
+    }
+
+    .tutorial nav.nav .nav-menu {
+        display: none;
     }
 
     .tutorial .tutorial-hero .hero {

@@ -44,6 +44,10 @@ body.sidebar-document .navigator {
 }
 
 /* Modules: a chevron and the module's name in the code font */
+.navigator .module-section {
+    margin-bottom: 0.5rem;
+}
+
 .module-header {
     display: flex;
     align-items: center;

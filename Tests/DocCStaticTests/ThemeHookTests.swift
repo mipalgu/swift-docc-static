@@ -147,6 +147,30 @@ struct ThemeHookTests {
         #expect(css.contains(".topic-list .\(TutorialDocument.topicAbstractClass) {\n    display: none;\n}"))
     }
 
+    @Test("A tutorial's introduction offers the dark variant of its background image to themes")
+    func heroBackgroundDarkVariant() {
+        let builder = HTMLPageBuilder(configuration: Configuration(
+            packageDirectory: FileManager.default.temporaryDirectory,
+            outputDirectory: FileManager.default.temporaryDirectory
+        ))
+        var asset = DataAsset()
+        asset.register(URL(string: "/images/M/hero.png")!, with: DataTraitCollection(userInterfaceStyle: .light, displayScale: .standard))
+        asset.register(URL(string: "/images/M/hero~dark.png")!, with: DataTraitCollection(userInterfaceStyle: .dark, displayScale: .standard))
+        let identifier = RenderReferenceIdentifier("hero.png")
+        var hero = IntroRenderSection(title: "Drawing")
+        hero.backgroundImage = identifier
+        let node = RenderNode(
+            identifier: ResolvedTopicReference(bundleID: "m", path: "/tutorials/m/drawing", sourceLanguage: .swift),
+            kind: .tutorial
+        )
+        let html = builder.tutorialHero(
+            hero, renderNode: node, timeline: "--t",
+            references: [identifier.identifier: ImageReference(identifier: identifier, imageAsset: asset)], depth: 3
+        )
+        let property = TutorialDocument.heroBackgroundDarkProperty
+        #expect(html.contains("<div class=\"bg\" style=\"background-image: url(&quot;../../../images/M/hero.png&quot;); \(property): url(&quot;../../../images/M/hero~dark.png&quot;)\"></div>"))
+    }
+
     @Test("The base stylesheet hides the navigation bar title icon")
     func navigationTitleIconIsHiddenByDefault() {
         let css = DocCStylesheet.generate(theme: ThemeConfiguration(builtInTheme: .default))

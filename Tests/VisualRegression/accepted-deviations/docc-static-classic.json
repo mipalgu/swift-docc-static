@@ -57,6 +57,22 @@
    "reason": "On narrow viewports the footer is not offset by the closed navigator, unlike the broken narrow layout of the main branch (see the presence deviation)."
   },
   {
+   "role": "*",
+   "property": "paddingLeft",
+   "viewports": [
+    "390x844"
+   ],
+   "reason": "On narrow viewports the introduction and the content are inset by 20px rather than 48px, to leave room for the text in the working narrow layout (the main branch's narrow layout was broken, see the presence deviation)."
+  },
+  {
+   "role": "*",
+   "property": "paddingRight",
+   "viewports": [
+    "390x844"
+   ],
+   "reason": "On narrow viewports the introduction and the content are inset by 20px rather than 48px, to leave room for the text in the working narrow layout (the main branch's narrow layout was broken, see the presence deviation)."
+  },
+  {
    "role": "appearanceOption",
    "property": "fontFamily",
    "reason": "The main branch left its colour scheme buttons in the browser's default button font (Arial in Chrome); classic uses the page font, like the rest of the footer."

@@ -174,3 +174,69 @@ body.index-page .card .module-stats {
     font-size: 0.8rem;
     color: var(--color-figure-gray-secondary);
 }
+
+/* The introduction from the package's INDEX.md: a narrower, centred column */
+body.index-page .index-intro {
+    max-width: 800px;
+    margin: 0 auto 2rem;
+    padding: 1rem 0;
+    line-height: 1.6;
+}
+
+body.index-page .index-intro .content {
+    margin: 0;
+}
+
+body.index-page .index-intro .content > :not(ul, ol) {
+    padding-left: 0;
+    padding-right: 0;
+}
+
+body.index-page .index-intro p {
+    margin: 0 0 1rem;
+}
+
+body.index-page .index-intro h2 {
+    margin: 1.5rem 0 1rem;
+    padding-bottom: 0;
+    border-bottom: none;
+    font-size: 1.5rem;
+}
+
+body.index-page .index-intro h3 {
+    margin: 1.25rem 0 0.75rem;
+    font-size: 1.25rem;
+}
+
+body.index-page .index-intro :is(ul, ol) {
+    margin: 1rem 0;
+    padding-left: 1.5rem;
+}
+
+body.index-page .index-intro li {
+    margin-bottom: 0.5rem;
+}
+
+body.index-page .index-intro code {
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    background: var(--color-fill-secondary);
+    font-size: 0.9em;
+}
+
+body.index-page .index-intro pre {
+    overflow-x: auto;
+    margin: 1rem 0;
+    padding: 1rem 1.25rem;
+    border-radius: 12px;
+    background: var(--color-fill-secondary);
+    font-family: var(--typography-html-font-mono);
+    font-size: 0.8125rem;
+    line-height: 1.6;
+}
+
+body.index-page .index-intro pre code {
+    padding: 0;
+    background: none;
+    font-size: inherit;
+}

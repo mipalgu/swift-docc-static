@@ -114,6 +114,14 @@ public extension TutorialDocument {
     /// The class of the list of tutorials and articles of a chapter.
     static let topicListClass = "topic-list"
 
+    /// The custom property that holds the dark variant of the background image of a
+    /// tutorial's introduction, as a CSS `url()`.
+    ///
+    /// Like swift-docc-render, the introduction shows the light variant of its
+    /// background image; the property lets a theme show the dark variant instead.  It
+    /// is set only when the image has a dark variant.
+    static let heroBackgroundDarkProperty = "--tutorial-hero-background-dark"
+
     /// The class of the hidden abstract of a tutorial or article in a chapter's list,
     /// for themes that show it.
     static let topicAbstractClass = "topic-abstract"

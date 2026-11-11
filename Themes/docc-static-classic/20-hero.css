@@ -11,6 +11,7 @@
  * is the width of its content box.
  */
 .documentation-hero {
+    --classic-breadcrumbs-padding: 1rem;
     --classic-hero-width: calc(100cqw + var(--spacing-hero-padding-left) + var(--spacing-hero-padding-right));
     display: flex;
     justify-content: space-between;
@@ -51,9 +52,14 @@
     flex: 0 0 auto;
     width: 200px;
     height: 200px;
-    margin: 0 0 0 2rem;
+    margin: var(--classic-decoration-offset, 0) 0 0 2rem;
     color: var(--color-hero-decoration);
     opacity: 0.6;
+}
+
+/* Below the breadcrumbs, like the introduction's fill */
+.documentation-hero:has(.hierarchy) {
+    --classic-decoration-offset: calc(3 * var(--classic-breadcrumbs-padding) + var(--spacing-small-font-size) * var(--spacing-body-line-height) + 1px);
 }
 
 .documentation-hero .icon .background-icon {
@@ -82,8 +88,8 @@
     gap: 0.5rem;
     width: var(--classic-hero-width);
     box-sizing: border-box;
-    margin: 0 0 1rem;
-    padding: 1rem var(--spacing-hero-padding-right) 1rem var(--spacing-hero-padding-left);
+    margin: 0 0 var(--classic-breadcrumbs-padding);
+    padding: var(--classic-breadcrumbs-padding) var(--spacing-hero-padding-right) var(--classic-breadcrumbs-padding) var(--spacing-hero-padding-left);
     border-bottom: 1px solid var(--color-fill-gray);
     font-size: var(--spacing-small-font-size);
     line-height: var(--spacing-body-line-height);
@@ -94,7 +100,7 @@
 .documentation-hero .hierarchy::before {
     content: "";
     position: absolute;
-    inset: 0 0 -1rem;
+    inset: 0 0 calc(-1 * var(--classic-breadcrumbs-padding));
     z-index: -1;
     background: var(--color-fill);
 }

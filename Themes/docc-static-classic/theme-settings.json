@@ -45,6 +45,7 @@
       "technology-title-background-hover": "transparent",
       "navigator-item-selected": "rgba(0, 102, 204, 0.1)",
       "tutorial-hero-background": "#1d1d1f",
+      "tutorial-background": "var(--color-fill)",
       "tutorials-overview-fill": "var(--color-fill)",
       "navigator-filter-text": { "light": "#000000", "dark": "#f5f5f7" }
     },
