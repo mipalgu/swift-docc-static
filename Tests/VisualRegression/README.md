@@ -155,9 +155,11 @@ measures an already rendered reference site.
   `check.mjs`: see
   above; `nojs.mjs` checks that every page type renders its content, the sidebar (with the
   current row highlighted and in view below the title of its module), working expand and
-  collapse, breadcrumbs that follow the width of the content area when the navigator
-  closes, and a Light or Dark choice in the footer
-  that overrides the system appearance, all with JavaScript disabled; `loading.mjs` loads
+  collapse (of rows, and of groups where a theme shows their chevrons), breadcrumbs that
+  follow the width of the content area when the navigator closes, a quiz answer that
+  shows its justification (and whether a Submit button was needed), and a Light or Dark
+  choice in the footer that overrides the system appearance, all with JavaScript
+  disabled; `loading.mjs` loads
   every page repeatedly, with and without JavaScript and with stylesheets that arrive at
   once or late, and fails if a transition or a time-based animation starts while it
   loads (scroll-driven animations may start); `navigator.mjs` loads the documentation
