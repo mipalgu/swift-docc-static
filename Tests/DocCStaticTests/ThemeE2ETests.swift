@@ -67,11 +67,11 @@ struct ThemeE2ETests {
         let css = DocCStylesheet.generate(theme: .default)
 
         // Verify navigator card hover uses variable
-        #expect(css.contains(".navigator-card:hover"))
+        #expect(css.contains(".navigator-card-item:not(.is-group):hover .head-wrapper"))
         #expect(css.contains("background: var(--color-navigator-item-hover)"))
 
-        // Verify navigator card active/selected uses variable
-        #expect(css.contains(".navigator-card.active"))
+        // Verify the current page's row (the target row) uses variable
+        #expect(css.contains(".navigator-card-item:target .head-wrapper"))
         #expect(css.contains("background: var(--color-fill-gray-quaternary)"))
     }
 
@@ -89,12 +89,12 @@ struct ThemeE2ETests {
         let theme = ThemeConfiguration(accentColour: "#0066cc", includeDarkMode: true)
         let css = DocCStylesheet.generate(theme: theme)
 
-        // Verify dark mode section exists
-        #expect(css.contains("@media (prefers-color-scheme: dark)"))
+        // Verify the palette follows the colour scheme
+        #expect(css.contains("color-scheme: light dark"))
 
         // Verify dark mode colour overrides
-        #expect(css.contains("--color-fill-gray-quaternary: #424242"))
-        #expect(css.contains("--color-navigator-item-hover: rgba(0, 102, 255, 0.5)"))
+        #expect(css.contains("--color-fill-gray-quaternary: light-dark(#f0f0f0, #424242)"))
+        #expect(css.contains("--color-navigator-item-hover: light-dark(rgba(0, 0, 255, .05), rgba(0, 102, 255, .5))"))
     }
 
     @Test("Sidebar width respects theme settings")
@@ -105,8 +105,8 @@ struct ThemeE2ETests {
         let classicTheme = ThemeConfiguration(builtInTheme: .classic, includeDarkMode: true, customCSS: nil)
         let classicCSS = DocCStylesheet.generate(theme: classicTheme)
 
-        // Default theme uses 400px sidebar width matching docc-render LARGE_DEFAULT_WIDTH
-        #expect(defaultCSS.contains("--sidebar-width: var(--spacing-sidebar-width, 400px)"))
+        // Default theme uses docc-render's default width, kept between 30% and 40% of the viewport
+        #expect(defaultCSS.contains("--sidebar-width: var(--spacing-sidebar-width, clamp(calc(min(100vw, 1521px) * 0.3), 400px, calc(min(100vw, 1521px) * 0.4)))"))
 
         // Classic theme also uses the same variable pattern (theme can override via --spacing-sidebar-width)
         #expect(classicCSS.contains("--sidebar-width: var(--spacing-sidebar-width,"))
@@ -121,7 +121,7 @@ struct ThemeE2ETests {
 
             // Basic validation
             #expect(!css.isEmpty, "Theme \(theme) generated empty CSS")
-            #expect(css.contains(":root"), "Theme \(theme) missing :root selector")
+            #expect(css.contains("body {"), "Theme \(theme) missing body selector")
             #expect(css.contains("--color-fill:"), "Theme \(theme) missing colour variables")
         }
     }

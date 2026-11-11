@@ -77,14 +77,87 @@ public extension SidebarDocument {
     /// to the class names they use, so that the names are defined in one place.
     static var stylesheet: String {
         """
-        /* Embedded navigation document fills the sidebar container */
+        /* Embedded navigation document.  Beside the content it is fixed below the
+           navigation bar, so that selecting the current row through the URL fragment
+           never scrolls the page; where scroll timelines are supported, its bottom
+           follows the footer as the footer scrolls into view.  On narrow viewports
+           it fills the full-screen navigator. */
         .\(frameClass) {
-            flex: 1;
+            --footer-height: 65px;
             display: block;
-            width: 100%;
-            height: 100%;
             border: 0;
             background: var(--color-fill);
+            position: fixed;
+            top: 3.0588235294rem;
+            height: calc(100vh - 3.0588235294rem);
+            left: max(0px, (100vw - 1920px) / 2);
+            width: calc(var(--sidebar-width) - 1px);
+            z-index: 1;
+        }
+
+        @media only screen and (min-width: 1920px) {
+            .\(frameClass) {
+                left: calc(max(0px, (100vw - 1920px) / 2) + 1px);
+            }
+        }
+
+        @supports (animation-timeline: scroll()) {
+            .\(frameClass) {
+                animation: sidebar-frame-above-footer linear both;
+                animation-timeline: scroll(root block);
+                animation-range: calc(100% - var(--footer-height)) 100%;
+            }
+
+            @keyframes sidebar-frame-above-footer {
+                from {
+                    height: calc(100vh - 3.0588235294rem);
+                }
+
+                to {
+                    height: calc(100vh - 3.0588235294rem - var(--footer-height));
+                }
+            }
+        }
+
+        @supports not (animation-timeline: scroll()) {
+            .footer {
+                position: relative;
+                z-index: 2;
+                background: var(--color-fill);
+            }
+        }
+
+        /* A hidden navigator takes its embedded document out of the layout once
+           it has slid or narrowed out of view */
+        #\(HTMLPageBuilder.sidebarToggleIdentifier):checked ~ .documentation-layout .\(frameClass) {
+            display: none;
+        }
+
+        @media only screen and (min-width: 1024px) {
+            .\(frameClass) {
+                transition: width 0.3s ease-in, display 0.3s allow-discrete;
+            }
+
+            #\(HTMLPageBuilder.sidebarToggleIdentifier):checked ~ .documentation-layout .\(frameClass) {
+                width: 0;
+            }
+        }
+
+        @media only screen and (max-width: 1023px) {
+            .\(frameClass) {
+                position: static;
+                flex: 1 1 auto;
+                min-height: 0;
+                width: 100%;
+                height: auto;
+                animation: none;
+                display: none;
+                transition: display var(--nav-transition-duration, 0.15s) allow-discrete;
+            }
+
+            #\(HTMLPageBuilder.sidebarToggleIdentifier):checked ~ .documentation-layout .\(frameClass) {
+                display: block;
+            }
         }
 
         /* Standalone navigation document shown inside the embedded frame */
@@ -94,16 +167,9 @@ public extension SidebarDocument {
             background: var(--color-fill);
         }
 
-        body.\(documentClass) .sidebar {
-            position: fixed;
-            top: 0;
-            right: 0;
-            bottom: 0;
-            left: 0;
-            width: auto;
-            border-right: none;
-            transform: none;
-            transition: none;
+        html:has(> body.\(documentClass)),
+        body.\(documentClass) {
+            height: 100%;
         }
 
         """
@@ -181,6 +247,12 @@ public extension SidebarDocument {
 
     /// Builds the sidebar container that embeds the shared document in a page.
     ///
+    /// The container mirrors swift-docc-render's adjustable sidebar (`.sidebar >
+    /// .aside > .documentation-layout-aside`).  Above the embedded document it holds
+    /// the heading and close button that the navigator shows when it opens as a
+    /// full-screen overlay on narrow viewports; the close button is a label for the
+    /// page's navigator toggle (``HTMLPageBuilder/sidebarToggleIdentifier``).
+    ///
     /// - Parameters:
     ///   - path: The documentation path of the page.
     ///   - depth: The number of directories between the output root and the page.
@@ -190,10 +262,30 @@ public extension SidebarDocument {
         if let identifier = targetIdentifier(forPagePath: path) {
             source += "#" + identifier
         }
-        return """
+        return Self.containerMarkup(
+            content: "<iframe class=\"\(Self.frameClass)\" title=\"\(escapeHTML(Self.frameTitle))\" src=\"\(escapeHTML(source))\"></iframe>"
+        )
+    }
 
-                <nav class="sidebar" aria-label="\(escapeHTML(Self.frameTitle))">
-                    <iframe class="\(Self.frameClass)" title="\(escapeHTML(Self.frameTitle))" src="\(escapeHTML(source))"></iframe>
+    /// Wraps navigator content in the sidebar container of a page.
+    ///
+    /// - Parameter content: The navigator: the embedded document, or an inline fallback.
+    /// - Returns: The HTML for the sidebar container.
+    static func containerMarkup(content: String) -> String {
+        """
+
+                <nav class="sidebar" aria-label="\(escapeHTML(frameTitle))">
+                    <div class="aside">
+                        <div class="documentation-layout-aside">
+                            <div class="head-inner">
+                                <h2 class="nav-title">Documentation</h2>
+                                <label for="\(HTMLPageBuilder.sidebarToggleIdentifier)" class="close-card" aria-label="Close Documentation Navigator">
+                                    <svg class="close-icon svg-icon" viewBox="0 0 14 14" aria-hidden="true"><path d="M12.73,0l1.27,1.27-5.74,5.73,5.72,5.72-1.27,1.27-5.72-5.72L1.28,13.99,.01,12.72,5.72,7.01,0,1.28,1.27,.01,6.99,5.73,12.73,0Z"/></svg>
+                                </label>
+                            </div>
+                            \(content)
+                        </div>
+                    </div>
                 </nav>
         """
     }

@@ -121,8 +121,8 @@ struct ThemeDOMStructureTests {
     static let required: [String: [String]] = [
         "landing": ["class=\"index-header\"", "class=\"module-card\"", "<footer"],
         "documentation": [
-            "class=\"documentation-nav\"", "<iframe class=\"\(SidebarDocument.frameClass)\"",
-            "class=\"documentation-hero", "<h1>", "class=\"primary-content-container\"", "<footer",
+            "documentation-nav", "<iframe class=\"\(SidebarDocument.frameClass)\"",
+            "class=\"documentation-hero", "<h1 class=\"title\">", "class=\"doc-content", "<footer",
         ],
         "tutorial": ["<h1", "<footer"],
         "module": ["class=\"contenttable", "id=\"topics\""],
@@ -136,8 +136,9 @@ struct ThemeDOMStructureTests {
         "operator": ["<section class=\"declaration\"", "class=\"parameters\""],
         "nested": ["<section class=\"declaration\"", "id=\"topics\""],
         "article": [
-            "class=\"code-listing\"", "<table", "<img", "<ol", "<ul", "<code>",
-            "aside note", "aside tip", "aside important", "aside warning", "aside experiment",
+            "class=\"code-listing\"", "<table", "<img", "<ol", "<ul", "<code class=\"inline-code\">",
+            "<aside class=\"note\"", "<aside class=\"tip\"", "<aside class=\"important\"",
+            "<aside class=\"warning\"", "<aside class=\"experiment\"",
         ],
         "tutorial-page": ["class=\"tutorial-hero\"", "class=\"tutorial-section\"", "class=\"step-card\"", "class=\"tutorial-assessments\""],
         "tutorialsOverview": ["class=\"overview-hero\"", "class=\"tutorial-card\""],

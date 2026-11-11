@@ -70,8 +70,8 @@ struct ThemeSpecComplianceTests {
             if let navigatorItemHover = colors["navigator-item-hover"] {
                 switch navigatorItemHover {
                 case .lightDark(let light, let dark):
-                    #expect(light == "rgba(51, 102, 255, 0.05)",
-                            "navigator-item-hover light mode should be rgba(51, 102, 255, 0.05)")
+                    #expect(light == "rgba(0, 0, 255, 0.05)",
+                            "navigator-item-hover light mode should be rgba(0, 0, 255, 0.05)")
                     #expect(dark == "rgba(0, 102, 255, 0.5)",
                             "navigator-item-hover dark mode should be rgba(0, 102, 255, 0.5)")
                 case .single:

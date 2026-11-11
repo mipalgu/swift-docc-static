@@ -1,117 +1,64 @@
-/* Main content */
+/*
+ * Documentation pages (swift-docc-render DocumentationTopic): hero, content column,
+ * primary content, content tables and the "On This Page" column.
+ *
+ * The content column and the "On This Page" column follow the width of the area
+ * beside the navigator through a container query, like swift-docc-render shows its
+ * "On This Page" column only when that area is wider than 1050px.
+ */
 .doc-topic {
-    flex: 1;
-    margin-left: var(--sidebar-width);
-    padding: 0;
-    max-width: calc(100% - var(--sidebar-width));
-    transition: margin-left 0.3s ease, max-width 0.3s ease;
-}
-
-/* Main content expanded when sidebar is collapsed */
-.sidebar-toggle-checkbox:checked ~ .documentation-layout .doc-topic {
-    margin-left: 0;
-    max-width: 100%;
-}
-
-/* Breadcrumbs - matches swift-docc-render hierarchy (ul inside hero) */
-.hierarchy {
     display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    list-style: none;
-    padding: 0;
-    margin: 0 0 var(--spacing-hierarchy-margin-bottom, 20px) 0;
-    font-size: var(--spacing-hierarchy-font-size, 14px);
-    line-height: var(--spacing-hierarchy-line-height, 20px);
-    color: var(--color-figure-gray);
+    flex-direction: column;
+    height: 100%;
 }
 
-.hierarchy li + li::before {
-    content: "/";
-    margin: 0 0.5rem;
-    color: var(--color-figure-gray-secondary);
+.adjustable-sidebar-width > .content {
+    container-type: inline-size;
+    container-name: doc-content;
 }
 
-.hierarchy a {
-    color: var(--color-link);
-    text-decoration: none;
+#app-main {
+    outline-style: none;
+    height: 100%;
 }
 
-.hierarchy a:hover {
-    text-decoration: underline;
-}
-
-/* Hero section */
+/* Hero */
 .documentation-hero {
-    color: var(--color-figure-gray);
+    color: var(--color-documentation-intro-figure, var(--color-figure-gray));
     overflow: hidden;
-    text-align: left;
     position: relative;
-    padding-right: 0;
+    padding-inline-end: var(--doc-hero-right-offset);
+    text-align: start;
     margin-bottom: var(--spacing-hero-margin-bottom, 0);
 }
 
 .documentation-hero::before {
     content: "";
-    background: var(--color-documentation-intro-fill, var(--color-fill-secondary));
+    background: var(--standard-accent-color, var(--color-documentation-intro-fill, var(--color-fill-tertiary)));
     position: absolute;
     width: 100%;
     height: 100%;
 }
 
-/* Symbol pages (non-module) get no background fill: matches docc-render
-   DocumentationHero.vue `documentation-hero--disabled` logic. */
-.documentation-hero--disabled {
-    background: none;
+.documentation-hero::after {
+    background: transparent;
+    opacity: 0.85;
+    width: 100%;
+    position: absolute;
+    content: "";
+    height: 100%;
+    inset-inline-start: 0;
+    top: 0;
 }
 
-.documentation-hero--disabled::before,
-.documentation-hero--disabled::after {
-    content: none;
-}
-
-.documentation-hero__content {
-    padding-top: var(--spacing-hero-padding-top, 40px);
-    padding-bottom: var(--spacing-hero-padding-bottom, 40px);
-    position: relative;
-    z-index: 1;
-    max-width: var(--spacing-hero-max-width, 980px);
-    margin-left: var(--spacing-hero-margin-left, auto);
-    margin-right: var(--spacing-hero-margin-right, auto);
-    padding-left: var(--spacing-hero-padding-left, 80px);
-    padding-right: var(--spacing-hero-padding-right, 80px);
-    box-sizing: border-box;
-}
-
-/* Technology icon for modules - background decoration */
 .documentation-hero .icon {
     position: absolute;
     margin-top: 10px;
-    margin-right: 25px;
-    right: 0;
+    margin-inline-end: 25px;
+    inset-inline-end: 0;
     width: 250px;
     height: calc(100% - 20px);
     box-sizing: border-box;
-}
-
-.background-icon {
-    color: var(--color-figure-gray-secondary);
-    display: block;
-    width: 250px;
-    height: auto;
-    opacity: 0.15;
-    mix-blend-mode: normal;
-    position: absolute;
-    top: 50%;
-    left: 0;
-    transform: translateY(-50%);
-    max-height: 100%;
-}
-
-.background-icon img,
-.background-icon svg {
-    width: 100%;
-    height: 100%;
 }
 
 @media only screen and (max-width: 735px) {
@@ -120,196 +67,615 @@
     }
 }
 
-.eyebrow,
-.doc-topic .eyebrow {
+.documentation-hero .background-icon {
+    color: var(--color-documentation-intro-accent, var(--color-figure-gray-secondary));
     display: block;
-    font-size: var(--spacing-eyebrow-font-size, 21px);
-    line-height: var(--spacing-eyebrow-line-height, 25px);
-    color: var(--color-figure-gray-secondary);
-    margin-bottom: var(--spacing-eyebrow-margin-bottom, 15px);
+    width: 250px;
+    height: auto;
+    opacity: 0.15;
+    mix-blend-mode: normal;
+    position: absolute;
+    top: 50%;
+    inset-inline-start: 0;
+    transform: translateY(-50%);
+    max-height: 100%;
 }
 
-.documentation-hero h1 {
-    margin-top: 0;
-    margin-bottom: var(--spacing-hero-title-margin-bottom, 12px);
+.documentation-hero .background-icon svg {
+    width: 100%;
+    height: 100%;
 }
 
-/* Reset margins on hero content elements: prevents adjacent-sibling
-   rules from adding unwanted margin-top to <p> eyebrow/abstract tags.
-   Uses .doc-topic prefix for specificity (0-2-1) to beat .doc-topic p (0-1-1). */
-.doc-topic .documentation-hero__content > p,
-.doc-topic .documentation-hero__content > div,
-.doc-topic .documentation-hero__content > span,
-.documentation-hero__content > * {
-    margin-top: 0;
+.documentation-hero__above-content {
+    position: relative;
+    z-index: 1;
 }
 
-/* Hero abstract uses font-styles(intro) from docc-render: 21px/29px at large viewport */
-.documentation-hero .abstract {
-    font-size: var(--spacing-hero-abstract-font-size, 21px);
-    line-height: var(--spacing-hero-abstract-line-height, 29px);
-    color: var(--color-figure-gray);
+.documentation-hero__content {
+    padding-top: var(--spacing-hero-padding-top, 2.3529411765rem);
+    padding-bottom: var(--spacing-hero-padding-bottom, 2.3529411765rem);
+    position: relative;
+    z-index: 1;
+}
+
+.documentation-hero--disabled {
+    background: none;
+    color: var(--colors-text, var(--color-text));
+}
+
+.documentation-hero--disabled::before,
+.documentation-hero--disabled::after {
+    content: none;
+}
+
+/* Content width beside the navigator: 820px, 980px from 1251px, 1080px from 1500px */
+.full-width-container .documentation-hero__content,
+.full-width-container .container {
+    max-width: var(--spacing-hero-max-width, 820px);
+    margin-left: var(--spacing-hero-margin-left, auto);
+    margin-right: var(--spacing-hero-margin-right, auto);
+    padding-left: var(--spacing-content-padding-horizontal, 80px);
+    padding-right: var(--spacing-content-padding-horizontal, 80px);
+    box-sizing: border-box;
+}
+
+.full-width-container .documentation-hero__content {
+    padding-left: var(--spacing-hero-padding-left, var(--spacing-content-padding-horizontal, 80px));
+    padding-right: var(--spacing-hero-padding-right, var(--spacing-content-padding-horizontal, 80px));
+}
+
+@media only screen and (min-width: 1251px) {
+    .full-width-container .documentation-hero__content,
+    .full-width-container .container {
+        max-width: var(--spacing-hero-max-width, 980px);
+    }
+}
+
+@media only screen and (min-width: 1500px) {
+    .full-width-container .documentation-hero__content,
+    .full-width-container .container {
+        max-width: var(--spacing-hero-max-width, 1080px);
+    }
+}
+
+@media only screen and (max-width: 735px) {
+    .full-width-container .documentation-hero__content,
+    .full-width-container .container {
+        width: auto;
+        padding-left: 20px;
+        padding-right: 20px;
+    }
+}
+
+@media print {
+    .full-width-container .documentation-hero__content,
+    .full-width-container .container {
+        padding-left: 20px;
+        padding-right: 20px;
+        max-width: none;
+    }
+}
+
+/* Breadcrumbs (swift-docc-render Hierarchy) */
+.hierarchy {
+    display: flex;
+    font-size: var(--spacing-hierarchy-font-size, 0.8235294118rem);
+    line-height: var(--spacing-hierarchy-line-height, 1.4285714286);
+    font-weight: 400;
+    justify-content: flex-start;
+    align-items: center;
+    margin: 0 0 var(--spacing-hierarchy-margin-bottom, 1.1764705882rem) 0;
+    min-width: 0;
+}
+
+.hierarchy-item {
+    display: flex;
+    list-style: none;
+    align-items: center;
+    margin-inline-start: 0;
+    min-width: 0;
+}
+
+.hierarchy-item:not(:first-child)::before {
+    content: "/";
+    width: 0.2941176471rem;
+    margin-block: 0;
+    margin-inline: 0.2941176471rem;
+}
+
+.hierarchy .item {
+    vertical-align: middle;
+}
+
+.hierarchy a.nav-menu-link {
+    color: inherit;
+    text-decoration: underline;
+}
+
+@media only screen and (min-width: 768px) {
+    .hierarchy-item .item {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .hierarchy-item:first-child:nth-last-child(1 of .hierarchy-item) .item,
+    .hierarchy-item:first-child:nth-last-child(1 of .hierarchy-item) ~ .hierarchy-item .item {
+        max-width: 45rem;
+    }
+
+    .hierarchy-item:first-child:nth-last-child(2 of .hierarchy-item) .item,
+    .hierarchy-item:first-child:nth-last-child(2 of .hierarchy-item) ~ .hierarchy-item .item {
+        max-width: 36rem;
+    }
+
+    .hierarchy-item:first-child:nth-last-child(3 of .hierarchy-item) .item,
+    .hierarchy-item:first-child:nth-last-child(3 of .hierarchy-item) ~ .hierarchy-item .item {
+        max-width: 27rem;
+    }
+
+    .hierarchy-item:first-child:nth-last-child(4 of .hierarchy-item) .item,
+    .hierarchy-item:first-child:nth-last-child(4 of .hierarchy-item) ~ .hierarchy-item .item {
+        max-width: 18rem;
+    }
+
+    .hierarchy-item:first-child:nth-last-child(5 of .hierarchy-item) .item,
+    .hierarchy-item:first-child:nth-last-child(5 of .hierarchy-item) ~ .hierarchy-item .item {
+        max-width: 9rem;
+    }
+}
+
+.hierarchy .root-hierarchy .item {
+    max-width: 10rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/*
+ * Long hierarchies collapse behind a menu, like swift-docc-render: beside the
+ * root, at most three parents stay visible where the content area is wider than
+ * 1200px, two up to 1200px, one up to 1000px, and none (nor the current page) on
+ * narrower areas.  Items carry their distance from the current page (capped at 4)
+ * in data-from-end, the list the number of its parents (capped at 4) in
+ * data-parents.  The menu is a details element, so it opens without JavaScript.
+ */
+.hierarchy-item[data-from-end="4"] {
+    display: none;
+}
+
+.hierarchy-collapsed-items .dropdown-item:not([data-from-end="4"]) {
+    display: none;
+}
+
+.hierarchy:not([data-parents="4"]) > .hierarchy-collapsed-items {
+    display: none;
+}
+
+/* Items after the collapsed menu */
+.hierarchy[data-parents="4"] > .hierarchy-item:not(.root-hierarchy) .item {
+    max-width: 10.8rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+@container doc-content (max-width: 1200px) {
+    .hierarchy-item[data-from-end="3"] {
+        display: none;
+    }
+
+    .hierarchy-collapsed-items .dropdown-item[data-from-end="3"] {
+        display: block;
+    }
+
+    .hierarchy[data-parents="3"] > .hierarchy-collapsed-items {
+        display: inline-flex;
+    }
+
+    .hierarchy[data-parents="3"] > .hierarchy-item:not(.root-hierarchy) .item {
+        max-width: 10.8rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+}
+
+@container doc-content (max-width: 1000px) {
+    .hierarchy-item[data-from-end="2"] {
+        display: none;
+    }
+
+    .hierarchy-collapsed-items .dropdown-item[data-from-end="2"] {
+        display: block;
+    }
+
+    .hierarchy[data-parents="2"] > .hierarchy-collapsed-items {
+        display: inline-flex;
+    }
+
+    .hierarchy[data-parents="2"] > .hierarchy-item:not(.root-hierarchy) .item {
+        max-width: 10.8rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+}
+
+@container doc-content (max-width: 734.98px) {
+    .hierarchy-item[data-from-end="1"],
+    .hierarchy-item[data-from-end="0"] {
+        display: none;
+    }
+
+    .hierarchy-collapsed-items .dropdown-item[data-from-end="1"],
+    .hierarchy-collapsed-items .dropdown-item[data-from-end="0"] {
+        display: block;
+    }
+
+    .hierarchy > .hierarchy-collapsed-items {
+        display: inline-flex;
+    }
+}
+
+.hierarchy-collapsed-items {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+}
+
+.hierarchy-collapsed-items::before {
+    content: "/";
+    width: 0.2941176471rem;
+    margin: 0 0.2941176471rem;
+}
+
+.hierarchy-collapsed-items .toggle {
+    background: var(--color-nav-hierarchy-collapse-background);
+    border-color: var(--color-nav-hierarchy-collapse-borders);
+    border-radius: var(--border-radius, 4px);
+    border-style: solid;
+    border-width: 0;
+    font-weight: 600;
+    height: 1.1176470588rem;
+    text-align: center;
+    width: 2.1176470588rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    list-style: none;
+}
+
+.hierarchy-collapsed-items .toggle::-webkit-details-marker {
+    display: none;
+}
+
+.hierarchy-collapsed-items details[open] .toggle,
+.hierarchy-collapsed-items .toggle:focus-visible {
+    box-shadow: 0 0 0 4px var(--color-focus-color);
+    outline: none;
+}
+
+.hierarchy-collapsed-items .indicator {
+    width: 1em;
+    height: 1em;
+    display: flex;
+    align-items: center;
+}
+
+.hierarchy-collapsed-items .toggle-icon {
+    width: 100%;
+    fill: currentColor;
+}
+
+.hierarchy-collapsed-items .dropdown {
+    background: var(--color-nav-hierarchy-collapse-background);
+    margin: 0;
+    list-style-type: none;
+    border-color: var(--color-nav-hierarchy-collapse-borders);
+    border-radius: var(--border-radius, 4px);
+    border-style: solid;
+    box-shadow: 0 1px 4px -1px var(--color-figure-gray-secondary);
+    border-width: 0;
+    padding: 0 0.5rem;
+    position: absolute;
+    z-index: 42;
+    top: calc(100% + 0.41176rem);
+    opacity: 1;
+    transform: none;
+    transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+@starting-style {
+    .hierarchy-collapsed-items details[open] .dropdown {
+        opacity: 0;
+        transform: translate3d(0, -0.4117647059rem, 0);
+    }
+}
+
+.hierarchy-collapsed-items .dropdown::before {
+    border-bottom-color: var(--color-nav-hierarchy-collapse-background);
+    border-bottom-style: solid;
+    border-bottom-width: 0.5rem;
+    border-left-color: transparent;
+    border-left-style: solid;
+    border-left-width: 0.5rem;
+    border-right-color: transparent;
+    border-right-style: solid;
+    border-right-width: 0.5rem;
+    content: "";
+    inset-inline-start: 1.4411764706rem;
+    position: absolute;
+    top: -0.4411764706rem;
+}
+
+.hierarchy-collapsed-items .dropdown-item {
+    border-top-color: var(--color-nav-hierarchy-collapse-borders);
+    border-top-style: solid;
+    border-top-width: 1px;
+}
+
+.hierarchy-collapsed-items .dropdown-item:first-child {
+    border-top: none;
+}
+
+.hierarchy-collapsed-items .dropdown .nav-menu-link {
+    max-width: 57.6470588235rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    display: block;
+    padding: 0.75rem 1rem;
+    color: inherit;
+    text-decoration: underline;
+}
+
+/* Title */
+.topictitle {
+    margin-bottom: 0.7058823529rem;
+}
+
+.topictitle:last-child {
     margin-bottom: 0;
+}
+
+.eyebrow {
+    display: block;
+    font-size: var(--spacing-eyebrow-font-size, 1.2352941176rem);
+    line-height: var(--spacing-eyebrow-line-height, 1.1904761905);
+    font-weight: 400;
+    color: var(--color-documentation-intro-eyebrow, var(--colors-secondary-label, var(--color-secondary-label)));
+    margin-bottom: var(--spacing-eyebrow-margin-bottom, 0.8823529412rem);
+}
+
+.documentation-hero .title {
+    font-size: var(--spacing-h1-font-size, 2.3529411765rem);
+    line-height: var(--spacing-h1-line-height, 1.1);
+    font-weight: var(--spacing-h1-font-weight, 400);
+    color: var(--color-documentation-intro-title, var(--colors-header-text, var(--color-header-text)));
+    margin: 0;
+}
+
+.documentation-hero .abstract {
+    font-size: var(--spacing-hero-abstract-font-size, var(--spacing-abstract-font-size, 1.2352941176rem));
+    line-height: var(--spacing-hero-abstract-line-height, var(--spacing-abstract-line-height, 1.380952381));
+    font-weight: 400;
+    margin-bottom: var(--spacing-abstract-margin-bottom, 0);
 }
 
 .documentation-hero .abstract p {
     margin: 0;
 }
 
-.abstract {
-    font-size: var(--spacing-abstract-font-size, 17px);
-    line-height: var(--spacing-abstract-line-height, 25px);
-    color: var(--color-figure-gray-secondary);
-    margin-bottom: var(--spacing-abstract-margin-bottom, 1.5rem);
+@media only screen and (max-width: 1250px) {
+    .documentation-hero .title {
+        font-size: var(--spacing-h1-font-size, 1.8823529412rem);
+        line-height: var(--spacing-h1-line-height, 1.125);
+    }
 }
 
-/* Topic link items within content table sections */
-.link-block.topic {
-    margin-top: var(--spacing-link-block-topic-margin-top, 15px);
+@media only screen and (max-width: 735px) {
+    .topictitle {
+        margin: 0;
+    }
+
+    .eyebrow {
+        font-size: var(--spacing-eyebrow-font-size, 1.1176470588rem);
+        line-height: var(--spacing-eyebrow-line-height, 1.2105263158);
+    }
+
+    .documentation-hero .title {
+        font-size: var(--spacing-h1-font-size, 1.6470588235rem);
+        line-height: var(--spacing-h1-line-height, 1.1428571429);
+    }
+
+    .documentation-hero .abstract {
+        font-size: var(--spacing-hero-abstract-font-size, 1.1176470588rem);
+        line-height: var(--spacing-hero-abstract-line-height, 1.4210526316);
+    }
 }
 
-.no-title .link-block.topic:first-child {
-    margin-top: 0;
+/* Declaration */
+.declarations-container {
+    margin-top: var(--spacing-hero-declaration-margin-top, 40px);
 }
 
-/* Topic link styling - matches swift-docc-render inline display with vertical padding */
-.link-block a.link {
-    display: var(--spacing-topic-link-display, inline);
-    padding: var(--spacing-topic-link-padding, 5px 0);
+.declaration {
+    margin: var(--spacing-declaration-margin, 0);
 }
 
-/* Topic icon wrapper - matches swift-docc-render inline-flex display with right margin */
-.topic-icon-wrapper {
-    display: var(--spacing-topic-icon-display, inline-flex);
-    vertical-align: middle;
-    margin-right: var(--spacing-topic-icon-margin-right, 17px);
+.declaration-list:not(:first-child) {
+    margin-top: var(--declaration-conditional-constraints-margin, 20px);
 }
 
-/* Topic abstracts inside content table sections use body font, not hero font */
-.contenttable-section .section-content .abstract,
-.link-block .abstract {
-    font-size: var(--spacing-topic-abstract-font-size, 17px);
-    line-height: var(--spacing-topic-abstract-line-height, 25px);
-    color: var(--color-figure-gray);
-    margin-inline-start: var(--spacing-topic-abstract-margin-start, calc(1rem + 1.294rem));
-    margin-bottom: 0;
+.declaration .source {
+    background: var(--background, var(--color-code-background));
+    border-color: var(--color-grid);
+    color: var(--text, var(--color-code-plain));
+    border-radius: var(--spacing-declaration-border-radius, var(--border-radius, 4px));
+    border-style: solid;
+    border-width: 1px;
+    padding: var(--spacing-declaration-padding, var(--code-block-style-elements-padding));
+    line-height: 25px;
+    margin: var(--spacing-declaration-source-margin, 0);
+    filter: blur(0);
+    transition: margin 0.3s linear;
+    white-space: pre;
+    overflow: auto;
 }
 
-/* When link-block has no icon, remove the abstract indent */
-.link-block.no-icon .abstract {
-    margin-inline-start: 0;
+.declaration .source > code {
+    font-size: var(--spacing-declaration-font-size, 0.8823529412rem);
+    line-height: var(--spacing-declaration-line-height, 1.6666666667);
+    font-weight: 400;
+    font-family: var(--typography-html-font-mono, Menlo, monospace);
+    display: block;
 }
 
-/* Decorated topic title - matches swift-docc-render DecoratedTopicTitle */
-.decorated-title {
-    display: inline;
-    font-family: var(--typography-html-font-mono, monospace);
-    font-size: var(--spacing-decorated-title-font-size, 16px);
-    line-height: var(--spacing-decorated-title-line-height, 25px);
-    font-weight: var(--spacing-decorated-title-font-weight, 400);
-    background: transparent;
-    padding: 0;
-}
-.decorated-title .decorator,
-.decorated-title .label {
-    color: var(--color-secondary-label, var(--color-figure-gray-secondary));
-}
-.decorated-title .identifier {
-    color: var(--color-link);
-    font-weight: var(--spacing-decorated-title-identifier-font-weight, 600);
+.token-keyword {
+    color: var(--syntax-keyword, var(--color-syntax-keywords));
 }
 
-/* Fallback width constraint for any content elements that appear directly
-   inside .doc-topic outside of .primary-content-container (e.g. on edge-case
-   page types). Uses direct-child (>) combinators to avoid matching nested
-   content that already has padding via .primary-content-container or
-   .documentation-hero__content. */
-.doc-topic > ul,
-.doc-topic > ol,
-.doc-topic > p,
-.doc-topic > h2,
-.doc-topic > h3,
-.doc-topic > h4,
-.doc-topic > h5,
-.doc-topic > h6,
-.doc-topic > .aside {
-    max-width: var(--spacing-content-max-width, 980px);
-    padding-left: var(--spacing-content-padding-horizontal, 80px);
-    padding-right: var(--spacing-content-padding-horizontal, 80px);
-    margin-left: var(--spacing-content-margin-left, auto);
-    margin-right: var(--spacing-content-margin-right, auto);
+.token-number {
+    color: var(--syntax-number, var(--color-syntax-numbers));
 }
 
-/* Content list items: margin-left creates the indent for list text
-   while bullets (list-style-position: outside) sit in the margin space,
-   aligning with paragraph text. Matches docc-render's
-   ul { margin-inline-start: em(20px) } model. */
-.doc-topic > ul > li,
-.doc-topic > ol > li {
-    margin-left: var(--spacing-list-indent, 1.176em);
-    margin-top: var(--spacing-content-list-item-margin-top, 0.5em);
+.token-string {
+    color: var(--syntax-string, var(--color-syntax-strings));
 }
 
-/* First list item has no top margin to avoid extra space at list start */
-.doc-topic > ul > li:first-child,
-.doc-topic > ol > li:first-child {
-    margin-top: 0;
+.attribute-link,
+.token-attribute {
+    color: var(--syntax-attribute, var(--color-syntax-keywords));
 }
 
-/* Main content layout: doc-content (flex: 1) + OnThisPageStickyContainer (right) */
+.token-internalParam {
+    color: var(--color-syntax-param-internal-name);
+}
+
+.type-identifier-link {
+    color: var(--syntax-type, var(--color-syntax-other-type-names));
+}
+
+/* Content column and "On This Page" column */
 .doc-content-wrapper {
     display: flex;
-    flex-direction: row;
     justify-content: center;
-    align-items: flex-start;
 }
 
-.doc-content {
-    flex: 1 1 auto;
+.doc-content-wrapper .doc-content {
     min-width: 0;
     width: 100%;
-    overflow: hidden;
 }
 
-/* Primary content container: constrains paragraph/heading width with 80px gutters,
-   matching docc-render's inner .container inside .doc-content */
-.primary-content-container {
-    max-width: var(--spacing-content-max-width, 980px);
-    margin-left: auto;
-    margin-right: auto;
-    padding-left: var(--spacing-content-padding-horizontal, 80px);
-    padding-right: var(--spacing-content-padding-horizontal, 80px);
-    padding-top: 40px;
-    box-sizing: border-box;
+.full-width-container .doc-content .container {
+    outline-style: none;
 }
 
-/* On-this-page sticky navigation sidebar: matches docc-render OnThisPageStickyContainer */
-.OnThisPageStickyContainer {
-    position: sticky;
-    top: 3.82353rem;
-    align-self: flex-start;
-    flex: 0 0 auto;
-    width: 192px;
-    padding-inline-end: 22px;
-    box-sizing: border-box;
-    padding-bottom: var(--spacing-stacked-margin-small);
-    max-height: calc(100vh - 3.82353rem);
+.contenttable .container {
+    --section-spacing-single-side: 40px;
+    padding-bottom: var(--section-spacing-single-side);
+}
+
+.description {
+    margin-bottom: 2.353rem;
+}
+
+.description:empty {
+    display: none;
+}
+
+.description.after-enhanced-hero {
     margin-top: 2.353rem;
 }
 
-.OnThisPageNav ul.items {
-    list-style: none;
+.primary-content.with-border::before {
+    border-top-color: var(--colors-grid, var(--color-grid));
+    border-top-style: solid;
+    border-top-width: var(--content-table-title-border-width, 1px);
+    content: "";
+    display: block;
+}
+
+.primary-content > * {
+    margin-bottom: 40px;
+    margin-top: 40px;
+}
+
+.primary-content > :first-child {
+    margin-top: 2.353rem;
+}
+
+.OnThisPageStickyContainer {
+    display: none;
+    margin-top: 2.353rem;
+    position: sticky;
+    top: 3.8235294118rem;
+    align-self: flex-start;
+    flex: 0 0 auto;
+    width: 192px;
+    padding-inline-end: 1.2941176471rem;
+    box-sizing: border-box;
+    padding-bottom: var(--spacing-stacked-margin-small);
+    max-height: calc(100vh - 3.82353rem);
+    overflow: auto;
+}
+
+@container doc-content (min-width: 1051px) {
+    .doc-topic:has(.OnThisPageStickyContainer) {
+        --doc-hero-right-offset: 192px;
+    }
+
+    .doc-topic:has(.OnThisPageStickyContainer) .doc-content-wrapper .doc-content {
+        max-width: 820px;
+    }
+
+    .OnThisPageStickyContainer {
+        display: block;
+    }
+}
+
+@media only screen and (min-width: 1251px) {
+    @container doc-content (min-width: 1051px) {
+        .doc-topic:has(.OnThisPageStickyContainer) .doc-content-wrapper .doc-content {
+            max-width: 980px;
+        }
+    }
+}
+
+@media only screen and (min-width: 1500px) {
+    @container doc-content (min-width: 1051px) {
+        .doc-topic:has(.OnThisPageStickyContainer) .doc-content-wrapper .doc-content {
+            max-width: 1080px;
+        }
+    }
+}
+
+@media only screen and (max-width: 735px), print {
+    .OnThisPageStickyContainer {
+        display: none;
+    }
+}
+
+.OnThisPageNav ul {
+    list-style-type: none;
     margin: 0;
-    padding: 0;
+}
+
+.OnThisPageNav ul li:first-child .base-link {
+    margin-top: 0;
 }
 
 .OnThisPageNav .base-link {
     color: var(--color-figure-gray-secondary);
-    font-size: 14px;
-    line-height: 18px;
+    font-size: 0.8235294118rem;
+    line-height: 1.2857142857;
+    font-weight: 400;
     display: inline-block;
     margin: 5px 0;
-    text-decoration: none;
+    transition: color 0.15s ease-in;
+    max-width: 100%;
 }
 
 .OnThisPageNav .parent-item .base-link {
@@ -317,199 +683,332 @@
 }
 
 .OnThisPageNav .child-item .base-link {
-    padding-inline-start: 0.8rem;
+    padding-inline-start: 1rem;
 }
 
 .OnThisPageNav .active .base-link {
-    color: var(--color-figure-gray);
+    color: var(--color-text);
 }
 
-/* Hide on-this-page nav when viewport is too narrow.
-   docc-render uses JS to check contentWidth > 1050px; with a ~432px left
-   sidebar the threshold is ~1482px total viewport width. */
-@media only screen and (max-width: 1480px) {
-    .OnThisPageStickyContainer {
-        display: none;
+/* Content tables: Topics, Relationships and See Also */
+.contenttable .title {
+    padding-top: var(--section-spacing-single-side);
+    font-size: 1.8823529412rem;
+    line-height: 1.125;
+    font-weight: 400;
+    border-top-color: var(--color-grid);
+    border-top-style: solid;
+    border-top-width: var(--content-table-title-border-width, 1px);
+}
+
+.doc-content.no-primary-content {
+    --content-table-title-border-width: 0px;
+}
+
+.contenttable .title + .contenttable-section {
+    margin-top: 0;
+}
+
+.contenttable-section {
+    align-items: baseline;
+    padding-top: var(--spacing-contenttable-section-padding-top, 2.353rem);
+}
+
+.contenttable-section:last-child {
+    margin-bottom: 0;
+}
+
+.section-content,
+.section-title {
+    padding: 0;
+}
+
+.contenttable-title {
+    font-size: var(--spacing-contenttable-title-font-size, 1.4117647059rem);
+    line-height: var(--spacing-contenttable-title-line-height, 1.1666666667);
+    font-weight: var(--spacing-contenttable-title-font-weight, 400);
+}
+
+@media only screen and (max-width: 1250px) {
+    .contenttable .title {
+        font-size: 1.6470588235rem;
+        line-height: 1.1428571429;
+    }
+
+    .contenttable-title {
+        font-size: var(--spacing-contenttable-title-font-size, 1.2352941176rem);
+        line-height: var(--spacing-contenttable-title-line-height, 1.1904761905);
     }
 }
 
-/* contenttable sections (Topics, Relationships, See Also): matches docc-render ContentTable.vue.
-   The section itself spans full width with no background; only its inner .container constrains
-   the content width. The alt-light class is a modifier in docc-render but carries no background. */
-.contenttable.alt-light .container {
-    max-width: var(--spacing-content-max-width, 980px);
-    margin-left: auto;
-    margin-right: auto;
-    padding-top: 0;
-    padding-left: var(--spacing-content-padding-horizontal, 80px);
-    padding-right: var(--spacing-content-padding-horizontal, 80px);
-    padding-bottom: var(--spacing-section-spacing-single-side, 40px);
-    box-sizing: border-box;
+@media only screen and (max-width: 735px) {
+    .contenttable .title {
+        font-size: 1.4117647059rem;
+        line-height: 1.1666666667;
+    }
+
+    .contenttable-section {
+        align-items: unset;
+        border-top: none;
+        display: inherit;
+        margin: 0;
+    }
+
+    .contenttable-title {
+        margin: 0 0 2.353rem 0;
+        padding-bottom: 0.5rem;
+    }
 }
 
-.contenttable.alt-light .title {
-    font-size: 32px;
-    line-height: 36px;
-    padding-top: 40px;
-    border-top: 1px solid var(--color-fill-gray);
-    margin-top: 0;
-    margin-bottom: 0;
+/* Topic link blocks (swift-docc-render TopicsLinkBlock) */
+.topic-link-block,
+.link-block.topic {
+    margin-top: var(--spacing-link-block-topic-margin-top, 15px);
 }
 
-/* Overview separator: first h2 in primary content (after declaration in hero) */
-.primary-content-container > h2:first-child,
-.primary-content-container > .mentions + h2,
-.primary-content-container > .mentions + p + h2 {
-    border-top: 1px solid var(--color-fill-gray);
-    padding-top: 40px;
-    margin-top: -40px;
+
+.link-block,
+.link-block .link {
+    box-sizing: inherit;
 }
 
-/* Module pages: first h2 has no border (no declaration preceding it in hero) */
-.doc-topic > .doc-content-wrapper > .doc-content > .primary-content-container > h2:first-child {
-    border-top: none;
-    padding-top: 0;
-    margin-top: 0;
+.link-block .has-adjacent-elements {
+    padding-top: 5px;
+    padding-bottom: 5px;
+    display: inline-flex;
 }
 
-/* Prevent margin stacking on top-level content sections */
-.doc-content > section,
-.doc-topic > section {
-    margin-top: 0;
-}
-
-/* Code listings fill the available content width: no max-width constraint,
-   matching docc-render which lets code blocks span the full content area. */
-.doc-topic .code-listing {
-    margin-left: auto;
-    margin-right: auto;
-}
-
-/* Paragraph spacing - matches swift-docc-render exactly (0.8rem × 17px root = 13.6px) */
-main p, article p, .doc-topic p {
-    margin-top: var(--spacing-paragraph-margin-top, 0.8rem);
-    margin-bottom: 0;
-}
-
-/* List items have no top margin (inside ul/ol) - matches swift-docc-render */
-main li p,
-article li p,
-.doc-topic li p,
-main ul li p,
-main ol li p,
-article ul li p,
-article ol li p,
-.doc-topic ul li p,
-.doc-topic ol li p {
-    margin-top: 0;
-}
-
-.discussion,
-.parameters {
-    padding-bottom: 1rem;
-}
-
-/* Mentions section (matched to vue.js .mentions class) */
-.mentions {
-    padding-bottom: 1rem;
-}
-
-/* Legacy single-column layout (for index page) */
-.container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 2rem;
-}
-
-/* Declaration section - matches swift-docc-render structure */
-.declaration {
-    margin: var(--spacing-declaration-margin, 0);
-}
-
-/* Declaration rendered inside the hero (symbol pages) needs top margin
-   matching docc-render's spacing above the declarations-container */
-.documentation-hero .declaration {
-    margin-top: var(--spacing-hero-declaration-margin-top, 40px);
-}
-.declaration .source {
-    background: var(--color-code-background, var(--color-fill-secondary));
-    border: var(--spacing-declaration-border, 1px solid var(--color-grid, var(--color-fill-gray)));
-    border-bottom: none;
-    padding: var(--spacing-declaration-padding, 8px 14px);
-    border-radius: var(--spacing-declaration-border-radius, 4px);
-    line-height: var(--spacing-declaration-line-height, 25px);
-    margin: var(--spacing-declaration-source-margin, 0);
-    overflow-x: auto;
-}
-.declaration .source code {
-    white-space: pre;
-}
-
-/* Symbol cards in Topics section */
-.symbol-list {
+.topic-icon-wrapper {
     display: flex;
-    flex-direction: column;
-    gap: 0;
+    align-items: center;
+    justify-content: center;
+    height: 1.4705882353rem;
+    flex: 0 0 1.294rem;
+    width: 1.294rem;
+    margin-inline-end: var(--spacing-topic-icon-margin-right, 1rem);
 }
 
-.topic-link-container {
+.topic-icon {
+    height: 0.8823529412rem;
+    transform: scale(1);
+    overflow: visible;
+    fill: currentColor;
+}
+
+.topic-icon.curly-brackets-icon {
+    height: 1rem;
+}
+
+.mention-icon {
+    margin-inline-end: 0.25rem;
+}
+
+.mentions .link-block .link {
+    display: inline-flex;
+    align-items: center;
+}
+
+.mentions .link-block + .link-block {
+    margin-top: 15px;
+}
+
+/* The kind of every topic, for themes that show letter badges */
+.topic-kind-badge {
+    display: none;
+}
+
+.link-block .abstract {
+    margin-inline-start: var(--spacing-topic-abstract-margin-start, 2.294rem);
+}
+
+.link-block .abstract .content {
+    font-size: var(--spacing-topic-abstract-font-size, 1rem);
+    line-height: var(--spacing-topic-abstract-line-height, 1.4705882353);
+}
+
+.decorated-title {
+    direction: ltr;
+}
+
+.decorated-title .decorator,
+.decorated-title .label {
+    color: var(--colors-secondary-label, var(--color-secondary-label));
+}
+
+/* Relationships */
+.relationships-list {
+    list-style: none;
+    margin-inline-start: 0;
+}
+
+.relationships-list.column {
+    margin-top: 15px;
+}
+
+.relationships-list.inline {
     display: flex;
-    align-items: flex-start;
-    gap: 0.75rem;
-    padding: 0.75rem 0;
+    flex-direction: row;
+    flex-wrap: wrap;
+    margin-top: 15px;
 }
 
-.topic-link-container .badge {
-    margin-top: 0.125rem;
+.relationships-list.inline li:not(:last-child)::after {
+    content: ", ";
 }
 
-.symbol-info {
-    flex: 1;
-    min-width: 0;
-}
-
-.symbol-name {
-    font-family: var(--typography-html-font);
-    font-weight: 400;
-    display: block;
-    margin-bottom: 0.25rem;
-}
-
-.symbol-summary {
-    color: var(--color-figure-gray-secondary);
-    font-size: 0.875rem;
+/* Parameters */
+.parameters dl {
     margin: 0;
-    line-height: 1.4;
 }
 
-/* Aside boxes: border-radius, padding, and border-width match docc-render */
-.aside {
-    padding: 1rem;
-    border-radius: 4px;
-    margin: 1rem 1.5rem;
-}
-
-.aside.tip {
-    background: var(--color-aside-tip-background);
-    border-left: 6px solid var(--color-aside-tip-border);
-}
-
-.aside.note {
-    background: var(--color-aside-note-background);
-    border-left: 6px solid var(--color-aside-note-border);
-}
-
-.aside.warning {
-    background: var(--color-aside-warning-background);
-    border-left: 6px solid var(--color-aside-warning-border);
-}
-
-.aside.important {
-    background: var(--color-aside-important-background);
-    border-left: 6px solid var(--color-aside-important-border);
-}
-
-.aside .label {
+.param-name {
     font-weight: 600;
-    margin-bottom: 0.5rem;
+    padding-inline-start: 1rem;
+    padding-top: var(--spacing-param);
+}
+
+.param-name:first-child {
+    padding-top: 0;
+}
+
+.param-content {
+    padding-inline-start: 2rem;
+    margin-left: 0;
+}
+
+.param-content dt {
+    font-weight: 600;
+}
+
+.param-content dd {
+    margin-inline-start: 1em;
+}
+
+@media only screen and (max-width: 735px) {
+    .param-name,
+    .param-content {
+        padding-inline-start: 0;
+    }
+}
+
+/* Heading anchors (swift-docc-render LinkableHeading) */
+.header-anchor {
+    color: var(--color-heading-link, inherit);
+    text-decoration: none;
+    position: relative;
+    padding-inline-end: 23px;
+    display: inline-block;
+}
+
+.header-anchor:hover {
+    text-decoration: none;
+}
+
+.header-anchor::after {
+    position: absolute;
+    clip: rect(1px, 1px, 1px, 1px);
+    clip-path: inset(0 0 99.9% 99.9%);
+    overflow: hidden;
+    height: 1px;
+    width: 1px;
+    padding: 0;
+    border: 0;
+    content: attr(data-after-text);
+}
+
+.header-anchor .icon {
+    position: absolute;
+    inset-inline-end: 0;
+    bottom: 0.2em;
+    display: none;
+    height: 16px;
+    width: 16px;
+    margin-inline-start: 7px;
+    fill: currentColor;
+}
+
+.header-anchor:focus .icon,
+.header-anchor:hover .icon {
+    display: inline;
+}
+
+/* Asides (swift-docc-render Aside): note, tip, important, warning, experiment, deprecated */
+aside {
+    break-inside: avoid;
+    border-radius: var(--aside-border-radius, var(--border-radius, 4px));
+    border-style: var(--aside-border-style, solid);
+    border-block-width: var(--aside-border-width-block, 0);
+    border-inline-width: var(--aside-border-width-inline, 6px 0);
+    padding: var(--spacing-aside-padding, 0.9411764706rem);
+    text-align: start;
+}
+
+aside .label {
+    font-size: 1rem;
+    line-height: 1.5294117647;
+    font-weight: 600;
+}
+
+aside .label + * {
+    margin-top: var(--spacing-stacked-margin-small);
+}
+
+aside.deprecated {
+    background-color: var(--color-aside-deprecated-background);
+    border-color: var(--color-aside-deprecated-border);
+    box-shadow: 0 0 0 0 var(--color-aside-deprecated-border) inset, 0 0 0 0 var(--color-aside-deprecated-border);
+}
+
+aside.deprecated .label {
+    color: var(--color-aside-deprecated);
+}
+
+aside.experiment {
+    background-color: var(--color-aside-experiment-background);
+    border-color: var(--color-aside-experiment-border);
+    box-shadow: 0 0 0 0 var(--color-aside-experiment-border) inset, 0 0 0 0 var(--color-aside-experiment-border);
+}
+
+aside.experiment .label {
+    color: var(--color-aside-experiment);
+}
+
+aside.important {
+    background-color: var(--color-aside-important-background);
+    border-color: var(--color-aside-important-border);
+    box-shadow: 0 0 0 0 var(--color-aside-important-border) inset, 0 0 0 0 var(--color-aside-important-border);
+}
+
+aside.important .label {
+    color: var(--color-aside-important);
+}
+
+aside.note {
+    background-color: var(--color-aside-note-background);
+    border-color: var(--color-aside-note-border);
+    box-shadow: 0 0 0 0 var(--color-aside-note-border) inset, 0 0 0 0 var(--color-aside-note-border);
+}
+
+aside.note .label {
+    color: var(--color-aside-note);
+}
+
+aside.tip {
+    background-color: var(--color-aside-tip-background);
+    border-color: var(--color-aside-tip-border);
+    box-shadow: 0 0 0 0 var(--color-aside-tip-border) inset, 0 0 0 0 var(--color-aside-tip-border);
+}
+
+aside.tip .label {
+    color: var(--color-aside-tip);
+}
+
+aside.warning {
+    background-color: var(--color-aside-warning-background);
+    border-color: var(--color-aside-warning-border);
+    box-shadow: 0 0 0 0 var(--color-aside-warning-border) inset, 0 0 0 0 var(--color-aside-warning-border);
+}
+
+aside.warning .label {
+    color: var(--color-aside-warning);
 }

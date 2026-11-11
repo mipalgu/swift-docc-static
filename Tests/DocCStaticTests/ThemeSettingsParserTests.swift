@@ -128,7 +128,7 @@ struct ThemeSettingsParserTests {
         #expect(css.contains("--color-fill: #ffffff"))
         #expect(css.contains("--color-link: #0066cc"))
         #expect(css.contains("--typography-html-font: system-ui, sans-serif"))
-        #expect(css.contains(":root"))
+        #expect(css.contains("body {"))
     }
 
     @Test("Generate dark mode CSS")
@@ -145,11 +145,10 @@ struct ThemeSettingsParserTests {
         let css = ThemeSettingsParser.generateDarkModeCSS(from: settings)
 
         // Should include fill (different values)
-        #expect(css.contains("--color-fill: #1d1d1f"))
+        #expect(css.contains("--color-fill: light-dark(#ffffff, #1d1d1f)"))
         // Should NOT include link (same value for both modes)
         #expect(!css.contains("--color-link"))
-        #expect(css.contains("@media (prefers-color-scheme: dark)"))
-        #expect(css.contains("body[data-color-scheme=\"dark\"]"))
+        #expect(css.contains("@supports (color: light-dark(#000, #fff))"))
     }
 
     @Test("Generate CSS includes both modes when enabled")
@@ -164,8 +163,8 @@ struct ThemeSettingsParserTests {
 
         let css = ThemeSettingsParser.generateCSS(from: settings, includeDarkMode: true)
 
-        #expect(css.contains(":root"))
-        #expect(css.contains("@media (prefers-color-scheme: dark)"))
+        #expect(css.contains("body {"))
+        #expect(css.contains("light-dark(#ffffff, #1d1d1f)"))
     }
 
     @Test("Generate CSS without dark mode when disabled")
@@ -180,8 +179,8 @@ struct ThemeSettingsParserTests {
 
         let css = ThemeSettingsParser.generateCSS(from: settings, includeDarkMode: false)
 
-        #expect(css.contains(":root"))
-        #expect(!css.contains("@media (prefers-color-scheme: dark)"))
+        #expect(css.contains("body {"))
+        #expect(!css.contains("light-dark("))
     }
 
     // MARK: - Color Value Tests

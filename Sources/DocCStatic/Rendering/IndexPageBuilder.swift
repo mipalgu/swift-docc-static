@@ -162,7 +162,7 @@ public extension IndexPageBuilder {
             <title>\(escapeHTML(title))</title>
             <link rel="stylesheet" href="css/main.css">
         </head>
-        <body class="index-page">
+        <body class="index-page" \(ColourSchemeToggle.bodyAttribute)>
             <div class="container">
                 <header class="index-header">
                     <h1>\(escapeHTML(title))</h1>
@@ -291,62 +291,22 @@ private extension IndexPageBuilder {
         """
     }
 
-    /// Builds the page footer with configurable content and appearance selector.
+    /// Builds the page footer with the custom footer content and the colour scheme toggle.
+    ///
+    /// - Returns: The footer built by ``ColourSchemeToggle/footerMarkup(content:)``.
     func buildFooter() -> String {
-        let footerContent = configuration.footerHTML ?? Configuration.defaultFooter
-        return """
-
-            <footer class="documentation-footer">
-                <div class="footer-content">\(footerContent)</div>
-                <div class="appearance-selector" id="appearance-selector">
-                    <button type="button" class="appearance-btn" data-color-scheme="light" aria-label="Light mode">Light</button>
-                    <button type="button" class="appearance-btn" data-color-scheme="dark" aria-label="Dark mode">Dark</button>
-                    <button type="button" class="appearance-btn active" data-color-scheme="auto" aria-label="Auto mode">Auto</button>
-                </div>
-            </footer>
-        """
+        ColourSchemeToggle.footerMarkup(content: configuration.footerHTML ?? Configuration.defaultFooter)
     }
 
-    /// JavaScript for the appearance selector.
+    /// JavaScript for the colour scheme toggle.
+    ///
+    /// Without JavaScript the toggle still switches the colour scheme of the page;
+    /// the script remembers the choice across pages.
     var appearanceSelectorScript: String {
         """
 
             <script>
-            (function() {
-                const selector = document.getElementById('appearance-selector');
-                if (!selector) return;
-
-                // Show the selector (hidden by default for no-JS fallback)
-                selector.style.visibility = 'visible';
-
-                const buttons = selector.querySelectorAll('.appearance-btn');
-                const body = document.body;
-
-                // Load saved preference
-                const saved = localStorage.getItem('\(SidebarDocument.colourSchemeStorageKey)') || 'auto';
-                applyTheme(saved);
-                updateButtons(saved);
-
-                // Add click handlers
-                buttons.forEach(btn => {
-                    btn.addEventListener('click', () => {
-                        const scheme = btn.dataset.colorScheme;
-                        localStorage.setItem('\(SidebarDocument.colourSchemeStorageKey)', scheme);
-                        applyTheme(scheme);
-                        updateButtons(scheme);
-                    });
-                });
-
-                function applyTheme(scheme) {
-                    body.setAttribute('data-color-scheme', scheme);
-                }
-
-                function updateButtons(scheme) {
-                    buttons.forEach(btn => {
-                        btn.classList.toggle('active', btn.dataset.colorScheme === scheme);
-                    });
-                }
-            })();
+            \(ColourSchemeToggle.script)
             </script>
         """
     }

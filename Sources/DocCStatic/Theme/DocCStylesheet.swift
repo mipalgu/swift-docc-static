@@ -17,10 +17,11 @@ import Foundation
 /// 1. ``base``: the base stylesheet shared by all themes (structure and layout,
 ///    with every visual value routed through a custom property);
 /// 2. ``sidebarDocument``: the rules for the embedded navigation sidebar;
-/// 3. ``accent``: the accent colour, when the theme settings do not set `link`;
-/// 4. ``themeSettings``: the custom properties defined by the theme settings;
-/// 5. ``theme``: the theme's own stylesheets;
-/// 6. ``custom``: custom CSS supplied by the user.
+/// 3. ``colourScheme``: the rules that apply the colour scheme chosen by the reader;
+/// 4. ``accent``: the accent colour, when the theme settings do not set `link`;
+/// 5. ``themeSettings``: the custom properties defined by the theme settings;
+/// 6. ``theme``: the theme's own stylesheets;
+/// 7. ``custom``: custom CSS supplied by the user.
 ///
 /// Every layer starts with a marker comment (see ``marker(part:)``) naming the
 /// layer and, for layers made of several files, the part.
@@ -30,6 +31,9 @@ public enum StylesheetLayer: String, CaseIterable, Sendable {
 
     /// The rules for the embedded navigation sidebar.
     case sidebarDocument = "sidebar-document"
+
+    /// The rules that apply the colour scheme chosen with the colour scheme toggle.
+    case colourScheme = "color-scheme"
 
     /// The accent colour set through the configuration rather than theme settings.
     case accent
@@ -72,8 +76,9 @@ enum DocCStylesheet {
             css += layer(.base, part: part.name, css: part.css)
         }
         css += layer(.sidebarDocument, css: SidebarDocument.stylesheet)
+        css += layer(.colourScheme, css: ColourSchemeToggle.stylesheet(includeDarkMode: theme.includeDarkMode))
         if theme.themeSettings?.theme.color?["link"] == nil {
-            css += layer(.accent, css: ":root {\n    --color-link: \(theme.accentColour);\n}\n")
+            css += layer(.accent, css: "body {\n    --color-link: \(theme.accentColour);\n}\n")
         }
         if let settings = theme.themeSettings {
             css += layer(

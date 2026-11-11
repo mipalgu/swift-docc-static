@@ -162,7 +162,7 @@ struct TutorialStepRenderingTests {
 
         let html = renderer.renderBlockContent(step, references: [:], depth: 0)
 
-        #expect(html.contains("<code>validate()</code>"))
+        #expect(html.contains("<code class=\"inline-code\">validate()</code>"))
         #expect(html.contains("Call the"))
         #expect(html.contains("method."))
     }

@@ -1,85 +1,109 @@
-@media (prefers-color-scheme: dark) {
-    :root {
-        --color-fill: #1d1d1f;
-        --color-fill-secondary: #2c2c2e;
-        --color-figure-gray: #f5f5f7;
-        --color-figure-gray-secondary: #a1a1a6;
-        --color-fill-gray: #424245;
-        --color-fill-gray-quaternary: #424242;
-        --color-navigator-item-hover: rgba(0, 102, 255, 0.5);
+/*
+ * The colour palette of swift-docc-render, dark appearance.
+ *
+ * The body follows the reader's system preference unless a colour scheme has been
+ * chosen with the colour scheme toggle in the footer.  Every colour that differs in
+ * the dark appearance is a light-dark() pair, so the used colour scheme of the body
+ * picks the value.  Browsers without light-dark() keep the light palette.
+ */
+body {
+    color-scheme: light dark;
+}
 
-        /* Syntax highlighting colours - dark mode */
-        --color-syntax-keywords: #ff7ab2;
-        --color-syntax-other-type-names: #dabaff;
-        --color-syntax-strings: #ff8170;
-        --color-syntax-comments: #7f8c8d;
-        --color-syntax-numbers: #d9c97c;
-
-        /* Symbol badge colours - dark mode - using filled backgrounds for HTML badges */
-        --color-badge-default: #2c2c2e;
-        --color-badge-text: #a1a1a6;
-        --color-badge-border: #424245;
-
-        /* Badge border properties remain same in dark mode (inherit from light mode defaults) */
-
-        /* Code listing colours - dark mode */
-        --color-code-background: #2c2c2e;
-        --color-grid: #424245;
-
-        /* Aside colours - dark mode */
-        --color-aside-tip-background: rgba(102, 102, 102, 0.2);
-        --color-aside-tip-border: #888888;
-        --color-aside-note-background: rgba(59, 130, 246, 0.15);
-        --color-aside-note-border: #3b82f6;
-        --color-aside-warning-background: rgba(245, 158, 11, 0.15);
-        --color-aside-warning-border: #f59e0b;
-        --color-aside-important-background: rgba(239, 68, 68, 0.15);
-        --color-aside-important-border: #ef4444;
-
-        /* Decorative colours - dark mode */
-        --color-documentation-intro-fill: #4a4a4a;
+@supports (color: light-dark(#000, #fff)) {
+    body {
+        --color-fill: light-dark(#fff, #000);
+        --color-fill-secondary: light-dark(#f7f7f7, #161616);
+        --color-fill-tertiary: light-dark(#f0f0f0, #2a2a2a);
+        --color-fill-blue: light-dark(#00f, #06f);
+        --color-fill-light-blue-secondary: light-dark(#d1d1ff, #004ec4);
+        --color-fill-gray: light-dark(#ccc, #575757);
+        --color-fill-gray-secondary: light-dark(#f5f5f5, #222);
+        --color-fill-gray-tertiary: light-dark(#f0f0f0, #424242);
+        --color-fill-gray-quaternary: light-dark(#f0f0f0, #424242);
+        --color-fill-green-secondary: light-dark(#f0fff0, #030);
+        --color-fill-orange-secondary: light-dark(#fffaf6, #472400);
+        --color-fill-red-secondary: light-dark(#fff0f5, #300);
+        --color-figure-blue: light-dark(#36f, #09f);
+        --color-figure-gray: light-dark(#000, #fff);
+        --color-figure-gray-secondary: light-dark(#666, #ccc);
+        --color-figure-gray-secondary-alt: light-dark(#666, #b0b0b0);
+        --color-figure-gray-tertiary: light-dark(#666, #b0b0b0);
+        --color-figure-green: light-dark(green, #090);
+        --color-figure-light-gray: light-dark(#666, #b0b0b0);
+        --color-figure-orange: light-dark(#c30, #f60);
+        --color-figure-red: light-dark(red, #f33);
+        --color-tutorials-teal: light-dark(#000, #fff);
+        --color-article-body-background: light-dark(var(--color-fill), #111);
+        --color-badge-text: light-dark(#fff, #000);
+        --color-badge-default: light-dark(var(--color-figure-gray), var(--color-badge-dark-default));
+        --color-button-background-active: light-dark(#36f, #06f);
+        --color-code-line-highlight: light-dark(rgba(51, 102, 255, .08), rgba(0, 153, 255, .08));
+        --color-dropdown-background: light-dark(hsla(0, 0%, 100%, .8), var(--color-dropdown-dark-background));
+        --color-dropdown-border: light-dark(#ccc, var(--color-dropdown-dark-border));
+        --color-dropdown-option-text: light-dark(#666, var(--color-dropdown-dark-option-text));
+        --color-dropdown-text: light-dark(#000, var(--color-dropdown-dark-text));
+        --color-nav-color: light-dark(#000, var(--color-nav-dark-color));
+        --color-nav-current-link: light-dark(#000, var(--color-nav-dark-current-link));
+        --color-nav-expanded: light-dark(#fff, var(--color-nav-dark-expanded));
+        --color-nav-hierarchy-collapse-background: light-dark(#f0f0f0, var(--color-nav-dark-hierarchy-collapse-background));
+        --color-nav-hierarchy-collapse-borders: light-dark(#ccc, var(--color-nav-dark-hierarchy-collapse-borders));
+        --color-nav-hierarchy-item-borders: light-dark(#ccc, var(--color-nav-dark-hierarchy-item-borders));
+        --color-nav-keyline: light-dark(rgba(0, 0, 0, .2), var(--color-nav-dark-keyline));
+        --color-nav-link-color: light-dark(#000, var(--color-nav-dark-link-color));
+        --color-nav-link-color-hover: light-dark(#36f, var(--color-nav-dark-link-color-hover));
+        --color-nav-outlines: light-dark(#ccc, var(--color-nav-dark-outlines));
+        --color-nav-rule: light-dark(hsla(0, 0%, 94%, .5), var(--color-nav-dark-rule));
+        --color-nav-solid-background: light-dark(#fff, var(--color-nav-dark-solid-background));
+        --color-nav-sticking-expanded-keyline: light-dark(rgba(0, 0, 0, .1), var(--color-nav-dark-sticking-expanded-keyline));
+        --color-nav-stuck: light-dark(hsla(0, 0%, 100%, .9), var(--color-nav-dark-stuck));
+        --color-nav-uiblur-expanded: light-dark(hsla(0, 0%, 100%, .9), var(--color-nav-dark-uiblur-expanded));
+        --color-nav-uiblur-stuck: light-dark(hsla(0, 0%, 100%, .7), var(--color-nav-dark-uiblur-stuck));
+        --color-runtime-preview-disabled-text: light-dark(hsla(0, 0%, 40%, .6), hsla(0, 0%, 80%, .6));
+        --color-syntax-attributes: light-dark(#947100, #cc9768);
+        --color-syntax-characters: light-dark(#272ad8, #d9c97c);
+        --color-syntax-comments: light-dark(#707f8c, #7f8c98);
+        --color-syntax-documentation-markup: light-dark(#506375, #7f8c98);
+        --color-syntax-documentation-markup-keywords: light-dark(#506375, #a3b1bf);
+        --color-syntax-highlighted: light-dark(rgba(0, 113, 227, .2), rgba(0, 113, 227, .6));
+        --color-syntax-keywords: light-dark(#ad3da4, #ff7ab2);
+        --color-syntax-marks: light-dark(#000, #fff);
+        --color-syntax-numbers: light-dark(#272ad8, #d9c97c);
+        --color-syntax-other-class-names: light-dark(#703daa, #dabaff);
+        --color-syntax-other-constants: light-dark(#4b21b0, #a7ebdd);
+        --color-syntax-other-declarations: light-dark(#047cb0, #4eb0cc);
+        --color-syntax-other-function-and-method-names: light-dark(#4b21b0, #b281eb);
+        --color-syntax-other-instance-variables-and-globals: light-dark(#703daa, #b281eb);
+        --color-syntax-other-preprocessor-macros: light-dark(#78492a, #ffa14f);
+        --color-syntax-other-type-names: light-dark(#703daa, #dabaff);
+        --color-syntax-param-internal-name: light-dark(#404040, #bfbfbf);
+        --color-syntax-plain-text: light-dark(#000, #fff);
+        --color-syntax-preprocessor-statements: light-dark(#78492a, #ffa14f);
+        --color-syntax-project-class-names: light-dark(#3e8087, #acf2e4);
+        --color-syntax-project-constants: light-dark(#2d6469, #78c2b3);
+        --color-syntax-project-function-and-method-names: light-dark(#2d6469, #78c2b3);
+        --color-syntax-project-instance-variables-and-globals: light-dark(#3e8087, #78c2b3);
+        --color-syntax-project-preprocessor-macros: light-dark(#78492a, #ffa14f);
+        --color-syntax-project-type-names: light-dark(#3e8087, #acf2e4);
+        --color-syntax-strings: light-dark(#d12f1b, #ff8170);
+        --color-syntax-type-declarations: light-dark(#03638c, #6bdfff);
+        --color-syntax-urls: light-dark(#1337ff, #69f);
+        --color-tutorial-background: light-dark(var(--color-fill), var(--color-fill-tertiary));
+        --color-navigator-item-hover: light-dark(rgba(0, 0, 255, .05), rgba(0, 102, 255, .5));
+        --color-card-shadow: light-dark(rgba(0, 0, 0, .04), hsla(0, 0%, 100%, .04));
+        --color-link-block-card-border: light-dark(rgba(0, 0, 0, .04), hsla(0, 0%, 100%, .25));
+        --color-standard-red: light-dark(#ffc2c2, #8b0000);
+        --color-standard-orange: light-dark(#fc9, #8b4000);
+        --color-standard-yellow: light-dark(#ffe0a3, #8f7200);
+        --color-standard-blue: light-dark(#9cf, #002d75);
+        --color-standard-green: light-dark(#9cc, #023b2d);
+        --color-standard-purple: light-dark(#ccf, #512b55);
+        --color-standard-gray: light-dark(#f0f0f0, #2a2a2a);
     }
 }
 
-/* Explicit theme selection via data-color-scheme attribute */
-body[data-color-scheme="light"] {
-    --color-fill: #fff;
-    --color-fill-secondary: #f7f7f7;
-    --color-fill-tertiary: #f0f0f0;
-    --color-figure-gray: #000;
-    --color-figure-gray-secondary: #666;
-    --color-fill-gray: #ccc;
-    --color-fill-gray-secondary: #f5f5f5;
-    --color-fill-gray-quaternary: #f0f0f0;
-    --color-navigator-item-hover: rgba(51, 102, 255, 0.05);
-    --color-syntax-keywords: #ad3da4;
-    --color-syntax-other-type-names: #703daa;
-    --color-syntax-strings: #d12f1b;
-    --color-syntax-comments: #707f8c;
-    --color-syntax-numbers: #272ad8;
-    --color-badge-default: #f5f5f7;
-    --color-badge-text: #6e6e73;
-    --color-badge-border: #d2d2d7;
-    --color-documentation-intro-fill: #f0f0f0;
-}
-
-body[data-color-scheme="dark"] {
-    --color-fill: #1d1d1f;
-    --color-fill-secondary: #2c2c2e;
-    --color-figure-gray: #f5f5f7;
-    --color-figure-gray-secondary: #a1a1a6;
-    --color-fill-gray: #424245;
-    --color-fill-gray-quaternary: #424242;
-    --color-navigator-item-hover: rgba(0, 102, 255, 0.5);
-    --color-syntax-keywords: #ff7ab2;
-    --color-syntax-other-type-names: #dabaff;
-    --color-syntax-strings: #ff8170;
-    --color-syntax-comments: #7f8c8d;
-    --color-syntax-numbers: #d9c97c;
-    --color-badge-default: #2c2c2e;
-    --color-badge-text: #a1a1a6;
-    --color-badge-border: #424245;
-    --color-code-background: #2c2c2e;
-    --color-grid: #424245;
-    --color-documentation-intro-fill: #4a4a4a;
+@media print {
+    body {
+        color-scheme: light;
+    }
 }

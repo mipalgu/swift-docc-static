@@ -77,7 +77,8 @@ struct StylesheetLayerTests {
         let markers = layerMarkers(in: DocCStylesheet.generate(theme: configuration))
         let expected =
             BaseStylesheet.parts.map { StylesheetLayer.base.marker(part: $0.name) }
-            + [StylesheetLayer.sidebarDocument.marker(), StylesheetLayer.themeSettings.marker()]
+            + [StylesheetLayer.sidebarDocument.marker(), StylesheetLayer.colourScheme.marker(),
+               StylesheetLayer.themeSettings.marker()]
             + theme.stylesheets.map { StylesheetLayer.theme.marker(part: $0.name) }
             + [StylesheetLayer.custom.marker()]
         #expect(markers == expected)
@@ -126,7 +127,7 @@ struct StylesheetLayerTests {
     func sidebarRules() {
         let css = DocCStylesheet.generate(theme: .default)
         #expect(css.contains(".\(SidebarDocument.frameClass) {"))
-        #expect(css.contains("body.\(SidebarDocument.documentClass) .sidebar {"))
+        #expect(css.contains("html:has(> body.\(SidebarDocument.documentClass))"))
     }
 }
 
@@ -177,7 +178,7 @@ struct RuntimeThemeLoadingTests {
         #expect(css.contains("--aside-border-radius: 6px;"))
         #expect(css.contains("--border-radius: 0;"))
         #expect(css.contains("--button-background: white;"))
-        #expect(css.contains("--button-background: black;"))
+        #expect(css.contains("--button-background: light-dark(white, black);"))
         let dark = ThemeSettingsParser.extractVariables(from: settings, colorScheme: .dark)
         #expect(dark["--button-background"] == "black")
     }

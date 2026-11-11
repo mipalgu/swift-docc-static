@@ -14,7 +14,7 @@
   ]
  },
  "headerTitle": {
-  "static": ".documentation-nav .header-title",
+  "static": ".documentation-nav h2.nav-title",
   "main": ".doc-header .header-title",
   "vue": ".documentation-nav h2.nav-title",
   "kinds": [
@@ -22,7 +22,7 @@
   ]
  },
  "headerIcon": {
-  "static": ".documentation-nav .header-icon",
+  "static": ".documentation-nav .nav-title .header-icon",
   "main": ".doc-header .header-icon",
   "vue": ".documentation-nav .nav-title .header-icon",
   "kinds": [
@@ -30,7 +30,7 @@
   ]
  },
  "headerLanguage": {
-  "static": ".documentation-nav .header-language",
+  "static": ".documentation-nav .language-container",
   "main": ".doc-header .header-language",
   "vue": ".documentation-nav .language-container",
   "kinds": [
@@ -46,7 +46,7 @@
   ]
  },
  "layout": {
-  "static": ".documentation-layout",
+  "static": ".adjustable-sidebar-width",
   "main": ".doc-layout",
   "vue": ".adjustable-sidebar-width",
   "geometry": true,
@@ -55,7 +55,7 @@
   ]
  },
  "sidebar": {
-  "static": "nav.sidebar",
+  "static": ".adjustable-sidebar-width > .sidebar",
   "main": "nav.doc-sidebar",
   "vue": ".adjustable-sidebar-width > .sidebar",
   "geometry": true,
@@ -64,7 +64,7 @@
   ]
  },
  "sidebarContent": {
-  "static": "iframe.sidebar-frame >>> .sidebar-content",
+  "static": "iframe.sidebar-frame >>> nav.navigator",
   "main": "nav.doc-sidebar .sidebar-content",
   "vue": "nav.navigator",
   "kinds": [
@@ -88,7 +88,7 @@
   ]
  },
  "sidebarGroupTitle": {
-  "static": "iframe.sidebar-frame >>> .navigator-card.is-group .group-title",
+  "static": "iframe.sidebar-frame >>> .navigator-card-item.is-group .leaf-link",
   "main": ".sidebar-section > h3.sidebar-heading:not(.module-name)",
   "vue": ".navigator-card-item.is-group .leaf-link",
   "pick": "in-viewport",
@@ -97,7 +97,7 @@
   ]
  },
  "sidebarRowDepth0": {
-  "static": "iframe.sidebar-frame >>> .navigator-card:not(.is-group)[style*='nesting-index: 2']",
+  "static": "iframe.sidebar-frame >>> .navigator-card-item[data-nesting-index='0']:not(.is-group)",
   "main": "li.sidebar-item",
   "vue": ".navigator-card-item[data-nesting-index='0']:not(.is-group)",
   "pick": "in-viewport",
@@ -106,7 +106,7 @@
   ]
  },
  "sidebarRowDepth0Link": {
-  "static": "iframe.sidebar-frame >>> .navigator-card:not(.is-group)[style*='nesting-index: 2'] > a.leaf-link",
+  "static": "iframe.sidebar-frame >>> .navigator-card-item[data-nesting-index='0']:not(.is-group) .leaf-link",
   "main": "li.sidebar-item > a.nav-link",
   "vue": ".navigator-card-item[data-nesting-index='0']:not(.is-group) .leaf-link",
   "pick": "in-viewport",
@@ -115,7 +115,7 @@
   ]
  },
  "sidebarRowDepth1": {
-  "static": "iframe.sidebar-frame >>> .navigator-card:not(.is-group)[style*='nesting-index: 5']",
+  "static": "iframe.sidebar-frame >>> .navigator-card-item[data-nesting-index='1']:not(.is-group)",
   "main": "li.sidebar-item > ul.nav-children > li > ul.nav-children > li",
   "vue": ".navigator-card-item[data-nesting-index='1']:not(.is-group)",
   "pick": "in-viewport",
@@ -125,7 +125,7 @@
   ]
  },
  "sidebarRowDepth2": {
-  "static": "iframe.sidebar-frame >>> .navigator-card:not(.is-group)[style*='nesting-index: 8']",
+  "static": "iframe.sidebar-frame >>> .navigator-card-item[data-nesting-index='2']:not(.is-group)",
   "main": "li.sidebar-item > ul.nav-children > li > ul.nav-children > li > ul.nav-children > li > ul.nav-children > li",
   "vue": ".navigator-card-item[data-nesting-index='2']:not(.is-group)",
   "pick": "in-viewport",
@@ -135,7 +135,7 @@
   ]
  },
  "sidebarSelectedRow": {
-  "static": "iframe.sidebar-frame >>> .navigator-card:target",
+  "static": "iframe.sidebar-frame >>> .navigator-card-item:target",
   "main": ".nav-child-item.selected, .sidebar-item.selected",
   "vue": ".navigator-card-item.active",
   "kinds": [
@@ -143,7 +143,7 @@
   ]
  },
  "sidebarSelectedLink": {
-  "static": "iframe.sidebar-frame >>> .navigator-card:target > a.leaf-link",
+  "static": "iframe.sidebar-frame >>> .navigator-card-item:target .leaf-link",
   "main": ".nav-child-item.selected > a, .sidebar-item.selected > a",
   "vue": ".navigator-card-item.active .leaf-link",
   "kinds": [
@@ -151,7 +151,7 @@
   ]
  },
  "sidebarSymbolBadge": {
-  "static": "iframe.sidebar-frame >>> .navigator-card .badge",
+  "static": "iframe.sidebar-frame >>> .navigator-card-item .navigator-icon",
   "main": "nav.doc-sidebar .symbol-badge",
   "vue": ".navigator-card-item .navigator-icon",
   "pick": "in-viewport",
@@ -160,7 +160,7 @@
   ]
  },
  "sidebarArticleIcon": {
-  "static": "iframe.sidebar-frame >>> .navigator-card .symbol-icon",
+  "static": "iframe.sidebar-frame >>> .navigator-card-item .navigator-icon",
   "main": "nav.doc-sidebar .symbol-icon",
   "vue": ".navigator-card-item .navigator-icon",
   "pick": "in-viewport",
@@ -169,7 +169,7 @@
   ]
  },
  "sidebarChevron": {
-  "static": "iframe.sidebar-frame >>> .navigator-card .disclosure-chevron",
+  "static": "iframe.sidebar-frame >>> .navigator-card-item .tree-toggle",
   "main": "nav.doc-sidebar .sidebar-item .disclosure-chevron",
   "vue": ".navigator-card-item .tree-toggle",
   "pick": "in-viewport",
@@ -178,7 +178,7 @@
   ]
  },
  "sidebarFilter": {
-  "static": "iframe.sidebar-frame >>> .sidebar-filter",
+  "static": "iframe.sidebar-frame >>> .navigator .filter-wrapper",
   "main": ".sidebar-filter",
   "vue": ".navigator .filter-wrapper",
   "kinds": [
@@ -186,7 +186,7 @@
   ]
  },
  "sidebarFilterInput": {
-  "static": "iframe.sidebar-frame >>> .sidebar-filter .filter-input",
+  "static": "iframe.sidebar-frame >>> .navigator-filter input",
   "main": ".sidebar-filter .filter-input",
   "vue": ".navigator-filter input",
   "kinds": [
@@ -194,13 +194,13 @@
   ]
  },
  "main": {
-  "static": "main.doc-topic",
+  "static": "main#app-main",
   "main": "main.doc-main",
   "vue": "main#app-main, #app-main",
   "geometry": true
  },
  "contentColumn": {
-  "static": ".primary-content-container",
+  "static": ".primary-content, .container:not(.minimized-container)",
   "main": "main.doc-main",
   "vue": ".primary-content, .container:not(.minimized-container)",
   "geometry": true,
@@ -227,7 +227,7 @@
   ]
  },
  "breadcrumbs": {
-  "static": "ul.hierarchy",
+  "static": ".documentation-hero ul.hierarchy",
   "main": "nav.breadcrumbs",
   "vue": ".documentation-hero ul.hierarchy, nav.hierarchy, .hierarchy",
   "kinds": [
@@ -235,7 +235,7 @@
   ]
  },
  "breadcrumbLink": {
-  "static": "ul.hierarchy a",
+  "static": ".hierarchy a",
   "main": "nav.breadcrumbs a",
   "vue": ".hierarchy a",
   "kinds": [
@@ -267,7 +267,7 @@
   ]
  },
  "declaration": {
-  "static": "section.declaration",
+  "static": ".declarations-container",
   "main": "main .declaration",
   "vue": ".declarations-container",
   "geometry": true
@@ -363,57 +363,57 @@
   "vue": "section.parameters h2, h2#parameters"
  },
  "parameterName": {
-  "static": "section.parameters dt",
+  "static": ".parameters dt",
   "main": "section.parameters dt",
   "vue": ".parameters dt, .parameters-table dt"
  },
  "parameterDescription": {
-  "static": "section.parameters dd",
+  "static": ".parameters dd",
   "main": "section.parameters dd",
   "vue": ".parameters dd, .parameters-table dd"
  },
  "contentHeading2": {
-  "static": ".primary-content-container > h2",
+  "static": ".primary-content h2",
   "main": "main.doc-main > h2",
   "vue": ".primary-content h2"
  },
  "contentHeading3": {
-  "static": ".primary-content-container > h3",
+  "static": ".primary-content h3",
   "main": "main.doc-main > h3",
   "vue": ".primary-content h3"
  },
  "paragraph": {
-  "static": ".primary-content-container > p",
+  "static": ".primary-content p",
   "main": "main.doc-main > p",
   "vue": ".primary-content p"
  },
  "inlineCode": {
-  "static": ".primary-content-container p code",
+  "static": ".primary-content p code",
   "main": "main.doc-main > p code",
   "vue": ".primary-content p code"
  },
  "inlineLink": {
-  "static": ".primary-content-container p a",
+  "static": ".primary-content p a",
   "main": "main.doc-main > p a",
   "vue": ".primary-content p a"
  },
  "inlineCodeInLink": {
-  "static": ".primary-content-container p a code",
+  "static": ".primary-content p a code",
   "main": "main.doc-main > p a code",
   "vue": ".primary-content p a code"
  },
  "unorderedList": {
-  "static": ".primary-content-container > ul",
+  "static": ".primary-content ul",
   "main": "main.doc-main > ul",
   "vue": ".primary-content ul"
  },
  "listItem": {
-  "static": ".primary-content-container > ul > li",
+  "static": ".primary-content ul > li",
   "main": "main.doc-main > ul > li",
   "vue": ".primary-content ul > li"
  },
  "orderedList": {
-  "static": ".primary-content-container ol",
+  "static": ".primary-content ol",
   "main": "main.doc-main ol",
   "vue": ".primary-content ol"
  },
@@ -454,22 +454,22 @@
   "vue": ".code-listing .syntax-type"
  },
  "table": {
-  "static": ".primary-content-container table",
+  "static": ".primary-content table",
   "main": "main.doc-main table",
   "vue": ".primary-content table"
  },
  "tableHeaderCell": {
-  "static": ".primary-content-container th",
+  "static": ".primary-content th",
   "main": "main.doc-main th",
   "vue": ".primary-content th"
  },
  "tableCell": {
-  "static": ".primary-content-container td",
+  "static": ".primary-content td",
   "main": "main.doc-main td",
   "vue": ".primary-content td"
  },
  "image": {
-  "static": ".primary-content-container img",
+  "static": ".primary-content img",
   "main": "main.doc-main img",
   "vue": ".primary-content img"
  },
@@ -519,12 +519,12 @@
   "vue": "footer"
  },
  "appearanceSelector": {
-  "static": ".appearance-selector",
+  "static": ".color-scheme-toggle, .appearance-selector",
   "main": ".appearance-selector",
   "vue": ".color-scheme-toggle"
  },
  "appearanceOption": {
-  "static": ".appearance-btn",
+  "static": ".color-scheme-toggle label, .appearance-btn",
   "main": ".appearance-btn",
   "vue": ".color-scheme-toggle label"
  },

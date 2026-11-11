@@ -41,6 +41,37 @@ public extension HTMLPageBuilder {
 
     /// The class of the sticky "On This Page" navigator column.
     static let onThisPageContainerClass = "OnThisPageStickyContainer"
+
+    /// The identifier of the checkbox that shows or hides the documentation navigator.
+    ///
+    /// The navigator is shown by default on wide viewports and hidden by default on
+    /// narrow ones, where it opens as a full-screen overlay; checking the box toggles
+    /// it from its default state.  The navigation bar's toggle and the overlay's close
+    /// button are labels for this checkbox, so the navigator works without JavaScript.
+    static let sidebarToggleIdentifier = "sidebar-toggle"
+
+    /// The number of parents from which the breadcrumbs always collapse the farthest ones.
+    ///
+    /// Like swift-docc-render, the breadcrumbs show the root and at most three further
+    /// parents; items farther away than this from the current page are listed in the
+    /// collapsed menu.  The stylesheet collapses nearer items on narrower viewports.
+    static let breadcrumbCollapseLimit = 4
+
+    /// The identifier of the checkbox that opens the navigation bar menu on narrow viewports.
+    static let navigationMenuToggleIdentifier = "nav-menu-toggle"
+
+    /// The checkboxes that hold the open or closed state of the page chrome.
+    ///
+    /// They precede the documentation layout so that the stylesheet can reach the
+    /// navigator and the navigation bar menu with sibling selectors.  They are
+    /// visually hidden but stay keyboard accessible; the stylesheet draws the focus
+    /// ring on their visible labels.
+    static var chromeToggles: String {
+        """
+        <input type="checkbox" id="\(sidebarToggleIdentifier)" class="sidebar-toggle-checkbox visuallyhidden" aria-label="Toggle Documentation Navigator">
+            <input type="checkbox" id="\(navigationMenuToggleIdentifier)" class="nav-menu-toggle-checkbox visuallyhidden" aria-label="Toggle Menu">
+        """
+    }
 }
 
 // MARK: - Public Methods
@@ -105,8 +136,16 @@ public extension HTMLPageBuilder {
 
             <link rel="stylesheet" href="\(cssPath)">
         </head>
-        <body data-color-scheme="auto">
-            <input type="checkbox" id="sidebar-toggle" class="sidebar-toggle-checkbox" aria-hidden="true">
+        <body \(ColourSchemeToggle.bodyAttribute)>
+            <div id="app">
+            <div id="app-top"></div>
+            <a href="#app-main" id="skip-nav">Skip Navigation</a>
+            \(Self.chromeToggles)
+        """
+
+        html += """
+
+            <div class="documentation-layout">
         """
 
         // Add header bar
@@ -114,7 +153,7 @@ public extension HTMLPageBuilder {
 
         html += """
 
-            <div class="documentation-layout">
+            <div class="adjustable-sidebar-width full-width-container topic-wrapper">
         """
 
         // Add sidebar navigation
@@ -123,7 +162,9 @@ public extension HTMLPageBuilder {
         // Add main content area
         html += """
 
-                <main class="doc-topic" id="app-top">
+                <div class="content">
+                <div class="doc-topic">
+                <main class="main" id="app-main">
         """
 
         // Add main content (breadcrumbs are rendered inside the hero section)
@@ -132,11 +173,15 @@ public extension HTMLPageBuilder {
         html += """
 
                 </main>
+                </div>
+                </div>
+            </div>
             </div>
         """
 
         // Add footer
         html += buildFooter()
+        html += "\n    </div>"
 
         // The shared sidebar document loads the search and filter scripts itself;
         // pages with an inline fallback sidebar load them directly.
@@ -432,26 +477,53 @@ public extension HTMLPageBuilder {
 // MARK: - Private Methods
 
 private extension HTMLPageBuilder {
-    /// Builds the header bar.
+    /// Builds the navigation bar at the top of documentation pages.
+    ///
+    /// The bar mirrors swift-docc-render's `DocumentationNav`: the navigator toggle,
+    /// the "Documentation" title linking to the index page, and a menu with the
+    /// language setting.  On narrow viewports the menu collapses behind a chevron
+    /// that opens it, which works without JavaScript through
+    /// ``navigationMenuToggleIdentifier``.
+    ///
+    /// - Parameter depth: The number of directories between the output root and the page.
+    /// - Returns: The `<nav>` element.
     func buildHeader(depth: Int) -> String {
         let homeURL = String(repeating: "../", count: depth) + "index.html"
         return """
 
-            <header class="documentation-nav">
-                <div class="header-content">
-                    <label for="sidebar-toggle" class="sidenav-toggle" aria-label="Toggle sidebar">
-                        <span class="sidenav-icon-wrapper">
-                            <svg class="sidenav-icon" viewBox="0 0 14 14" width="19" height="19" fill="currentColor">
-                                <path d="M6.533 1.867h-6.533v10.267h14v-10.267zM0.933 11.2v-8.4h4.667v8.4zM13.067 11.2h-6.533v-8.4h6.533z"></path>
-                                <path d="M1.867 5.133h2.8v0.933h-2.8z"></path>
-                                <path d="M1.867 7.933h2.8v0.933h-2.8z"></path>
-                            </svg>
-                        </span>
-                    </label>
-                    <a href="\(homeURL)" class="header-title">Documentation</a>
-                    <span class="header-language">Language: Swift</span>
+            <nav class="nav documentation-nav nav--fullwidth-border nav--is-wide-format" aria-label="API Reference">
+                <div class="nav__wrapper">
+                    <div class="nav__background"></div>
+                    <div class="nav-content">
+                        <div class="pre-title">
+                            <div class="sidenav-toggle-wrapper">
+                                <label for="\(Self.sidebarToggleIdentifier)" class="sidenav-toggle" aria-hidden="true">
+                                    <span class="sidenav-icon-wrapper">
+                                        <svg class="sidenav-icon svg-icon" viewBox="0 0 14 14" width="19" height="19" fill="currentColor" aria-hidden="true">
+                                            <path d="M6.533 1.867h-6.533v10.267h14v-10.267zM0.933 11.2v-8.4h4.667v8.4zM13.067 11.2h-6.533v-8.4h6.533z"></path>
+                                            <path d="M1.867 5.133h2.8v0.933h-2.8z"></path>
+                                            <path d="M1.867 7.933h2.8v0.933h-2.8z"></path>
+                                        </svg>
+                                    </span>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="nav-title"><h2 class="nav-title"><a href="\(homeURL)">Documentation</a></h2></div>
+                        <div class="nav-menu">
+                            <div class="nav-menu-tray">
+                                <ul class="nav-menu-items nav-menu-settings">
+                                    <li class="nav-menu-item nav-menu-setting language-container nav-menu-item--animated">
+                                        <div><span class="nav-menu-setting-label">Language: </span><span class="current-language" aria-current="page">Swift</span></div>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="nav-actions">
+                            <label for="\(Self.navigationMenuToggleIdentifier)" class="nav-menucta" aria-label="Toggle Menu"><span class="nav-menucta-chevron"></span></label>
+                        </div>
+                    </div>
                 </div>
-            </header>
+            </nav>
         """
     }
 
@@ -486,10 +558,9 @@ private extension HTMLPageBuilder {
         // Use the title for display if available, otherwise use the module name
         let displayTitle = renderNode.metadata.title ?? moduleName
         var html = """
-
-                <nav class="sidebar">
-                    <div class="sidebar-content">
-                        <h2 class="sidebar-module">\(escapeHTML(displayTitle))</h2>
+        <div class="navigator">
+            <div class="sidebar-content">
+                <h2 class="sidebar-module">\(escapeHTML(displayTitle))</h2>
         """
 
         // Build sidebar from topic sections
@@ -499,14 +570,14 @@ private extension HTMLPageBuilder {
 
         html += """
 
-                    </div>
-                    <div class="sidebar-filter" id="sidebar-filter">
-                        <input type="text" placeholder="Filter" class="filter-input" aria-label="Filter navigation">
-                    </div>
-                </nav>
+            </div>
+            <div class="sidebar-filter" id="sidebar-filter">
+                <input type="text" placeholder="Filter" class="filter-input" aria-label="Filter navigation">
+            </div>
+        </div>
         """
 
-        return html
+        return SidebarDocument.containerMarkup(content: html)
     }
 
     /// Builds a sidebar section from a task group.
@@ -562,37 +633,6 @@ private extension HTMLPageBuilder {
         reference.symbolKind?.badgeClass ?? "badge-other"
     }
 
-    /// Returns the topic icon SVG for the reference type.
-    ///
-    /// The icons match swift-docc's icons. Themes can override the appearance via CSS.
-    /// For custom SVG icons, themes should provide their own CSS rules for `.topic-icon`.
-    func topicIcon(for reference: TopicRenderReference) -> String {
-        // For articles, use the article icon
-        if reference.symbolKind == nil || reference.symbolKind?.id == "article" {
-            return """
-<svg aria-hidden="true" class="svg-icon article-icon topic-icon" viewBox="0 0 14 14">
-<path d="M8.033 1l3.967 4.015v7.985h-10v-12zM7.615 2h-4.615v10h8v-6.574z"></path>
-<path d="M7 1h1v4h-1z"></path>
-<path d="M7 5h5v1h-5z"></path>
-</svg>
-"""
-        }
-
-        // For tutorials, use tutorial icon
-        if reference.symbolKind?.id == "tutorial" {
-            return """
-<svg aria-hidden="true" class="svg-icon tutorial-icon topic-icon" viewBox="0 0 14 14">
-<path d="M2 2h10v10h-10z"></path>
-<path d="M6 5l4 2-4 2z" fill="currentColor"></path>
-</svg>
-"""
-        }
-
-        // For symbols (struct, enum, class, etc.), swift-docc doesn't show icons in Topics section
-        // The icon type is indicated by the symbol kind badge instead
-        return ""
-    }
-
     /// Extracts the module name from the render node.
     func extractModuleName(from renderNode: RenderNode) -> String {
         // Try to extract from identifier path
@@ -633,6 +673,16 @@ private extension HTMLPageBuilder {
         return components.count
     }
 
+    /// Builds the breadcrumbs of a page (swift-docc-render's `Hierarchy`).
+    ///
+    /// The breadcrumbs list the page's ancestors as links, followed by the page's own
+    /// title, in the menu item structure swift-docc-render uses.
+    ///
+    /// - Parameters:
+    ///   - renderNode: The render node of the page.
+    ///   - references: The references used to resolve the ancestors.
+    ///   - depth: The number of directories between the output root and the page.
+    /// - Returns: The `<ul>` element, or an empty string if the page has no hierarchy.
     func buildBreadcrumbs(
         for renderNode: RenderNode,
         references: [String: any RenderReference],
@@ -642,7 +692,6 @@ private extension HTMLPageBuilder {
             return ""
         }
 
-        // Extract paths from the hierarchy enum
         let paths: [[String]]
         switch hierarchy {
         case .reference(let referenceHierarchy):
@@ -655,32 +704,40 @@ private extension HTMLPageBuilder {
             return ""
         }
 
-        var html = """
-
-                            <ul class="hierarchy" aria-label="Breadcrumbs">
-        """
-
-        // Build breadcrumb trail from hierarchy using list items
-        // (separators rendered via CSS ::before on li + li)
-        for identifier in firstPath {
-            if let reference = references[identifier] as? TopicRenderReference {
-                let title = reference.title
-                let relativeURL = makeRelativeURL(reference.url, depth: depth)
-                html += "\n                                <li><a href=\"\(escapeHTML(relativeURL))\">\(escapeHTML(title))</a></li>"
-            } else {
-                html += "\n                                <li><span>\(escapeHTML(identifier))</span></li>"
+        // The root, then the other parents with their distance from the current page
+        let root = firstPath[0]
+        let parents = Array(firstPath.dropFirst())
+        let currentTitle = extractTitle(from: renderNode)
+        func link(_ identifier: String, classes: String) -> String {
+            guard let reference = references[identifier] as? TopicRenderReference else {
+                return "<span class=\"\(classes)\">\(escapeHTML(identifier))</span>"
             }
+            let relativeURL = makeRelativeURL(reference.url, depth: depth)
+            return "<a href=\"\(escapeHTML(relativeURL))\" class=\"\(classes) nav-menu-link\">\(escapeHTML(reference.title))</a>"
+        }
+        func distance(_ index: Int) -> Int {
+            min(parents.count - index, Self.breadcrumbCollapseLimit)
         }
 
-        // Add current page title as the last (non-linked) breadcrumb item
-        let currentTitle = extractTitle(from: renderNode)
-        html += "\n                                <li><span>\(escapeHTML(currentTitle))</span></li>"
+        var html = "\n<ul class=\"nav-menu-items hierarchy\" data-parents=\"\(min(parents.count, Self.breadcrumbCollapseLimit))\" aria-label=\"Breadcrumbs\">"
+        html += "<li class=\"nav-menu-item hierarchy-item root-hierarchy\">\(link(root, classes: "parent item"))</li>"
 
-        html += """
+        // The menu listing the items that do not fit
+        html += "<li class=\"hierarchy-collapsed-items\"><details><summary class=\"toggle\" aria-label=\"Show more\">"
+        html += "<span class=\"indicator\"><svg class=\"svg-icon icon-inline toggle-icon\" viewBox=\"0 0 14 14\" aria-hidden=\"true\">"
+        html += "<path d=\"m12.439 7.777v-1.554h-1.554v1.554zm-4.662 0v-1.554h-1.554v1.554zm-4.662 0v-1.554h-1.554v1.554z\"/></svg></span>"
+        html += "</summary><ul class=\"dropdown\">"
+        for (index, identifier) in parents.enumerated() {
+            html += "<li class=\"dropdown-item\" data-from-end=\"\(distance(index))\">\(link(identifier, classes: "item"))</li>"
+        }
+        html += "<li class=\"dropdown-item\" data-from-end=\"0\"><span class=\"current item nav-menu-link\">\(escapeHTML(currentTitle))</span></li>"
+        html += "</ul></details></li>"
 
-                            </ul>
-        """
-
+        for (index, identifier) in parents.enumerated() {
+            html += "<li class=\"nav-menu-item hierarchy-item\" data-from-end=\"\(distance(index))\">\(link(identifier, classes: "parent item"))</li>"
+        }
+        html += "<li class=\"nav-menu-item hierarchy-item\" data-from-end=\"0\"><span class=\"current item\">\(escapeHTML(currentTitle))</span></li>"
+        html += "</ul>"
         return html
     }
 
@@ -728,6 +785,18 @@ private extension HTMLPageBuilder {
         path.replacingOccurrences(of: "~dark", with: "")
     }
 
+    /// Builds the main content of a documentation page.
+    ///
+    /// The structure mirrors swift-docc-render's `DocumentationTopic`: the hero with
+    /// the breadcrumbs, title, abstract and declaration, followed by the content
+    /// column with the primary content, the topics, relationships and see also
+    /// sections, and the "On This Page" column.
+    ///
+    /// - Parameters:
+    ///   - renderNode: The render node of the page.
+    ///   - references: The references used to resolve links.
+    ///   - depth: The number of directories between the output root and the page.
+    /// - Returns: The HTML placed inside the page's `<main>` element.
     func buildMainContent(
         from renderNode: RenderNode,
         references: [String: any RenderReference],
@@ -735,13 +804,12 @@ private extension HTMLPageBuilder {
     ) -> String {
         var html = ""
 
-        // Hero section with framework label and title
         let title = extractTitle(from: renderNode)
         let roleLabel = roleLabel(for: renderNode)
 
-        // Modules and articles get the enhanced (coloured) hero background;
-        // all other symbol pages get the --disabled hero (no background fill),
-        // matching swift-docc-render's DocumentationHero.vue `enhanceBackground` logic.
+        // Modules and articles get the enhanced hero with a background and an icon;
+        // other symbol pages get a plain hero, like swift-docc-render's
+        // `enhanceBackground`.
         let isModule = renderNode.kind == .symbol && renderNode.metadata.symbolKind == "module"
         let isSymbol = renderNode.metadata.symbolKind != nil
         let enhanceBackground = !isSymbol || isModule
@@ -749,174 +817,107 @@ private extension HTMLPageBuilder {
             ? "documentation-hero"
             : "documentation-hero documentation-hero--disabled"
 
-        html += """
-
-                    <div class="\(heroClass)">
-        """
-
-        // Add technology icon for modules/frameworks
-        if isModule {
-            html += """
-
-                        <div class="icon">
-                            <div class="background-icon">
-                                <svg viewBox="0 0 14 14" class="technology-icon">
-                                    <path d="M3.39,9l3.16,1.84.47.28.47-.28L10.61,9l.45.26,1.08.63L7,12.91l-5.16-3,1.08-.64L3.39,9M7,0,0,4.1,2.47,5.55,0,7,2.47,8.44,0,9.9,7,14l7-4.1L11.53,8.45,14,7,11.53,5.56,14,4.1ZM7,7.12,5.87,6.45l-1.54-.9L3.39,5,1.85,4.1,7,1.08l5.17,3L10.6,5l-.93.55-1.54.91ZM7,10,3.39,7.9,1.85,7,3.4,6.09,4.94,7,7,8.2,9.06,7,10.6,6.1,12.15,7l-1.55.9Z" fill="currentColor"/>
-                                </svg>
-                            </div>
-                        </div>
-        """
+        html += "\n<div class=\"\(heroClass)\">"
+        html += "<div class=\"icon\">"
+        if enhanceBackground {
+            let iconType = isModule ? "module" : (renderNode.metadata.role ?? "article")
+            html += TopicTypeIcon.markup(for: iconType, additionalClass: "background-icon first-icon")
         }
-
-        html += """
-
-                        <div class="documentation-hero__content">
-        """
-
-        // Insert breadcrumb hierarchy inside hero content
+        html += "</div>"
+        html += "<div class=\"documentation-hero__above-content\"></div>"
+        html += "\n<div class=\"documentation-hero__content\">"
         html += buildBreadcrumbs(for: renderNode, references: references, depth: depth)
+        html += "\n<div class=\"topictitle\"><span class=\"eyebrow\">\(escapeHTML(roleLabel))</span>"
+        html += "<h1 class=\"title\">\(escapeHTML(title))</h1></div>"
 
-        html += """
-                            <span class="eyebrow">\(escapeHTML(roleLabel))</span>
-                            <h1>\(escapeHTML(title))</h1>
-        """
-
-        // Abstract, in the same wrapper as swift-docc-render
         if let abstract = renderNode.abstract {
             let abstractHTML = contentRenderer.renderInlineContent(abstract, references: references, depth: depth)
-            html += """
-
-                            <div class="\(Self.heroAbstractClass)"><p>\(abstractHTML.html)</p></div>
-            """
+            html += "\n<div class=\"\(Self.heroAbstractClass)\"><p>\(abstractHTML.html)</p></div>"
         }
 
-        // Declaration inside the hero — matches swift-docc-render's DocumentationHero.vue layout
-        // where the declarations-container lives inside documentation-hero__content.
         if renderNode.kind == .symbol {
             html += buildDeclaration(from: renderNode, references: references, depth: depth)
         }
+        html += "\n</div>\n</div>"
 
-        html += """
-
-                        </div>
-                    </div>
-        """
-
-        // Flex wrapper: doc-content (main column) + OnThisPageStickyContainer (right column)
-        html += """
-
-                    <div class="doc-content-wrapper">
-                        <div class="doc-content">
-                            <div class="primary-content-container">
-        """
-
-        // Primary content sections — skip declarations (already rendered inside the hero)
-        for section in renderNode.primaryContentSections {
-            if section is DeclarationsRenderSection { continue }
-            html += buildSection(section, references: references, depth: depth)
+        // The content column and the "On This Page" column
+        let primarySections = renderNode.primaryContentSections.filter { !($0 is DeclarationsRenderSection) }
+        var primaryHTML = ""
+        for section in primarySections {
+            primaryHTML += buildSection(section, references: references, depth: depth)
         }
-
-        // Sections array (used by tutorials and tutorial articles)
         for section in renderNode.sections {
-            html += buildSection(section, references: references, depth: depth)
+            primaryHTML += buildSection(section, references: references, depth: depth)
+        }
+        let noPrimaryContent = primaryHTML.isEmpty && enhanceBackground
+        html += "\n<div class=\"doc-content-wrapper\">\n<div class=\"doc-content\(noPrimaryContent ? " no-primary-content" : "")\">"
+        if !primaryHTML.isEmpty {
+            let border = enhanceBackground ? "" : " with-border"
+            html += "\n<div class=\"container\">"
+            html += "<div class=\"description\(enhanceBackground ? " after-enhanced-hero" : "")\"></div>"
+            html += "\n<div class=\"primary-content\(border)\">\(primaryHTML)\n</div>\n</div>"
         }
 
-        html += """
-
-                            </div>
-        """
-
-        // Topic sections — contenttable structure matching swift-docc-render ContentTable.vue
         if !renderNode.topicSections.isEmpty {
-            html += """
-
-                        <section class="contenttable alt-light">
-                            <div class="container">
-                                <h2 id="topics" class="title">Topics</h2>
-            """
-
-            for taskGroup in renderNode.topicSections {
-                html += buildTaskGroup(taskGroup, references: references, depth: depth)
-            }
-
-            html += """
-
-                            </div>
-                        </section>
-            """
+            html += buildContentTable(
+                title: "Topics", anchor: "topics", className: "topics",
+                body: renderNode.topicSections.map { buildTaskGroup($0, references: references, depth: depth) }.joined()
+            )
         }
-
-        // Relationships (for symbols) — contenttable structure
         if !renderNode.relationshipSections.isEmpty {
-            html += """
-
-                        <section class="contenttable alt-light">
-                            <div class="container">
-                                <h2 id="relationships" class="title">Relationships</h2>
-            """
-
-            for relationship in renderNode.relationshipSections {
-                html += buildRelationshipSection(relationship, references: references, depth: depth)
-            }
-
-            html += """
-
-                            </div>
-                        </section>
-            """
+            html += buildContentTable(
+                title: "Relationships", anchor: "relationships", className: "relationships",
+                body: renderNode.relationshipSections.map {
+                    buildRelationshipSection($0, references: references, depth: depth)
+                }.joined()
+            )
         }
-
-        // See Also — contenttable structure
         if !renderNode.seeAlsoSections.isEmpty {
-            html += """
-
-                        <section class="contenttable alt-light">
-                            <div class="container">
-                                <h2 id="see-also" class="title">See Also</h2>
-            """
-
-            for seeAlso in renderNode.seeAlsoSections {
-                html += buildTaskGroup(seeAlso, references: references, depth: depth)
-            }
-
-            html += """
-
-                            </div>
-                        </section>
-            """
+            html += buildContentTable(
+                title: "See Also", anchor: "see-also", className: "see-also",
+                body: renderNode.seeAlsoSections.map { buildTaskGroup($0, references: references, depth: depth) }.joined()
+            )
         }
 
-        // Close doc-content
-        html += """
-
-                        </div>
-        """
-
-        // On-this-page navigation sidebar (right column, sticky)
+        html += "\n</div>"
         html += buildOnThisPageNav(for: renderNode, title: title)
-
-        // Close doc-content-wrapper
-        html += """
-
-                    </div>
-        """
+        html += "\n</div>"
 
         return html
+    }
+
+    /// Builds a content table section such as Topics, Relationships or See Also.
+    ///
+    /// - Parameters:
+    ///   - title: The section title.
+    ///   - anchor: The identifier of the section heading.
+    ///   - className: An additional class naming the kind of section.
+    ///   - body: The HTML of the groups listed in the section.
+    /// - Returns: The `<section>` element (swift-docc-render's `ContentTable`).
+    func buildContentTable(title: String, anchor: String, className: String, body: String) -> String {
+        """
+
+        <section class="contenttable alt-light \(className)">
+        <div class="container">
+        <h2 id="\(anchor)" class="title">\(RenderContentHTMLRenderer.headerAnchor(anchor: anchor, title: escapeHTML(title)))</h2>\(body)
+        </div>
+        </section>
+        """
     }
 
     /// Builds the sticky on-this-page navigation sidebar shown to the right of the main content.
     ///
     /// Generates links to major sections present on the current page, matching
     /// swift-docc-render's `OnThisPageStickyContainer` / `OnThisPageNav` components.
-    /// The first item (page title) is pre-marked active; active tracking during scroll
-    /// would require JavaScript and is omitted in this pure-HTML implementation.
+    /// The first item (page title) is pre-marked active; when JavaScript is available,
+    /// the page script moves the mark to the section in view while scrolling.
     ///
     /// - Parameters:
     ///   - renderNode: The render node for the current page.
     ///   - title: The page title (used as the first nav item label).
-    /// - Returns: HTML string for the sticky container, or an empty string if there
-    ///   are no sections to navigate to or the theme disables the navigator
-    ///   (``ThemeFeatureFlag/onThisPageNavigatorDisabled``).
+    /// - Returns: HTML string for the sticky container, which lists the sections only
+    ///   when there are at least two besides the title, or an empty string if the
+    ///   theme disables the navigator (``ThemeFeatureFlag/onThisPageNavigatorDisabled``).
     func buildOnThisPageNav(for renderNode: RenderNode, title: String) -> String {
         guard !configuration.theme.isEnabled(.onThisPageNavigatorDisabled) else { return "" }
 
@@ -933,7 +934,10 @@ private extension HTMLPageBuilder {
 
         // Check primary content sections for mentions and content headings
         for section in renderNode.primaryContentSections {
-            if let mentionsSection = section as? MentionsRenderSection,
+            if let parametersSection = section as? ParametersRenderSection,
+               !parametersSection.parameters.isEmpty {
+                items.append(NavItem(anchor: "parameters", label: "Parameters", isChild: false))
+            } else if let mentionsSection = section as? MentionsRenderSection,
                !mentionsSection.mentions.isEmpty {
                 items.append(NavItem(anchor: "mentions", label: "Mentioned in", isChild: false))
             } else if let contentSection = section as? ContentRenderSection {
@@ -962,41 +966,30 @@ private extension HTMLPageBuilder {
             items.append(NavItem(anchor: "see-also", label: "See Also", isChild: false))
         }
 
-        // Only render the sidebar when there are navigation targets beyond the title
-        guard items.count > 1 else { return "" }
-
-        var html = """
-
-                        <div class="\(Self.onThisPageContainerClass)">
-                            <div class="OnThisPageNav">
-                                <ul class="items">
-        """
-
-        for (index, item) in items.enumerated() {
-            let activeClass = index == 0 ? " active" : ""
-            let itemClass = item.isChild ? "child-item" : "parent-item\(activeClass)"
-            html += """
-
-                                    <li class="\(itemClass)">
-                                        <a href="#\(escapeHTML(item.anchor))" class="base-link">
-                                            <span>\(escapeHTML(item.label))</span>
-                                        </a>
-                                    </li>
-            """
+        // Like swift-docc-render, the column is always there, but it lists the
+        // sections only when the page has at least two besides its title
+        var html = "\n<div class=\"\(Self.onThisPageContainerClass)\">"
+        if items.count > 2 {
+            html += "<nav class=\"OnThisPageNav\" aria-label=\"On This Page\"><ul class=\"items\">"
+            for (index, item) in items.enumerated() {
+                let activeClass = index == 0 ? " active" : ""
+                let itemClass = (item.isChild ? "child-item" : "parent-item") + activeClass
+                html += "<li class=\"\(itemClass)\"><a href=\"#\(escapeHTML(item.anchor))\" class=\"base-link\">"
+                    + "<span>\(escapeHTML(item.label))</span></a></li>"
+            }
+            html += "</ul></nav>"
         }
-
-        html += """
-
-                                </ul>
-                            </div>
-                        </div>
-        """
-
+        html += "</div>"
         return html
     }
 
     /// Returns the role label for a render node (e.g., "Framework", "Structure", "Class").
     func roleLabel(for renderNode: RenderNode) -> String {
+        // The role heading is the eyebrow swift-docc-render shows
+        if let heading = renderNode.metadata.roleHeading, !heading.isEmpty {
+            return heading
+        }
+
         // Check metadata role first
         if let role = renderNode.metadata.role {
             switch role {
@@ -1045,8 +1038,14 @@ private extension HTMLPageBuilder {
         return "Framework"
     }
 
+    /// Builds the declaration of a symbol page, if the page has one.
+    ///
+    /// - Parameters:
+    ///   - renderNode: The render node of the page.
+    ///   - references: The references used to link type names.
+    ///   - depth: The number of directories between the output root and the page.
+    /// - Returns: The declarations container, or an empty string.
     func buildDeclaration(from renderNode: RenderNode, references: [String: any RenderReference], depth: Int) -> String {
-        // Look for declaration section in primary content
         for section in renderNode.primaryContentSections {
             if let declarationSection = section as? DeclarationsRenderSection {
                 return buildDeclarationsSection(declarationSection, references: references, depth: depth)
@@ -1055,82 +1054,84 @@ private extension HTMLPageBuilder {
         return ""
     }
 
+    /// Builds the declarations of a symbol (swift-docc-render's `Declaration`).
+    ///
+    /// Each declaration is a `pre.source` box inside the declaration pill structure of
+    /// swift-docc-render.  Swift declarations are formatted like swift-docc-render
+    /// does (see ``formattedSwiftTokens(_:)``), and every token is rendered like
+    /// swift-docc-render's `DeclarationToken`.
+    ///
+    /// - Parameters:
+    ///   - section: The declarations section.
+    ///   - references: The references used to link type names.
+    ///   - depth: The number of directories between the output root and the page.
+    /// - Returns: The declarations container.
     func buildDeclarationsSection(_ section: DeclarationsRenderSection, references: [String: any RenderReference], depth: Int) -> String {
-        // Match swift-docc-render structure:
-        // section.declaration > div.declaration-list > div.declaration-pill > div.declaration-group-wrapper > div.declaration-group > pre.source > code
-        var html = """
-
-                <section class="declaration">
-                    <div class="declaration-list">
-        """
-
+        var html = "\n<div class=\"declarations-container\"><section class=\"declaration\"><div class=\"declaration-list\">"
         for declaration in section.declarations {
-            html += """
-
-                        <div class="declaration-pill selected-declaration">
-                            <div class="declaration-group-wrapper">
-                                <div class="declaration-group">
-                                    <pre class="source"><code>
-            """
-
-            for token in declaration.tokens {
-                let tokenClass = tokenCSSClass(for: token.kind)
-                let escapedText = escapeHTML(token.text)
-
-                // Check if this token has a reference we can link to
-                var linkedText = escapedText
-                if let identifier = token.identifier,
-                   let reference = references[identifier] as? TopicRenderReference {
-                    let relativeURL = makeRelativeURL(reference.url, depth: depth)
-                    linkedText = "<a href=\"\(escapeHTML(relativeURL))\">\(escapedText)</a>"
-                }
-
-                if let tokenClass = tokenClass {
-                    html += "<span class=\"\(tokenClass)\">\(linkedText)</span>"
-                } else {
-                    html += linkedText
-                }
+            let isSwift = declaration.languages?.contains("swift") ?? true
+            let tokens = isSwift
+                ? Self.formattedSwiftTokens(declaration.tokens.map { ($0.kind, $0.text, $0.identifier) })
+                : declaration.tokens.map { ($0.kind, $0.text, $0.identifier) }
+            let multiline = tokens.contains { $0.text.contains("\n") }
+            html += "<div class=\"declaration-pill selected-declaration\"><div class=\"declaration-group-wrapper\"><div class=\"declaration-group\">"
+            html += "<pre class=\"source\(multiline ? " displays-multiple-lines" : "")\"><code>"
+            for token in tokens {
+                html += declarationTokenMarkup(kind: token.kind, text: token.text, identifier: token.identifier, references: references, depth: depth)
             }
-
-            html += "</code></pre>\n                                </div>\n                            </div>\n                        </div>"
+            html += "</code></pre></div></div></div>"
         }
-
-        html += """
-
-                    </div>
-                </section>
-        """
-
+        html += "</div></section></div>"
         return html
     }
 
-    func tokenCSSClass(for kind: DeclarationRenderSection.Token.Kind) -> String? {
-        // Class names match swift-docc-render's token-* naming convention
+    /// Renders one declaration token like swift-docc-render's `DeclarationToken`.
+    ///
+    /// Type names become `type-identifier-link` elements, linked to their page when
+    /// the page is documented; plain text stays unmarked; every other token is a span
+    /// with the class `token-<kind>`.
+    ///
+    /// - Parameters:
+    ///   - kind: The token kind.
+    ///   - text: The token text.
+    ///   - identifier: The reference identifier of the token, if any.
+    ///   - references: The references used to resolve the identifier.
+    ///   - depth: The number of directories between the output root and the page.
+    /// - Returns: The token HTML.
+    func declarationTokenMarkup(
+        kind: DeclarationRenderSection.Token.Kind,
+        text: String,
+        identifier: String?,
+        references: [String: any RenderReference],
+        depth: Int
+    ) -> String {
+        let escapedText = escapeHTML(text)
+        let linkURL = identifier.flatMap { references[$0] as? TopicRenderReference }.map { makeRelativeURL($0.url, depth: depth) }
         switch kind {
-        case .keyword:
-            return "token-keyword"
+        case .text:
+            return escapedText
         case .typeIdentifier:
-            return "token-type"
-        case .genericParameter:
-            return "token-type"
+            if let linkURL {
+                return "<a href=\"\(escapeHTML(linkURL))\" class=\"type-identifier-link\"><code><span>\(escapedText)</span></code></a>"
+            }
+            return "<span class=\"type-identifier-link\"><span>\(escapedText)</span></span>"
+        case .attribute where linkURL != nil:
+            return "<a href=\"\(escapeHTML(linkURL ?? ""))\" class=\"attribute-link\">\(escapedText)</a>"
+        default:
+            return "<span class=\"\(tokenCSSClass(for: kind) ?? "")\">\(escapedText)</span>"
+        }
+    }
+
+    /// Returns the class of a declaration token: `token-` followed by the token kind.
+    ///
+    /// - Parameter kind: The token kind.
+    /// - Returns: The class, or `nil` for plain text.
+    func tokenCSSClass(for kind: DeclarationRenderSection.Token.Kind) -> String? {
+        switch kind {
         case .text:
             return nil
-        case .internalParam:
-            return "token-param"
-        case .externalParam:
-            return "token-param"
-        case .identifier:
-            return "token-identifier"
-        case .label:
-            return "token-label"
-        case .number:
-            return "token-number"
-        case .string:
-            return "token-string"
-        case .attribute:
-            return "token-attribute"
-        @unknown default:
-            return nil
+        default:
+            return "token-\(kind.rawValue)"
         }
     }
 
@@ -1146,17 +1147,12 @@ private extension HTMLPageBuilder {
             }
         case .discussion:
             if let contentSection = section as? ContentRenderSection {
-                var html = """
-
-                <section class="discussion">
-                    <h2>Discussion</h2>
-                """
-                html += buildContentSection(contentSection, references: references, depth: depth)
-                html += """
-
-                </section>
-                """
-                return html
+                var html = "\n<div class=\"content\"><h2 id=\"discussion\">"
+                html += RenderContentHTMLRenderer.headerAnchor(anchor: "discussion", title: "Discussion") + "</h2>"
+                for block in contentSection.content {
+                    html += contentRenderer.renderBlockContent(block, references: references, depth: depth)
+                }
+                return html + "\n</div>"
             }
         case .parameters:
             if let parametersSection = section as? ParametersRenderSection {
@@ -1204,18 +1200,32 @@ private extension HTMLPageBuilder {
         return ""
     }
 
+    /// Builds a content section of the primary content.
+    ///
+    /// - Parameters:
+    ///   - section: The content section.
+    ///   - references: The references used to resolve links.
+    ///   - depth: The number of directories between the output root and the page.
+    /// - Returns: The blocks of the section in a `.content` wrapper.
     func buildContentSection(
         _ section: ContentRenderSection,
         references: [String: any RenderReference],
         depth: Int
     ) -> String {
-        var html = ""
+        var html = "\n<div class=\"content\">"
         for block in section.content {
             html += contentRenderer.renderBlockContent(block, references: references, depth: depth)
         }
-        return html
+        return html + "\n</div>"
     }
 
+    /// Builds the parameters section of a symbol (swift-docc-render's `Parameters`).
+    ///
+    /// - Parameters:
+    ///   - section: The parameters section.
+    ///   - references: The references used to resolve links.
+    ///   - depth: The number of directories between the output root and the page.
+    /// - Returns: The `<section>` element, or an empty string without parameters.
     func buildParametersSection(
         _ section: ParametersRenderSection,
         references: [String: any RenderReference],
@@ -1223,81 +1233,67 @@ private extension HTMLPageBuilder {
     ) -> String {
         guard !section.parameters.isEmpty else { return "" }
 
-        var html = """
-
-                <section class="parameters">
-                    <h2>Parameters</h2>
-                    <dl>
-        """
-
+        var html = "\n<section class=\"parameters\">"
+        html += "<h2 id=\"parameters\">\(RenderContentHTMLRenderer.headerAnchor(anchor: "parameters", title: "Parameters"))</h2><dl>"
         for param in section.parameters {
-            html += "\n                    <dt><code>\(escapeHTML(param.name))</code></dt>"
-            html += "\n                    <dd>"
-
+            html += "\n<dt class=\"param-name\"><code>\(escapeHTML(param.name))</code></dt>"
+            html += "<dd class=\"param-content\"><div class=\"content\">"
             for block in param.content {
                 html += contentRenderer.renderBlockContent(block, references: references, depth: depth)
             }
-
-            html += "</dd>"
+            html += "</div></dd>"
         }
-
-        html += """
-
-                    </dl>
-                </section>
-        """
-
+        html += "</dl></section>"
         return html
     }
 
+    /// Builds a group of topics in a content table section.
+    ///
+    /// - Parameters:
+    ///   - taskGroup: The group.
+    ///   - references: The references of the listed topics.
+    ///   - depth: The number of directories between the output root and the page.
+    /// - Returns: The `.contenttable-section` element.
     func buildTaskGroup(
         _ taskGroup: TaskGroupRenderSection,
         references: [String: any RenderReference],
         depth: Int
     ) -> String {
-        var html = """
-
-                        <div class="contenttable-section">
-        """
-
+        var html = "\n<div class=\"contenttable-section\(taskGroup.title == nil ? " no-title" : "")\">"
         if let title = taskGroup.title {
-            html += """
-
-                            <div class="section-title">
-                                <h3 class="contenttable-title">\(escapeHTML(title))</h3>
-                            </div>
-            """
+            let anchor = taskGroup.anchor ?? slugify(title)
+            html += "<div class=\"section-title\"><h3 id=\"\(escapeHTML(anchor))\" class=\"contenttable-title\">"
+            html += RenderContentHTMLRenderer.headerAnchor(anchor: anchor, title: escapeHTML(title))
+            html += "</h3></div>"
         }
-
-        html += """
-
-                            <div class="section-content">
-        """
-
+        html += "<div class=\"section-content\">"
         for identifier in taskGroup.identifiers {
             if let reference = references[identifier] as? TopicRenderReference {
                 html += buildSymbolCard(for: reference, depth: depth)
             }
         }
-
-        html += """
-
-                            </div>
-                        </div>
-        """
-
+        html += "</div></div>"
         return html
     }
 
+    /// Builds the link block of one topic (swift-docc-render's `TopicsLinkBlock`).
+    ///
+    /// Articles, collections, tutorials and sample code show an icon, like
+    /// swift-docc-render; symbols show their declaration fragments.  Every block
+    /// carries the topic type and role in ``TopicTypeIcon/typeAttribute`` and
+    /// `data-topic-role`, and a hidden `.topic-kind-badge` with the letters of the
+    /// kind, so that a theme can show a kind indicator for every topic.
+    ///
+    /// - Parameters:
+    ///   - reference: The topic reference.
+    ///   - depth: The number of directories between the output root and the page.
+    /// - Returns: The `.link-block` element.
     func buildSymbolCard(for reference: TopicRenderReference, depth: Int) -> String {
         let relativeURL = makeRelativeURL(reference.url, depth: depth)
         let abstract = contentRenderer.renderInlineContent(reference.abstract, references: [:], depth: 0).plainText
+        let role = reference.role ?? reference.kind.rawValue
+        let type = TopicTypeIcon.normalisedType(reference.symbolKind?.id ?? role)
 
-        // Get icon SVG for the reference type
-        let iconSVG = topicIcon(for: reference)
-        let hasIcon = !iconSVG.isEmpty
-
-        // Render title: use fragments if available, fall back to plain title
         let titleHTML: String
         if let fragments = reference.fragments, !fragments.isEmpty {
             titleHTML = renderDecoratedTitle(fragments)
@@ -1305,58 +1301,50 @@ private extension HTMLPageBuilder {
             titleHTML = "<span>\(escapeHTML(reference.title))</span>"
         }
 
-        // Only include icon wrapper when icon SVG is present (avoids 0px collapsed wrapper)
-        let iconBlock: String
-        if hasIcon {
-            iconBlock = """
-
-                                        <div class="topic-icon-wrapper">
-                                            \(iconSVG)
-                                        </div>
-            """
-        } else {
-            iconBlock = ""
+        var html = "\n<div class=\"link-block topic\" \(TopicTypeIcon.typeAttribute)=\"\(escapeHTML(type))\" data-topic-role=\"\(escapeHTML(role))\">"
+        html += "<a href=\"\(escapeHTML(relativeURL))\" class=\"link has-adjacent-elements\">"
+        if let icon = TopicTypeIcon.topicListIcon(forRole: role) {
+            html += "<div class=\"topic-icon-wrapper\">\(icon)</div>"
         }
-
-        let linkBlockClass = hasIcon ? "link-block topic" : "link-block topic no-icon"
-
-        return """
-
-                                <div class="\(linkBlockClass)">
-                                    <a href="\(escapeHTML(relativeURL))" class="link has-adjacent-elements">\(iconBlock)
-                                        \(titleHTML)
-                                    </a>
-                                    <div class="abstract">
-                                        <p>\(escapeHTML(abstract))</p>
-                                    </div>
-                                </div>
-        """
+        let letters = TopicTypeIcon.letters(for: type) ?? ""
+        html += "<span class=\"topic-kind-badge\" \(TopicTypeIcon.typeAttribute)=\"\(escapeHTML(type))\" aria-hidden=\"true\">\(escapeHTML(letters))</span>"
+        html += titleHTML + "</a>"
+        if !abstract.isEmpty {
+            html += "<div class=\"abstract\"><div class=\"content\">\(escapeHTML(abstract))</div></div>"
+        }
+        html += "</div>"
+        return html
     }
 
+    /// Builds a group of relationships, such as the protocols a type conforms to.
+    ///
+    /// Documented types are linked; other types are listed as code, like
+    /// swift-docc-render's `RelationshipsList`.
+    ///
+    /// - Parameters:
+    ///   - section: The relationships group.
+    ///   - references: The references of the related types.
+    ///   - depth: The number of directories between the output root and the page.
+    /// - Returns: The `.contenttable-section` element.
     func buildRelationshipSection(
         _ section: RelationshipsRenderSection,
         references: [String: any RenderReference],
         depth: Int
     ) -> String {
-        var html = """
-
-                        <h3>\(escapeHTML(section.title))</h3>
-                        <ul class="relationships-list">
-        """
-
+        let anchor = slugify(section.title)
+        var html = "\n<div class=\"contenttable-section\"><div class=\"section-title\">"
+        html += "<h3 id=\"\(escapeHTML(anchor))\" class=\"contenttable-title\">"
+        html += RenderContentHTMLRenderer.headerAnchor(anchor: anchor, title: escapeHTML(section.title)) + "</h3></div>"
+        html += "<div class=\"section-content\"><ul class=\"relationships-list column\">"
         for identifier in section.identifiers {
             if let reference = references[identifier] as? TopicRenderReference {
                 let relativeURL = makeRelativeURL(reference.url, depth: depth)
-                let title = reference.title
-                html += "\n                        <li><a href=\"\(escapeHTML(relativeURL))\">\(escapeHTML(title))</a></li>"
+                html += "<li class=\"relationships-item\"><a href=\"\(escapeHTML(relativeURL))\" class=\"link\"><code>\(escapeHTML(reference.title))</code></a></li>"
+            } else if let reference = references[identifier] as? UnresolvedRenderReference {
+                html += "<li class=\"relationships-item\"><code>\(escapeHTML(reference.title))</code></li>"
             }
         }
-
-        html += """
-
-                        </ul>
-        """
-
+        html += "</ul></div></div>"
         return html
     }
 
@@ -1839,6 +1827,15 @@ private extension HTMLPageBuilder {
         return html
     }
 
+    /// Builds the "Mentioned in" section of a symbol (swift-docc-render's `Mentions`).
+    ///
+    /// Like swift-docc-render, at most five articles are listed.
+    ///
+    /// - Parameters:
+    ///   - section: The mentions section.
+    ///   - references: The references of the mentioning articles.
+    ///   - depth: The number of directories between the output root and the page.
+    /// - Returns: The `<section>` element, or an empty string without mentions.
     func buildMentionsSection(
         _ section: MentionsRenderSection,
         references: [String: any RenderReference],
@@ -1847,151 +1844,101 @@ private extension HTMLPageBuilder {
         guard !section.mentions.isEmpty else {
             return ""
         }
-
-        var html = """
-
-                <section class="mentions">
-                    <h2 id="mentions"><a href="#mentions">Mentioned in</a></h2>
-                    <div class="symbol-list">
-        """
-
-        // Limit to top 5 mentions (matching swift-docc-render behavior)
+        var html = "\n<section class=\"mentions\">"
+        html += "<h2 id=\"mentions\">\(RenderContentHTMLRenderer.headerAnchor(anchor: "mentions", title: "Mentioned in"))</h2>"
         for mentionURL in section.mentions.prefix(5) {
-            let urlString = mentionURL.absoluteString
-            // Look up the reference to get the title
-            if let reference = references[urlString] as? TopicRenderReference {
+            if let reference = references[mentionURL.absoluteString] as? TopicRenderReference {
                 let relativeURL = makeRelativeURL(reference.url, depth: depth)
-                let title = reference.title
-                html += """
-
-                        <div class="topic-link-container">
-                            <span class="symbol-icon"><svg viewBox="0 0 14 14" fill="none"><path d="M3 1.5A.5.5 0 013.5 1h5.793a.5.5 0 01.353.146l2.208 2.208a.5.5 0 01.146.353V12.5a.5.5 0 01-.5.5h-8a.5.5 0 01-.5-.5v-11z" stroke="currentColor" stroke-width="1"/><path d="M9 1v3h3" stroke="currentColor" stroke-width="1"/></svg></span>
-                            <div class="symbol-info">
-                                <a href="\(escapeHTML(relativeURL))" class="symbol-name">\(escapeHTML(title))</a>
-                            </div>
-                        </div>
-                """
+                let icon = TopicTypeIcon.topicListIcon(forRole: "article") ?? ""
+                html += "<div class=\"link-block\"><a href=\"\(escapeHTML(relativeURL))\" class=\"link\">"
+                html += "<div class=\"topic-icon-wrapper mention-icon\">\(icon)</div>\(escapeHTML(reference.title))</a></div>"
             }
         }
-
-        html += """
-
-                    </div>
-                </section>
-        """
-
+        html += "</section>"
         return html
     }
 
-    /// Builds the page footer with configurable content and appearance selector.
+    /// Builds the page footer with the custom footer content and the colour scheme toggle.
+    ///
+    /// - Returns: The footer built by ``ColourSchemeToggle/footerMarkup(content:)``.
     func buildFooter() -> String {
-        let footerContent = configuration.footerHTML ?? Configuration.defaultFooter
-        return """
-
-            <footer class="documentation-footer">
-                <div class="footer-content">\(footerContent)</div>
-                <div class="appearance-selector" id="appearance-selector">
-                    <button type="button" class="appearance-btn" data-color-scheme="light" aria-label="Light mode">Light</button>
-                    <button type="button" class="appearance-btn" data-color-scheme="dark" aria-label="Dark mode">Dark</button>
-                    <button type="button" class="appearance-btn active" data-color-scheme="auto" aria-label="Auto mode">Auto</button>
-                </div>
-            </footer>
-        """
+        ColourSchemeToggle.footerMarkup(content: configuration.footerHTML ?? Configuration.defaultFooter)
     }
 
-    /// JavaScript for the appearance selector and the embedded sidebar.
+    /// JavaScript for the colour scheme toggle and the embedded sidebar.
     ///
-    /// The script restores and stores the reader's colour scheme, forwards it to the
-    /// embedded sidebar document, and forwards the keyboard shortcuts that focus the
-    /// sidebar filter (`/`, and Command-F or Control-F while the sidebar is shown) to
-    /// the embedded sidebar document using `postMessage`, which also works for pages
-    /// opened from local files.
+    /// The script runs ``ColourSchemeToggle/script``, which remembers the reader's
+    /// colour scheme and forwards it to the embedded sidebar document, and forwards the
+    /// keyboard shortcuts that focus the sidebar filter (`/`, and Command-F or
+    /// Control-F while the sidebar is shown) to the embedded sidebar document using
+    /// `postMessage`, which also works for pages opened from local files.  Without
+    /// JavaScript the toggle still switches the colour scheme of the page.
     var appearanceSelectorScript: String {
         """
 
             <script>
-            (function() {
-                var storageKey = '\(SidebarDocument.colourSchemeStorageKey)';
-                var schemeMessage = '\(SidebarDocument.colourSchemeMessage)';
+            \(ColourSchemeToggle.script)
+            (function () {
+                // Mark the "On This Page" item of the first section in the upper half
+                // of the window, like swift-docc-render
+                var items = document.querySelectorAll('.OnThisPageNav li');
+                if (!items.length || !('IntersectionObserver' in window)) {
+                    return;
+                }
+                var sections = [];
+                var visibility = new Map();
+                for (var i = 0; i < items.length; i++) {
+                    var link = items[i].querySelector('a');
+                    var id = link ? decodeURIComponent(link.getAttribute('href').slice(1)) : '';
+                    var target = id === 'app-top' ? document.querySelector('.documentation-hero') : document.getElementById(id);
+                    if (target && target.parentElement && /^H[1-6]$/.test(target.tagName)) {
+                        target = target.parentElement.closest('section, .content') || target;
+                    }
+                    sections.push(target);
+                }
+                var nav = document.querySelector('.nav');
+                var top = nav ? nav.getBoundingClientRect().height : 0;
+                var observer = new IntersectionObserver(function (entries) {
+                    entries.forEach(function (entry) {
+                        visibility.set(entry.target, entry.intersectionRatio);
+                    });
+                    for (var j = 0; j < sections.length; j++) {
+                        if (sections[j] && visibility.get(sections[j]) > 0) {
+                            for (var k = 0; k < items.length; k++) {
+                                items[k].classList.toggle('active', k === j);
+                            }
+                            return;
+                        }
+                    }
+                }, { rootMargin: '-' + top + 'px 0% -50% 0%' });
+                sections.forEach(function (section) {
+                    if (section) {
+                        observer.observe(section);
+                    }
+                });
+            })();
+            (function () {
                 var focusMessage = '\(SidebarDocument.focusFilterMessage)';
-                var readyMessage = '\(SidebarDocument.readyMessage)';
-                var body = document.body;
                 var frame = document.querySelector('iframe.\(SidebarDocument.frameClass)');
-
-                function postToSidebar(message) {
-                    if (frame && frame.contentWindow) {
-                        frame.contentWindow.postMessage(message, '*');
-                    }
+                var toggle = document.getElementById('\(Self.sidebarToggleIdentifier)');
+                if (!frame) {
+                    return;
                 }
-
-                function currentScheme() {
-                    return body.getAttribute('data-color-scheme') || 'auto';
-                }
-
-                // --- Appearance Selector ---
-                var selector = document.getElementById('appearance-selector');
-                if (selector) {
-                    // Show the selector (hidden by default for no-JS fallback)
-                    selector.style.visibility = 'visible';
-
-                    var buttons = selector.querySelectorAll('.appearance-btn');
-
-                    function applyColorScheme(scheme) {
-                        body.setAttribute('data-color-scheme', scheme);
-                        buttons.forEach(function (btn) {
-                            btn.classList.toggle('active', btn.dataset.colorScheme === scheme);
-                        });
-                        postToSidebar({ type: schemeMessage, scheme: scheme });
-                    }
-
-                    var saved = 'auto';
-                    try {
-                        saved = localStorage.getItem(storageKey) || 'auto';
-                    } catch (error) {
-                        // Storage may be unavailable, for example for local files.
-                    }
-                    applyColorScheme(saved);
-
-                    buttons.forEach(function (btn) {
-                        btn.addEventListener('click', function () {
-                            var scheme = btn.dataset.colorScheme;
-                            try {
-                                localStorage.setItem(storageKey, scheme);
-                            } catch (error) {
-                                // The choice then only applies to this page.
-                            }
-                            applyColorScheme(scheme);
-                        });
-                    });
-                }
-
-                // --- Embedded Sidebar ---
-                if (frame) {
-                    window.addEventListener('message', function (event) {
-                        var data = event.data;
-                        if (event.source === frame.contentWindow && data && data.type === readyMessage) {
-                            postToSidebar({ type: schemeMessage, scheme: currentScheme() });
+                document.addEventListener('keydown', function (e) {
+                    var focused = document.activeElement;
+                    var editing = focused && (focused.tagName === 'INPUT' && focused.type === 'text' || focused.tagName === 'TEXTAREA' || focused.isContentEditable);
+                    var hidden = frame.getClientRects().length === 0 || frame.getBoundingClientRect().width === 0;
+                    var slash = e.key === '/' && !editing;
+                    var find = (e.metaKey || e.ctrlKey) && e.key === 'f' && !hidden;
+                    if (slash || find) {
+                        e.preventDefault();
+                        if (hidden && toggle) {
+                            toggle.checked = !toggle.checked;
                         }
-                    });
-
-                    var toggle = document.getElementById('sidebar-toggle');
-
-                    document.addEventListener('keydown', function (e) {
-                        var focused = document.activeElement;
-                        var editing = focused && (focused.tagName === 'INPUT' || focused.tagName === 'TEXTAREA' || focused.isContentEditable);
-                        var hidden = toggle && toggle.checked;
-                        var slash = e.key === '/' && !editing;
-                        var find = (e.metaKey || e.ctrlKey) && e.key === 'f' && !hidden;
-                        if (slash || find) {
-                            e.preventDefault();
-                            if (hidden) {
-                                toggle.checked = false;
-                            }
-                            frame.focus();
-                            postToSidebar({ type: focusMessage });
-                        }
-                    });
-                }
+                        frame.focus();
+                        frame.contentWindow.postMessage({ type: focusMessage }, '*');
+                    }
+                });
             })();
             </script>
         """
@@ -2562,6 +2509,98 @@ private extension HTMLPageBuilder {
             })();
             </script>
         """
+    }
+}
+
+// MARK: - Declaration Formatting
+
+extension HTMLPageBuilder {
+    /// A declaration token: its kind, its text and the identifier of the page it refers to.
+    typealias DeclarationToken = (kind: DeclarationRenderSection.Token.Kind, text: String, identifier: String?)
+
+    /// The indentation swift-docc-render uses for parameters on their own lines.
+    static let declarationIndentation = "    "
+
+    /// Formats the tokens of a Swift declaration like swift-docc-render.
+    ///
+    /// When a function or initialiser has more than one parameter, every parameter is
+    /// moved onto its own indented line and the closing parenthesis onto a line of its
+    /// own; attributes before the declaration keyword get a line of their own.  This
+    /// is the algorithm of swift-docc-render's `DeclarationSource`.
+    ///
+    /// - Parameter tokens: The declaration tokens.
+    /// - Returns: The tokens with line breaks and indentation added to their text.
+    static func formattedSwiftTokens(_ tokens: [DeclarationToken]) -> [DeclarationToken] {
+        var result: [DeclarationToken] = []
+        var indentedParameters = false
+        var openParenthesisToken: Int?
+        var closeParenthesisToken: Int?
+        var closeParenthesisOffset: String.Index?
+        var unclosedParentheses = 0
+        var firstKeywordToken: Int?
+
+        for (index, token) in tokens.enumerated() {
+            var newToken = token
+            let previous = index > 0 ? tokens[index - 1] : nil
+            let next = index + 1 < tokens.count ? tokens[index + 1] : nil
+
+            if firstKeywordToken == nil && token.kind == .keyword {
+                firstKeywordToken = index
+            }
+            if firstKeywordToken != nil {
+                for position in token.text.indices {
+                    let character = token.text[position]
+                    if character == "(" {
+                        unclosedParentheses += 1
+                        if openParenthesisToken == nil {
+                            openParenthesisToken = index
+                        }
+                    } else if character == ")" {
+                        unclosedParentheses -= 1
+                        if openParenthesisToken != nil && closeParenthesisToken == nil && unclosedParentheses == 0 {
+                            closeParenthesisToken = index
+                            closeParenthesisOffset = position
+                            break
+                        }
+                    }
+                }
+            }
+
+            // Attributes before the declaration get a line of their own
+            if token.kind == .text && unclosedParentheses == 0
+                && previous?.kind == .attribute && next?.kind == .keyword {
+                newToken.text = token.text.trimmingTrailingWhitespace() + "\n"
+            }
+
+            // Every parameter after the first starts a new indented line
+            if token.text.hasSuffix(", "), let next, next.kind == .attribute || next.kind == .externalParam {
+                newToken.text = token.text.trimmingTrailingWhitespace() + "\n" + declarationIndentation
+                indentedParameters = true
+            }
+            result.append(newToken)
+        }
+
+        if indentedParameters, let open = openParenthesisToken {
+            result[open].text += "\n" + declarationIndentation
+        }
+        if indentedParameters, let close = closeParenthesisToken, let offset = closeParenthesisOffset {
+            let characters = tokens[close].text.distance(from: tokens[close].text.startIndex, to: offset)
+            let text = result[close].text
+            let split = text.index(text.startIndex, offsetBy: min(characters, text.count))
+            result[close].text = text[..<split] + "\n" + text[split...]
+        }
+        return result
+    }
+}
+
+private extension String {
+    /// The string without trailing spaces, tabs and line breaks.
+    func trimmingTrailingWhitespace() -> String {
+        var result = self
+        while let last = result.last, last.isWhitespace {
+            result.removeLast()
+        }
+        return result
     }
 }
 

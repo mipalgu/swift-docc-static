@@ -46,15 +46,15 @@ try {
     }, titleSelector);
     if (page.kind === 'documentation') {
       const frame = tab.frames().find((candidate) => candidate !== tab.mainFrame() && /sidebar\.html/.test(candidate.url()));
-      checks.sidebar = Boolean(frame) && (await frame.evaluate(() => document.querySelectorAll('.navigator-card').length > 0));
+      checks.sidebar = Boolean(frame) && (await frame.evaluate(() => document.querySelectorAll('.navigator-card-item').length > 0));
       if (frame) {
-        const hasOwnRow = await frame.evaluate(() => Boolean(document.querySelector('.navigator-card:target, .module-header:target')));
+        const hasOwnRow = await frame.evaluate(() => Boolean(document.querySelector('.navigator-card-item:target, .module-header:target, .technology-title:target')));
         if (hasOwnRow) {
           checks.currentRow = await frame.evaluate(() => {
-            const row = document.querySelector('.navigator-card:target, .module-header:target');
+            const row = document.querySelector('.navigator-card-item:target, .module-header:target, .technology-title:target');
             const box = row.getBoundingClientRect();
-            // A module's row is highlighted through its title link
-            const highlighted = [row, row.querySelector(':scope > .technology-title')].filter(Boolean).some((element) => {
+            // A row is highlighted through its head, a module through its title link
+            const highlighted = [row, row.querySelector(':scope > .head-wrapper, :scope > .technology-title')].filter(Boolean).some((element) => {
               const background = getComputedStyle(element).backgroundColor;
               return background !== 'rgba(0, 0, 0, 0)' && background !== 'transparent';
             });
@@ -62,9 +62,9 @@ try {
           });
         }
         const toggle = await frame.evaluateHandle(() => {
-          for (const row of document.querySelectorAll('li.navigator-card.expandable:not(:target)')) {
+          for (const row of document.querySelectorAll('li.navigator-card-item.expandable:not(:target)')) {
             const wrapper = row.nextElementSibling;
-            const label = row.querySelector('.disclosure-chevron');
+            const label = row.querySelector('.tree-toggle');
             const chevron = label && (label.querySelector('svg') || label);
             if (!wrapper || !chevron) continue;
             if (wrapper.getBoundingClientRect().height === 0 && chevron.getBoundingClientRect().height > 0) {

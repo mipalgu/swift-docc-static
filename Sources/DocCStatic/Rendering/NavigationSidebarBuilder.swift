@@ -14,7 +14,7 @@ import Foundation
 /// - Disclosure chevrons for expandable items (pure CSS, no JavaScript)
 /// - A stable `id` on every row, derived from the row's documentation path, so that
 ///   the page embedding the document can select its row with a URL fragment
-/// - Proper icons/badges for different symbol types
+/// - The topic type icon of every row (see ``TopicTypeIcon``)
 /// - Flat list structure (matches swift-docc-render architecture)
 ///
 /// The shared document carries no per-page state: highlighting the current page and
@@ -28,7 +28,7 @@ import Foundation
 /// indentation.
 ///
 /// Group markers (e.g., "Initializers", "Instance Methods") are regular `<li>` items
-/// with the `.is-group` class, rendered at `depth + 1` relative to their parent.
+/// with the `.is-group` class, at the same depth as the rows they group.
 ///
 /// This matches the swift-docc-render Vue.js implementation where items are flattened
 /// during rendering with depth-based indentation.
@@ -96,31 +96,45 @@ public extension NavigationSidebarBuilder {
 
     /// Builds the navigation tree with its filter field.
     ///
-    /// Links are relative to the output root.  Every row representing a page carries
-    /// the identifier returned by ``SidebarDocument/rowIdentifier(forPath:)``; if a
-    /// page is listed more than once, only its first row carries the identifier.
+    /// The structure mirrors swift-docc-render's `Navigator` and `NavigatorCard`: a
+    /// `nav.navigator` holding the card with the technology title and the rows, and
+    /// the filter field at the bottom.  A single module's title stays above the
+    /// scrolling rows like swift-docc-render's; with several modules, each module's
+    /// title and rows scroll together.  Links are relative to the output root.  Every
+    /// row representing a page carries the identifier returned by
+    /// ``SidebarDocument/rowIdentifier(forPath:)``; if a page is listed more than once,
+    /// only its first row carries the identifier.
     ///
-    /// - Returns: The tree inside a `.sidebar` container, or an empty sidebar
-    ///   structure if the index contains no modules.
+    /// - Returns: The navigator, with an empty card if the index contains no modules.
     mutating func buildNavigationTree() -> String {
         let allModules = navigationIndex.allModules()
         var html = """
 
-            <div class="sidebar">
-                <div class="sidebar-content">
+            <nav class="navigator" aria-label="Documentation Navigator">
+                <div class="navigator-card">
+                    <div class="navigator-card-full-height">
+                        <div class="navigator-card-inner">
+                            <div class="card-body">
         """
         if allModules.count > 1 {
+            html += "\n<div class=\"sidebar-content scroller\">"
             for moduleNode in allModules {
                 html += buildModuleSection(moduleNode)
             }
+            html += "\n</div>"
         } else if let moduleNode = allModules.first {
             html += buildSingleModuleTree(moduleNode)
+        } else {
+            html += "\n<div class=\"sidebar-content scroller\"></div>"
         }
         html += """
 
-                </div>
+                            </div>
+                        </div>
+                    </div>
         \(Self.filterMarkup)
-            </div>
+                </div>
+            </nav>
         """
         return html
     }
@@ -129,14 +143,11 @@ public extension NavigationSidebarBuilder {
     ///
     /// - Returns: An empty sidebar container with a filter field.
     static func buildFallbackSidebar() -> String {
-        """
-
-                <nav class="sidebar">
-                    <div class="sidebar-content">
-                    </div>
+        SidebarDocument.containerMarkup(content: """
+        <div class="navigator"><div class="sidebar-content"></div>
         \(filterMarkup)
-                </nav>
-        """
+        </div>
+        """)
     }
 
     /// Returns the normalised paths of all rows that carry an identifier.
@@ -163,7 +174,8 @@ public extension NavigationSidebarBuilder {
     ///
     /// The script applies the reader's colour scheme (from local storage and from
     /// messages posted by the embedding page), marks the target row as the current
-    /// page for assistive technologies, reveals the filter field and filters the tree
+    /// page for assistive technologies, scrolls the list only when the target row
+    /// would otherwise be out of view, reveals the filter field and filters the tree
     /// by title, and focuses the filter on request of the embedding page or when `/`
     /// is pressed.
     static var sidebarScript: String {
@@ -223,11 +235,7 @@ public extension NavigationSidebarBuilder {
                     window.parent.postMessage({ type: readyMessage }, '*');
                 }
 
-                function markCurrentPage() {
-                    var marked = document.querySelectorAll('[aria-current]');
-                    for (var i = 0; i < marked.length; i++) {
-                        marked[i].removeAttribute('aria-current');
-                    }
+                function currentRow() {
                     var fragment = window.location.hash.slice(1);
                     var target = fragment ? document.getElementById(fragment) : null;
                     if (!target && fragment) {
@@ -237,22 +245,55 @@ public extension NavigationSidebarBuilder {
                             target = null;
                         }
                     }
+                    return target;
+                }
+
+                function markCurrentPage() {
+                    var marked = document.querySelectorAll('[aria-current]');
+                    for (var i = 0; i < marked.length; i++) {
+                        marked[i].removeAttribute('aria-current');
+                    }
+                    var target = currentRow();
                     var link = target ? (target.tagName === 'A' ? target : target.querySelector('a')) : null;
                     if (link) {
                         link.setAttribute('aria-current', 'page');
                     }
                 }
 
+                // Like swift-docc-render, scroll the current row to the top of the
+                // list only if it would not be visible otherwise.
+                function revealCurrentRow(initial) {
+                    var target = currentRow();
+                    var scroller = target ? target.closest('.scroller') : null;
+                    if (!scroller || scroller.clientHeight === 0) {
+                        return;
+                    }
+                    var area = scroller.getBoundingClientRect();
+                    var row = target.getBoundingClientRect();
+                    var offset = row.top - area.top + scroller.scrollTop;
+                    if (initial && offset + row.height <= scroller.clientHeight) {
+                        scroller.scrollTop = 0;
+                    } else if (row.top < area.top || row.bottom > area.bottom) {
+                        scroller.scrollTop = offset;
+                    }
+                }
+
                 markCurrentPage();
                 window.addEventListener('hashchange', markCurrentPage);
+                window.addEventListener('load', function () {
+                    revealCurrentRow(true);
+                });
+                window.addEventListener('resize', function () {
+                    revealCurrentRow(false);
+                });
 
                 if (!filterBox || !input || !content) {
                     return;
                 }
 
-                filterBox.style.display = 'flex';
+                filterBox.hidden = false;
 
-                var rows = content.querySelectorAll('.navigator-card');
+                var rows = content.querySelectorAll('.navigator-card-item');
                 var wrappers = content.querySelectorAll('.nav-children-wrapper');
                 var sections = content.querySelectorAll('.module-section');
 
@@ -346,28 +387,42 @@ public extension NavigationSidebarBuilder {
 
 // MARK: - Private
 private extension NavigationSidebarBuilder {
-    /// The filter field shown at the bottom of the sidebar when JavaScript is available.
+    /// The filter field at the bottom of the navigator.
+    ///
+    /// It starts hidden, because filtering needs JavaScript; the sidebar script shows it.
     static let filterMarkup = """
-                <div class="sidebar-filter" id="sidebar-filter">
-                    <span class="filter-icon">
-                        <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
-                            <path d="M0 1.5A1.5 1.5 0 011.5 0h11A1.5 1.5 0 0114 1.5v1.75a1.5 1.5 0 01-.44 1.06L9 8.871V13.5a.5.5 0 01-.757.429l-3-1.8A.5.5 0 015 11.7V8.871L.44 4.31A1.5 1.5 0 010 3.25V1.5z"/>
-                        </svg>
-                    </span>
-                    <input type="text" placeholder="Filter" class="filter-input" aria-label="Filter navigation">
-                    <span class="filter-shortcut">/</span>
+                <div class="filter-wrapper" id="sidebar-filter" hidden>
+                    <div class="navigator-filter">
+                        <div class="input-wrapper">
+                            <div class="filter filter-component" role="search">
+                                <div class="filter__wrapper filter__wrapper--reversed">
+                                    <div class="filter__top-wrapper">
+                                        <span class="filter__filter-button" aria-hidden="true">
+                                            <svg class="svg-icon filter-icon" width="14" height="14" viewBox="0 0 14 14"><path d="m2 6.5h10v1h-10z"/><path d="m1 3h12v1h-12z"/><path d="m3 10h8v1h-8z"/></svg>
+                                        </span>
+                                        <div class="filter__input-box-wrapper">
+                                            <label class="filter__input-label">
+                                                <input type="text" placeholder="Filter" class="filter__input filter-input" aria-label="Filter navigation" autocomplete="off" spellcheck="false">
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <span class="quick-navigation-open" title="Type / to filter">/</span>
+                    </div>
                 </div>
     """
 
-    /// The chevron drawn by disclosure labels.
+    /// The chevron drawn by disclosure toggles (swift-docc-render's `InlineChevronRightIcon`).
     static let chevronSVG = """
-    <svg viewBox="0 0 10 10" fill="currentColor"><path d="M3 1.5L7 5L3 8.5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <svg class="svg-icon inline-chevron-right-icon icon-inline chevron" viewBox="0 0 14 14" aria-hidden="true"><path d="M2.964 1.366l0.649-0.76 7.426 6.343-7.423 6.445-0.655-0.755 6.545-5.683-6.542-5.59z"></path></svg>
     """
 
     /// Builds a module section in the multi-module sidebar.
     ///
     /// Every module starts collapsed; the stylesheet expands the module that contains
-    /// the target row.
+    /// the target row.  The disclosure toggle sits beside the technology title link.
     ///
     /// - Parameter moduleNode: The module's navigation node.
     /// - Returns: The HTML for the module section.
@@ -378,18 +433,16 @@ private extension NavigationSidebarBuilder {
 
         var html = """
 
-                    <div class="sidebar-section module-section">
+                    <div class="module-section">
                         <input type="checkbox" id="\(checkboxId)" class="disclosure-checkbox">
                         <div class="module-header"\(identifierAttribute(for: moduleNode))>
-                            <a href="\(escapeHTML(relativeURL))" class="technology-title">
-                                <h2 class="card-link">\(title)</h2>
-                                <label for="\(checkboxId)" class="disclosure-chevron" aria-label="Toggle \(title)">\(Self.chevronSVG)</label>
-                            </a>
+                            <a href="\(escapeHTML(relativeURL))" class="technology-title"><h2 class="card-link">\(title)</h2></a>
+                            <label for="\(checkboxId)" class="tree-toggle module-toggle" aria-label="Toggle \(title)">\(Self.chevronSVG)</label>
                         </div>
         """
 
         if let children = moduleNode.children {
-            html += "\n<ul class=\"sidebar-list module-contents\">"
+            html += "\n<ul class=\"navigator-tree module-contents\">"
             html += buildFlatNavigationList(children, nestingLevel: 0)
             html += "\n</ul>"
         }
@@ -403,135 +456,97 @@ private extension NavigationSidebarBuilder {
 
     /// Builds the tree of the only module of a single-module sidebar.
     ///
+    /// The technology title stays above the scrolling rows.
+    ///
     /// - Parameter moduleNode: The module's navigation node.
     /// - Returns: The HTML for the module title and its tree.
     mutating func buildSingleModuleTree(_ moduleNode: NavigationNode) -> String {
         let relativeURL = makeRelativeURL(moduleNode.path ?? "")
         var html = """
 
-                    <a href="\(escapeHTML(relativeURL))" class="technology-title"\(identifierAttribute(for: moduleNode))>
-                        <h2 class="card-link">\(escapeHTML(moduleNode.title))</h2>
-                    </a>
+                    <a href="\(escapeHTML(relativeURL))" class="technology-title"\(identifierAttribute(for: moduleNode))><h2 class="card-link">\(escapeHTML(moduleNode.title))</h2></a>
+                    <div class="sidebar-content scroller">
         """
 
         if let children = moduleNode.children {
-            html += "\n<ul class=\"sidebar-list\">"
+            html += "\n<ul class=\"navigator-tree\">"
             html += buildFlatNavigationList(children, nestingLevel: 0)
             html += "\n</ul>"
         }
+        html += "\n</div>"
         return html
     }
 
     /// Builds a flat navigation list where all items are siblings.
     ///
     /// This method recursively flattens the navigation tree into a single list,
-    /// using `--nesting-index` for visual hierarchy via CSS indentation.
-    /// Children are wrapped in a `.nav-children-wrapper` list item for CSS-based disclosure.
+    /// using `--nesting-index` for visual hierarchy via CSS indentation.  Like
+    /// swift-docc-render, a group heading has the same nesting index as the rows
+    /// listed under it.  Children are wrapped in a `.nav-children-wrapper` list item
+    /// for CSS-based disclosure.
     ///
     /// - Parameters:
     ///   - nodes: The navigation nodes to render.
-    ///   - nestingLevel: The nesting level for indentation (matches docc-render's `depth`).
+    ///   - nestingLevel: The nesting level for indentation (swift-docc-render's `depth`).
     /// - Returns: HTML string with flat list items.
     mutating func buildFlatNavigationList(_ nodes: [NavigationNode], nestingLevel: Int) -> String {
         var html = ""
-        var i = 0
-
-        while i < nodes.count {
-            let node = nodes[i]
-
-            if node.isGroupMarker {
-                // Collect all items in this group
-                var groupChildren: [NavigationNode] = []
-                var j = i + 1
-                while j < nodes.count && !nodes[j].isGroupMarker {
-                    groupChildren.append(nodes[j])
-                    j += 1
-                }
-
-                html += buildGroupMarkerItemWithChildren(
-                    node,
-                    children: groupChildren,
-                    nestingLevel: nestingLevel + 1
-                )
-
-                i = j  // Skip to next group or end
-            } else {
-                html += buildNavigatorItemWithChildren(node, nestingLevel: nestingLevel)
-                i += 1
-            }
+        for node in nodes {
+            html += node.isGroupMarker
+                ? buildGroupMarker(node, nestingLevel: nestingLevel)
+                : buildNavigatorItemWithChildren(node, nestingLevel: nestingLevel)
         }
-
         return html
     }
 
-    /// Builds a group marker item with its children always visible.
+    /// Builds a group heading row.
     ///
-    /// Group markers are rendered as non-interactive `<li>` items with the `.is-group`
-    /// class: plain flat section headers with no disclosure chevron, matching
-    /// swift-docc-render's behaviour where groups are always expanded.
+    /// Group headings are plain, non-interactive rows (swift-docc-render renders them
+    /// as `h3.leaf-link` in an `.is-group` row) followed by the rows they group.
     ///
     /// - Parameters:
     ///   - node: The group marker node.
-    ///   - children: The nodes listed under the group marker.
-    ///   - nestingLevel: The nesting level of the group marker.
-    /// - Returns: The HTML for the group marker and its children.
-    mutating func buildGroupMarkerItemWithChildren(
-        _ node: NavigationNode,
-        children: [NavigationNode],
-        nestingLevel: Int
-    ) -> String {
-        var html = "\n<li class=\"navigator-card is-group\" style=\"--nesting-index: \(nestingLevel)\">"
-            + "<div class=\"depth-spacer\"></div>"
-            + "<span class=\"group-title\">\(escapeHTML(node.title))</span></li>"
-
-        if !children.isEmpty {
-            html += "\n<li class=\"nav-children-wrapper\"><ul class=\"sidebar-list\">"
-            html += buildFlatNavigationList(children, nestingLevel: nestingLevel + 1)
-            html += "\n</ul></li>"
-        }
-
-        return html
+    ///   - nestingLevel: The nesting level of the group and its rows.
+    /// - Returns: The HTML for the group heading.
+    func buildGroupMarker(_ node: NavigationNode, nestingLevel: Int) -> String {
+        "\n<li class=\"navigator-card-item is-group\" data-nesting-index=\"\(nestingLevel)\" style=\"--nesting-index: \(nestingLevel)\">"
+            + "<div class=\"head-wrapper\"><div class=\"depth-spacer\"></div>"
+            + "<div class=\"title-container\"><h3 class=\"leaf-link\">\(escapeHTML(node.title))</h3></div></div></li>"
     }
 
-    /// Builds a regular navigator item with its children wrapped for disclosure.
+    /// Builds a regular navigator row with its children wrapped for disclosure.
     ///
-    /// Expandable items start collapsed; the stylesheet expands the target row and its
-    /// ancestors.
+    /// Expandable rows start collapsed; the stylesheet expands the target row and its
+    /// ancestors.  The disclosure checkbox precedes the row's content, so that sibling
+    /// selectors can reach the chevron, whose label fills the row's depth spacer.
     ///
     /// - Parameters:
     ///   - node: The navigation node.
     ///   - nestingLevel: The nesting level for indentation.
     /// - Returns: The HTML for the item and its children.
     mutating func buildNavigatorItemWithChildren(_ node: NavigationNode, nestingLevel: Int) -> String {
-        let nodeType = node.nodeType
         let relativeURL = makeRelativeURL(node.path ?? "")
         let expandableClass = node.isExpandable ? " expandable" : ""
 
-        var html = "\n<li class=\"navigator-card\(expandableClass)\" style=\"--nesting-index: \(nestingLevel)\""
-            + "\(identifierAttribute(for: node))>"
+        var html = "\n<li class=\"navigator-card-item\(expandableClass)\" data-nesting-index=\"\(nestingLevel)\""
+            + " style=\"--nesting-index: \(nestingLevel)\"\(identifierAttribute(for: node))>"
 
+        var toggle = ""
         if node.isExpandable {
-            // The checkbox precedes the depth spacer so sibling selectors can reach the chevron
             let checkboxId = nextCheckboxId()
             html += "<input type=\"checkbox\" id=\"\(checkboxId)\" class=\"disclosure-checkbox\">"
-            html += "<div class=\"depth-spacer\">"
-            html += "<label for=\"\(checkboxId)\" class=\"disclosure-chevron\" aria-label=\"Toggle \(escapeHTML(node.title))\">"
-            html += Self.chevronSVG
-            html += "</label></div>"
-        } else {
-            html += "<div class=\"depth-spacer\"></div>"
+            toggle = "<label for=\"\(checkboxId)\" class=\"tree-toggle\" aria-label=\"Toggle \(escapeHTML(node.title))\">"
+                + Self.chevronSVG + "</label>"
         }
-
-        if nodeType.showsBadge {
-            html += "<span class=\"badge \(nodeType.badgeClass)\">\(nodeType.badgeCharacter)</span>"
-        } else if let iconSVG = nodeType.iconSVG {
-            html += "<span class=\"symbol-icon\">\(iconSVG)</span>"
-        }
-
-        html += "<a href=\"\(escapeHTML(relativeURL))\" class=\"leaf-link\">\(escapeHTML(node.title))</a></li>"
+        html += "<div class=\"head-wrapper\"><div class=\"depth-spacer\">\(toggle)</div>"
+        html += "<div class=\"navigator-icon-wrapper\">"
+            + TopicTypeIcon.markup(for: node.type ?? node.nodeType.rawValue, additionalClass: "navigator-icon")
+            + "</div>"
+        html += "<div class=\"title-container\"><a href=\"\(escapeHTML(relativeURL))\" class=\"leaf-link\">"
+            + "\(escapeHTML(node.title))</a></div></div></li>"
 
         if let children = node.children, !children.isEmpty {
-            html += "\n<li class=\"nav-children-wrapper\"><ul class=\"sidebar-list\">"
+            html += "\n<li class=\"nav-children-wrapper\"><ul class=\"navigator-tree\">"
             html += buildFlatNavigationList(children, nestingLevel: nestingLevel + 1)
             html += "\n</ul></li>"
         }

@@ -70,7 +70,7 @@ private extension RenderContentHTMLRenderer {
 
         case .codeVoice(let code):
             return InlineResult(
-                html: "<code>\(escapeHTML(code))</code>",
+                html: "<code class=\"inline-code\">\(escapeHTML(code))</code>",
                 plainText: code
             )
 
@@ -138,6 +138,11 @@ private extension RenderContentHTMLRenderer {
         }
     }
 
+    /// Renders a link to another page or an external URL (swift-docc-render's `Reference`).
+    ///
+    /// Links are `a.inline-link` elements.  A link to a symbol that keeps the symbol's
+    /// own title shows the title as code, like swift-docc-render.  Inactive links
+    /// render their title only.
     func renderReference(
         identifier: RenderReferenceIdentifier,
         isActive: Bool,
@@ -146,10 +151,11 @@ private extension RenderContentHTMLRenderer {
         references: [String: any RenderReference],
         depth: Int
     ) -> InlineResult {
-        // Determine the title to display
-        let title: String
-        let titleHTML: String
+        let topicReference = references[identifier.identifier] as? TopicRenderReference
+        let linkReference = references[identifier.identifier] as? LinkReference
 
+        let title: String
+        var titleHTML: String
         if let overridingTitleContent = overridingTitleInlineContent {
             let rendered = renderInlineContent(overridingTitleContent, references: references, depth: depth)
             title = rendered.plainText
@@ -157,28 +163,38 @@ private extension RenderContentHTMLRenderer {
         } else if let overriding = overridingTitle {
             title = overriding
             titleHTML = escapeHTML(overriding)
-        } else if let reference = references[identifier.identifier] as? TopicRenderReference {
-            title = reference.title
-            titleHTML = escapeHTML(reference.title)
+        } else if let topicReference {
+            title = topicReference.title
+            titleHTML = escapeHTML(topicReference.title)
+            if topicReference.kind == .symbol {
+                titleHTML = "<code>\(titleHTML)</code>"
+            }
+        } else if let linkReference {
+            let rendered = renderInlineContent(linkReference.titleInlineContent, references: references, depth: depth)
+            title = rendered.plainText.isEmpty ? linkReference.title : rendered.plainText
+            titleHTML = rendered.html.isEmpty ? escapeHTML(linkReference.title) : rendered.html
         } else {
             title = identifier.identifier
             titleHTML = escapeHTML(identifier.identifier)
         }
 
-        // Get the URL from the reference
-        if isActive, let reference = references[identifier.identifier] as? TopicRenderReference {
-            let relativeURL = makeRelativeURL(reference.url, depth: depth)
-            return InlineResult(
-                html: "<a href=\"\(escapeHTML(relativeURL))\">\(titleHTML)</a>",
-                plainText: title
-            )
+        let url: String? = if let topicReference {
+            makeRelativeURL(topicReference.url, depth: depth)
+        } else if let linkReference {
+            makeRelativeURL(linkReference.url, depth: depth)
         } else {
-            // Inactive reference - just show the text
+            nil
+        }
+        if isActive, let url {
             return InlineResult(
-                html: "<span class=\"inactive-reference\">\(titleHTML)</span>",
+                html: "<a href=\"\(escapeHTML(url))\" class=\"inline-link\">\(titleHTML)</a>",
                 plainText: title
             )
         }
+        return InlineResult(
+            html: "<span class=\"inactive-reference\">\(titleHTML)</span>",
+            plainText: title
+        )
     }
 
     func renderImage(
@@ -207,7 +223,7 @@ private extension RenderContentHTMLRenderer {
         let cleanPath = url.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
         let prefix = String(repeating: "../", count: depth)
         // Don't add index.html for anchors or external URLs
-        if url.hasPrefix("#") || url.hasPrefix("http://") || url.hasPrefix("https://") {
+        if url.hasPrefix("#") || url.contains("://") || url.hasPrefix("mailto:") {
             return url
         }
         return "\(prefix)\(cleanPath)/index.html"
@@ -235,17 +251,17 @@ public extension RenderContentHTMLRenderer {
         switch block {
         case .paragraph(let paragraph):
             let content = renderInlineContent(paragraph.inlineContent, references: references, depth: depth)
+            if paragraph.inlineContent.count == 1, case .image = paragraph.inlineContent[0] {
+                return "\n        <p class=\"inline-image-container\">\(content.html)</p>"
+            }
             return "\n        <p>\(content.html)</p>"
 
         case .heading(let heading):
             let text = heading.text
             let anchor = heading.anchor ?? slugify(text)
-            return """
-
-                    <h\(heading.level) id="\(escapeHTML(anchor))">
-                        <a href="#\(escapeHTML(anchor))">\(escapeHTML(text))</a>
-                    </h\(heading.level)>
-            """
+            return "\n        <h\(heading.level) id=\"\(escapeHTML(anchor))\">"
+                + Self.headerAnchor(anchor: anchor, title: escapeHTML(text))
+                + "</h\(heading.level)>"
 
         case .aside(let aside):
             return renderAside(aside, references: references, depth: depth)
@@ -291,6 +307,29 @@ public extension RenderContentHTMLRenderer {
     }
 }
 
+// MARK: - Heading Anchors
+
+public extension RenderContentHTMLRenderer {
+    /// The text that assistive technologies read after a heading's anchor link.
+    static let headerAnchorDescription = "in page link"
+
+    /// Builds the link that makes a heading an anchor (swift-docc-render's `LinkableHeading`).
+    ///
+    /// The link icon after the title appears while the heading is hovered or focused.
+    ///
+    /// - Parameters:
+    ///   - anchor: The identifier of the heading.
+    ///   - title: The heading text, already escaped for HTML.
+    /// - Returns: The `a.header-anchor` element.
+    static func headerAnchor(anchor: String, title: String) -> String {
+        "<a href=\"#\(escapeHTML(anchor))\" class=\"header-anchor\" data-after-text=\"\(headerAnchorDescription)\">\(title)"
+            + "<svg class=\"icon svg-icon link-icon\" viewBox=\"0 0 20 20\" aria-hidden=\"true\">"
+            + "<path d=\"M19.34,4.88L15.12,.66c-.87-.87-2.3-.87-3.17,0l-3.55,3.56-1.38,1.38-1.4,1.4c-.47,.47-.68,1.09-.64,1.7,.02,.29,.09,.58,.21,.84,.11,.23,.24,.44,.43,.63l4.22,4.22h0l.53-.53,.53-.53h0l-4.22-4.22c-.29-.29-.29-.77,0-1.06l1.4-1.4,.91-.91,.58-.58,.55-.55,2.9-2.9c.29-.29,.77-.29,1.06,0l4.22,4.22c.29,.29,.29,.77,0,1.06l-2.9,2.9c.14,.24,.24,.49,.31,.75,.08,.32,.11,.64,.09,.96l3.55-3.55c.87-.87,.87-2.3,0-3.17Z\"/>"
+            + "<path d=\"M14.41,9.82s0,0,0,0l-4.22-4.22h0l-.53,.53-.53,.53h0l4.22,4.22c.29,.29,.29,.77,0,1.06l-1.4,1.4-.91,.91-.58,.58-.55,.55h0l-2.9,2.9c-.29,.29-.77,.29-1.06,0L1.73,14.04c-.29-.29-.29-.77,0-1.06l2.9-2.9c-.14-.24-.24-.49-.31-.75-.08-.32-.11-.64-.09-.97L.68,11.93c-.87,.87-.87,2.3,0,3.17l4.22,4.22c.87,.87,2.3,.87,3.17,0l3.55-3.55,1.38-1.38,1.4-1.4c.47-.47,.68-1.09,.64-1.7-.02-.29-.09-.58-.21-.84-.11-.22-.24-.44-.43-.62Z\"/>"
+            + "</svg></a>"
+    }
+}
+
 // MARK: - Block Content Private
 
 private extension RenderContentHTMLRenderer {
@@ -300,7 +339,7 @@ private extension RenderContentHTMLRenderer {
 
         var html = """
 
-                <aside class="aside \(styleClass)">
+                <aside class="\(styleClass)" aria-label="\(escapeHTML(styleClass))">
                     <p class="label">\(escapeHTML(displayName))</p>
         """
 
@@ -328,14 +367,15 @@ private extension RenderContentHTMLRenderer {
             highlightedCode = escapeHTML(code)
         }
 
-        // Wrap in .code-listing wrapper to match swift-docc-render structure
+        // One line container per line, like swift-docc-render's `CodeListing`
+        let lines = highlightedCode.components(separatedBy: "\n").map {
+            "<span class=\"code-line-container\"><span class=\"code-line\">\($0)</span></span>"
+        }
         return """
 
-                <div class="code-listing" data-syntax="\(language)">
-                    <div class="container-general">
-                        <pre class="language-\(language)"><code>\(highlightedCode)</code></pre>
-                    </div>
-                </div>
+                <div class="code-listing" data-syntax="\(escapeHTML(language))">\
+        <div class="container-general"><pre class="language-\(escapeHTML(language))"><code>\(lines.joined(separator: "\n"))
+        </code></pre></div></div>
         """
     }
 
@@ -383,13 +423,13 @@ private extension RenderContentHTMLRenderer {
         references: [String: any RenderReference],
         depth: Int
     ) -> String {
-        var html = "\n        <table>"
+        var html = "\n        <div class=\"table-wrapper\"><table>"
 
         // Header row
         if let headerRow = table.rows.first {
             html += "\n            <thead>\n                <tr>"
             for cell in headerRow.cells {
-                html += "\n                    <th>"
+                html += "\n                    <th scope=\"col\">"
                 for block in cell {
                     html += renderBlockContent(block, references: references, depth: depth)
                 }
@@ -415,7 +455,7 @@ private extension RenderContentHTMLRenderer {
             html += "\n            </tbody>"
         }
 
-        html += "\n        </table>"
+        html += "\n        </table></div>"
         return html
     }
 

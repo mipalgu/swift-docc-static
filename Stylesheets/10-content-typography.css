@@ -1,246 +1,455 @@
+/*
+ * Base styles and typography (swift-docc-render base styles and ContentNode).
+ */
 html {
-    font-size: var(--spacing-html-font-size, 17px);
+    font: var(--typography-html-font-size, var(--spacing-html-font-size, 17px)) var(--typography-html-font, "Helvetica Neue", "Helvetica", "Arial", sans-serif);
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    height: 100%;
+    quotes: "\201C" "\201D";
+    --scale-inline: 1;
+}
+
+html[dir=rtl] {
+    --scale-inline: -1;
 }
 
 * {
     box-sizing: border-box;
+}
+
+abbr, blockquote, body, button, dd, dl, dt, fieldset, figure, form, h1, h2, h3, h4, h5, h6,
+hgroup, input, legend, li, ol, p, pre, ul {
     margin: 0;
     padding: 0;
 }
 
-body {
-    font-family: var(--typography-html-font, 'Helvetica Neue', Helvetica, Arial, sans-serif);
-    font-size: var(--spacing-body-font-size, 17px);
-    background: var(--color-fill);
-    color: var(--color-figure-gray);
-    line-height: var(--spacing-body-line-height, 25px);
-    font-weight: var(--spacing-body-font-weight, 400);
-    -webkit-font-smoothing: antialiased;
-
-    /* Spacing variables matching swift-docc-render */
-    --spacing-stacked-margin-small: 0.4em;
-    --spacing-stacked-margin-large: 0.8em;
-    --spacing-stacked-margin-xlarge: 1.6em;
-
-    /* Default padding for code blocks (matches swift-docc-render) */
-    --code-block-style-elements-padding: 8px 14px;
+address, caption, code, figcaption, pre, th {
+    font-size: 1em;
+    font-weight: 400;
+    font-style: normal;
 }
 
-a {
-    color: var(--color-link);
-    text-decoration: none;
+fieldset, iframe, img {
+    border: 0;
 }
 
-a:hover {
-    text-decoration: underline;
-}
-
-code {
-    font-family: var(--typography-html-font-mono, Menlo, monospace);
-    font-size: var(--spacing-code-font-size, inherit);
-    background: var(--color-code-inline-background, transparent);
-    padding: var(--spacing-code-padding, 0);
-    border-radius: var(--spacing-code-border-radius, 0);
-}
-
-pre {
-    font-family: var(--typography-html-font-mono, Menlo, monospace);
-    font-size: var(--spacing-pre-font-size, 17px);
-    line-height: var(--spacing-pre-line-height, 25px);
-    background: var(--color-pre-background, transparent);
-    border: var(--spacing-pre-border, none);
-    border-radius: var(--spacing-pre-border-radius, 0px);
-    /* Use swift-docc-render variable name, fallback to legacy for classic theme */
-    padding: var(--code-block-style-elements-padding, var(--spacing-pre-padding, 8px 14px));
-    /* Individual padding properties allow themes to override horizontal padding */
-    padding-left: var(--spacing-pre-padding-left, 14px);
-    padding-right: var(--spacing-pre-padding-right, 14px);
-    overflow-x: auto;
-    margin: var(--spacing-pre-margin, 0);
-    max-width: var(--spacing-pre-max-width, none);
-    box-sizing: border-box;
-    position: var(--spacing-pre-code-position, static);
-    display: var(--spacing-pre-display, block);
-}
-
-pre code {
-    display: block;
-    background: none;
-    padding: var(--spacing-pre-code-padding, 0);
-    font-size: var(--spacing-pre-code-font-size, 15px);
-    font-family: var(--typography-html-font-mono, Menlo, monospace);
-    position: var(--spacing-pre-code-position, static);
-    left: var(--spacing-pre-code-left, 0);
-}
-
-/* Code listing wrapper (matches swift-docc-render structure) */
-.code-listing {
-    display: block;
-    background-color: var(--color-code-background, #f7f7f7);
-    border: 1px solid var(--color-grid, #ccc);
-    border-radius: var(--code-border-radius, 4px);
-    margin-top: 1.6rem;
-    padding: 0;
-}
-
-.container-general {
-    /* Container for code blocks within code-listing */
-    margin: 0;
-    padding: 0;
+caption, th {
+    text-align: start;
 }
 
 table {
     border-collapse: collapse;
-    margin: var(--spacing-table-margin, 1rem 0);
-    font-size: var(--spacing-table-font-size, 17px);
-    line-height: var(--spacing-table-line-height, 25px);
+    border-spacing: 0;
 }
 
-th, td {
-    padding: var(--spacing-table-cell-padding, 0.75rem 1rem);
-    text-align: left;
-    border-bottom: 1px solid var(--color-fill-gray);
+article, aside, details, figcaption, figure, footer, header, hgroup, main, nav, section, summary {
+    display: block;
 }
 
-th {
-    font-weight: var(--spacing-table-header-font-weight, 600);
-    color: var(--color-figure-gray-secondary);
+button, input, select, textarea {
+    font: inherit;
+    color: inherit;
 }
 
-tr:last-child td {
-    border-bottom: none;
+button {
+    background: none;
+    border: 0;
+    box-sizing: content-box;
+    cursor: pointer;
+    line-height: inherit;
+    overflow: visible;
+    vertical-align: inherit;
 }
 
-/* Syntax highlighting */
-.syntax-keyword {
-    color: var(--color-syntax-keywords);
-    font-weight: 500;
+:focus-visible {
+    outline: 4px solid var(--color-focus-color);
+    outline-offset: 1px;
 }
 
-.syntax-string {
-    color: var(--color-syntax-strings);
+body {
+    height: 100%;
+    min-width: 320px;
+    font-size: var(--spacing-body-font-size, 1rem);
+    line-height: var(--spacing-body-line-height, 1.4705882353);
+    font-weight: var(--spacing-body-font-weight, 400);
+    font-family: var(--typography-html-font, "Helvetica Neue", "Helvetica", "Arial", sans-serif);
+    background-color: var(--color-text-background);
+    color: var(--colors-text, var(--color-text));
+    font-style: normal;
+    overflow-wrap: break-word;
+    font-synthesis: none;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-align: start;
+
+    /* Spacing between stacked blocks, as in swift-docc-render */
+    --spacing-stacked-margin-small: 0.4em;
+    --spacing-stacked-margin-large: 0.8em;
+    --spacing-stacked-margin-xlarge: calc(var(--spacing-stacked-margin-large) * 2);
+    --spacing-param: 1.6470588235rem;
+    --declaration-code-listing-margin: 30px 0 0 0;
+    --code-block-style-elements-padding: 8px 14px;
 }
 
-.syntax-number {
-    color: var(--color-syntax-numbers);
+/* Documentation pages fill the window, so the footer stays at the bottom */
+#app {
+    display: flex;
+    flex-flow: column;
+    min-height: 100%;
 }
 
-.syntax-comment {
-    color: var(--color-syntax-comments);
+#app > * {
+    min-width: 0;
+}
+
+#app > .documentation-layout {
+    flex: 1;
+}
+
+a {
+    color: var(--colors-link, var(--color-link));
+}
+
+a:link,
+a:visited {
+    text-decoration: none;
+}
+
+a.inline-link,
+a:hover {
+    text-decoration: underline;
+}
+
+a:active {
+    text-decoration: none;
+}
+
+p + a {
+    display: inline-block;
+}
+
+b, strong {
+    font-weight: 600;
+}
+
+cite, dfn, em, i {
     font-style: italic;
 }
 
-.syntax-type {
-    color: var(--color-syntax-other-type-names);
+sup {
+    font-size: 0.6em;
+    vertical-align: top;
+    position: relative;
+    bottom: -0.2em;
 }
 
-.syntax-attribute {
-    color: var(--color-syntax-keywords);
+sub {
+    line-height: 1;
 }
 
+pre {
+    overflow: auto;
+    white-space: pre;
+    overflow-wrap: normal;
+}
+
+code {
+    font-family: var(--typography-html-font-mono, Menlo, monospace);
+    font-weight: inherit;
+    letter-spacing: 0;
+    font-size: var(--spacing-code-font-size, 1em);
+}
+
+.inline-code {
+    background-color: var(--color-inline-code-background, var(--color-code-inline-background, transparent));
+    padding: var(--inline-code-padding, var(--spacing-code-padding, 0));
+    border-radius: var(--inline-code-border-radius, var(--spacing-code-border-radius, 0));
+}
+
+/* Headings */
 h1, h2, h3, h4, h5, h6 {
-    font-family: var(--typography-html-font, 'Helvetica Neue', Helvetica, Arial, sans-serif);
-    margin: 0;
-    padding: 0;
+    color: var(--colors-header-text, var(--color-header-text));
+    font-family: var(--typography-html-font, "Helvetica Neue", "Helvetica", "Arial", sans-serif);
 }
 
-/* Content section headings - matches swift-docc-render exactly */
-/* H3 content headings: 44.8px matches docc-render exactly */
-/* Only direct child H3s of .doc-topic (content headings like "Quick Start") */
-.doc-topic > h3 {
-    margin-top: var(--spacing-content-heading-margin-top, 44.8px);
+h1 + *, h2 + *, h3 + *, h4 + *, h5 + *, h6 + * {
+    margin-top: var(--spacing-stacked-margin-large);
+}
+
+ol + h1, ol + h2, ol + h3, ol + h4, ol + h5, ol + h6,
+p + h1, p + h2, p + h3, p + h4, p + h5, p + h6,
+ul + h1, ul + h2, ul + h3, ul + h4, ul + h5, ul + h6 {
+    margin-top: 1.6em;
+}
+
+ol + *, p + *, ul + * {
+    margin-top: var(--spacing-stacked-margin-large);
+}
+
+ol, ul {
+    margin-inline-start: var(--spacing-list-indent, 1.1764705882em);
+}
+
+ol ol, ol ul, ul ol, ul ul {
+    margin-top: 0;
     margin-bottom: 0;
 }
 
-/* Topic group headings (Essentials, Guides, etc.) have NO top margin */
-/* These are inside .contenttable-section with class .contenttable-title */
-/* Uses "label" font style from swift-docc-render: 24px/28px vs H3's 28px/32px */
-.contenttable-title,
-.contenttable-section h3 {
-    margin-top: 0;
-    margin-bottom: var(--spacing-contenttable-title-margin-bottom, 0);
-    font-size: var(--spacing-contenttable-title-font-size, 24px);
-    line-height: var(--spacing-contenttable-title-line-height, 28px);
-    font-weight: var(--spacing-contenttable-title-font-weight, 400);
+nav:not(.navigator) ol, nav:not(.navigator) ul {
+    margin: 0;
+    list-style: none;
 }
 
-/* Topic group sections need top padding for separation (matches swift-docc-render).
-   margin-top: 0 prevents adjacent-sibling rules (h2 + *) from adding extra spacing. */
-.contenttable-section {
-    padding-top: var(--spacing-contenttable-section-padding-top, 2.353rem);
-    margin-top: 0;
+li li {
+    font-size: 1em;
 }
-
 
 h1 {
-    font-size: var(--spacing-h1-font-size, 40px);
-    line-height: var(--spacing-h1-line-height, 44px);
+    font-size: var(--spacing-h1-font-size, 2.3529411765rem);
+    line-height: var(--spacing-h1-line-height, 1.1);
     font-weight: var(--spacing-h1-font-weight, 400);
 }
+
 h2 {
-    font-size: var(--spacing-h2-font-size, 32px);
-    line-height: var(--spacing-h2-line-height, 36px);
+    font-size: var(--spacing-h2-font-size, 1.8823529412rem);
+    line-height: var(--spacing-h2-line-height, 1.125);
     font-weight: var(--spacing-h2-font-weight, 400);
     border-bottom: var(--spacing-h2-border-bottom, none);
     padding-bottom: var(--spacing-h2-padding-bottom, 0);
 }
+
 h3 {
-    font-size: var(--spacing-h3-font-size, 28px);
-    line-height: var(--spacing-h3-line-height, 32px);
+    font-size: var(--spacing-h3-font-size, 1.6470588235rem);
+    line-height: var(--spacing-h3-line-height, 1.1428571429);
     font-weight: var(--spacing-h3-font-weight, 400);
 }
+
 h4 {
-    font-size: var(--spacing-h4-font-size, 24px);
-    line-height: var(--spacing-h4-line-height, 28px);
+    font-size: var(--spacing-h4-font-size, 1.4117647059rem);
+    line-height: var(--spacing-h4-line-height, 1.1666666667);
     font-weight: var(--spacing-h4-font-weight, 600);
 }
+
 h5 {
-    font-size: var(--spacing-h5-font-size, 22px);
-    line-height: var(--spacing-h5-line-height, 26px);
+    font-size: var(--spacing-h5-font-size, 1.2941176471rem);
+    line-height: var(--spacing-h5-line-height, 1.1818181818);
     font-weight: var(--spacing-h5-font-weight, 600);
 }
+
 h6 {
-    font-size: var(--spacing-h6-font-size, 17px);
-    line-height: var(--spacing-h6-line-height, 25px);
+    font-size: var(--spacing-h6-font-size, 1rem);
+    line-height: var(--spacing-h6-line-height, 1.4705882353);
     font-weight: var(--spacing-h6-font-weight, 600);
 }
 
-/* Heading anchor links - configurable via --color-heading-link variable */
-h1 a, h2 a, h3 a, h4 a, h5 a, h6 a {
-    color: var(--color-heading-link, inherit);
-    text-decoration: none;
-}
-h1 a:hover, h2 a:hover, h3 a:hover, h4 a:hover, h5 a:hover, h6 a:hover {
-    color: var(--color-heading-link, inherit);
-    text-decoration: underline;
+@media only screen and (max-width: 1250px) {
+    h1 {
+        font-size: var(--spacing-h1-font-size, 1.8823529412rem);
+        line-height: var(--spacing-h1-line-height, 1.125);
+    }
+
+    h2 {
+        font-size: var(--spacing-h2-font-size, 1.6470588235rem);
+        line-height: var(--spacing-h2-line-height, 1.1428571429);
+    }
+
+    h3 {
+        font-size: var(--spacing-h3-font-size, 1.4117647059rem);
+        line-height: var(--spacing-h3-line-height, 1.1666666667);
+    }
+
+    h4 {
+        font-size: var(--spacing-h4-font-size, 1.2352941176rem);
+        line-height: var(--spacing-h4-line-height, 1.1904761905);
+    }
+
+    h5 {
+        font-size: var(--spacing-h5-font-size, 1.1764705882rem);
+        line-height: var(--spacing-h5-line-height, 1.2);
+    }
 }
 
-/* Adjacent sibling margin rules: matches swift-docc-render _typography.scss */
-h1 + *, h2 + *, h3 + *, h4 + *, h5 + *, h6 + * {
-    margin-top: var(--spacing-stacked-margin-large, 0.8em);
-}
-p + h1, p + h2, p + h3, p + h4, p + h5, p + h6,
-ul + h1, ul + h2, ul + h3, ul + h4, ul + h5, ul + h6,
-ol + h1, ol + h2, ol + h3, ol + h4, ol + h5, ol + h6 {
-    margin-top: var(--spacing-stacked-margin-xlarge, 1.6em);
-}
-p + *, ul + *, ol + * {
-    margin-top: var(--spacing-stacked-margin-large, 0.8em);
-}
-ul, ol {
-    margin-inline-start: var(--spacing-list-indent, 1.176em);
-}
-li { margin-bottom: 0; }
+@media only screen and (max-width: 735px) {
+    h1 {
+        font-size: var(--spacing-h1-font-size, 1.6470588235rem);
+        line-height: var(--spacing-h1-line-height, 1.1428571429);
+    }
 
-/* Syntax highlighting - token-* classes match swift-docc-render */
-.token-keyword { color: var(--color-syntax-keywords); font-weight: 500; }
-.token-type { color: var(--color-syntax-other-type-names); }
-.token-identifier { color: var(--color-figure-gray); }
-.token-param { color: var(--color-figure-gray-secondary); }
-.token-string { color: var(--color-syntax-strings); }
-.token-number { color: var(--color-syntax-numbers); }
-.token-attribute { color: var(--color-syntax-keywords); }
-.token-label { color: var(--color-figure-gray); }
-/* Legacy class names for backward compatibility */
-.keyword { color: var(--color-syntax-keywords); font-weight: 500; }
-.comment { color: var(--color-syntax-comments); font-style: italic; }
+    h2 {
+        font-size: var(--spacing-h2-font-size, 1.4117647059rem);
+        line-height: var(--spacing-h2-line-height, 1.1666666667);
+    }
+
+    h3 {
+        font-size: var(--spacing-h3-font-size, 1.2352941176rem);
+        line-height: var(--spacing-h3-line-height, 1.1904761905);
+    }
+
+    h5 {
+        font-size: var(--spacing-h5-font-size, 1.0588235294rem);
+        line-height: var(--spacing-h5-line-height, 1.4444444444);
+    }
+}
+
+/* Spacing of content blocks in the primary content (swift-docc-render ContentNode) */
+.primary-content .content * + .code-listing,
+.primary-content .content * + .inline-image-container,
+.primary-content .content * + aside,
+.primary-content .content * + figure,
+.primary-content .content .code-listing + *,
+.primary-content .content .inline-image-container + *,
+.primary-content .content aside + *,
+.primary-content .content figure + * {
+    margin-top: var(--spacing-stacked-margin-xlarge);
+}
+
+.primary-content .content * + dl,
+.primary-content .content dl + * {
+    margin-top: var(--spacing-stacked-margin-large);
+}
+
+.primary-content .content img {
+    display: block;
+    margin: auto;
+    max-width: 100%;
+}
+
+.primary-content .content ol,
+.primary-content .content ol li:not(:first-child),
+.primary-content .content ul,
+.primary-content .content ul li:not(:first-child) {
+    margin-top: var(--spacing-stacked-margin-large);
+}
+
+@media only screen and (max-width: 735px) {
+    .primary-content .content ol,
+    .primary-content .content ul {
+        margin-left: 1.25rem;
+    }
+}
+
+.primary-content .content dt:not(:first-child) {
+    margin-top: var(--spacing-stacked-margin-large);
+}
+
+.primary-content .content dd {
+    margin-left: 2em;
+}
+
+/* Code listings (swift-docc-render CodeListing) */
+.code-listing {
+    display: flex;
+    flex-direction: column;
+    background: var(--background, var(--color-pre-background, var(--color-code-background)));
+    color: var(--text, var(--color-code-plain));
+    border-color: var(--colors-grid, var(--color-grid));
+    border-width: var(--code-border-width, 1px);
+    border-style: var(--code-border-style, solid);
+    border-radius: var(--code-border-radius, var(--border-radius, 4px));
+    overflow: hidden;
+    position: relative;
+    filter: blur(0);
+}
+
+.container-general {
+    display: flex;
+    overflow: auto;
+    flex-grow: 1;
+}
+
+.code-listing pre {
+    display: var(--spacing-pre-display, flex);
+    border: var(--spacing-pre-border, none);
+    overflow: unset;
+    height: 100%;
+    tab-size: var(--code-indentationWidth, 4);
+    flex-grow: 1;
+    padding: var(--code-block-style-elements-padding, var(--spacing-pre-padding, 8px 14px));
+    padding-left: var(--spacing-pre-padding-left, 14px);
+    padding-right: var(--spacing-pre-padding-right, 14px);
+    margin: var(--spacing-pre-margin, 0);
+    border-radius: var(--spacing-pre-border-radius, 0px);
+    font-size: var(--spacing-pre-font-size, 17px);
+    line-height: var(--spacing-pre-line-height, 25px);
+}
+
+.code-listing pre > code {
+    font-size: var(--spacing-pre-code-font-size, 0.8823529412rem);
+    line-height: 1.6666666667;
+    font-weight: 400;
+    font-family: var(--typography-html-font-mono, Menlo, monospace);
+    white-space: pre;
+    overflow-wrap: normal;
+    flex-grow: 9999;
+    padding: var(--spacing-pre-code-padding, 0);
+    position: var(--spacing-pre-code-position, static);
+    left: var(--spacing-pre-code-left, 0);
+}
+
+.code-listing .code-line-container {
+    display: inline-block;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.code-listing .code-line-container .code-line {
+    display: inline;
+}
+
+/* Syntax highlighting */
+.syntax-comment,
+.syntax-quote {
+    color: var(--syntax-comment, var(--color-syntax-comments));
+}
+
+.syntax-keyword,
+.syntax-literal,
+.syntax-attribute {
+    color: var(--syntax-keyword, var(--color-syntax-keywords));
+}
+
+.syntax-string {
+    color: var(--syntax-string, var(--color-syntax-strings));
+}
+
+.syntax-number {
+    color: var(--syntax-number, var(--color-syntax-characters));
+}
+
+.syntax-type,
+.syntax-title,
+.syntax-built_in,
+.syntax-class {
+    color: var(--syntax-type, var(--color-syntax-other-type-names));
+}
+
+/* Tables (swift-docc-render Table) */
+.table-wrapper {
+    overflow: auto;
+}
+
+.primary-content .content table {
+    border-style: hidden;
+    margin: var(--spacing-table-margin, 0);
+    font-size: var(--spacing-table-font-size, 1rem);
+    line-height: var(--spacing-table-line-height, 1.4705882353);
+}
+
+.primary-content .content * + .table-wrapper,
+.primary-content .content .table-wrapper + * {
+    margin-top: var(--spacing-stacked-margin-large);
+}
+
+th {
+    font-weight: var(--spacing-table-header-font-weight, 600);
+    word-break: keep-all;
+    hyphens: auto;
+}
+
+td, th {
+    border-color: var(--color-fill-gray-tertiary);
+    border-style: solid;
+    border-width: var(--table-border-width, 1px 1px);
+    padding: var(--spacing-table-cell-padding, 0.5882352941rem);
+}

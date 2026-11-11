@@ -31,13 +31,21 @@ import Foundation
 /// The parser generates:
 ///
 /// ```css
-/// :root {
+/// body {
 ///     --color-fill: #ffffff;
 /// }
-/// body[data-color-scheme="dark"] {
-///     --color-fill: #1d1d1f;
+/// @supports (color: light-dark(#000, #fff)) {
+///     body {
+///         --color-fill: light-dark(#ffffff, #1d1d1f);
+///     }
 /// }
 /// ```
+///
+/// The properties are defined on the body element, like the colour palette of the
+/// base stylesheet, so that they replace the palette's values.  A value that differs
+/// between the light and the dark appearance becomes a `light-dark()` pair, which
+/// follows the colour scheme of the body (the reader's system setting, or the scheme
+/// chosen with ``ColourSchemeToggle``).
 public enum ThemeSettingsParser {
     /// The color scheme for CSS variable generation.
     public enum ColorScheme: Sendable {
@@ -133,24 +141,21 @@ public enum ThemeSettingsParser {
     public static func generateCSS(from settings: ThemeSettings.Root, includeDarkMode: Bool = true)
         -> String
     {
-        var css = ""
-
-        // Generate light mode (root) variables
-        css += generateLightModeCSS(from: settings)
-
-        // Generate explicit color scheme selectors if dark mode is enabled
+        var css = generateLightModeCSS(from: settings)
         if includeDarkMode {
-            css += generateLightModeExplicitCSS(from: settings)
             css += generateDarkModeCSS(from: settings)
         }
-
         return css
     }
 
     /// Generates light mode CSS variables.
     ///
+    /// The variables are defined on the body element, where the base stylesheet
+    /// defines its colour palette.
+    ///
     /// - Parameter settings: The theme settings.
-    /// - Returns: CSS for light mode variables.
+    /// - Returns: CSS for light mode variables, or an empty string if the settings
+    ///   define none.
     public static func generateLightModeCSS(from settings: ThemeSettings.Root) -> String {
         let variables = customProperties(from: settings, dark: false).map { "    \($0.name): \($0.value);" }
 
@@ -159,29 +164,7 @@ public enum ThemeSettingsParser {
         return """
 
             /* Theme settings overrides - light mode */
-            :root {
-            \(variables.joined(separator: "\n"))
-            }
-
-            """
-    }
-
-    /// Generates explicit light mode CSS variables for color scheme switching.
-    ///
-    /// This generates the same variables as `generateLightModeCSS` but with
-    /// a `body[data-color-scheme="light"]` selector to allow JavaScript theme
-    /// switching to force light mode even when the system prefers dark mode.
-    ///
-    /// - Parameter settings: The theme settings.
-    /// - Returns: CSS for explicit light mode variables.
-    public static func generateLightModeExplicitCSS(from settings: ThemeSettings.Root) -> String {
-        let variables = customProperties(from: settings, dark: false).map { "    \($0.name): \($0.value);" }
-
-        guard !variables.isEmpty else { return "" }
-
-        return """
-
-            body[data-color-scheme="light"] {
+            body {
             \(variables.joined(separator: "\n"))
             }
 
@@ -190,29 +173,29 @@ public enum ThemeSettingsParser {
 
     /// Generates dark mode CSS variables.
     ///
+    /// Every property whose dark value differs from its light value is redefined as a
+    /// `light-dark()` pair of both values, so the colour scheme of the body selects
+    /// the value.  The rule is guarded by `@supports`, so browsers without
+    /// `light-dark()` keep the light values.
+    ///
     /// - Parameter settings: The theme settings.
-    /// - Returns: CSS for dark mode variables.
+    /// - Returns: CSS for dark mode variables, or an empty string if no value differs.
     public static func generateDarkModeCSS(from settings: ThemeSettings.Root) -> String {
-        // Only properties whose dark value differs from the light value
         let light = customProperties(from: settings, dark: false)
         let dark = customProperties(from: settings, dark: true)
         let variables = zip(light, dark)
             .filter { $0.value != $1.value }
-            .map { "        \($1.name): \($1.value);" }
+            .map { "        \($1.name): light-dark(\($0.value), \($1.value));" }
 
         guard !variables.isEmpty else { return "" }
 
         return """
 
             /* Theme settings overrides - dark mode */
-            @media (prefers-color-scheme: dark) {
-                :root {
+            @supports (color: light-dark(#000, #fff)) {
+                body {
             \(variables.joined(separator: "\n"))
                 }
-            }
-
-            body[data-color-scheme="dark"] {
-            \(variables.joined(separator: "\n"))
             }
 
             """

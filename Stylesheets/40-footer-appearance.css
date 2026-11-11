@@ -1,63 +1,161 @@
-/* Footer - accounts for fixed sidebar */
-.documentation-footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1rem 1.5rem;
-    margin-left: var(--sidebar-width);
-    border-top: 1px solid var(--color-fill-gray);
-    background: var(--color-fill);
-    font-size: 0.8125rem;
-    color: var(--color-figure-gray-secondary);
-    transition: margin-left 0.3s ease;
+/*
+ * Page footer with the colour scheme toggle (swift-docc-render Footer and
+ * ColorSchemeToggle).
+ *
+ * The toggle is a group of radio buttons; the scheme they select is applied by the
+ * colour scheme layer of the stylesheet, so it works without JavaScript.
+ */
+.footer {
+    border-top: 1px solid var(--color-grid);
 }
 
-/* Footer expands when sidebar is collapsed */
-.sidebar-toggle-checkbox:checked ~ .documentation-footer {
-    margin-left: 0;
+.footer .row {
+    margin-left: auto;
+    margin-right: auto;
+    width: 980px;
+    display: flex;
+    flex-direction: row-reverse;
+    align-items: center;
+    margin: 20px auto;
+}
+
+@media only screen and (max-width: 1250px) {
+    .footer .row {
+        width: 692px;
+    }
+}
+
+@media only screen and (max-width: 735px) {
+    .footer .row {
+        width: 100%;
+        padding: 0 0.9411764706rem;
+        box-sizing: border-box;
+    }
 }
 
 .footer-content {
-    flex: 1;
+    margin-inline-end: auto;
+    font-size: 0.7058823529rem;
+    line-height: 1.3333333333;
+    color: var(--color-figure-gray-secondary);
 }
 
 .footer-content a {
     color: var(--color-link);
 }
 
-/* Appearance selector */
+.color-scheme-toggle {
+    --toggle-color-fill: var(--color-button-background);
+    --toggle-color-text: var(--color-fill-blue);
+    font-size: 0.7058823529rem;
+    line-height: 1.3333333333;
+    font-weight: 400;
+    border: 1px solid var(--toggle-color-fill);
+    border-radius: var(--toggle-border-radius-outer, var(--border-radius, 4px));
+    display: inline-flex;
+    padding: 1px;
+    margin: 0;
+    min-inline-size: 0;
+}
+
+@supports (color: light-dark(#000, #fff)) {
+    .color-scheme-toggle {
+        --toggle-color-text: light-dark(var(--color-fill-blue), var(--color-figure-blue));
+    }
+}
+
+@media print {
+    .color-scheme-toggle {
+        display: none;
+    }
+}
+
+.color-scheme-toggle input {
+    position: absolute;
+    clip: rect(1px, 1px, 1px, 1px);
+    clip-path: inset(0 0 99.9% 99.9%);
+    overflow: hidden;
+    height: 1px;
+    width: 1px;
+    padding: 0;
+    border: 0;
+    appearance: none;
+}
+
+.color-scheme-toggle label:has(input:focus-visible) {
+    outline: 4px solid var(--color-focus-color);
+    outline-offset: 1px;
+}
+
+.color-scheme-toggle .text {
+    border: 1px solid transparent;
+    border-radius: var(--toggle-border-radius-inner, 2px);
+    color: var(--toggle-color-text);
+    display: inline-block;
+    text-align: center;
+    padding: 1px 6px;
+    min-width: 42px;
+    box-sizing: border-box;
+}
+
+.color-scheme-toggle .text:hover {
+    cursor: pointer;
+}
+
+.color-scheme-toggle input:checked + .text {
+    --toggle-color-text: var(--color-button-text);
+    background: var(--toggle-color-fill);
+    border-color: var(--toggle-color-fill);
+}
+
+/* Visually hidden text that stays available to assistive technologies */
+.visuallyhidden {
+    position: absolute;
+    clip: rect(1px, 1px, 1px, 1px);
+    clip-path: inset(0 0 99.9% 99.9%);
+    overflow: hidden;
+    height: 1px;
+    width: 1px;
+    padding: 0;
+    border: 0;
+}
+
+/* Footer and appearance buttons of pages that build their own footer */
+.documentation-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 1.2941176471rem;
+    border-top: 1px solid var(--color-grid);
+    font-size: 0.7058823529rem;
+    line-height: 25px;
+    color: var(--color-figure-gray-secondary);
+}
+
 .appearance-selector {
     display: inline-flex;
     border: 1px solid var(--color-link);
     border-radius: 6px;
     overflow: hidden;
+    visibility: hidden;
 }
 
 .appearance-btn {
     padding: 0.25rem 0.75rem;
+    font: inherit;
     font-size: 0.75rem;
     font-weight: 500;
     border: none;
     background: transparent;
     color: var(--color-link);
     cursor: pointer;
-    transition: background-color 0.15s ease, color 0.15s ease;
 }
 
 .appearance-btn:not(:last-child) {
     border-right: 1px solid var(--color-link);
 }
 
-.appearance-btn:hover {
-    background: rgba(0, 102, 204, 0.1);
-}
-
 .appearance-btn.active {
     background: var(--color-link);
-    color: white;
-}
-
-/* Hide appearance selector until JS runs (shows noscript fallback) */
-.appearance-selector {
-    visibility: hidden;
+    color: var(--color-button-text);
 }

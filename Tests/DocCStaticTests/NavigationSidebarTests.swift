@@ -111,7 +111,7 @@ struct NavigationSidebarBuilderTests {
         let html = NavigationSidebarBuilder.buildFallbackSidebar()
 
         // Should contain basic sidebar structure
-        #expect(html.contains("<nav class=\"sidebar\">"))
+        #expect(html.contains("<nav class=\"sidebar\""))
         #expect(html.contains("sidebar-content"))
     }
 
@@ -254,7 +254,7 @@ struct NavigationSidebarBuilderTests {
 
         // Should contain disclosure chevron elements
         #expect(html.contains("disclosure-checkbox"))
-        #expect(html.contains("disclosure-chevron"))
+        #expect(html.contains("tree-toggle"))
         #expect(html.contains("expandable"))
     }
 
@@ -289,9 +289,10 @@ struct NavigationSidebarBuilderTests {
         var builder = NavigationSidebarBuilder(navigationIndex: navigationIndex)
         let html = builder.buildNavigationTree()
 
-        // Should contain badge with correct class
-        #expect(html.contains("class=\"badge"))
-        #expect(html.contains("badge-struct"))
+        // Should contain the topic type icon of a structure, a framed S
+        #expect(html.contains("class=\"TopicTypeIcon navigator-icon\""))
+        #expect(html.contains("data-topic-type=\"struct\""))
+        #expect(html.contains("<tspan>S</tspan>"))
     }
 
     @Test("Nesting index increments with depth")

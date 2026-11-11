@@ -213,7 +213,7 @@ struct SharedSidebarDocumentTests {
     @Test("Filter box and its script live in the sidebar document")
     func filterLivesInDocument() {
         let html = document()
-        #expect(html.contains("class=\"filter-input\""))
+        #expect(html.contains("filter-input\""))
         #expect(html.contains("id=\"sidebar-filter\""))
         #expect(html.contains(SidebarDocument.focusFilterMessage))
         #expect(html.contains(SidebarDocument.colourSchemeMessage))
@@ -241,7 +241,7 @@ struct SharedSidebarDocumentTests {
     @Test("Fallback sidebar keeps the inline structure")
     func fallbackSidebar() {
         let html = NavigationSidebarBuilder.buildFallbackSidebar()
-        #expect(html.contains("<nav class=\"sidebar\">"))
+        #expect(html.contains("<nav class=\"sidebar\""))
         #expect(html.contains("sidebar-content"))
     }
 }
@@ -284,9 +284,9 @@ struct SidebarStylesheetTests {
 
     @Test("Target row is styled as selected and scrolled with context")
     func targetIsSelected() {
-        #expect(css.contains(".navigator-card:target"))
+        #expect(css.contains(".navigator-card-item:target .head-wrapper"))
         #expect(css.contains("scroll-margin-top"))
-        #expect(css.contains(".module-section:has(:target) .technology-title"))
+        #expect(css.contains(".module-header:target .technology-title"))
     }
 
     @Test("Rows on the target path invert their disclosure checkbox")
@@ -296,10 +296,10 @@ struct SidebarStylesheetTests {
         #expect(css.contains(".module-section:has(:target) > .disclosure-checkbox:not(:checked) ~ .module-contents"))
     }
 
-    @Test("Item chevrons rotate with the checkbox that precedes the depth spacer")
+    @Test("Item chevrons rotate with the checkbox that precedes the row's head")
     func itemChevronRotates() {
-        #expect(css.contains("> .disclosure-checkbox:checked ~ .depth-spacer .disclosure-chevron svg"))
-        #expect(css.contains("> .disclosure-checkbox:not(:checked) ~ .depth-spacer .disclosure-chevron svg"))
+        #expect(css.contains("> .disclosure-checkbox:checked ~ .head-wrapper .chevron"))
+        #expect(css.contains("> .disclosure-checkbox:not(:checked) ~ .head-wrapper .chevron"))
     }
 
     @Test("Expanded children are not clipped by a fixed maximum height")

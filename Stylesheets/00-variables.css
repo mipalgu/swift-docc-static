@@ -1,52 +1,211 @@
-/* swift-docc-static generated stylesheet - DocC-style layout */
-:root {
+/*
+ * The colour palette of swift-docc-render, light appearance.
+ *
+ * Every colour of the base stylesheet is read from one of these custom properties,
+ * so that a theme can change it through its theme settings.  The palette is defined
+ * on the body element, like swift-docc-render does, so that the colour scheme of the
+ * body decides between light and dark values (see 01-variables.dark.css).
+ */
+body {
     --color-fill: #fff;
     --color-fill-secondary: #f7f7f7;
     --color-fill-tertiary: #f0f0f0;
-    --color-figure-gray: #000;
-    --color-figure-gray-secondary: #666;
-    --color-link: #0066cc;
+    --color-fill-quaternary: #282828;
+    --color-fill-blue: #00f;
+    --color-fill-light-blue-secondary: #d1d1ff;
     --color-fill-gray: #ccc;
     --color-fill-gray-secondary: #f5f5f5;
+    --color-fill-gray-tertiary: #f0f0f0;
     --color-fill-gray-quaternary: #f0f0f0;
-    --color-navigator-item-hover: rgba(51, 102, 255, 0.05);
-    --sidebar-width: var(--spacing-sidebar-width, 400px);
-    --header-height: 52px;
-
-    /* Typography */
-    --typography-html-font: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
-    --typography-html-font-mono: 'SF Mono', Menlo, monospace;
-
-    /* Syntax highlighting colours */
-    --color-syntax-keywords: #ad3da4;
-    --color-syntax-other-type-names: #703daa;
-    --color-syntax-strings: #d12f1b;
+    --color-fill-green-secondary: #f0fff0;
+    --color-fill-orange-secondary: #fffaf6;
+    --color-fill-red-secondary: #fff0f5;
+    --color-figure-blue: #36f;
+    --color-figure-gray: #000;
+    --color-figure-gray-secondary: #666;
+    --color-figure-gray-secondary-alt: #666;
+    --color-figure-gray-tertiary: #666;
+    --color-figure-green: green;
+    --color-figure-light-gray: #666;
+    --color-figure-orange: #c30;
+    --color-figure-red: red;
+    --color-tutorials-teal: #000;
+    --color-article-background: var(--color-fill-tertiary);
+    --color-article-body-background: var(--color-fill);
+    --color-aside-deprecated: var(--color-figure-gray);
+    --color-aside-deprecated-background: var(--color-fill-orange-secondary);
+    --color-aside-deprecated-border: var(--color-figure-orange);
+    --color-aside-experiment: var(--color-figure-gray);
+    --color-aside-experiment-background: var(--color-fill-gray-secondary);
+    --color-aside-experiment-border: var(--color-figure-light-gray);
+    --color-aside-important: var(--color-figure-gray);
+    --color-aside-important-background: var(--color-fill-gray-secondary);
+    --color-aside-important-border: var(--color-figure-light-gray);
+    --color-aside-note: var(--color-figure-gray);
+    --color-aside-note-background: var(--color-fill-gray-secondary);
+    --color-aside-note-border: var(--color-figure-light-gray);
+    --color-aside-tip: var(--color-figure-gray);
+    --color-aside-tip-background: var(--color-fill-gray-secondary);
+    --color-aside-tip-border: var(--color-figure-light-gray);
+    --color-aside-warning: var(--color-figure-gray);
+    --color-aside-warning-background: var(--color-fill-red-secondary);
+    --color-aside-warning-border: var(--color-figure-red);
+    --color-badge-text: #fff;
+    --color-badge-default: var(--color-figure-gray);
+    --color-badge-beta: var(--color-figure-gray-tertiary);
+    --color-badge-deprecated: var(--color-figure-orange);
+    --color-badge-dark-default: #fff;
+    --color-badge-dark-beta: #b0b0b0;
+    --color-badge-dark-deprecated: #f60;
+    --color-button-background: var(--color-fill-blue);
+    --color-button-background-active: #36f;
+    --color-button-background-hover: var(--color-figure-blue);
+    --color-button-text: #fff;
+    --color-call-to-action-background: var(--color-fill-secondary);
+    --color-changes-added: var(--color-figure-light-gray);
+    --color-changes-added-hover: var(--color-figure-light-gray);
+    --color-changes-deprecated: var(--color-figure-light-gray);
+    --color-changes-deprecated-hover: var(--color-figure-light-gray);
+    --color-changes-modified: var(--color-figure-light-gray);
+    --color-changes-modified-hover: var(--color-figure-light-gray);
+    --color-changes-modified-previous-background: var(--color-fill);
+    --color-code-background: var(--color-fill-secondary);
+    --color-code-collapsible-background: var(--color-fill-tertiary);
+    --color-code-collapsible-text: var(--color-figure-gray-secondary-alt);
+    --color-code-line-highlight: rgba(51, 102, 255, .08);
+    --color-code-line-highlight-border: var(--color-figure-blue);
+    --color-inline-code-background: transparent;
+    --color-code-plain: var(--color-figure-gray);
+    --color-dropdown-background: hsla(0, 0%, 100%, .8);
+    --color-dropdown-border: #ccc;
+    --color-dropdown-option-text: #666;
+    --color-dropdown-text: #000;
+    --color-dropdown-dark-background: hsla(0, 0%, 100%, .1);
+    --color-dropdown-dark-border: hsla(0, 0%, 94%, .2);
+    --color-dropdown-dark-option-text: #ccc;
+    --color-dropdown-dark-text: #fff;
+    --color-eyebrow: var(--color-figure-gray-secondary);
+    --color-focus-border-color: var(--color-fill-blue);
+    --color-focus-color: rgba(0, 125, 250, .6);
+    --color-form-error: var(--color-figure-red);
+    --color-form-error-background: var(--color-fill-red-secondary);
+    --color-form-valid: var(--color-figure-green);
+    --color-form-valid-background: var(--color-fill-green-secondary);
+    --color-generic-modal-background: var(--color-fill);
+    --color-grid: var(--color-fill-gray);
+    --color-header-text: var(--color-figure-gray);
+    --color-hero-eyebrow: #ccc;
+    --color-link: var(--color-figure-blue);
+    --color-loading-placeholder-background: var(--color-fill);
+    --color-nav-color: #000;
+    --color-nav-current-link: #000;
+    --color-nav-expanded: #fff;
+    --color-nav-hierarchy-collapse-background: #f0f0f0;
+    --color-nav-hierarchy-collapse-borders: #ccc;
+    --color-nav-hierarchy-item-borders: #ccc;
+    --color-nav-keyline: rgba(0, 0, 0, .2);
+    --color-nav-link-color: #000;
+    --color-nav-link-color-hover: #36f;
+    --color-nav-outlines: #ccc;
+    --color-nav-rule: hsla(0, 0%, 94%, .5);
+    --color-nav-solid-background: #fff;
+    --color-nav-sticking-expanded-keyline: rgba(0, 0, 0, .1);
+    --color-nav-stuck: hsla(0, 0%, 100%, .9);
+    --color-nav-uiblur-expanded: hsla(0, 0%, 100%, .9);
+    --color-nav-uiblur-stuck: hsla(0, 0%, 100%, .7);
+    --color-nav-root-subhead: var(--color-tutorials-teal);
+    --color-nav-dark-border-top-color: hsla(0, 0%, 100%, .4);
+    --color-nav-dark-color: #fff;
+    --color-nav-dark-current-link: #fff;
+    --color-nav-dark-expanded: #2a2a2a;
+    --color-nav-dark-hierarchy-collapse-background: #424242;
+    --color-nav-dark-hierarchy-collapse-borders: #666;
+    --color-nav-dark-hierarchy-item-borders: #424242;
+    --color-nav-dark-keyline: rgba(66, 66, 66, .95);
+    --color-nav-dark-link-color: #fff;
+    --color-nav-dark-link-color-hover: #09f;
+    --color-nav-dark-outlines: #575757;
+    --color-nav-dark-rule: #575757;
+    --color-nav-dark-solid-background: #000;
+    --color-nav-dark-sticking-expanded-keyline: rgba(66, 66, 66, .7);
+    --color-nav-dark-stuck: rgba(42, 42, 42, .9);
+    --color-nav-dark-uiblur-expanded: rgba(42, 42, 42, .9);
+    --color-nav-dark-uiblur-stuck: rgba(42, 42, 42, .7);
+    --color-nav-dark-root-subhead: #fff;
+    --color-other-decl-button: var(--color-text-background);
+    --color-overviewcard-border: var(--color-fill);
+    --color-overviewcard-fill: var(--color-fill-secondary);
+    --color-overviewcard-fill-secondary: var(--color-fill-tertiary);
+    --color-runtime-preview-background: var(--color-fill-tertiary);
+    --color-runtime-preview-disabled-text: hsla(0, 0%, 40%, .6);
+    --color-runtime-preview-text: var(--color-figure-gray-secondary);
+    --color-secondary-label: var(--color-figure-gray-secondary);
+    --color-step-background: var(--color-fill-secondary);
+    --color-step-caption: var(--color-figure-gray-secondary);
+    --color-step-focused: var(--color-figure-light-gray);
+    --color-step-text: var(--color-figure-gray-secondary);
+    --color-svg-icon: #666;
+    --color-syntax-addition: var(--color-figure-green);
+    --color-syntax-attributes: #947100;
+    --color-syntax-characters: #272ad8;
     --color-syntax-comments: #707f8c;
+    --color-syntax-deletion: var(--color-figure-red);
+    --color-syntax-documentation-markup: #506375;
+    --color-syntax-documentation-markup-keywords: #506375;
+    --color-syntax-heading: #ba2da2;
+    --color-syntax-highlighted: rgba(0, 113, 227, .2);
+    --color-syntax-keywords: #ad3da4;
+    --color-syntax-marks: #000;
     --color-syntax-numbers: #272ad8;
-
-    /* Symbol badge colours - using filled backgrounds for HTML badges */
-    --color-badge-default: #f5f5f7;
-    --color-badge-text: #6e6e73;
-    --color-badge-border: #d2d2d7;
-
-    /* Aside colours: matching docc-render computed values */
-    --color-aside-tip-background: #f5f5f5;
-    --color-aside-tip-border: #666666;
-    --color-aside-note-background: #e3f2fd;
-    --color-aside-note-border: #2196f3;
-    --color-aside-warning-background: #fff3e0;
-    --color-aside-warning-border: #ff9800;
-    --color-aside-important-background: #fce4ec;
-    --color-aside-important-border: #e91e63;
-
-    /* Decorative colours */
-    --color-documentation-intro-fill: #f0f0f0;
-
-    /* Navigator spacing - matching swift-docc-render defaults */
-    --spacing-nesting-spacing: 15px;
-    --spacing-nav-depth-spacer: 20px;
-    --spacing-nav-chevron-padding: 5px;
-
-    /* Content padding - matching swift-docc-render container padding (fixed px, not rem) */
-    --spacing-content-padding-horizontal: 80px;
+    --color-syntax-other-class-names: #703daa;
+    --color-syntax-other-constants: #4b21b0;
+    --color-syntax-other-declarations: #047cb0;
+    --color-syntax-other-function-and-method-names: #4b21b0;
+    --color-syntax-other-instance-variables-and-globals: #703daa;
+    --color-syntax-other-preprocessor-macros: #78492a;
+    --color-syntax-other-type-names: #703daa;
+    --color-syntax-param-internal-name: #404040;
+    --color-syntax-plain-text: #000;
+    --color-syntax-preprocessor-statements: #78492a;
+    --color-syntax-project-class-names: #3e8087;
+    --color-syntax-project-constants: #2d6469;
+    --color-syntax-project-function-and-method-names: #2d6469;
+    --color-syntax-project-instance-variables-and-globals: #3e8087;
+    --color-syntax-project-preprocessor-macros: #78492a;
+    --color-syntax-project-type-names: #3e8087;
+    --color-syntax-strings: #d12f1b;
+    --color-syntax-type-declarations: #03638c;
+    --color-syntax-urls: #1337ff;
+    --color-tabnav-item-border-color: var(--color-fill-gray);
+    --color-text: var(--color-figure-gray);
+    --color-text-background: var(--color-fill);
+    --color-tutorial-assessments-background: var(--color-fill-secondary);
+    --color-tutorial-background: var(--color-fill);
+    --color-tutorial-navbar-dropdown-background: var(--color-fill);
+    --color-tutorial-navbar-dropdown-border: var(--color-fill-gray);
+    --color-tutorial-quiz-border-active: var(--color-figure-blue);
+    --color-tutorials-overview-background: #161616;
+    --color-tutorials-overview-content: #fff;
+    --color-tutorials-overview-content-alt: #fff;
+    --color-tutorials-overview-eyebrow: #ccc;
+    --color-tutorials-overview-icon: #b0b0b0;
+    --color-tutorials-overview-link: #09f;
+    --color-tutorials-overview-navigation-link: #ccc;
+    --color-tutorials-overview-navigation-link-active: #fff;
+    --color-tutorials-overview-navigation-link-hover: #fff;
+    --color-tutorial-hero-text: #fff;
+    --color-tutorial-hero-background: #000;
+    --color-navigator-item-hover: rgba(0, 0, 255, .05);
+    --color-card-background: var(--color-fill);
+    --color-card-content-text: var(--color-figure-gray);
+    --color-card-eyebrow: var(--color-figure-gray-secondary-alt);
+    --color-card-shadow: rgba(0, 0, 0, .04);
+    --color-link-block-card-border: rgba(0, 0, 0, .04);
+    --color-standard-red: #ffc2c2;
+    --color-standard-orange: #fc9;
+    --color-standard-yellow: #ffe0a3;
+    --color-standard-blue: #9cf;
+    --color-standard-green: #9cc;
+    --color-standard-purple: #ccf;
+    --color-standard-gray: #f0f0f0;
 }

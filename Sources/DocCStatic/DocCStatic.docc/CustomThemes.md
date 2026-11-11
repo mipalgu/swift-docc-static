@@ -143,10 +143,22 @@ can override the layers before it:
 1. the base stylesheet shared by all themes, whose visual values are read
    from custom properties with the swift-docc-render values as fallbacks;
 2. the rules for the embedded navigation sidebar;
-3. the accent colour, when a configuration sets one without theme settings;
-4. the custom properties defined by the theme settings;
-5. the theme's stylesheets;
-6. the custom CSS.
+3. the rules that apply the colour scheme chosen in the page footer;
+4. the accent colour, when a configuration sets one without theme settings;
+5. the custom properties defined by the theme settings;
+6. the theme's stylesheets;
+7. the custom CSS.
+
+### Light and Dark Appearance
+
+The colour palette, and every colour a theme settings file defines, is set on
+the `body` element.  A colour with different light and dark values becomes a
+`light-dark()` pair, so the page follows the reader's system appearance, or the
+Light, Dark or Auto choice in the page footer.  That choice works without
+JavaScript; with JavaScript it is also remembered across pages and applied to
+the navigation sidebar.  A theme stylesheet that needs a different value in the
+dark appearance can use `light-dark()` itself, for example
+`--color-fill: light-dark(#fff, #111);`.
 
 ## Feature Switches
 
