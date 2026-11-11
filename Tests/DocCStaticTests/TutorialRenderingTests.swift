@@ -239,3 +239,65 @@ struct TutorialContentRenderingTests {
         #expect(html.contains("</ul>"))
     }
 }
+
+/// Tests of links to external pages in tutorial content.
+@Suite("Tutorial External Link Tests")
+struct TutorialExternalLinkTests {
+    /// The URL of the external page the links lead to.
+    static let url = "https://www.example.com/specification"
+
+    /// The title of the external link.
+    static let title = "The Example Specification"
+
+    /// The reference that DocC records for a Markdown link to the external page.
+    static var reference: LinkReference {
+        LinkReference(
+            identifier: RenderReferenceIdentifier(url),
+            title: title,
+            titleInlineContent: [.text(title)],
+            url: url
+        )
+    }
+
+    /// A paragraph that links to the external page.
+    static var paragraph: RenderBlockContent {
+        .paragraph(.init(inlineContent: [
+            .text("See "),
+            .reference(identifier: RenderReferenceIdentifier(url), isActive: true, overridingTitle: nil, overridingTitleInlineContent: nil),
+            .text(".")
+        ]))
+    }
+
+    /// The markup of a link to the external page that shows its title.
+    static let expectedLink = "<a href=\"\(url)\" class=\"inline-link\">\(title)</a>"
+
+    @Test("A link to an external page shows its title")
+    func contentRenderer() {
+        let html = RenderContentHTMLRenderer().renderBlockContent(Self.paragraph, references: [Self.url: Self.reference], depth: 2)
+        #expect(html.contains(Self.expectedLink))
+        #expect(!html.contains(">\(Self.url)<"))
+    }
+
+    @Test("A link in the introduction of a tutorial section shows its title")
+    func sectionIntroduction() throws {
+        let topic = ResolvedTopicReference(
+            bundleID: "org.example.Fixture",
+            path: "/tutorials/Fixture/Linking",
+            sourceLanguage: .swift
+        )
+        var introduction = ContentAndMediaSection(layout: nil, title: "Linking", media: nil, mediaPosition: .trailing)
+        introduction.content = [Self.paragraph]
+        var node = RenderNode(identifier: topic, kind: .tutorial)
+        node.sections = [TutorialSectionsRenderSection(sections: [
+            .init(title: "Linking", contentSection: [.contentAndMedia(content: introduction)], stepsSection: [], anchor: "Linking")
+        ])]
+        node.references = [Self.url: Self.reference]
+        let builder = HTMLPageBuilder(configuration: Configuration(
+            packageDirectory: URL(fileURLWithPath: "/"),
+            outputDirectory: URL(fileURLWithPath: "/")
+        ))
+        let html = try builder.buildPage(from: node, references: node.references)
+        #expect(html.contains(Self.expectedLink))
+        #expect(!html.contains(">\(Self.url)<"))
+    }
+}
