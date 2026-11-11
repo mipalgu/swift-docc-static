@@ -1,15 +1,9 @@
 /* ========================================
    Tutorial and tutorials overview pages: shared parts
    The markup and values follow swift-docc-render's tutorial components.
-   Colours use swift-docc-render's custom properties; their fallbacks are
-   swift-docc-render's light appearance, and themes set the dark values.
+   Colours use swift-docc-render's custom properties, whose light-dark() pairs in
+   the base palette follow the colour scheme; the fallbacks are the light values.
    ======================================== */
-
-/* swift-docc-render sizes boxes by their content and resets margins */
-.tutorial *, .tutorial *::before, .tutorial *::after,
-.tutorials-overview *, .tutorials-overview *::before, .tutorials-overview *::after {
-    box-sizing: content-box;
-}
 
 body.tutorial-page,
 body.tutorial-overview-page {
@@ -189,15 +183,4 @@ body > .tutorial {
     from, to { --tutorial-current: 1; }
 }
 
-/* Paragraph spacing follows swift-docc-render: only consecutive blocks are spaced */
-.tutorial main p,
-.tutorials-overview main p {
-    margin-top: 0;
-    margin-bottom: 0;
-}
-
-.tutorial main :is(h1, h2, h3, h4, h5, h6, p, ul, ol) + p,
-.tutorials-overview main :is(h1, h2, h3, h4, h5, h6, p, ul, ol) + p {
-    margin-top: var(--spacing-stacked-margin-large, 0.8em);
-}
 
