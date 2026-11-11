@@ -16,6 +16,12 @@
     display: none;
 }
 
+/* The blocks of the primary content are spaced by their own margins, as in the main branch */
+.primary-content > :is(*, :first-child) {
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
 /* Blocks are spaced by the margin below each, not by the stacked margins of the base */
 .primary-content .content :is(p, ul, ol, li, .code-listing, .table-wrapper, .inline-image-container) {
     margin-top: 0;
@@ -30,6 +36,11 @@
     font-family: var(--typography-html-font-headline);
     margin-top: var(--spacing-heading-margin-top);
     margin-bottom: var(--spacing-heading-margin-bottom);
+}
+
+/* A heading keeps its own margin after a code listing, image, table or aside */
+.primary-content .content :is(.code-listing, .inline-image-container, aside, figure, .table-wrapper, dl) + :is(h2, h3, h4, h5, h6) {
+    margin-top: var(--spacing-heading-margin-top);
 }
 
 .primary-content :is(h3, h4, h5, h6) {
@@ -162,7 +173,14 @@
     color: var(--color-syntax-numbers);
 }
 
-/* Tables: rows separated by a line */
+/*
+ * Tables: rows separated by a line.  The wrapper does not clip, so that the table's
+ * margins meet those of its neighbours, as the main branch's bare tables did.
+ */
+.primary-content .content .table-wrapper {
+    overflow: visible;
+}
+
 .primary-content .content table {
     border-style: none;
 }

@@ -91,6 +91,10 @@ struct AcceptedDeviationTests {
         for deviation in try VisualRegressionHarness.acceptedDeviations(for: theme.rawValue) {
             let name = "\(deviation.role).\(deviation.property) for \(theme.rawValue)"
             #expect(deviation.role == "*" || roles[deviation.role] != nil, "\(name) names an unknown role")
+            #expect(deviation.roles == nil || deviation.role == "*", "\(name) lists roles but names a role")
+            for role in deviation.roles ?? [] {
+                #expect(roles[role] != nil, "\(name) lists the unknown role \(role)")
+            }
             #expect(properties.contains(deviation.property), "\(name) names an unmeasured property")
             #expect(Set(deviation.pages ?? []).isSubset(of: pages), "\(name) names an unknown page")
             #expect(Set(deviation.viewports ?? []).isSubset(of: viewports), "\(name) names an unknown viewport")

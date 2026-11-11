@@ -125,7 +125,7 @@
 
       "content-padding-horizontal": "0",
       "content-block-padding-horizontal": "3rem",
-      "paragraph-margin-bottom": "1rem",
+      "paragraph-margin-bottom": "1em",
       "section-padding-vertical": "1rem",
       "topic-abstract-margin-start": "0",
       "topic-abstract-font-size": "0.875rem",

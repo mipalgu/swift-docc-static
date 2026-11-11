@@ -2,75 +2,183 @@
  "deviations": [
   {
    "role": "*",
+   "roles": [
+    "sidebar",
+    "sidebarArticleIcon",
+    "sidebarChevron",
+    "sidebarContent",
+    "sidebarCurrentChildren",
+    "sidebarExpandableRow",
+    "sidebarFilter",
+    "sidebarFilterInput",
+    "sidebarGroupChevron",
+    "sidebarGroupTitle",
+    "sidebarModuleChevron",
+    "sidebarModuleLink",
+    "sidebarModuleName",
+    "sidebarNestedGroupTitle",
+    "sidebarRowDepth0",
+    "sidebarRowDepth0Link",
+    "sidebarRowDepth1",
+    "sidebarRowDepth2",
+    "sidebarSelectedLink",
+    "sidebarSelectedRow",
+    "sidebarSymbolBadge"
+   ],
    "property": "presence",
    "viewports": [
     "390x844"
    ],
-   "reason": "On narrow viewports the main branch kept the 320px navigator beside a content column only 70px wide, which hid the page content and scrolled sideways; classic keeps the shared narrow layout instead, with the content at full width and the navigator closed until the toggle opens it."
+   "reason": "On narrow viewports classic closes the navigator until its toggle opens it, as the shared narrow layout does, where the main branch kept the 320px navigator beside a content column only 96px wide, which hid most of the page content and scrolled sideways."
   },
   {
    "role": "*",
+   "roles": [
+    "tutorialMenus",
+    "tutorialMenuSeparator"
+   ],
+   "property": "presence",
+   "viewports": [
+    "390x844"
+   ],
+   "reason": "On narrow viewports classic folds a tutorial's menus into the menu tray, where the main branch's menus ran past the right edge of the bar and made the page scroll sideways."
+  },
+  {
+   "role": "*",
+   "roles": [
+    "abstract",
+    "asideLabel",
+    "codeListingCode",
+    "eyebrow",
+    "heroContent",
+    "listItem",
+    "pageTitle",
+    "parameterDescription",
+    "parameterName",
+    "parametersTitle",
+    "relationshipsItem",
+    "relationshipsTitle",
+    "seeAlsoTitle",
+    "topicAbstract",
+    "topicGroupTitle",
+    "topicItem",
+    "topicLink",
+    "topicLinkWithoutAbstract",
+    "topicName",
+    "topicsSectionTitle"
+   ],
+   "property": "presence",
+   "viewports": [
+    "390x844"
+   ],
+   "reason": "On narrow viewports classic shows the page content at full width, where the main branch kept the 320px navigator beside a content column only 96px wide, which hid most of the page content and scrolled sideways, leaving these elements without room."
+  },
+  {
+   "role": "*",
+   "roles": [
+    "codeListing",
+    "contentColumn",
+    "declaration",
+    "hero",
+    "heroDecoration",
+    "main",
+    "mentionedInItem"
+   ],
    "property": "box.x",
    "viewports": [
     "390x844"
    ],
-   "reason": "On narrow viewports the content starts at the left edge of the window, unlike the broken narrow layout of the main branch (see the presence deviation)."
+   "reason": "On narrow viewports the content starts at the left edge of the window, where the main branch kept the 320px navigator beside a content column only 96px wide, which hid most of the page content and scrolled sideways."
   },
   {
    "role": "*",
+   "roles": [
+    "codeListing",
+    "contentColumn",
+    "declaration",
+    "hero",
+    "main",
+    "mentionedInItem"
+   ],
    "property": "box.width",
    "viewports": [
     "390x844"
    ],
-   "reason": "On narrow viewports the content spans the window, unlike the broken narrow layout of the main branch (see the presence deviation)."
+   "reason": "On narrow viewports the content spans the window, where the main branch kept the 320px navigator beside a content column only 96px wide, which hid most of the page content and scrolled sideways."
   },
   {
-   "role": "main",
-   "property": "*",
-   "viewports": [
-    "390x844"
+   "role": "*",
+   "roles": [
+    "contentColumn",
+    "footer",
+    "main"
    ],
-   "reason": "On narrow viewports the main element is not offset by the closed navigator, unlike the broken narrow layout of the main branch (see the presence deviation)."
-  },
-  {
-   "role": "contentColumn",
-   "property": "*",
-   "viewports": [
-    "390x844"
-   ],
-   "reason": "On narrow viewports the content column is not offset by the closed navigator, unlike the broken narrow layout of the main branch (see the presence deviation)."
-  },
-  {
-   "role": "image",
-   "property": "maxWidth",
-   "viewports": [
-    "390x844"
-   ],
-   "reason": "On narrow viewports images shrink to the window, where the main branch let them overflow its broken narrow layout (see the presence deviation)."
-  },
-  {
-   "role": "footer",
    "property": "marginLeft",
    "viewports": [
     "390x844"
    ],
-   "reason": "On narrow viewports the footer is not offset by the closed navigator, unlike the broken narrow layout of the main branch (see the presence deviation)."
+   "reason": "On narrow viewports the content and the footer are not offset by the closed navigator, where the main branch kept the 320px navigator beside a content column only 96px wide, which hid most of the page content and scrolled sideways."
   },
   {
    "role": "*",
+   "roles": [
+    "contentColumn",
+    "image",
+    "main"
+   ],
+   "property": "maxWidth",
+   "viewports": [
+    "390x844"
+   ],
+   "reason": "On narrow viewports the content (and images in it) may span the window, where the main branch kept the 320px navigator beside a content column only 96px wide, which hid most of the page content and scrolled sideways."
+  },
+  {
+   "role": "*",
+   "roles": [
+    "breadcrumbs",
+    "contentHeading2",
+    "contentHeading3",
+    "hero",
+    "mentionedInItem",
+    "mentionedInTitle",
+    "paragraph",
+    "tableFollower",
+    "unorderedList"
+   ],
    "property": "paddingLeft",
    "viewports": [
     "390x844"
    ],
-   "reason": "On narrow viewports the introduction and the content are inset by 20px rather than 48px, to leave room for the text in the working narrow layout (the main branch's narrow layout was broken, see the presence deviation)."
+   "reason": "On narrow viewports the content is inset by 20px rather than 48px, to leave room for the text, where the main branch kept the 320px navigator beside a content column only 96px wide, which hid most of the page content and scrolled sideways."
   },
   {
    "role": "*",
+   "roles": [
+    "breadcrumbs",
+    "contentHeading2",
+    "contentHeading3",
+    "hero",
+    "mentionedInTitle",
+    "paragraph",
+    "tableFollower",
+    "unorderedList"
+   ],
    "property": "paddingRight",
    "viewports": [
     "390x844"
    ],
-   "reason": "On narrow viewports the introduction and the content are inset by 20px rather than 48px, to leave room for the text in the working narrow layout (the main branch's narrow layout was broken, see the presence deviation)."
+   "reason": "On narrow viewports the content is inset by 20px rather than 48px, to leave room for the text, where the main branch kept the 320px navigator beside a content column only 96px wide, which hid most of the page content and scrolled sideways."
+  },
+  {
+   "role": "*",
+   "roles": [
+    "documentationLayoutHeight"
+   ],
+   "property": "box.height",
+   "viewports": [
+    "390x844"
+   ],
+   "reason": "On narrow viewports the page is as tall as its content at full width, where the main branch kept the 320px navigator beside a content column only 96px wide, which hid most of the page content and scrolled sideways, which made its pages several times taller."
   },
   {
    "role": "appearanceOption",
@@ -136,38 +244,6 @@
     "dark"
    ],
    "reason": "The main branch kept the browser's black input text in the dark appearance, which is barely readable on the dark field; classic uses the light text colour there."
-  },
-  {
-   "role": "moduleCard",
-   "property": "cursor",
-   "pages": [
-    "landing"
-   ],
-   "reason": "The whole module card is a link in the shared markup, so it shows the pointer cursor; the main branch linked only the module name."
-  },
-  {
-   "role": "moduleCardAbstract",
-   "property": "cursor",
-   "pages": [
-    "landing"
-   ],
-   "reason": "The whole module card is a link in the shared markup, so it shows the pointer cursor; the main branch linked only the module name."
-  },
-  {
-   "role": "syntaxKeyword",
-   "property": "presence",
-   "pages": [
-    "tutorial"
-   ],
-   "reason": "Classic highlights the syntax of the code in tutorial steps, which the main branch showed as plain text."
-  },
-  {
-   "role": "syntaxType",
-   "property": "presence",
-   "pages": [
-    "tutorial"
-   ],
-   "reason": "Classic highlights the syntax of the code in tutorial steps, which the main branch showed as plain text."
   }
  ]
 }

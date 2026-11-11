@@ -592,6 +592,14 @@
     white-space: pre;
 }
 
+/* The code of tutorial steps is plain text, as in the main branch */
+.tutorial .code-listing :is([class^="syntax-"], [class*=" syntax-"]) {
+    display: contents;
+    color: inherit;
+    font-weight: inherit;
+    font-style: inherit;
+}
+
 /* Assessments: every question at once, each on a filled card */
 .tutorial .assessments-wrapper {
     box-sizing: border-box;

@@ -54,6 +54,24 @@
    "documentation"
   ]
  },
+ "documentationLayoutHeight": {
+  "static": ".adjustable-sidebar-width",
+  "main": ".doc-layout",
+  "vue": null,
+  "properties": [],
+  "height": true,
+  "kinds": [
+   "documentation"
+  ],
+  "pages": [
+   "module",
+   "class",
+   "defaultImplementations",
+   "property",
+   "operator",
+   "article"
+  ]
+ },
  "sidebar": {
   "static": ".adjustable-sidebar-width > .sidebar",
   "main": "nav.doc-sidebar",
@@ -324,6 +342,20 @@
    "documentation"
   ],
   "text": true
+ },
+ "heroDecoration": {
+  "static": ".documentation-hero .icon .background-icon",
+  "main": ".hero-decoration svg",
+  "vue": null,
+  "properties": [
+   "color",
+   "opacity"
+  ],
+  "geometry": true,
+  "height": true,
+  "pages": [
+   "article"
+  ]
  },
  "pageTitle": {
   "static": ".documentation-hero h1",
@@ -701,6 +733,64 @@
    "landing"
   ]
  },
+ "landingIntroParagraph": {
+  "static": ".index-intro p",
+  "main": "section.index-intro > p",
+  "vue": null,
+  "kinds": [
+   "landing"
+  ]
+ },
+ "landingIntroCode": {
+  "static": ".index-intro p code",
+  "main": "section.index-intro p code",
+  "vue": null,
+  "kinds": [
+   "landing"
+  ]
+ },
+ "landingIntroHeading": {
+  "static": ".index-intro h2",
+  "main": "section.index-intro h2",
+  "vue": null,
+  "kinds": [
+   "landing"
+  ]
+ },
+ "landingIntroCodeBlock": {
+  "static": ".index-intro pre",
+  "main": "section.index-intro pre",
+  "vue": null,
+  "height": true,
+  "kinds": [
+   "landing"
+  ]
+ },
+ "landingIntroList": {
+  "static": ".index-intro ul",
+  "main": "section.index-intro ul",
+  "vue": null,
+  "kinds": [
+   "landing"
+  ]
+ },
+ "landingIntroListItem": {
+  "static": ".index-intro li",
+  "main": "section.index-intro li",
+  "vue": null,
+  "height": true,
+  "kinds": [
+   "landing"
+  ]
+ },
+ "landingIntroListItemParagraph": {
+  "static": ".index-intro li p",
+  "main": "section.index-intro li p",
+  "vue": null,
+  "kinds": [
+   "landing"
+  ]
+ },
  "moduleCard": {
   "static": ".module-card",
   "main": ".module-card",
@@ -855,16 +945,28 @@
   ]
  },
  "overviewCard": {
-  "static": ".chapter.tile",
-  "main": null,
+  "static": ".chapter.tile, .topic-list .topic",
+  "main": ".tutorial-card",
   "vue": ".chapter.tile",
   "kinds": [
    "tutorial"
   ]
  },
+ "overviewGrid": {
+  "static": ".learning-path .content-sections-container",
+  "main": ".tutorial-grid",
+  "vue": ".learning-path .content-sections-container",
+  "geometry": true,
+  "kinds": [
+   "tutorial"
+  ],
+  "pages": [
+   "tutorialsOverview"
+  ]
+ },
  "overviewCardTitle": {
-  "static": ".chapter .name",
-  "main": null,
+  "static": ".chapter .name, .topic-list .link",
+  "main": ".tutorial-card-title",
   "vue": ".chapter .name",
   "kinds": [
    "tutorial"

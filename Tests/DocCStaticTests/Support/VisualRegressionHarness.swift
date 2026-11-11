@@ -63,7 +63,11 @@ enum VisualRegressionHarness {
         /// The role the deviation concerns, or `*` for all roles.
         var role: String
 
-        /// The measured property, `presence`, `box.x`, `box.width`, or `*` for all.
+        /// The roles a deviation with the role `*` is limited to, if any.
+        var roles: [String]?
+
+        /// The measured property, `presence`, `box.x`, `box.width`, `box.height`,
+        /// `text`, or `*` for all.
         var property: String
 
         /// The page identifiers the deviation is restricted to, if any.

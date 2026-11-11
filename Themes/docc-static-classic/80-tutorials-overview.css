@@ -2,8 +2,9 @@
  * Tutorials overview of the `docc-static-classic` theme: a light page with a
  * centred title above a grid of tutorial cards, without the navigation bar.
  *
- * The chapters of the overview are kept as headings when there are several of
- * them; every tutorial of a chapter is a filled card that links to it as a whole.
+ * Like the main branch, the overview is one grid of the tutorials of all chapters,
+ * without chapter headings; every tutorial is a filled card that links to it as a
+ * whole.
  */
 body.tutorial-overview-page #app-main {
     box-sizing: border-box;
@@ -85,14 +86,15 @@ body.tutorial-overview-page #app-main {
     display: none;
 }
 
-/* The tutorials, as a grid of cards per chapter */
+/* The tutorials of all chapters, as one grid of cards */
 .tutorials-overview .learning-path {
-    padding: 3rem 2rem;
+    padding: 3rem 4rem;
     background: none;
 }
 
 .tutorials-overview .learning-path .main-container {
     display: block;
+    width: auto;
     max-width: none;
     margin: 0;
     padding: 0;
@@ -102,48 +104,18 @@ body.tutorial-overview-page #app-main {
     max-width: none;
 }
 
-.tutorials-overview .content-sections-container .content-section {
-    border-radius: 0;
-}
-
-.tutorials-overview .chapter.tile {
-    display: block;
-    margin: 0 0 3rem;
-    padding: 0;
-    background: none;
-}
-
-.tutorials-overview .chapter .info {
-    display: block;
-    margin: 0 0 1rem;
-    padding: 0;
-}
-
-.tutorials-overview .chapter .info .asset,
-.tutorials-overview .chapter .intro .eyebrow,
-.tutorials-overview .content-section:has(> .chapter:only-of-type) .chapter .info {
-    display: none;
-}
-
-.tutorials-overview .chapter .name {
-    margin: 0 0 1rem;
-    padding-bottom: 0.5rem;
-    border-bottom: 2px solid var(--color-link);
-    font-size: 1.5rem;
-    font-weight: 600;
-    color: var(--color-figure-gray);
-}
-
-.tutorials-overview .chapter .intro .content {
-    color: var(--color-figure-gray-secondary);
-}
-
-.tutorials-overview .topic-list {
+.tutorials-overview .learning-path .content-sections-container {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     gap: 1.5rem;
-    margin: 0;
-    padding: 0;
+}
+
+.tutorials-overview .content-sections-container :is(.content-section, .chapter.tile, .topic-list) {
+    display: contents;
+}
+
+.tutorials-overview .chapter .info {
+    display: none;
 }
 
 .tutorials-overview .topic-list::before {

@@ -127,6 +127,15 @@ body.index-page .card {
     transition: box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
+/* As in the main branch, only the name shows the pointer, although the whole card links */
+body.index-page .card.module-card {
+    cursor: auto;
+}
+
+body.index-page .card.module-card .module-name {
+    cursor: pointer;
+}
+
 body.index-page .card:hover {
     border-color: var(--color-link);
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);

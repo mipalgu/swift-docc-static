@@ -207,8 +207,8 @@ export const DEVIATION_CONDITIONS = ['pages', 'viewports', 'schemes'];
 /**
  * Whether an accepted deviation covers a mismatch.
  *
- * A deviation names a role (`"*"` for every role) and a property (`"*"` for every
- * property) and
+ * A deviation names a role (`"*"` for every role, optionally limited to the roles
+ * listed in `roles`) and a property (`"*"` for every property) and
  * may restrict itself to some pages (page identifiers), viewports (such as
  * `"390x844"`) and colour schemes (`"light"`, `"dark"`); a mismatch is covered when
  * it matches the role, the property and every condition the deviation states.
@@ -219,6 +219,7 @@ export const DEVIATION_CONDITIONS = ['pages', 'viewports', 'schemes'];
  */
 export function deviationCovers(mismatch, deviation) {
   if (deviation.role !== '*' && deviation.role !== mismatch.role) return false;
+  if (deviation.roles && !deviation.roles.includes(mismatch.role)) return false;
   if (deviation.property !== '*' && deviation.property !== mismatch.property) return false;
   const values = { pages: mismatch.page, viewports: mismatch.viewport, schemes: mismatch.scheme };
   return DEVIATION_CONDITIONS.every((field) => !deviation[field] || deviation[field].includes(values[field]));
@@ -253,7 +254,8 @@ export function partitionMismatches(mismatches, deviations) {
 export function describeDeviation(deviation) {
   const conditions = DEVIATION_CONDITIONS.filter((field) => deviation[field])
     .map((field) => `${field}: ${deviation[field].join(',')}`);
-  return `${deviation.role}.${deviation.property}${conditions.length ? ` (${conditions.join('; ')})` : ''}`;
+  const role = deviation.roles ? `{${deviation.roles.join(',')}}` : deviation.role;
+  return `${role}.${deviation.property}${conditions.length ? ` (${conditions.join('; ')})` : ''}`;
 }
 
 /**

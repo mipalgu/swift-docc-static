@@ -82,7 +82,8 @@ a theme keeps on purpose, mostly where the reference renderer is broken (for
 example, an unreadable colour, or a narrow layout that hides the content).  Each
 entry in `deviations` names:
 
-- `role`: a role from `roles.json`, or `*` for every role;
+- `role`: a role from `roles.json`, or `*` for every role, optionally limited by
+  `roles`, a list of roles from `roles.json`;
 - `property`: a measured property, `presence`, `box.x`, `box.width`, `box.height`, `text`, or `*` for
   every property;
 - optionally `pages` (page identifiers from `pages.json`), `viewports` (such as

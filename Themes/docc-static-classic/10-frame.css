@@ -213,6 +213,12 @@ body {
     padding-top: var(--spacing-header-height);
 }
 
+/* Like the main branch, documentation pages fill the window, so the footer starts below it */
+body:not(.index-page) .adjustable-sidebar-width {
+    box-sizing: border-box;
+    min-height: 100vh;
+}
+
 .full-width-container {
     max-width: none;
     border-inline: none;
@@ -240,16 +246,12 @@ body {
     padding-right: 0;
 }
 
-/* Narrow viewports: smaller insets, and no room for the language */
+/* Narrow viewports: smaller insets */
 @media only screen and (max-width: 735px) {
     body {
         --spacing-hero-padding-left: 20px;
         --spacing-hero-padding-right: 20px;
         --spacing-content-block-padding-horizontal: 20px;
-    }
-
-    .documentation-nav .nav-menu {
-        display: none;
     }
 }
 
