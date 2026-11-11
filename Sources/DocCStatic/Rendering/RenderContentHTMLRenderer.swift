@@ -138,6 +138,10 @@ private extension RenderContentHTMLRenderer {
         }
     }
 
+    /// The roles of the pages whose titles links show as code, like swift-docc-render's
+    /// `ReferenceInternalSymbol`; links to other pages, such as modules, show plain text.
+    static let codeTitleRoles: Set<String> = ["symbol", "dictionarySymbol"]
+
     /// Renders a link to another page or an external URL (swift-docc-render's `Reference`).
     ///
     /// Links are `a.inline-link` elements.  A link to a symbol that keeps the symbol's
@@ -166,7 +170,7 @@ private extension RenderContentHTMLRenderer {
         } else if let topicReference {
             title = topicReference.title
             titleHTML = escapeHTML(topicReference.title)
-            if topicReference.kind == .symbol {
+            if topicReference.kind == .symbol, let role = topicReference.role, Self.codeTitleRoles.contains(role) {
                 titleHTML = "<code>\(titleHTML)</code>"
             }
         } else if let linkReference {

@@ -887,7 +887,13 @@
     height: 0.8823529412rem;
     transform: scale(1);
     overflow: visible;
-    fill: currentColor;
+    fill: var(--colors-svg-icon-fill-light, var(--color-svg-icon));
+}
+
+@supports (color: light-dark(#000, #fff)) {
+    .topic-icon {
+        fill: light-dark(var(--colors-svg-icon-fill-light, var(--color-svg-icon)), var(--colors-svg-icon-fill-dark, var(--color-svg-icon)));
+    }
 }
 
 .topic-icon.curly-brackets-icon {
@@ -899,12 +905,8 @@
 }
 
 .mentions .link-block .link {
-    display: inline-flex;
-    align-items: center;
-}
-
-.mentions .link-block + .link-block {
-    margin-top: 15px;
+    display: flex;
+    margin-bottom: 0.5rem;
 }
 
 /* The kind of every topic, for themes that show letter badges */

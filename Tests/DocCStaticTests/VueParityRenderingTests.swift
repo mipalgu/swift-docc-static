@@ -191,3 +191,52 @@ struct NavigatorRowTests {
         }
     }
 }
+
+/// Tests of links to other documentation pages in prose.
+@Suite("Symbol Link Rendering")
+struct SymbolLinkRenderingTests {
+    /// Renders a paragraph with a link to a page of the given role.
+    func link(role: String, title: String) -> String {
+        let identifier = "doc://org.example.Fixture/documentation/Fixture/\(title)"
+        let reference = TopicRenderReference(
+            identifier: RenderReferenceIdentifier(identifier),
+            title: title,
+            abstract: [],
+            url: "/documentation/fixture/\(title.lowercased())",
+            kind: .symbol,
+            role: role
+        )
+        let paragraph = RenderBlockContent.paragraph(.init(inlineContent: [
+            .reference(identifier: RenderReferenceIdentifier(identifier), isActive: true, overridingTitle: nil, overridingTitleInlineContent: nil)
+        ]))
+        return RenderContentHTMLRenderer().renderBlockContent(paragraph, references: [identifier: reference], depth: 0)
+    }
+
+    @Test("A link to a symbol shows its title as code, like swift-docc-render",
+          arguments: ["symbol", "dictionarySymbol"])
+    func symbolTitleAsCode(role: String) {
+        #expect(link(role: role, title: "Point").contains("class=\"inline-link\"><code>Point</code></a>"))
+    }
+
+    @Test("A link to a module shows its title as text, like swift-docc-render")
+    func moduleTitleAsText() {
+        #expect(link(role: "collection", title: "Fixture").contains("class=\"inline-link\">Fixture</a>"))
+    }
+}
+
+/// Tests of stylesheet rules that reproduce swift-docc-render's link blocks.
+@Suite("Link Block Styles")
+struct LinkBlockStyleTests {
+    let css = DocCStylesheet.generate(theme: .default)
+
+    @Test("Topic icons use the icon colour rather than the link colour, like swift-docc-render")
+    func topicIconFill() {
+        #expect(css.contains(".topic-icon {\n    height: 0.8823529412rem;\n    transform: scale(1);\n    overflow: visible;\n    fill: var(--colors-svg-icon-fill-light, var(--color-svg-icon));"))
+    }
+
+    @Test("Mentions are spaced by the margin below each link, like swift-docc-render")
+    func mentionSpacing() {
+        #expect(css.contains(".mentions .link-block .link {\n    display: flex;\n    margin-bottom: 0.5rem;\n}"))
+        #expect(!css.contains(".mentions .link-block + .link-block"))
+    }
+}
