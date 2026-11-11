@@ -31,7 +31,7 @@ struct DocCStaticCommand: AsyncParsableCommand {
             JavaScript. The output can be viewed locally as file:// URLs or
             hosted on any static web server.
             """,
-        version: "0.1.0",
+        version: "0.2.0",
         subcommands: [
             Generate.self,
             Render.self,
