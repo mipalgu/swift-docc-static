@@ -10,14 +10,14 @@ on:
 jobs:
   build-windows:
     name: Windows (Swift ${{ matrix.swift }})
-    runs-on: windows-2022
+    runs-on: windows-latest
     strategy:
       fail-fast: false
       matrix:
         include:
-          - swift: "6.2"
-            swift-tag: "swift-6.2.4-release"
-            swift-build: "6.2.4-RELEASE"
+          - swift: "6.4"
+            swift-tag: "swift-6.4.2-release"
+            swift-build: "6.4.2-RELEASE"
     steps:
       - name: Checkout
         uses: actions/checkout@v4
