@@ -14,7 +14,8 @@ import Foundation
 /// - Disclosure chevrons for expandable items (pure CSS, no JavaScript)
 /// - A stable `id` on every row, derived from the row's documentation path, so that
 ///   the page embedding the document can select its row with a URL fragment
-/// - The topic type icon of every row (see ``TopicTypeIcon``)
+/// - The topic type icon of every row (see ``TopicTypeIcon``), whose drawing, like
+///   that of the chevron, is defined once at the start of the navigator
 /// - Flat list structure (matches swift-docc-render architecture)
 ///
 /// The shared document carries no per-page state: highlighting the current page and
@@ -24,8 +25,9 @@ import Foundation
 ///
 /// The builder generates a flat list where items are siblings in a single `<ul>`, and
 /// the children of an item follow it in a `.nav-children-wrapper` list item.  Visual
-/// hierarchy is achieved through CSS using the `--nesting-index` custom property for
-/// indentation.
+/// hierarchy is achieved through CSS: the stylesheet derives the `--nesting-index`
+/// custom property, which indents the row, from the row's `data-nesting-index`
+/// attribute.
 ///
 /// Group markers (e.g., "Initializers", "Instance Methods") are regular `<li>` items
 /// with the `.is-group` class, at the same depth as the rows they group.
@@ -41,6 +43,12 @@ public struct NavigationSidebarBuilder: Sendable {
 
     /// The normalised paths that have already been given a row identifier.
     private var identifiedPaths: Set<String> = []
+
+    /// The topic types whose icons the rows built so far show.
+    private var iconTypes: Set<String> = []
+
+    /// Whether a row built so far has a disclosure chevron.
+    private var hasChevron = false
 }
 
 // MARK: - Public
@@ -108,14 +116,9 @@ public extension NavigationSidebarBuilder {
     /// - Returns: The navigator, with an empty card if the index contains no modules.
     mutating func buildNavigationTree() -> String {
         let allModules = navigationIndex.allModules()
-        var html = """
-
-            <nav class="navigator" aria-label="Documentation Navigator">
-                <div class="navigator-card">
-                    <div class="navigator-card-full-height">
-                        <div class="navigator-card-inner">
-                            <div class="card-body">
-        """
+        iconTypes = []
+        hasChevron = false
+        var html = ""
         if allModules.count > 1 {
             html += "\n<div class=\"sidebar-content scroller\">"
             for moduleNode in allModules {
@@ -127,7 +130,16 @@ public extension NavigationSidebarBuilder {
         } else {
             html += "\n<div class=\"sidebar-content scroller\"></div>"
         }
-        html += """
+        let chevron = hasChevron ? [(identifier: Self.chevronSymbolIdentifier, svg: Self.chevronSVG)] : []
+        let symbols = TopicTypeIcon.symbolDefinitions(for: iconTypes, additionalDrawings: chevron)
+        return """
+
+            <nav class="navigator" aria-label="Documentation Navigator">\(symbols)
+                <div class="navigator-card">
+                    <div class="navigator-card-full-height">
+                        <div class="navigator-card-inner">
+                            <div class="card-body">
+        """ + html + """
 
                             </div>
                         </div>
@@ -136,7 +148,6 @@ public extension NavigationSidebarBuilder {
                 </div>
             </nav>
         """
-        return html
     }
 
     /// Builds the inline sidebar used when no navigation tree is available.
@@ -440,6 +451,18 @@ private extension NavigationSidebarBuilder {
     <svg class="svg-icon inline-chevron-right-icon icon-inline chevron" viewBox="0 0 14 14" aria-hidden="true"><path d="M2.964 1.366l0.649-0.76 7.426 6.343-7.423 6.445-0.655-0.755 6.545-5.683-6.542-5.59z"></path></svg>
     """
 
+    /// The identifier of the chevron's drawing, defined once in the navigator.
+    static let chevronSymbolIdentifier = TopicTypeIcon.symbolIdentifierPrefix + "disclosure-chevron"
+
+    /// The chevron of a disclosure toggle, drawn by referring to its definition.
+    ///
+    /// - Returns: The chevron's `<svg>` element, noting that the navigator needs the
+    ///   chevron's definition.
+    mutating func chevron() -> String {
+        hasChevron = true
+        return TopicTypeIcon.referringSVG(Self.chevronSVG, identifier: Self.chevronSymbolIdentifier)
+    }
+
     /// Builds a module section in the multi-module sidebar.
     ///
     /// Every module starts collapsed; the stylesheet expands the module that contains
@@ -458,7 +481,7 @@ private extension NavigationSidebarBuilder {
                         <input type="checkbox" id="\(checkboxId)" class="disclosure-checkbox">
                         <div class="module-header"\(identifierAttribute(for: moduleNode))>
                             <a href="\(escapeHTML(relativeURL))" class="technology-title"><h2 class="card-link">\(title)</h2></a>
-                            <label for="\(checkboxId)" class="tree-toggle module-toggle" aria-label="Toggle \(title)">\(Self.chevronSVG)</label>
+                            <label for="\(checkboxId)" class="tree-toggle module-toggle" aria-label="Toggle \(title)">\(chevron())</label>
                         </div>
         """
 
@@ -501,7 +524,7 @@ private extension NavigationSidebarBuilder {
     /// Builds a flat navigation list where all items are siblings.
     ///
     /// This method recursively flattens the navigation tree into a single list,
-    /// using `--nesting-index` for visual hierarchy via CSS indentation.  Like
+    /// using `data-nesting-index` for visual hierarchy via CSS indentation.  Like
     /// swift-docc-render, a group heading has the same nesting index as the rows
     /// listed under it.  Children are wrapped in a `.nav-children-wrapper` list item
     /// for CSS-based disclosure.
@@ -530,7 +553,7 @@ private extension NavigationSidebarBuilder {
     ///   - nestingLevel: The nesting level of the group and its rows.
     /// - Returns: The HTML for the group heading.
     func buildGroupMarker(_ node: NavigationNode, nestingLevel: Int) -> String {
-        "\n<li class=\"navigator-card-item is-group\" data-nesting-index=\"\(nestingLevel)\" style=\"--nesting-index: \(nestingLevel)\">"
+        "\n<li class=\"navigator-card-item is-group\" data-nesting-index=\"\(nestingLevel)\">"
             + "<div class=\"head-wrapper\"><div class=\"depth-spacer\"></div>"
             + "<div class=\"title-container\"><h3 class=\"leaf-link\">\(escapeHTML(node.title))</h3></div></div></li>"
     }
@@ -550,18 +573,20 @@ private extension NavigationSidebarBuilder {
         let expandableClass = node.isExpandable ? " expandable" : ""
 
         var html = "\n<li class=\"navigator-card-item\(expandableClass)\" data-nesting-index=\"\(nestingLevel)\""
-            + " style=\"--nesting-index: \(nestingLevel)\"\(identifierAttribute(for: node))>"
+            + "\(identifierAttribute(for: node))>"
 
         var toggle = ""
         if node.isExpandable {
             let checkboxId = nextCheckboxId()
             html += "<input type=\"checkbox\" id=\"\(checkboxId)\" class=\"disclosure-checkbox\">"
             toggle = "<label for=\"\(checkboxId)\" class=\"tree-toggle\" aria-label=\"Toggle \(escapeHTML(node.title))\">"
-                + Self.chevronSVG + "</label>"
+                + chevron() + "</label>"
         }
         html += "<div class=\"head-wrapper\"><div class=\"depth-spacer\">\(toggle)</div>"
+        let iconType = node.type ?? node.nodeType.rawValue
+        iconTypes.insert(iconType)
         html += "<div class=\"navigator-icon-wrapper\">"
-            + TopicTypeIcon.markup(for: node.type ?? node.nodeType.rawValue, additionalClass: "navigator-icon")
+            + TopicTypeIcon.referenceMarkup(for: iconType, additionalClass: "navigator-icon")
             + "</div>"
         html += "<div class=\"title-container\"><a href=\"\(escapeHTML(relativeURL))\" class=\"leaf-link\">"
             + "\(escapeHTML(node.title))</a>\(Self.badgeMarkup(for: node))</div></div></li>"

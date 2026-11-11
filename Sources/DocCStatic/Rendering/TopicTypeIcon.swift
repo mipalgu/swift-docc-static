@@ -24,6 +24,12 @@ public enum TopicTypeIcon {
 
     /// The class of the element wrapping an icon.
     public static let className = "TopicTypeIcon"
+
+    /// The prefix of the identifiers of icon drawings defined once per document.
+    public static let symbolIdentifierPrefix = "topic-icon-"
+
+    /// The class of the hidden SVG element that holds the icon drawings of a document.
+    public static let symbolsClassName = "svg-icon-symbols"
 }
 
 // MARK: - Types
@@ -111,6 +117,151 @@ public extension TopicTypeIcon {
             attributes += " \(lettersAttribute)=\"\(escapeHTML(letters))\""
         }
         return "<span \(attributes)>\(svg(for: normalised))</span>"
+    }
+
+    /// Builds the icon of a topic type like ``markup(for:additionalClass:)``, but
+    /// referring to a drawing defined once in the document.
+    ///
+    /// The icon keeps the wrapper and the classes of swift-docc-render's icon, whose
+    /// size the stylesheet sets, and draws its content with a `<use>` element that
+    /// refers to the drawing ``symbolDefinitions(for:additionalDrawings:)`` defines for
+    /// the type, with the icon's view box.  A document that lists many topics then
+    /// holds each drawing only once.
+    ///
+    /// - Parameters:
+    ///   - type: A type name; it is normalised with ``normalisedType(_:)``.
+    ///   - additionalClass: Further classes of the wrapper, such as `navigator-icon`.
+    /// - Returns: A `<span>` with the class ``className`` holding the referring icon.
+    static func referenceMarkup(for type: String, additionalClass: String = "") -> String {
+        let normalised = normalisedType(type)
+        let inline = markup(for: type, additionalClass: additionalClass)
+        guard let start = inline.range(of: "<svg") else { return inline }
+        return String(inline[..<start.lowerBound])
+            + referringSVG(svg(for: normalised), identifier: symbolIdentifier(for: normalised)) + "</span>"
+    }
+
+    /// Returns the identifier of the drawing of a topic type's icon.
+    ///
+    /// - Parameter type: A type name; it is normalised with ``normalisedType(_:)``.
+    /// - Returns: The identifier, ``symbolIdentifierPrefix`` followed by the type name
+    ///   with every character other than ASCII letters and digits replaced by `-`.
+    static func symbolIdentifier(for type: String) -> String {
+        let name = normalisedType(type).unicodeScalars.map { scalar in
+            scalar.isASCII && CharacterSet.alphanumerics.contains(scalar) ? String(scalar) : "-"
+        }.joined()
+        return symbolIdentifierPrefix + name
+    }
+
+    /// Returns a hidden SVG element defining the drawings of the given topic types'
+    /// icons, which ``referenceMarkup(for:additionalClass:)`` refers to.
+    ///
+    /// Each drawing is a `<symbol>` with the content and the view box of the type's
+    /// icon and the identifier ``symbolIdentifier(for:)``; the element takes no space
+    /// in the layout.
+    ///
+    /// - Parameters:
+    ///   - types: The type names whose icons a document shows.
+    ///   - additionalDrawings: Further icons to define, as identifiers and complete SVG
+    ///     elements, such as the chevron of disclosure toggles.
+    /// - Returns: The SVG element, or an empty string if there is nothing to define.
+    static func symbolDefinitions(
+        for types: some Sequence<String>,
+        additionalDrawings: [(identifier: String, svg: String)] = []
+    ) -> String {
+        var seen = Set<String>()
+        var drawings: [(identifier: String, svg: String)] = []
+        for type in types {
+            let normalised = normalisedType(type)
+            let identifier = symbolIdentifier(for: normalised)
+            guard seen.insert(identifier).inserted else { continue }
+            drawings.append((identifier, svg(for: normalised)))
+        }
+        drawings.sort { $0.identifier < $1.identifier }
+        drawings += additionalDrawings
+        guard !drawings.isEmpty else { return "" }
+        let symbols = drawings.map { symbol($0.svg, identifier: $0.identifier) }.joined()
+        return "<svg class=\"\(symbolsClassName)\" width=\"0\" height=\"0\" style=\"position: absolute\" aria-hidden=\"true\">\(symbols)</svg>"
+    }
+
+    /// Returns an SVG element that draws a defined icon: the icon's classes and a
+    /// `<use>` element referring to its definition.
+    ///
+    /// - Parameters:
+    ///   - svg: The complete SVG element of the icon.
+    ///   - identifier: The identifier of the icon's definition.
+    ///   - keepingViewBox: Whether the element keeps the icon's view box, which gives
+    ///     it the icon's aspect ratio where the stylesheet sets only one dimension.
+    /// - Returns: The referring SVG element.
+    static func referringSVG(_ svg: String, identifier: String, keepingViewBox: Bool = false) -> String {
+        let classes = attribute("class", of: svg).map { " class=\"\($0)\"" } ?? ""
+        let viewBox = keepingViewBox ? attribute("viewBox", of: svg).map { " viewBox=\"\($0)\"" } ?? "" : ""
+        return "<svg\(classes)\(viewBox) aria-hidden=\"true\"><use href=\"#\(identifier)\"/></svg>"
+    }
+
+    /// Returns the `<symbol>` element that defines an icon for ``referringSVG(_:identifier:)``.
+    ///
+    /// - Parameters:
+    ///   - svg: The complete SVG element of the icon.
+    ///   - identifier: The identifier of the definition.
+    /// - Returns: A symbol with the icon's view box and content.
+    static func symbol(_ svg: String, identifier: String) -> String {
+        let viewBox = attribute("viewBox", of: svg).map { " viewBox=\"\($0)\"" } ?? ""
+        return "<symbol id=\"\(identifier)\"\(viewBox)>\(content(of: svg))</symbol>"
+    }
+
+    /// Returns the value of an attribute of the opening tag of an SVG element.
+    ///
+    /// - Parameters:
+    ///   - name: The attribute name.
+    ///   - svg: The SVG element.
+    /// - Returns: The attribute's value, or `nil` if the opening tag lacks it.
+    static func attribute(_ name: String, of svg: String) -> String? {
+        guard let tagEnd = svg.firstIndex(of: ">") else { return nil }
+        let tag = svg[..<tagEnd]
+        guard let start = tag.range(of: " \(name)=\"") else { return nil }
+        let rest = tag[start.upperBound...]
+        guard let end = rest.firstIndex(of: "\"") else { return nil }
+        return String(rest[..<end])
+    }
+
+    /// Draws the topic list icons that a page shows more than once (see
+    /// ``topicListIcon(forRole:)``) only once.
+    ///
+    /// Every repeated icon is replaced by an element of the same classes and view box
+    /// that refers to the icon's drawing, and the drawings are defined in a hidden SVG
+    /// element at the start of the page's body.  Icons shown once stay as they are.
+    ///
+    /// - Parameter html: A complete page.
+    /// - Returns: The page with its repeated topic list icons shared.
+    static func sharingRepeatedTopicIcons(in html: String) -> String {
+        var result = html
+        var symbols = ""
+        for role in topicListIconRoles {
+            guard let icon = topicListIcon(forRole: role) else { continue }
+            let occurrences = result.components(separatedBy: icon).count - 1
+            guard occurrences > 1 else { continue }
+            let identifier = symbolIdentifierPrefix + "topic-" + role
+            result = result.replacingOccurrences(of: icon, with: referringSVG(icon, identifier: identifier, keepingViewBox: true))
+            symbols += symbol(icon, identifier: identifier)
+        }
+        guard !symbols.isEmpty, let body = result.range(of: "<body"),
+              let bodyEnd = result[body.upperBound...].firstIndex(of: ">") else { return html }
+        let definitions = "<svg class=\"\(symbolsClassName)\" width=\"0\" height=\"0\" style=\"position: absolute\" aria-hidden=\"true\">\(symbols)</svg>"
+        result.insert(contentsOf: definitions, at: result.index(after: bodyEnd))
+        return result
+    }
+
+    /// One reference role for each distinct icon that topic lists show.
+    static let topicListIconRoles = ["article", "collection", "collectionGroup", "learn", "tutorial", "sampleCode"]
+
+    /// Returns the content of an SVG element: everything between its opening and
+    /// closing tags.
+    ///
+    /// - Parameter svg: An SVG element.
+    /// - Returns: The element's children.
+    static func content(of svg: String) -> String {
+        guard let tagEnd = svg.firstIndex(of: ">"), let close = svg.range(of: "</svg>", options: .backwards) else { return "" }
+        return String(svg[svg.index(after: tagEnd)..<close.lowerBound])
     }
 
     /// Returns the icon that topic lists show for a reference role, if any.

@@ -207,8 +207,9 @@ struct NavigationSidebarBuilderTests {
         var builder = NavigationSidebarBuilder(navigationIndex: navigationIndex)
         let html = builder.buildNavigationTree()
 
-        // Should contain nesting-index CSS variable
-        #expect(html.contains("--nesting-index:"))
+        // Rows carry their depth, from which the stylesheet derives --nesting-index
+        #expect(html.contains("data-nesting-index=\"1\""))
+        #expect(DocCStylesheet.generate(theme: .default).contains(".navigator-card-item[data-nesting-index=\"1\"] { --nesting-index: 1; }"))
     }
 
     @Test("Navigator card has disclosure chevron")
@@ -347,7 +348,7 @@ struct NavigationSidebarBuilderTests {
         let html = builder.buildNavigationTree()
 
         // Should contain different nesting levels
-        #expect(html.contains("--nesting-index: 0"))
-        #expect(html.contains("--nesting-index: 1") || html.contains("--nesting-index: 2"))
+        #expect(html.contains("data-nesting-index=\"0\""))
+        #expect(html.contains("data-nesting-index=\"1\"") || html.contains("data-nesting-index=\"2\""))
     }
 }

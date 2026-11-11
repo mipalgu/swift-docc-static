@@ -242,7 +242,7 @@ public extension HTMLPageBuilder {
         </html>
         """
 
-        return html
+        return TopicTypeIcon.sharingRepeatedTopicIcons(in: html)
     }
 }
 

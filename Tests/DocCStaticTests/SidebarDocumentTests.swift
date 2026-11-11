@@ -324,3 +324,93 @@ struct SidebarPostProcessingTests {
         #expect(DocLinkPostProcessor.shouldProcess(relativePath: "index.html"))
     }
 }
+
+@Suite("Sidebar Document Size")
+struct SidebarDocumentSizeTests {
+    /// A module with many symbols of every kind the navigator shows.
+    func largeIndex(rows: Int) -> NavigationIndex {
+        let kinds = ["struct", "class", "enum", "protocol", "method", "property", "op", "func", "article", "typealias"]
+        let children = (0..<rows).map { number in
+            let kind = kinds[number % kinds.count]
+            return node("Symbol\(number)", "/documentation/large/symbol\(number)", kind,
+                        number % 5 == 0 ? [node("member()", "/documentation/large/symbol\(number)/member()", "method")] : nil)
+        }
+        return NavigationIndex(schemaVersion: nil, includedArchiveIdentifiers: nil,
+                               interfaceLanguages: ["swift": [node("Large", "/documentation/large", "module", children)]])
+    }
+
+    func document(_ index: NavigationIndex) -> String {
+        var builder = NavigationSidebarBuilder(navigationIndex: index)
+        return builder.buildSidebarDocument(includeSearch: false)
+    }
+
+    @Test("Rows refer to icons defined once in the document")
+    func iconsAreDefinedOnce() throws {
+        let html = document(largeIndex(rows: 40))
+        let references = attributeValues("href", in: html).filter { $0.hasPrefix("#") }.map { String($0.dropFirst()) }
+        #expect(!references.isEmpty)
+        let identifiers = attributeValues("id", in: html)
+        for reference in Set(references) {
+            #expect(identifiers.filter { $0 == reference }.count == 1, "\(reference) is not defined exactly once")
+        }
+        // No row repeats the drawing of an icon or chevron
+        let rows = html.components(separatedBy: "<li class=\"navigator-card-item").dropFirst()
+        #expect(rows.count >= 40)
+        for row in rows {
+            let markup = row.components(separatedBy: "</li>").first ?? row
+            #expect(!markup.contains("<path") && !markup.contains("<text") && !markup.contains("<rect"))
+        }
+    }
+
+    @Test("Icons keep the classes and geometry of swift-docc-render's icons")
+    func iconReferencesKeepTheOuterElement() throws {
+        for type in ["struct", "protocol", "article", "op", "func", "tutorial", "module", "collection"] {
+            let inline = TopicTypeIcon.svg(for: TopicTypeIcon.normalisedType(type))
+            let identifier = TopicTypeIcon.symbolIdentifier(for: type)
+            let reference = TopicTypeIcon.referenceMarkup(for: type, additionalClass: "navigator-icon")
+            let wrapper = try #require(TopicTypeIcon.markup(for: type, additionalClass: "navigator-icon").components(separatedBy: "<svg").first)
+            #expect(reference.hasPrefix(wrapper))
+            #expect(reference.contains("<svg class=\"\(TopicTypeIcon.attribute("class", of: inline) ?? "")\""))
+            #expect(reference.contains("<use href=\"#\(identifier)\"/>"))
+            let definitions = TopicTypeIcon.symbolDefinitions(for: [type])
+            let viewBox = try #require(TopicTypeIcon.attribute("viewBox", of: inline))
+            #expect(definitions.contains("<symbol id=\"\(identifier)\" viewBox=\"\(viewBox)\">\(TopicTypeIcon.content(of: inline))</symbol>"))
+        }
+    }
+
+    @Test("Large navigators stay compact")
+    func bytesPerRow() {
+        let rows = 1000
+        let html = document(largeIndex(rows: rows))
+        // Each row (and every fifth row's child) costs less than 600 bytes on average,
+        // where icons drawn in every row cost more than 800
+        #expect(html.utf8.count < rows * 6 / 5 * 600, "\(html.utf8.count) bytes for \(rows * 6 / 5) rows")
+    }
+}
+
+@Suite("Shared Topic Icons on Pages")
+struct SharedTopicIconTests {
+    @Test("Topic icons that a page repeats are drawn once and referred to")
+    func repeatedIconsAreShared() throws {
+        let article = try #require(TopicTypeIcon.topicListIcon(forRole: "article"))
+        let tutorial = try #require(TopicTypeIcon.topicListIcon(forRole: "tutorial"))
+        let page = "<html><body data-x=\"1\">\n<main>\(article)\(article)\(tutorial)\(article)</main></body></html>"
+        let shared = TopicTypeIcon.sharingRepeatedTopicIcons(in: page)
+        #expect(!shared.contains(article))
+        #expect(shared.components(separatedBy: "<use href=\"#").count - 1 == 3)
+        #expect(shared.components(separatedBy: "<symbol ").count - 1 == 1)
+        // An icon shown once stays inline
+        #expect(shared.contains(tutorial))
+        // The definitions follow the opening body tag and keep the icon's view box
+        #expect(shared.contains("<body data-x=\"1\"><svg class=\"\(TopicTypeIcon.symbolsClassName)\""))
+        let reference = try #require(shared.range(of: "<svg class=\"topic-icon svg-icon\" viewBox=\"0 0 14 14\" aria-hidden=\"true\"><use href=\"#"))
+        #expect(!reference.isEmpty)
+    }
+
+    @Test("Pages without repeated icons are unchanged")
+    func singleIconsStayInline() throws {
+        let article = try #require(TopicTypeIcon.topicListIcon(forRole: "article"))
+        let page = "<html><body>\(article)</body></html>"
+        #expect(TopicTypeIcon.sharingRepeatedTopicIcons(in: page) == page)
+    }
+}
