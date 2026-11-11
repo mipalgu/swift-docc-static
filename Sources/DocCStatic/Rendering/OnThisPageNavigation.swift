@@ -49,20 +49,28 @@ public enum OnThisPageNavigation {
 
     /// Returns a selector that matches the element with the given identifier.
     ///
-    /// The identifier becomes a CSS string, so any identifier is matched exactly and
-    /// cannot end the `<style>` element that contains the selector.
+    /// The identifier becomes a CSS string serialised like CSSOM's "serialize a
+    /// string": a null character becomes U+FFFD, control characters (including line
+    /// feeds, carriage returns and form feeds) become hexadecimal escapes, and quotation
+    /// marks and backslashes are escaped.  A `<` also becomes a hexadecimal escape, so
+    /// the selector cannot end the `<style>` element that contains it.  Any identifier
+    /// is therefore matched exactly.
     ///
     /// - Parameter anchor: The identifier of the section heading.
     /// - Returns: An attribute selector.
     public static func selector(forAnchor anchor: String) -> String {
         var escaped = ""
-        for character in anchor {
-            switch character {
-            case "\\": escaped += "\\\\"
-            case "\"": escaped += "\\\""
-            case "<": escaped += "\\3c "
-            case "\n": escaped += "\\a "
-            default: escaped.append(character)
+        for scalar in anchor.unicodeScalars {
+            switch scalar.value {
+            case 0:
+                escaped.unicodeScalars.append("\u{FFFD}")
+            case 0x01...0x1F, 0x7F, 0x3C:
+                escaped += "\\" + String(scalar.value, radix: 16) + " "
+            case 0x22, 0x5C:
+                escaped += "\\"
+                escaped.unicodeScalars.append(scalar)
+            default:
+                escaped.unicodeScalars.append(scalar)
             }
         }
         return "[id=\"\(escaped)\"]"

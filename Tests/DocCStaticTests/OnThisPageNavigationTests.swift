@@ -31,6 +31,26 @@ struct OnThisPageNavigationTests {
         #expect(OnThisPageNavigation.selector(forAnchor: #"a"b\c</style>"#) == #"[id="a\"b\\c\3c /style>"]"#)
     }
 
+    @Test("Anchors are serialised as complete CSS strings", arguments: [
+        ("line\nfeed", #"[id="line\a feed"]"#),
+        ("carriage\rreturn", #"[id="carriage\d return"]"#),
+        ("form\u{0C}feed", #"[id="form\c feed"]"#),
+        ("tab\tstop", #"[id="tab\9 stop"]"#),
+        ("delete\u{7F}", #"[id="delete\7f "]"#),
+        ("unit\u{1F}separator", #"[id="unit\1f separator"]"#),
+        ("null\u{0}", "[id=\"null\u{FFFD}\"]"),
+        (#"back\slash"#, #"[id="back\\slash"]"#),
+        (#"say "hi""#, #"[id="say \"hi\""]"#),
+        ("</style><script>", #"[id="\3c /style>\3c script>"]"#),
+        ("é-ü_9", #"[id="é-ü_9"]"#),
+    ])
+    func completeStringEscapes(anchor: String, selector: String) {
+        #expect(OnThisPageNavigation.selector(forAnchor: anchor) == selector)
+        let rules = OnThisPageNavigation.headingRules(anchors: ["top", anchor])
+        #expect(!rules.dropFirst().dropLast("</style>".count + 5).contains("</"))
+        #expect(!rules.contains("\r") && !rules.contains("\u{0C}"))
+    }
+
     @Test("Each section heading is the subject of a view timeline tracking the line swift-docc-render uses")
     func headingTimelines() async throws {
         let fixture = try await FixtureDocumentation.shared.output(theme: .default)
