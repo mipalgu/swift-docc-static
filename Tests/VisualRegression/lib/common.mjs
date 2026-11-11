@@ -183,8 +183,9 @@ export function compareMeasurements(golden, actual, roles, config) {
         if (roles[role].text && reference.text !== undefined && reference.text !== measured.text) {
           record(page, variant, role, 'text', reference.text, measured.text);
         }
-        if ((roles[role].geometry || roles[role].height) && reference.box && measured.box) {
-          const keys = [...(roles[role].geometry ? ['x', 'width'] : []), ...(roles[role].height ? ['height'] : [])];
+        if ((roles[role].geometry || roles[role].height || roles[role].top) && reference.box && measured.box) {
+          const keys = [...(roles[role].geometry ? ['x', 'width'] : []), ...(roles[role].height ? ['height'] : []),
+            ...(roles[role].top ? ['y'] : [])];
           for (const key of keys) {
             if (reference.box[key] === undefined || measured.box[key] === undefined) continue;
             if (Math.abs(reference.box[key] - measured.box[key]) > config.geometryTolerance) {

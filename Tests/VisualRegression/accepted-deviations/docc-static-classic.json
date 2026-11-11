@@ -82,7 +82,8 @@
     "hero",
     "heroDecoration",
     "main",
-    "mentionedInItem"
+    "mentionedInItem",
+    "symbolLinkWrap"
    ],
    "property": "box.x",
    "viewports": [

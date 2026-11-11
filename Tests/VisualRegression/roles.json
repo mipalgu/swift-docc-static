@@ -95,7 +95,8 @@
   "vue": ".navigator .technology-title",
   "kinds": [
    "documentation"
-  ]
+  ],
+  "top": true
  },
  "sidebarModuleName": {
   "static": "iframe.sidebar-frame >>> .technology-title .card-link",
@@ -419,7 +420,7 @@
  },
  "topicGroupTitle": {
   "static": ".contenttable-title",
-  "main": "section.topics > h3, body.index-page section > h2",
+  "main": "section.topics > h3, body.index-page section:not(.index-intro) > h2",
   "vue": ".contenttable-title"
  },
  "topicItem": {
@@ -547,9 +548,9 @@
   "vue": ".parameters dd, .parameters-table dd"
  },
  "contentHeading2": {
-  "static": ".primary-content .content h2",
+  "static": ".primary-content:not(.index-intro) .content h2",
   "main": "main.doc-main > h2",
-  "vue": ".primary-content .content h2"
+  "vue": ".primary-content:not(.index-intro) .content h2"
  },
  "contentHeading3": {
   "static": ".primary-content h3",
@@ -557,34 +558,44 @@
   "vue": ".primary-content h3"
  },
  "paragraph": {
-  "static": ".primary-content > .content > p",
+  "static": ".primary-content:not(.index-intro) > .content > p",
   "main": "main.doc-main > p",
-  "vue": ".primary-content > .content > p"
+  "vue": ".primary-content:not(.index-intro) > .content > p"
  },
  "inlineCode": {
-  "static": ".primary-content p code:not(a code)",
+  "static": ".primary-content:not(.index-intro) p code:not(a code)",
   "main": "main.doc-main > p code, main.doc-main > .aside p code",
-  "vue": ".primary-content p code:not(a code)"
+  "vue": ".primary-content:not(.index-intro) p code:not(a code)"
  },
  "inlineLink": {
-  "static": ".primary-content p a",
+  "static": ".primary-content:not(.index-intro) p a",
   "main": "main.doc-main > p a, main.doc-main > .aside p a",
-  "vue": ".primary-content p a"
+  "vue": ".primary-content:not(.index-intro) p a"
  },
  "inlineCodeInLink": {
   "static": ".primary-content p a code",
   "main": "main.doc-main > p a code",
   "vue": ".primary-content p a code"
  },
+ "symbolLinkWrap": {
+  "static": ".primary-content .content p a[href*='pattern-swift.enum']",
+  "main": "main.doc-main p a[href*='pattern-swift.enum']",
+  "vue": ".primary-content .content p a[href*='pattern-swift.enum']",
+  "properties": [],
+  "geometry": true,
+  "pages": [
+   "module"
+  ]
+ },
  "unorderedList": {
-  "static": ".primary-content ul",
+  "static": ".primary-content:not(.index-intro) ul",
   "main": "main.doc-main > ul",
-  "vue": ".primary-content ul"
+  "vue": ".primary-content:not(.index-intro) ul"
  },
  "listItem": {
-  "static": ".primary-content ul > li",
+  "static": ".primary-content:not(.index-intro) ul > li",
   "main": "main.doc-main > ul > li",
-  "vue": ".primary-content ul > li"
+  "vue": ".primary-content:not(.index-intro) ul > li"
  },
  "orderedList": {
   "static": ".primary-content ol",
@@ -852,7 +863,8 @@
   "kinds": [
    "tutorial"
   ],
-  "height": true
+  "height": true,
+  "top": true
  },
  "tutorialTitle": {
   "static": ".tutorial-hero h1",
@@ -934,7 +946,8 @@
   "vue": ".tutorials-overview .hero",
   "kinds": [
    "tutorial"
-  ]
+  ],
+  "geometry": true
  },
  "overviewTitle": {
   "static": ".tutorials-overview .hero h1",
@@ -2059,7 +2072,8 @@
   "vue": ".topic-list .topic",
   "kinds": [
    "tutorial"
-  ]
+  ],
+  "height": true
  },
  "overviewTopicIcon": {
   "static": ".topic-list .topic-icon",

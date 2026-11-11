@@ -76,6 +76,12 @@
     color: inherit;
 }
 
+/* Such links do not break inside their names, as the main branch's plain links did not */
+.primary-content :is(p, li, dd, td) a > code wbr,
+.documentation-hero .abstract a > code wbr {
+    display: none;
+}
+
 /* Parameters: a padded section listing each name above its description */
 .primary-content .parameters {
     padding: var(--spacing-section-padding-vertical) var(--spacing-content-block-padding-horizontal);

@@ -152,6 +152,7 @@
       "navigator-card-line-height": "1.3",
       "navigator-card-min-height": "auto",
       "navigator-padding-vertical": "1rem",
+      "navigator-card-inner-padding-top": "0px",
       "navigator-group-font-size": "0.75rem",
       "sidebar-heading-title-font-size": "1rem",
       "sidebar-heading-font-size": "0.8125rem",

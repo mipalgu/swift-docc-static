@@ -89,7 +89,7 @@ body.index-page .contenttable-section:has(.tutorial-list) {
 }
 
 body.index-page .contenttable-section:has(.tutorial-list) .contenttable-title {
-    margin: 0 0 1.5rem;
+    margin: var(--spacing-heading-margin-top) 0 1.5rem;
     padding-bottom: 0;
     border-bottom: none;
 }
@@ -184,6 +184,11 @@ body.index-page .card .module-stats {
     color: var(--color-figure-gray-secondary);
 }
 
+/* With an introduction from INDEX.md, the main branch left out the Modules heading */
+body.index-page:has(.index-intro) .contenttable-section:has(#modules) .section-title {
+    display: none;
+}
+
 /* The introduction from the package's INDEX.md: a narrower, centred column */
 body.index-page .index-intro {
     max-width: 800px;
@@ -207,6 +212,7 @@ body.index-page .index-intro p {
 
 body.index-page .index-intro h2 {
     margin: 1.5rem 0 1rem;
+    line-height: 1.6;
     padding-bottom: 0;
     border-bottom: none;
     font-size: 1.5rem;
@@ -217,9 +223,10 @@ body.index-page .index-intro h3 {
     font-size: 1.25rem;
 }
 
-body.index-page .index-intro :is(ul, ol) {
+body.index-page .index-intro .content > :is(ul, ol) {
     margin: 1rem 0;
     padding-left: 1.5rem;
+    padding-right: 0;
 }
 
 body.index-page .index-intro li {

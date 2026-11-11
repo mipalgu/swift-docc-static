@@ -9,6 +9,14 @@
    "role": "overviewVolume",
    "property": "overflowY",
    "reason": "The volume clips its overflow (overflow: clip) instead of hiding it, because a hidden overflow would make it a scroll container and break the scroll-driven highlighting of the chapter in view."
+  },
+  {
+   "role": "topicsSectionTitle",
+   "property": "borderTopWidth",
+   "pages": [
+    "landing"
+   ],
+   "reason": "The landing page shows the package's INDEX.md, which swift-docc-render's documentation root has no counterpart for; like swift-docc-render after primary content, the Topics title below it has a rule."
   }
  ]
 }

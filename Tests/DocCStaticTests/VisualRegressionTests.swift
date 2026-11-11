@@ -85,7 +85,7 @@ struct AcceptedDeviationTests {
         let measured = try #require(harness["properties"] as? [String])
         let variants = try #require(harness["variants"] as? [String])
         let pages = Set(FixturePage.all.map(\.id))
-        let properties = Set(measured + ["*", "presence", "box.x", "box.width", "box.height", "text"])
+        let properties = Set(measured + ["*", "presence", "box.x", "box.y", "box.width", "box.height", "text"])
         let viewports = Set(variants.compactMap { $0.split(separator: "/").first.map(String.init) })
         let schemes = Set(variants.compactMap { $0.split(separator: "/").last.map(String.init) })
         for deviation in try VisualRegressionHarness.acceptedDeviations(for: theme.rawValue) {
@@ -103,10 +103,10 @@ struct AcceptedDeviationTests {
         }
     }
 
-    @Test("The default theme accepts the clipped overflow of the tutorials overview volume")
+    @Test("The default theme accepts only the clipped overflow of the tutorials overview volume and the rule after the landing page's introduction")
     func defaultDeviations() throws {
         let deviations = try VisualRegressionHarness.acceptedDeviations(for: ThemeSettings.BuiltInTheme.default.rawValue)
-        #expect(Set(deviations.map { "\($0.role).\($0.property)" }) == ["overviewVolume.overflowX", "overviewVolume.overflowY"])
+        #expect(Set(deviations.map { "\($0.role).\($0.property)" }) == ["overviewVolume.overflowX", "overviewVolume.overflowY", "topicsSectionTitle.borderTopWidth"])
         #expect(try VisualRegressionHarness.knownIssues(for: ThemeSettings.BuiltInTheme.default.rawValue).mismatches.isEmpty)
     }
 }

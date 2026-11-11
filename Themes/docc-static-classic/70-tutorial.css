@@ -13,7 +13,6 @@
     --classic-tutorial-padding: 4rem;
     --classic-tutorial-column-gap: 3rem;
     --classic-tutorial-text-width: 40%;
-    padding-top: var(--spacing-header-height);
 }
 
 /* Navigation bar: the title of the tutorials and the tutorial and section menus */
