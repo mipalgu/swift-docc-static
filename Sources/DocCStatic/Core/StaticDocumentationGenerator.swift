@@ -45,7 +45,7 @@ public enum GenerationError: Error, LocalizedError {
 /// The generator processes symbol graphs, articles, and tutorials, then outputs
 /// a complete static website that can be viewed locally or hosted on any web server.
 ///
-/// ## Overview
+/// ## Usage
 ///
 /// Create a generator with a configuration, then call ``generate()`` to produce
 /// the documentation:
