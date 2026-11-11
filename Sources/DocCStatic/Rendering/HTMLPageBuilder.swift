@@ -79,6 +79,14 @@ public extension HTMLPageBuilder {
     /// theme can show a letter badge for every topic.
     static let topicKindBadgeClass = "topic-kind-badge"
 
+    /// The class of the hidden name of a page's kind after its eyebrow.
+    ///
+    /// The eyebrow shows swift-docc-render's role heading, such as *Instance Method*;
+    /// this element carries the shorter name the original swift-docc-static pages
+    /// showed, such as *Method* (see ``kindLabel(for:)``), for themes that show it
+    /// instead.
+    static let eyebrowKindClass = "eyebrow-kind"
+
     /// The class of the hidden plain title of a topic that shows its declaration.
     ///
     /// A theme that lists topics by name rather than by declaration can show this
@@ -581,6 +589,7 @@ extension HTMLPageBuilder {
         let titleText = enhanceBackground ? escapeHTML(title) : WordBreak.markup(title)
         html += buildBreadcrumbs(for: renderNode, references: references, depth: depth)
         html += "\n<div class=\"topictitle\"><span class=\"eyebrow\">\(escapeHTML(roleLabel))</span>"
+            + "<span class=\"\(Self.eyebrowKindClass)\">\(escapeHTML(kindLabel(for: renderNode)))</span>"
         html += "<h1 class=\"title\"><span>\(titleText)</span>\(status.map(Badge.titleTag) ?? "")</h1></div>"
 
         if let abstract = renderNode.abstract {
@@ -762,12 +771,29 @@ extension HTMLPageBuilder {
     }
 
     /// Returns the role label for a render node (e.g., "Framework", "Structure", "Class").
+    ///
+    /// This is the role heading swift-docc-render shows as the eyebrow, or the name of
+    /// the page's kind (see ``kindLabel(for:)``) for pages without one.
+    ///
+    /// - Parameter renderNode: The render node of the page.
+    /// - Returns: The label.
     func roleLabel(for renderNode: RenderNode) -> String {
         // The role heading is the eyebrow swift-docc-render shows
         if let heading = renderNode.metadata.roleHeading, !heading.isEmpty {
             return heading
         }
+        return kindLabel(for: renderNode)
+    }
 
+    /// Returns the name of a page's kind as the original swift-docc-static pages showed
+    /// it, such as *Method* where swift-docc-render shows *Instance Method*.
+    ///
+    /// The name follows from the page's role (*Framework* for a collection, *Article*
+    /// and *Tutorial*), otherwise from its symbol kind.
+    ///
+    /// - Parameter renderNode: The render node of the page.
+    /// - Returns: The name of the kind.
+    func kindLabel(for renderNode: RenderNode) -> String {
         // Check metadata role first
         if let role = renderNode.metadata.role {
             switch role {

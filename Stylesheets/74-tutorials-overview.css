@@ -53,6 +53,11 @@ body.tutorial-overview-page {
     color: var(--color-tutorials-overview-content, #fff);
 }
 
+/* The introduction the original pages showed, for themes that show it instead */
+.hero .overview-introduction {
+    display: none;
+}
+
 .tutorials-overview .hero .content {
     font-size: 1.2352941176rem;
     line-height: 1.380952381;

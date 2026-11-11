@@ -61,7 +61,12 @@
     height: auto;
 }
 
-.tutorial nav.nav .nav-title-content .title {
+/* The title of the tutorials overview, as the main branch showed it */
+.tutorial nav.nav .nav-title-content .title:has(~ .nav-overview-title) {
+    display: none;
+}
+
+.tutorial nav.nav .nav-title-content :is(.title, .nav-overview-title) {
     display: block;
     max-width: none;
     overflow: visible;
@@ -76,6 +81,7 @@
 
 .tutorial nav.nav .nav-menu {
     margin-left: auto;
+    justify-content: flex-end;
 }
 
 .tutorial nav.nav .nav-menu-tray {
@@ -93,8 +99,23 @@
     height: auto;
 }
 
-.tutorial nav.nav .dropdown-container > svg {
+/* The section menu names the section without counting it, like the main branch's */
+.tutorial nav.nav .secondary-dropdown .section-tracker {
     display: none;
+}
+
+/* The menu is as wide as the name of the section in view, as in the main branch */
+.tutorial nav.nav .secondary-dropdown .form-dropdown-title .tracked {
+    max-width: 0;
+    animation-name: tutorial-expanded;
+}
+
+/* The chevron between the menus reads as the main branch's "›" */
+.tutorial nav.nav .dropdown-container > svg {
+    width: 6px;
+    height: 0.875rem;
+    margin: 0;
+    color: var(--color-figure-gray-secondary);
 }
 
 .tutorial nav.nav .form-dropdown-toggle {
@@ -732,7 +753,7 @@
         --classic-tutorial-padding: 1.5rem;
     }
 
-    .tutorial nav.nav .nav-title-content .title {
+    .tutorial nav.nav .nav-title-content :is(.title, .nav-overview-title) {
         font-size: 0.8125rem;
     }
 

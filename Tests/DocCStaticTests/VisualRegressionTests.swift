@@ -83,7 +83,7 @@ struct AcceptedDeviationTests {
         let measured = try #require(harness["properties"] as? [String])
         let variants = try #require(harness["variants"] as? [String])
         let pages = Set(FixturePage.all.map(\.id))
-        let properties = Set(measured + ["*", "presence", "box.x", "box.width", "box.height"])
+        let properties = Set(measured + ["*", "presence", "box.x", "box.width", "box.height", "text"])
         let viewports = Set(variants.compactMap { $0.split(separator: "/").first.map(String.init) })
         let schemes = Set(variants.compactMap { $0.split(separator: "/").last.map(String.init) })
         for deviation in try VisualRegressionHarness.acceptedDeviations(for: theme.rawValue) {

@@ -196,6 +196,11 @@
     color: var(--color-nav-dark-link-color, #fff);
 }
 
+/* The title of the tutorials overview, for themes that show it instead */
+.nav-title-content .nav-overview-title {
+    display: none;
+}
+
 .tutorial .nav-title-content,
 .tutorials-overview .nav-title-content {
     display: block;

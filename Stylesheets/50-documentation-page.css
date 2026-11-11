@@ -475,13 +475,19 @@
     margin-bottom: 0;
 }
 
-.eyebrow {
+.eyebrow,
+.eyebrow-kind {
     display: block;
     font-size: var(--spacing-eyebrow-font-size, 1.2352941176rem);
     line-height: var(--spacing-eyebrow-line-height, 1.1904761905);
     font-weight: 400;
     color: var(--color-documentation-intro-eyebrow, var(--colors-secondary-label, var(--color-secondary-label)));
     margin-bottom: var(--spacing-eyebrow-margin-bottom, 0.8823529412rem);
+}
+
+/* The name of the page's kind as the original pages showed it, for themes */
+.topictitle .eyebrow-kind {
+    display: none;
 }
 
 .documentation-hero .title {
@@ -551,7 +557,8 @@
         margin: 0;
     }
 
-    .eyebrow {
+    .eyebrow,
+    .eyebrow-kind {
         font-size: var(--spacing-eyebrow-font-size, 1.1176470588rem);
         line-height: var(--spacing-eyebrow-line-height, 1.2105263158);
     }

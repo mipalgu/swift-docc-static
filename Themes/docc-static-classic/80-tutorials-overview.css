@@ -62,7 +62,16 @@ body.tutorial-overview-page #app-main {
     color: var(--color-figure-gray);
 }
 
-.tutorials-overview .hero .content p {
+/* The fixed introduction the main branch showed, instead of the overview's own text */
+.tutorials-overview .hero .content {
+    display: none;
+}
+
+.tutorials-overview .hero .overview-introduction {
+    display: block;
+}
+
+.tutorials-overview .hero :is(.content p, .overview-introduction) {
     margin: 0 0 1rem;
     font-size: 1.125rem;
     line-height: 1.6;

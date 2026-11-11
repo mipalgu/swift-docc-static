@@ -180,6 +180,9 @@ export function compareMeasurements(golden, actual, roles, config) {
           if (want === undefined || want === got || ignorable(property, reference.style, measured.style)) continue;
           record(page, variant, role, property, want, got);
         }
+        if (roles[role].text && reference.text !== undefined && reference.text !== measured.text) {
+          record(page, variant, role, 'text', reference.text, measured.text);
+        }
         if ((roles[role].geometry || roles[role].height) && reference.box && measured.box) {
           const keys = [...(roles[role].geometry ? ['x', 'width'] : []), ...(roles[role].height ? ['height'] : [])];
           for (const key of keys) {

@@ -13,7 +13,8 @@
  * A role definition may set `pick` to `"in-viewport"` (the first match that is visible
  * inside the viewport) or leave it unset (the first visible match anywhere, or the
  * first match if none is visible).  Roles with `geometry: true` also record their
- * horizontal position and width.  Roles with `pseudo` (for example `"::before"`)
+ * horizontal position and width (`height: true` the height), and roles with
+ * `text: true` the text the element shows.  Roles with `pseudo` (for example `"::before"`)
  * record the computed style of that pseudo-element of the matched element.
  *
  * The result is plain JSON with deterministic key order; URLs in style values are
@@ -72,6 +73,7 @@
       entry.style = {};
       // URLs are recorded without the origin, which differs between runs
       for (const property of properties) entry.style[property] = String(cs[property]).split(location.origin).join('');
+      if (definition.text) entry.text = (element.innerText || '').replace(/\s+/g, ' ').trim();
       if (definition.geometry || definition.height) {
         const r = element.getBoundingClientRect();
         entry.box = { x: round(r.x + offset.x), width: round(r.width) };

@@ -171,6 +171,49 @@ struct ThemeHookTests {
         #expect(html.contains("<div class=\"bg\" style=\"background-image: url(&quot;../../../images/M/hero.png&quot;); \(property): url(&quot;../../../images/M/hero~dark.png&quot;)\"></div>"))
     }
 
+    @Test("A page's title carries the name of its kind as the original pages showed it, hidden by default",
+          arguments: [("method", "Instance Method", "Method"), ("struct", "Structure", "Structure"),
+                      ("init", "Initializer", "Initializer"), ("var", "Instance Property", "Property"),
+                      ("typealias", "Type Alias", "Type Alias"), ("op", "Operator", "Op")])
+    func kindLabel(symbolKind: String, roleHeading: String, label: String) {
+        let builder = HTMLPageBuilder(configuration: Configuration(
+            packageDirectory: FileManager.default.temporaryDirectory,
+            outputDirectory: FileManager.default.temporaryDirectory
+        ))
+        var node = RenderNode(
+            identifier: ResolvedTopicReference(bundleID: "m", path: "/documentation/m/point/thing", sourceLanguage: .swift),
+            kind: .symbol
+        )
+        node.metadata.symbolKind = symbolKind
+        node.metadata.roleHeading = roleHeading
+        node.metadata.role = "symbol"
+        #expect(builder.kindLabel(for: node) == label)
+        let html = builder.buildMainContent(from: node, references: [:], depth: 3)
+        #expect(html.contains("<div class=\"topictitle\"><span class=\"eyebrow\">\(roleHeading)</span><span class=\"\(HTMLPageBuilder.eyebrowKindClass)\">\(label)</span><h1"))
+        let css = DocCStylesheet.generate(theme: ThemeConfiguration(builtInTheme: .default))
+        #expect(css.contains(".topictitle .\(HTMLPageBuilder.eyebrowKindClass) {\n    display: none;\n}"))
+    }
+
+    @Test("A tutorial's navigation bar carries the title of the tutorials overview, hidden by default")
+    func tutorialOverviewTitle() {
+        let builder = HTMLPageBuilder(configuration: Configuration(
+            packageDirectory: FileManager.default.temporaryDirectory,
+            outputDirectory: FileManager.default.temporaryDirectory
+        ))
+        let html = builder.tutorialsNavigationBar(technology: "Fixture Tutorials", overviewTitle: "Drawing with Fixtures",
+                                                  overviewURL: "../index.html", classes: "", menu: "", actions: false)
+        #expect(html.contains("<span class=\"title\">Fixture Tutorials</span><span class=\"subhead\">&nbsp;\(TutorialDocument.Text.tutorials)</span><span class=\"\(TutorialDocument.overviewTitleClass)\">Drawing with Fixtures</span></a>"))
+        let css = DocCStylesheet.generate(theme: ThemeConfiguration(builtInTheme: .default))
+        #expect(css.contains(".nav-title-content .\(TutorialDocument.overviewTitleClass) {\n    display: none;\n}"))
+    }
+
+    @Test("A tutorials overview carries the introduction the original pages showed, hidden by default")
+    func overviewIntroduction() {
+        let css = DocCStylesheet.generate(theme: ThemeConfiguration(builtInTheme: .default))
+        #expect(css.contains(".hero .\(TutorialDocument.overviewIntroductionClass) {\n    display: none;\n}"))
+        #expect(TutorialDocument.Text.overviewIntroduction.hasSuffix("."))
+    }
+
     @Test("The base stylesheet hides the navigation bar title icon")
     func navigationTitleIconIsHiddenByDefault() {
         let css = DocCStylesheet.generate(theme: ThemeConfiguration(builtInTheme: .default))

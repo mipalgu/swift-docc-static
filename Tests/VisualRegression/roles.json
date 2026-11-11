@@ -317,12 +317,13 @@
   ]
  },
  "eyebrow": {
-  "static": ".documentation-hero .eyebrow",
+  "static": ".documentation-hero .topictitle .eyebrow, .documentation-hero .topictitle .eyebrow-kind",
   "main": ".hero-content .eyebrow",
   "vue": ".documentation-hero .eyebrow",
   "kinds": [
    "documentation"
-  ]
+  ],
+  "text": true
  },
  "pageTitle": {
   "static": ".documentation-hero h1",
@@ -733,10 +734,23 @@
   ]
  },
  "tutorialNavTitle": {
-  "static": ".nav-title-content .title",
+  "static": ".nav-title-content .title, .nav-title-content .nav-overview-title",
   "main": ".tutorial-nav-title",
   "vue": ".nav-title-content .title",
   "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialNavTitleText": {
+  "static": "nav.nav .nav-title-content",
+  "main": ".tutorial-nav-title",
+  "vue": "nav.nav .nav-title-content",
+  "properties": [],
+  "text": true,
+  "kinds": [
+   "tutorial"
+  ],
+  "pages": [
    "tutorial"
   ]
  },
@@ -965,6 +979,34 @@
   "vue": ".dropdown-container",
   "geometry": true,
   "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialMenus": {
+  "static": ".dropdown-container",
+  "main": ".tutorial-nav-dropdowns",
+  "vue": ".dropdown-container",
+  "properties": [],
+  "geometry": true,
+  "kinds": [
+   "tutorial"
+  ],
+  "pages": [
+   "tutorial"
+  ]
+ },
+ "tutorialMenuSeparator": {
+  "static": ".dropdown-container > .chevron-icon",
+  "main": ".tutorial-nav-dropdowns .nav-separator",
+  "vue": ".dropdown-container > .chevron-icon",
+  "properties": [
+   "color"
+  ],
+  "geometry": true,
+  "kinds": [
+   "tutorial"
+  ],
+  "pages": [
    "tutorial"
   ]
  },
@@ -1743,6 +1785,19 @@
   "vue": ".tutorials-overview .hero .content p",
   "kinds": [
    "tutorial"
+  ]
+ },
+ "overviewIntroductionText": {
+  "static": ".tutorials-overview .hero .overview-introduction, .tutorials-overview .hero .content p",
+  "main": ".overview-hero-content > p",
+  "vue": ".tutorials-overview .hero .content p",
+  "properties": [],
+  "text": true,
+  "kinds": [
+   "tutorial"
+  ],
+  "pages": [
+   "tutorialsOverview"
   ]
  },
  "overviewHeroMeta": {

@@ -157,7 +157,16 @@
     margin: 0;
 }
 
-.documentation-hero .eyebrow {
+/* The name of the page's kind as the main branch showed it, such as "Method" */
+.documentation-hero .topictitle .eyebrow:has(+ .eyebrow-kind) {
+    display: none;
+}
+
+.documentation-hero .topictitle .eyebrow-kind {
+    display: block;
+}
+
+.documentation-hero :is(.eyebrow, .eyebrow-kind) {
     text-transform: capitalize;
     color: var(--color-figure-gray-secondary);
 }

@@ -125,6 +125,15 @@ public extension TutorialDocument {
     /// The class of the hidden abstract of a tutorial or article in a chapter's list,
     /// for themes that show it.
     static let topicAbstractClass = "topic-abstract"
+
+    /// The class of the hidden title of the tutorials overview in the navigation bar
+    /// of a tutorial, after the technology name, for themes that show it instead.
+    static let overviewTitleClass = "nav-overview-title"
+
+    /// The class of the hidden introduction below the title of a tutorials overview
+    /// (``TutorialDocument/Text/overviewIntroduction``), for themes that show it
+    /// instead of the overview's own text.
+    static let overviewIntroductionClass = "overview-introduction"
 }
 
 // MARK: - State Without JavaScript

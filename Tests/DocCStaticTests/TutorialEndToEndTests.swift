@@ -149,7 +149,11 @@ struct TutorialEndToEndTests {
         #expect(count(of: "<li class=\"topic tutorial\">", in: html) == 2)
         #expect(html.contains("<span class=\"time-label\">10min</span>"))
         #expect(html.contains("<a href=\"#basics\" class=\"tutorials-navigation-link\">Basics</a>"))
-        #expect(!html.contains("Learn through hands-on tutorials"))
+        // The original pages' fixed introduction is only carried in its hidden hook
+        let introduction = "<p class=\"\(TutorialDocument.overviewIntroductionClass)\">\(TutorialDocument.Text.overviewIntroduction)</p>"
+        #expect(count(of: "Learn through hands-on tutorials", in: html) == 1)
+        #expect(html.contains(introduction))
+        #expect(html.contains("<div class=\"content\">"))
     }
 
     @Test("Tutorial pages share the footer and colour scheme toggle of documentation pages",

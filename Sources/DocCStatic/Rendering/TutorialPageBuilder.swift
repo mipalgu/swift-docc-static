@@ -54,6 +54,10 @@ public extension TutorialDocument {
         public static let currentTutorial = "Current Tutorial"
         /// The accessible label of the section menu.
         public static let currentSection = "Current Section"
+        /// The introduction the original swift-docc-static tutorials overview showed
+        /// below its title, for themes that show it (see
+        /// ``TutorialDocument/overviewIntroductionClass``).
+        public static let overviewIntroduction = "Learn through hands-on tutorials covering all aspects of the framework."
 
         /// Returns the eyebrow of a chapter, such as `Chapter 1`.
         ///
@@ -364,6 +368,9 @@ extension HTMLPageBuilder {
     ///
     /// - Parameters:
     ///   - technology: The name of the technology, shown as the title.
+    ///   - overviewTitle: The title of the tutorials overview, carried hidden after the
+    ///     title for themes that show it instead (see
+    ///     ``TutorialDocument/overviewTitleClass``), or `nil` to leave it out.
     ///   - overviewURL: The relative URL of the tutorials overview.
     ///   - classes: Further classes of the `<nav>` element.
     ///   - afterTitle: Markup between the title and the menu.
@@ -372,6 +379,7 @@ extension HTMLPageBuilder {
     /// - Returns: The `<nav>` element.
     func tutorialsNavigationBar(
         technology: String,
+        overviewTitle: String? = nil,
         overviewURL: String,
         classes: String,
         afterTitle: String = "",
@@ -380,6 +388,7 @@ extension HTMLPageBuilder {
     ) -> String {
         let toggle = TutorialDocument.menuToggleClass
         let toggleInput = actions ? "<input type=\"checkbox\" class=\"\(toggle)\" id=\"\(toggle)\" aria-label=\"\(TutorialDocument.Text.openMenu)\">" : ""
+        let overviewTitleHTML = overviewTitle.map { "<span class=\"\(TutorialDocument.overviewTitleClass)\">\(escapeHTML($0))</span>" } ?? ""
         let actionsHTML = actions ? "<div class=\"nav-actions\"><label class=\"nav-menucta\" for=\"\(toggle)\" aria-hidden=\"true\"><span class=\"nav-menucta-chevron\"></span></label></div>" : ""
         return """
 
@@ -388,7 +397,7 @@ extension HTMLPageBuilder {
                         <div class="nav__background"></div>
                         <div class="nav-overlay"></div>
                         <div class="nav-content">
-                            <div class="nav-title"><a href="\(escapeHTML(overviewURL))" class="\(TutorialDocument.navigationTitleClass)"><span class="title">\(escapeHTML(technology))</span><span class="subhead">&nbsp;\(TutorialDocument.Text.tutorials)</span></a></div>\(afterTitle)
+                            <div class="nav-title"><a href="\(escapeHTML(overviewURL))" class="\(TutorialDocument.navigationTitleClass)"><span class="title">\(escapeHTML(technology))</span><span class="subhead">&nbsp;\(TutorialDocument.Text.tutorials)</span>\(overviewTitleHTML)</a></div>\(afterTitle)
                             <div class="nav-menu">
                                 <div class="nav-menu-tray">\(menu)</div>
                             </div>
@@ -420,10 +429,12 @@ extension HTMLPageBuilder {
         let title = extractTitle(from: renderNode)
         var technology = renderNode.metadata.category ?? TutorialDocument.Text.tutorials
         var overviewURL = makeRelativeURL("/tutorials/tutorials", depth: depth)
+        var overviewTitle: String?
         var chapters: [(title: String, tutorials: [(title: String, url: String, isCurrent: Bool)])] = []
         if case .tutorials(let hierarchy)? = renderNode.hierarchyVariants.defaultValue {
             if let root = hierarchy.paths.first?.first, let reference = references[root] as? TopicRenderReference {
                 overviewURL = makeRelativeURL(reference.url, depth: depth)
+                overviewTitle = reference.title
                 if renderNode.metadata.category == nil { technology = reference.title }
             }
             for chapter in hierarchy.modules ?? [] {
@@ -496,6 +507,7 @@ extension HTMLPageBuilder {
             """
         return tutorialsNavigationBar(
             technology: technology,
+            overviewTitle: overviewTitle,
             overviewURL: overviewURL,
             classes: "nav--solid-background",
             afterTitle: "\n                <div class=\"separator\"></div>",

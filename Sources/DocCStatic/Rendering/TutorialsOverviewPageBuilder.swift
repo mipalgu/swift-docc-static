@@ -296,6 +296,7 @@ extension HTMLPageBuilder {
                                 <a href="\(escapeHTML(action.url))" class="\(TutorialDocument.buttonClass) is-dark">\(escapeHTML(action.title))</a>
             """
         }
+        html += "\n                    <p class=\"\(TutorialDocument.overviewIntroductionClass)\">\(TutorialDocument.Text.overviewIntroduction)</p>"
         html += "\n                </div>"
         html += overview.imageHTML
         html += """
