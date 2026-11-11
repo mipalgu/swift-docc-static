@@ -686,8 +686,103 @@
     padding-inline-start: 1rem;
 }
 
-.OnThisPageNav .active .base-link {
-    color: var(--color-text);
+/*
+ * The item of the section in view (see OnThisPageNavigation): the first item at the
+ * top of the page, the last item at the bottom, and otherwise the item whose heading
+ * has passed the tracking line while the next item's heading has not.  Each heading
+ * is the subject of a view timeline whose scroll port starts at the tracking line;
+ * the animations set custom properties that the container queries below read.
+ */
+@property --on-this-page-reached {
+    syntax: "<integer>";
+    inherits: true;
+    initial-value: 0;
+}
+
+@property --on-this-page-next-reached {
+    syntax: "<integer>";
+    inherits: true;
+    initial-value: 0;
+}
+
+@property --on-this-page-at-top {
+    syntax: "<integer>";
+    inherits: true;
+    initial-value: 0;
+}
+
+@property --on-this-page-at-end {
+    syntax: "<integer>";
+    inherits: true;
+    initial-value: 0;
+}
+
+@keyframes on-this-page-reached {
+    from, to { --on-this-page-reached: 1; }
+}
+
+@keyframes on-this-page-next-reached {
+    from, to { --on-this-page-next-reached: 1; }
+}
+
+@keyframes on-this-page-scrolled {
+    from, to { --on-this-page-at-top: 0; }
+}
+
+@keyframes on-this-page-at-end {
+    from, to { --on-this-page-at-end: 1; }
+}
+
+@supports (animation-timeline: view()) {
+    /* A page that cannot scroll counts as scrolled to the top */
+    .OnThisPageNav .items {
+        --on-this-page-at-top: 1;
+        animation: on-this-page-scrolled linear forwards, on-this-page-at-end linear forwards;
+        animation-timeline: scroll(root block), scroll(root block);
+        animation-range: 1px 100%, 100% 100%;
+    }
+
+    .OnThisPageNav li {
+        animation: on-this-page-reached linear forwards, on-this-page-next-reached linear forwards;
+        animation-timeline: var(--on-this-page-timeline, none), var(--on-this-page-next-timeline, none);
+        animation-range: exit-crossing 0% exit-crossing 100%;
+    }
+
+    /* The first item stands for the top of the page, which is always passed, and the
+       last item has no next heading: an animation without a timeline would still apply */
+    .OnThisPageNav li:first-child {
+        --on-this-page-reached: 1;
+        animation-name: none, on-this-page-next-reached;
+    }
+
+    .OnThisPageNav li:last-child {
+        animation-name: on-this-page-reached, none;
+    }
+
+    @container style(--on-this-page-at-top: 0) and style(--on-this-page-at-end: 0) and style(--on-this-page-reached: 1) and style(--on-this-page-next-reached: 0) {
+        .OnThisPageNav li > .base-link {
+            color: var(--color-text);
+        }
+    }
+
+    @container style(--on-this-page-at-top: 1) {
+        .OnThisPageNav li:first-child > .base-link {
+            color: var(--color-text);
+        }
+    }
+
+    @container style(--on-this-page-at-top: 0) and style(--on-this-page-at-end: 1) {
+        .OnThisPageNav li:last-child > .base-link {
+            color: var(--color-text);
+        }
+    }
+}
+
+/* Without scroll-driven animations, the page script moves the mark if it runs */
+@supports not (animation-timeline: view()) {
+    .OnThisPageNav .active .base-link {
+        color: var(--color-text);
+    }
 }
 
 /* Content tables: Topics, Relationships and See Also */

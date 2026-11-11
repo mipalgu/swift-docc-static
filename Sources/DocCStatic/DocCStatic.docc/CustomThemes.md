@@ -185,6 +185,12 @@ off.  DocCStatic accepts the switches of swift-docc-render:
 The "On This Page" column is a switch rather than CSS because leaving it out
 also removes it from every page's markup, reading order and keyboard navigation.
 
+The column highlights the section in view as the reader scrolls, without
+JavaScript in browsers with scroll-driven animations.  A theme styles the
+highlighted item through the colour of `.OnThisPageNav .base-link`
+(`--color-text` for the highlighted item, `--color-figure-gray-secondary` for the
+others).
+
 ## Theming in Swift
 
 ```swift

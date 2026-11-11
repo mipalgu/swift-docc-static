@@ -134,11 +134,11 @@ public extension HTMLPageBuilder {
 
         html += """
 
-            <link rel="stylesheet" href="\(cssPath)">
+            <link rel="stylesheet" href="\(cssPath)">\(OnThisPageNavigation.headingRules(anchors: onThisPageItems(for: renderNode, title: title).map(\.anchor)))
         </head>
         <body \(ColourSchemeToggle.bodyAttribute)>
             <div id="app">
-            <div id="app-top"></div>
+            <div id="\(OnThisPageNavigation.topAnchor)"></div>
             <a href="#app-main" id="skip-nav">Skip Navigation</a>
             \(Self.chromeToggles)
         """
@@ -550,7 +550,9 @@ extension HTMLPageBuilder {
             primaryHTML += buildSection(section, references: references, depth: depth)
         }
         let noPrimaryContent = primaryHTML.isEmpty && enhanceBackground
-        html += "\n<div class=\"doc-content-wrapper\">\n<div class=\"doc-content\(noPrimaryContent ? " no-primary-content" : "")\">"
+        let onThisPage = onThisPageItems(for: renderNode, title: title)
+        let scope = onThisPage.isEmpty ? "" : " style=\"\(OnThisPageNavigation.timelineScope(count: onThisPage.count))\""
+        html += "\n<div class=\"doc-content-wrapper\"\(scope)>\n<div class=\"doc-content\(noPrimaryContent ? " no-primary-content" : "")\">"
         if !primaryHTML.isEmpty {
             let border = enhanceBackground ? "" : " with-border"
             html += "\n<div class=\"container\">"
@@ -580,7 +582,7 @@ extension HTMLPageBuilder {
         }
 
         html += "\n</div>"
-        html += buildOnThisPageNav(for: renderNode, title: title)
+        html += buildOnThisPageNav(items: onThisPage)
         html += "\n</div>"
 
         return html
@@ -605,76 +607,84 @@ extension HTMLPageBuilder {
         """
     }
 
-    /// Builds the sticky on-this-page navigation sidebar shown to the right of the main content.
+    /// An entry of the "On This Page" column.
+    struct OnThisPageItem {
+        /// The identifier of the section heading the entry links to.
+        let anchor: String
+
+        /// The text of the entry.
+        let label: String
+
+        /// Whether the entry is a subsection (a level 3 heading) rather than a section.
+        let isChild: Bool
+    }
+
+    /// Returns the entries of the "On This Page" column of a page.
     ///
-    /// Generates links to major sections present on the current page, matching
-    /// swift-docc-render's `OnThisPageStickyContainer` / `OnThisPageNav` components.
-    /// The first item (page title) is pre-marked active; when JavaScript is available,
-    /// the page script moves the mark to the section in view while scrolling.
+    /// The entries are the page title, followed by the parameters, mentions, level 2
+    /// and level 3 content headings, and the Topics, Relationships and See Also
+    /// sections, like swift-docc-render's `OnThisPageNav`.
     ///
     /// - Parameters:
     ///   - renderNode: The render node for the current page.
-    ///   - title: The page title (used as the first nav item label).
-    /// - Returns: HTML string for the sticky container, which lists the sections only
-    ///   when there are at least two besides the title, or an empty string if the
-    ///   theme disables the navigator (``ThemeFeatureFlag/onThisPageNavigatorDisabled``).
-    func buildOnThisPageNav(for renderNode: RenderNode, title: String) -> String {
-        guard !configuration.theme.isEnabled(.onThisPageNavigatorDisabled) else { return "" }
-
-        // Nav items carry both their anchor/label and whether they are a child (H3) or parent (H2).
-        struct NavItem {
-            let anchor: String
-            let label: String
-            let isChild: Bool
-        }
-        var items: [NavItem] = []
-
-        // Always include the page title as the first item (links to top)
-        items.append(NavItem(anchor: "app-top", label: title, isChild: false))
-
-        // Check primary content sections for mentions and content headings
+    ///   - title: The page title (used as the first entry).
+    /// - Returns: The entries, or an empty array if the column lists no sections: when
+    ///   the page has fewer than two besides its title, or the theme disables the
+    ///   navigator (``ThemeFeatureFlag/onThisPageNavigatorDisabled``).
+    func onThisPageItems(for renderNode: RenderNode, title: String) -> [OnThisPageItem] {
+        guard !configuration.theme.isEnabled(.onThisPageNavigatorDisabled) else { return [] }
+        var items = [OnThisPageItem(anchor: OnThisPageNavigation.topAnchor, label: title, isChild: false)]
         for section in renderNode.primaryContentSections {
             if let parametersSection = section as? ParametersRenderSection,
                !parametersSection.parameters.isEmpty {
-                items.append(NavItem(anchor: "parameters", label: "Parameters", isChild: false))
+                items.append(OnThisPageItem(anchor: "parameters", label: "Parameters", isChild: false))
             } else if let mentionsSection = section as? MentionsRenderSection,
                !mentionsSection.mentions.isEmpty {
-                items.append(NavItem(anchor: "mentions", label: "Mentioned in", isChild: false))
+                items.append(OnThisPageItem(anchor: "mentions", label: "Mentioned in", isChild: false))
             } else if let contentSection = section as? ContentRenderSection {
-                // Collect all H2 headings (parent-item) and H3 headings (child-item)
                 for block in contentSection.content {
-                    if case .heading(let heading) = block {
-                        if heading.level == 2 {
-                            let anchor = heading.anchor ?? slugify(heading.text)
-                            items.append(NavItem(anchor: anchor, label: heading.text, isChild: false))
-                        } else if heading.level == 3 {
-                            let anchor = heading.anchor ?? slugify(heading.text)
-                            items.append(NavItem(anchor: anchor, label: heading.text, isChild: true))
-                        }
+                    if case .heading(let heading) = block, heading.level == 2 || heading.level == 3 {
+                        let anchor = heading.anchor ?? slugify(heading.text)
+                        items.append(OnThisPageItem(anchor: anchor, label: heading.text, isChild: heading.level == 3))
                     }
                 }
             }
         }
-
         if !renderNode.topicSections.isEmpty {
-            items.append(NavItem(anchor: "topics", label: "Topics", isChild: false))
+            items.append(OnThisPageItem(anchor: "topics", label: "Topics", isChild: false))
         }
         if !renderNode.relationshipSections.isEmpty {
-            items.append(NavItem(anchor: "relationships", label: "Relationships", isChild: false))
+            items.append(OnThisPageItem(anchor: "relationships", label: "Relationships", isChild: false))
         }
         if !renderNode.seeAlsoSections.isEmpty {
-            items.append(NavItem(anchor: "see-also", label: "See Also", isChild: false))
+            items.append(OnThisPageItem(anchor: "see-also", label: "See Also", isChild: false))
         }
+        return items.count > 2 ? items : []
+    }
 
+    /// Builds the sticky "On This Page" column shown to the right of the main content.
+    ///
+    /// The column matches swift-docc-render's `OnThisPageStickyContainer` and
+    /// `OnThisPageNav` components.  Each item names the view timelines it follows (see
+    /// ``OnThisPageNavigation``), so that the highlight follows the section in view
+    /// without JavaScript.  The first item is marked active for browsers without
+    /// scroll-driven animations, where the page script moves the mark if it runs.
+    ///
+    /// - Parameter items: The entries from ``onThisPageItems(for:title:)``.
+    /// - Returns: HTML for the sticky container, which lists the entries if there are
+    ///   any, or an empty string if the theme disables the navigator.
+    func buildOnThisPageNav(items: [OnThisPageItem]) -> String {
+        guard !configuration.theme.isEnabled(.onThisPageNavigatorDisabled) else { return "" }
         // Like swift-docc-render, the column is always there, but it lists the
         // sections only when the page has at least two besides its title
         var html = "\n<div class=\"\(Self.onThisPageContainerClass)\">"
-        if items.count > 2 {
-            html += "<nav class=\"OnThisPageNav\" aria-label=\"On This Page\"><ul class=\"items\">"
+        if !items.isEmpty {
+            html += "<nav class=\"\(OnThisPageNavigation.navigationClass)\" aria-label=\"On This Page\"><ul class=\"items\">"
             for (index, item) in items.enumerated() {
                 let activeClass = index == 0 ? " active" : ""
                 let itemClass = (item.isChild ? "child-item" : "parent-item") + activeClass
-                html += "<li class=\"\(itemClass)\"><a href=\"#\(escapeHTML(item.anchor))\" class=\"base-link\">"
+                let timelines = OnThisPageNavigation.itemTimelines(index: index, count: items.count)
+                html += "<li class=\"\(itemClass)\" style=\"\(timelines)\"><a href=\"#\(escapeHTML(item.anchor))\" class=\"base-link\">"
                     + "<span>\(escapeHTML(item.label))</span></a></li>"
             }
             html += "</ul></nav>"
@@ -1572,50 +1582,57 @@ extension HTMLPageBuilder {
     /// keyboard shortcuts that focus the sidebar filter (`/`, and Command-F or
     /// Control-F while the sidebar is shown) to the embedded sidebar document using
     /// `postMessage`, which also works for pages opened from local files.  Without
-    /// JavaScript the toggle still switches the colour scheme of the page.
+    /// JavaScript the toggle still switches the colour scheme of the page.  In browsers
+    /// without scroll-driven animations, the script also marks the "On This Page" item
+    /// of the section in view (see ``OnThisPageNavigation``).
     var appearanceSelectorScript: String {
         """
 
             <script>
             \(ColourSchemeToggle.script)
             (function () {
-                // Mark the "On This Page" item of the first section in the upper half
-                // of the window, like swift-docc-render
-                var items = document.querySelectorAll('.OnThisPageNav li');
-                if (!items.length || !('IntersectionObserver' in window)) {
+                // Without scroll-driven animations, mark the "On This Page" item of the
+                // section in view like swift-docc-render: the first item at the top, the
+                // last item at the bottom, otherwise the last item whose heading has
+                // passed the tracking line
+                if (window.CSS && CSS.supports('animation-timeline: view()')) {
                     return;
                 }
-                var sections = [];
-                var visibility = new Map();
+                var items = document.querySelectorAll('.\(OnThisPageNavigation.navigationClass) li');
+                if (!items.length) {
+                    return;
+                }
+                var headings = [];
                 for (var i = 0; i < items.length; i++) {
                     var link = items[i].querySelector('a');
-                    var id = link ? decodeURIComponent(link.getAttribute('href').slice(1)) : '';
-                    var target = id === 'app-top' ? document.querySelector('.documentation-hero') : document.getElementById(id);
-                    if (target && target.parentElement && /^H[1-6]$/.test(target.tagName)) {
-                        target = target.parentElement.closest('section, .content') || target;
-                    }
-                    sections.push(target);
+                    headings.push(link ? document.getElementById(decodeURIComponent(link.hash.slice(1))) : null);
                 }
-                var nav = document.querySelector('.nav');
-                var top = nav ? nav.getBoundingClientRect().height : 0;
-                var observer = new IntersectionObserver(function (entries) {
-                    entries.forEach(function (entry) {
-                        visibility.set(entry.target, entry.intersectionRatio);
-                    });
-                    for (var j = 0; j < sections.length; j++) {
-                        if (sections[j] && visibility.get(sections[j]) > 0) {
-                            for (var k = 0; k < items.length; k++) {
-                                items[k].classList.toggle('active', k === j);
+                var scheduled = false;
+                function update() {
+                    scheduled = false;
+                    var root = document.documentElement;
+                    var current = 0;
+                    if (window.scrollY + window.innerHeight >= root.scrollHeight && window.scrollY > 0) {
+                        current = items.length - 1;
+                    } else if (window.scrollY > 0) {
+                        var line = window.scrollY + window.innerHeight * \(Double(OnThisPageNavigation.trackingLinePercentage) / 100);
+                        for (var j = 0; j < headings.length; j++) {
+                            if (headings[j] && headings[j].getBoundingClientRect().top + window.scrollY < line) {
+                                current = j;
                             }
-                            return;
                         }
                     }
-                }, { rootMargin: '-' + top + 'px 0% -50% 0%' });
-                sections.forEach(function (section) {
-                    if (section) {
-                        observer.observe(section);
+                    for (var k = 0; k < items.length; k++) {
+                        items[k].classList.toggle('active', k === current);
                     }
-                });
+                }
+                window.addEventListener('scroll', function () {
+                    if (!scheduled) {
+                        scheduled = true;
+                        window.requestAnimationFrame(update);
+                    }
+                }, { passive: true });
+                update();
             })();
             (function () {
                 var focusMessage = '\(SidebarDocument.focusFilterMessage)';

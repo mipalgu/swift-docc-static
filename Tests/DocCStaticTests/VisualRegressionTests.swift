@@ -41,6 +41,13 @@ private struct NoJavaScriptReport: Decodable {
     let checks: [String: Bool]
 }
 
+/// The results written by `onthispage.mjs --json`.
+private struct OnThisPageReport: Decodable {
+    let page: String
+    let checks: [String: Bool]
+    let failures: [String]
+}
+
 /// Browser-based checks of the rendered fixture against golden reference data.
 ///
 /// These tests run only when Node, playwright-core and a browser are available (see
@@ -110,6 +117,27 @@ struct VisualRegressionTests {
         for page in report where documentation.contains(page.page) {
             #expect(page.checks["sidebar"] == true, "\(page.page) has no working sidebar")
             #expect(page.checks["expandCollapse"] == true, "\(page.page) cannot expand and collapse rows")
+        }
+    }
+
+    @Test("The \"On This Page\" column follows the section in view without JavaScript",
+          arguments: ThemeSettings.BuiltInTheme.allCases)
+    func onThisPageFollowsScrolling(theme: ThemeSettings.BuiltInTheme) async throws {
+        let fixture = try await FixtureDocumentation.shared.output(theme: theme)
+        let results = try VisualRegressionHarness.temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: results) }
+        let reportFile = results.appendingPathComponent("onthispage.json")
+        _ = try VisualRegressionHarness.runNode(
+            script: "onthispage.mjs",
+            arguments: ["--site", fixture.outputDirectory.path, "--json", reportFile.path]
+        )
+        let report = try JSONDecoder().decode([OnThisPageReport].self, from: Data(contentsOf: reportFile))
+        let hasColumn = !ThemeConfiguration(builtInTheme: theme).isEnabled(.onThisPageNavigatorDisabled)
+        #expect(report.contains { $0.page == "article" } == hasColumn, "the article's column was not checked")
+        for page in report {
+            for (check, passed) in page.checks.sorted(by: { $0.key < $1.key }) {
+                #expect(passed, "\(check) fails on \(page.page) for \(theme.rawValue): \(page.failures.joined(separator: "; "))")
+            }
         }
     }
 }
