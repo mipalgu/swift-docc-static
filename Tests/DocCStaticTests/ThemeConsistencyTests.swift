@@ -186,5 +186,6 @@ struct ClassicLandingIntroductionTests {
         let start = try #require(Self.css.range(of: "body.index-page .index-intro pre code {"))
         let declarations = Self.css[start.upperBound...].prefix { $0 != "}" }
         #expect(!declarations.contains("font-size"))
+        #expect(declarations.contains("display: block;"), "inline code would take the line height of the block")
     }
 }
