@@ -217,8 +217,9 @@ let theme = ThemeConfiguration(accentColour: "#ff5500", includeDarkMode: true)
 ## Dark Mode
 
 By default, the documentation follows the reader's light or dark preference,
-which the reader can also choose with the appearance selector.  Disable dark
-mode styles with `--disable-dark-mode`, or in Swift:
+which the reader can also choose with the colour scheme toggle in the page
+footer.  Disable dark mode styles, which also hides the toggle, with
+`--disable-dark-mode`, or in Swift:
 
 ```swift
 let theme = ThemeConfiguration(builtInTheme: .default, includeDarkMode: false)

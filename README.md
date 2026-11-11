@@ -21,7 +21,8 @@ without requiring JavaScript for core functionality.
 
 - **Pure HTML/CSS output** - Documentation works without JavaScript enabled
 - **Full DocC support** - API documentation, articles, and tutorials
-- **Light/Dark mode** - Automatic theme switching based on system preferences
+- **Light/Dark mode** - Follows the system appearance; the Light, Dark and Auto choice in the
+  page footer also works without JavaScript (with JavaScript it is remembered across pages)
 - **Interactive tutorials** - Display step-by-step tutorials with code examples and quizzes
 - **Cross-package linking** - Relative links work with `file://` URLs for testing
 - **Multi-target support** - Document all targets in a package and create a common index page
