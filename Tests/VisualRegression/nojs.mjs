@@ -18,6 +18,9 @@
 // system appearance is dark (and Dark while it is light), scrolling to the toggle as a
 // reader would, and records whether the page then shows the same colours as when that
 // scheme is chosen under a matching system appearance.
+// On pages with a quiz, the check chooses the first answer of the first question,
+// submits it if a Submit button appears, and records whether the answer's
+// justification is shown (and, as `quizSubmit`, whether a Submit button appeared).
 // The results are printed, and written as JSON with --json; the exit status is 1 if a
 // check fails.
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
@@ -191,6 +194,24 @@ try {
       }
     }
     const url = server.base + page.static;
+    let quizSubmit;
+    // Answering a question, submitting the answer where a Submit button appears,
+    // shows the answer's justification
+    const choice = tab.locator('.quiz label.choice').first();
+    if ((await choice.count()) > 0) {
+      await choice.scrollIntoViewIfNeeded();
+      await choice.click();
+      await waitForSettledPage(tab);
+      const submit = tab.locator('.quiz').first().locator('.controls label.check:visible').first();
+      const submitShown = (await submit.count()) > 0;
+      if (submitShown) {
+        await submit.click();
+        await waitForSettledPage(tab);
+      }
+      const justification = await choice.locator('.answer').first().isVisible();
+      checks.quizAnswer = justification;
+      quizSubmit = submitShown;
+    }
     if (page.kind === 'documentation' && (await tab.locator('.hierarchy').count()) > 0) {
       const withNavigator = await visibleBreadcrumbs(tab);
       await tab.locator('.documentation-nav .sidenav-toggle').first().click();
@@ -206,7 +227,7 @@ try {
       const reference = await coloursOf(url, choice, choice);
       checks[`${choice}Choice`] = JSON.stringify(chosen) === JSON.stringify(reference);
     }
-    results.push({ page: page.id, checks });
+    results.push({ page: page.id, checks, ...(quizSubmit === undefined ? {} : { quizSubmit }) });
   }
   await context.close();
 } finally {

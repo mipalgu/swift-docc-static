@@ -43,6 +43,8 @@ private struct MismatchReport: Decodable {
 private struct NoJavaScriptReport: Decodable {
     let page: String
     let checks: [String: Bool]
+    /// Whether answering a quiz question needed a Submit button, on pages with a quiz.
+    let quizSubmit: Bool?
 }
 
 /// The results written by `onthispage.mjs --json`.
@@ -172,6 +174,13 @@ struct VisualRegressionTests {
                     "\(page.page) does not show the \(scheme.label) colours when chosen without JavaScript"
                 )
             }
+        }
+        // Like the main branch, classic reveals an answer's justification as soon as it
+        // is chosen; like swift-docc-render, the default theme asks to submit it first
+        let quizzes = report.filter { $0.quizSubmit != nil }
+        #expect(!quizzes.isEmpty, "no page with a quiz was checked")
+        for page in quizzes {
+            #expect(page.quizSubmit == (theme == .default), "\(page.page) of \(theme.rawValue) has an unexpected Submit button")
         }
         // Like the main branch, classic lets the reader collapse nested groups; like
         // swift-docc-render, the default theme shows no group chevrons

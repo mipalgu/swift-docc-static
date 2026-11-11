@@ -761,7 +761,8 @@
   "geometry": true,
   "kinds": [
    "tutorial"
-  ]
+  ],
+  "height": true
  },
  "tutorialTitle": {
   "static": ".tutorial-hero h1",
@@ -785,7 +786,8 @@
   "vue": ".tutorial-hero .intro",
   "kinds": [
    "tutorial"
-  ]
+  ],
+  "height": true
  },
  "tutorialSection": {
   "static": ".sections .section",
@@ -812,12 +814,13 @@
   ]
  },
  "tutorialStepCode": {
-  "static": ".asset-container .code-preview, .media-container .mobile-code-preview .code-listing-preview .code-listing",
+  "static": ".asset-container .code-preview, .media-container .mobile-code-preview .full-code-listing, .media-container .mobile-code-preview .code-listing-preview .code-listing",
   "main": ".step-code-panel",
   "vue": ".asset-container .code-preview, .media-container .mobile-code-preview .code-listing-preview .code-listing",
   "kinds": [
    "tutorial"
-  ]
+  ],
+  "height": true
  },
  "tutorialAssessments": {
   "static": ".assessments-wrapper",
@@ -1152,7 +1155,7 @@
  },
  "tutorialAbstractParagraph": {
   "static": ".tutorial-hero .intro p",
-  "main": null,
+  "main": ".tutorial-abstract p",
   "vue": ".tutorial-hero .intro p",
   "kinds": [
    "tutorial"
@@ -1184,7 +1187,7 @@
  },
  "tutorialDuration": {
   "static": ".tutorial-hero .metadata .duration",
-  "main": null,
+  "main": ".tutorial-hero .time-value",
   "vue": ".tutorial-hero .metadata .duration",
   "kinds": [
    "tutorial"
@@ -1200,7 +1203,7 @@
  },
  "tutorialMetadataLabel": {
   "static": ".tutorial-hero .metadata .item > .bottom",
-  "main": null,
+  "main": ".tutorial-hero .time-label",
   "vue": ".tutorial-hero .metadata .item > .bottom",
   "kinds": [
    "tutorial"

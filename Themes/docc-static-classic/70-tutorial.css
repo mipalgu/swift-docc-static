@@ -224,7 +224,7 @@
 }
 
 .tutorial .tutorial-hero .intro p {
-    margin: 0;
+    margin: 0 0 1em;
 }
 
 .tutorial .tutorial-hero .metadata {
@@ -241,12 +241,15 @@
 }
 
 .tutorial .tutorial-hero .metadata .minutes {
+    display: inline;
     margin-left: 0.25em;
     font-size: inherit;
     line-height: inherit;
 }
 
 .tutorial .tutorial-hero .metadata .duration {
+    display: block;
+    align-items: normal;
     font-size: 1.5rem;
     line-height: var(--spacing-body-line-height);
     font-weight: 600;
@@ -255,6 +258,8 @@
 .tutorial .tutorial-hero .metadata .bottom {
     margin: 0;
     font-size: 0.8125rem;
+    line-height: 1.5;
+    font-weight: 400;
     color: rgba(255, 255, 255, 0.7);
 }
 
@@ -434,6 +439,57 @@
 }
 
 /* Code panels: the file name above the numbered lines */
+
+/*
+ * Each step shows the whole file in place, as the main branch did, rather than the
+ * excerpt around the changed lines: the full listing, otherwise shown in a popover,
+ * is laid out in the step, without its close button or line highlights
+ */
+.tutorial .media-container .full-code-listing-modal .generic-modal {
+    display: block;
+    position: static;
+    inset: auto;
+    width: auto;
+    height: auto;
+    max-width: none;
+    max-height: none;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    overflow: visible;
+    background: none;
+    color: inherit;
+}
+
+.tutorial .media-container .full-code-listing-modal :is(.container, .modal-content, .full-code-listing-modal-content) {
+    display: block;
+    width: auto;
+    height: auto;
+    max-width: none;
+    margin: 0;
+    padding: 0;
+    overflow: visible;
+    background: none;
+}
+
+.tutorial .media-container .full-code-listing {
+    height: auto;
+    min-height: 0;
+    padding: 0;
+}
+
+.tutorial .media-container .full-code-listing .container-general {
+    height: auto;
+}
+
+.tutorial .media-container .full-code-listing-modal .close,
+.tutorial .media-container .code-listing-preview {
+    display: none;
+}
+
+.tutorial .full-code-listing-modal-content .code-line-container.highlighted {
+    background: none;
+}
 .tutorial .mobile-code-preview {
     display: block;
     padding: 0;
@@ -444,7 +500,7 @@
     display: none;
 }
 
-.tutorial .code-listing-preview > .code-listing {
+.tutorial :is(.code-listing-preview > .code-listing, .full-code-listing-modal-content .full-code-listing) {
     position: static;
     display: flex;
     flex-direction: column;
@@ -458,7 +514,7 @@
     color: var(--color-figure-gray);
 }
 
-.tutorial .code-listing-preview .filename {
+.tutorial :is(.code-listing-preview, .full-code-listing-modal-content) .filename {
     display: flex;
     align-items: center;
     gap: 0.5rem;
@@ -468,8 +524,10 @@
     background: var(--color-fill);
 }
 
-.tutorial .code-listing-preview .filename-link {
+.tutorial .code-listing-preview .filename-link,
+.tutorial .full-code-listing-modal-content .filename > span {
     display: flex;
+    line-height: 1.5;
     align-items: center;
     gap: 0.5rem;
     font-family: var(--typography-html-font-mono);
@@ -478,20 +536,20 @@
     color: var(--color-figure-gray);
 }
 
-.tutorial .code-listing-preview .file-icon {
+.tutorial :is(.code-listing-preview, .full-code-listing-modal-content) .file-icon {
     width: 16px;
     height: 16px;
     color: var(--color-figure-gray-secondary);
     fill: currentColor;
 }
 
-.tutorial .code-listing-preview .container-general {
+.tutorial :is(.code-listing-preview, .full-code-listing-modal-content) .container-general {
     flex: 1;
     overflow: auto;
     padding: 1rem 0;
 }
 
-.tutorial .code-listing-preview pre {
+.tutorial :is(.code-listing-preview, .full-code-listing-modal-content) pre {
     display: block;
     overflow: auto;
     border-radius: 12px;
@@ -503,7 +561,7 @@
     line-height: 1.4;
 }
 
-.tutorial .code-listing-preview pre code {
+.tutorial :is(.code-listing-preview, .full-code-listing-modal-content) pre code {
     display: block;
     position: relative;
     padding: 0;
@@ -513,14 +571,14 @@
     color: var(--color-figure-gray);
 }
 
-.tutorial .code-listing-preview .code-line-container {
+.tutorial :is(.code-listing-preview, .full-code-listing-modal-content) .code-line-container {
     display: inline-flex;
     width: 100%;
     box-sizing: border-box;
     padding: 0 1rem;
 }
 
-.tutorial .code-listing-preview .code-number {
+.tutorial :is(.code-listing-preview, .full-code-listing-modal-content) .code-number {
     flex-shrink: 0;
     width: 3rem;
     padding-right: 1rem;
@@ -529,7 +587,7 @@
     color: var(--color-figure-gray-secondary);
 }
 
-.tutorial .code-listing-preview .code-line {
+.tutorial :is(.code-listing-preview, .full-code-listing-modal-content) .code-line {
     flex: 1;
     white-space: pre;
 }
@@ -643,9 +701,54 @@
     background: var(--color-fill);
 }
 
+/*
+ * Choosing an answer shows at once whether it is right, and why, as in the main
+ * branch: there is no Submit button, and the other answers fade
+ */
+.tutorial .quiz .controls,
+.tutorial .quiz .choice input[type="radio"]:checked ~ .choice-submitted {
+    display: none;
+}
+
+.tutorial .quiz label.choice:has(input[type="radio"]:checked) .answer {
+    display: block;
+    flex-basis: 100%;
+    margin: 0.75rem 0 0;
+    padding-top: 0.75rem;
+    border-top: 1px solid color-mix(in srgb, var(--color-form-error) 30%, transparent);
+    font-size: 0.9rem;
+    line-height: var(--spacing-body-line-height);
+    opacity: 0.9;
+}
+
+.tutorial .quiz label.choice[data-correct]:has(input[type="radio"]:checked) .answer {
+    border-top-color: color-mix(in srgb, var(--color-form-valid) 30%, transparent);
+}
+
+.tutorial .quiz label.choice:has(input[type="radio"]:checked) {
+    flex-wrap: wrap;
+    border-color: var(--color-form-error);
+    background: var(--color-form-error-background);
+}
+
+.tutorial .quiz label.choice[data-correct]:has(input[type="radio"]:checked) {
+    border-color: var(--color-form-valid);
+    background: var(--color-form-valid-background);
+}
+
 .tutorial .quiz label.choice:has(input[type="radio"]:checked)::before {
-    border-color: var(--color-link);
-    background: radial-gradient(var(--color-link) 0 4px, var(--color-fill) 5px);
+    border-color: var(--color-form-error);
+    background: var(--color-form-error);
+}
+
+.tutorial .quiz label.choice[data-correct]:has(input[type="radio"]:checked)::before {
+    border-color: var(--color-form-valid);
+    background: var(--color-form-valid);
+}
+
+.tutorial .quiz .choices:has(input[type="radio"]:checked) label.choice:not(:has(input[type="radio"]:checked)) {
+    pointer-events: none;
+    opacity: 0.6;
 }
 
 .tutorial .quiz label.choice:hover {
