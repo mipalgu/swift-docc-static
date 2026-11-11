@@ -63,14 +63,18 @@ docc-static generate [options]
 | `-p, --package-path`             | Path to the Swift package (default: `.`)           |
 | `-o, --output`                   | Output directory (default: `.build/documentation`) |
 | `--scratch-path`                 | Scratch path for Swift build operations            |
-| `--symbol-graph-dir`             | Pre-generated symbol graph directory               |
+| `-S, --symbol-graph-dir`         | Pre-generated symbol graph directory               |
 | `-t, --target`                   | Specific targets to document (repeatable)          |
 | `-I, --include-all-dependencies` | Include all dependencies                           |
 | `-i, --include-dependency`       | Include specific dependency (repeatable)           |
 | `-x, --exclude-dependency`       | Exclude specific dependency (repeatable)           |
 | `-e, --external-docs`            | External docs URL mapping (`Package=URL`)          |
-| `--disable-search`               | Disable client-side search                         |
+| `-d, --dependency`               | Archive to resolve external links against          |
+| `-D, --disable-search`           | Disable client-side search                         |
 | `--footer`                       | Custom HTML for page footer                        |
+| `--theme`                        | Built-in theme, theme settings file or directory   |
+| `--custom-css`                   | CSS file applied after the theme's stylesheets     |
+| `--disable-dark-mode`            | Leave out dark mode styles                         |
 | `-v, --verbose`                  | Enable verbose output                              |
 | `-s, --summary`                  | Show summary statistics after generation           |
 
@@ -97,6 +101,9 @@ Render static HTML from an existing DocC archive:
 ```bash
 docc-static render <archive-path> --output ./docs
 ```
+
+The `render` and `preview` commands accept the theme options and the output
+options (`--disable-search`, `--footer`, `--verbose`, `--summary`) of `generate`.
 
 ### preview
 

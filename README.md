@@ -82,20 +82,25 @@ docc-static generate --package-path /path/to/package --output ./docs
 
 #### Options
 
-| Option                           | Description                                            |
-|----------------------------------|--------------------------------------------------------|
-| `-p, --package-path`.            | Path to the package directory (default: `.`).          |
-| `-o, --output`                   | Output directory (default: `.build/documentation`)     |
-| `--scratch-path`                 | Scratch path for Swift build operations                |
-| `--symbol-graph-dir`             | Pre-generated symbol graph directory (skips build).    |
-| `-t, --target`                   | Specific targets to document (can be repeated)         |
-| `-I, --include-all-dependencies` | Include documentation for all dependencies             |
-| `-i, --include-dependency`       | Include a specific dependency (can be repeated)        |
-| `-x, --exclude-dependency`       | Exclude a specific dependency (can be repeated)        |
-| `-e, --external-docs`            | External documentation URL (format: `PackageName=URL`) |
-| `--disable-search`               | Disable client-side search (enabled by default)        |
-| `--footer`                       | Custom HTML for the page footer                        |
-| `-v, --verbose`                  | Enable verbose output                                  |
+| Option                           | Description                                                  |
+|----------------------------------|--------------------------------------------------------------|
+| `-p, --package-path`             | Path to the package directory (default: `.`)                 |
+| `-o, --output`                   | Output directory (default: `.build/documentation`)           |
+| `--scratch-path`                 | Scratch path for Swift build operations                      |
+| `-S, --symbol-graph-dir`         | Pre-generated symbol graph directory (skips the build)       |
+| `-t, --target`                   | Specific targets to document (can be repeated)               |
+| `-I, --include-all-dependencies` | Include documentation for all dependencies                   |
+| `-i, --include-dependency`       | Include a specific dependency (can be repeated)              |
+| `-x, --exclude-dependency`       | Exclude a specific dependency (can be repeated, with `-I`)   |
+| `-e, --external-docs`            | External documentation URL (format: `PackageName=URL`)       |
+| `-d, --dependency`               | Documentation archive to resolve external links against      |
+| `-D, --disable-search`           | Disable client-side search (enabled by default)              |
+| `--footer`                       | Custom HTML for the page footer                              |
+| `--theme`                        | Built-in theme name, theme settings file or theme directory  |
+| `--custom-css`                   | CSS file applied after the theme's stylesheets               |
+| `--disable-dark-mode`            | Leave out dark mode styles                                   |
+| `-v, --verbose`                  | Enable verbose output                                        |
+| `-s, --summary`                  | Show summary statistics after generation                     |
 
 #### Examples
 

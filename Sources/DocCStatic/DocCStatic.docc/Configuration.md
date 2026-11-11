@@ -105,7 +105,8 @@ let configuration = Configuration(
 When search is enabled, the generator:
 1. Creates a `search-index.json` file with all searchable content
 2. Includes the Lunr.js library
-3. Adds a search form to the index page
+3. Lists content matches below the tree when the reader types in the filter field
+   of the navigation sidebar
 4. Provides incremental search across all documentation
 
 > Note: Search requires JavaScript and works when served from a web server. It typically does not function with `file://` URLs due to browser security restrictions.
