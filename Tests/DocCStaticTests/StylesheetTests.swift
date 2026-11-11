@@ -1032,17 +1032,24 @@ struct ThemeCompatibilitySpacingTests {
                 "Topic group must use contenttable-section-padding-top variable for spacing")
     }
 
-    @Test("Code listing uses auto margins and calc max-width to align with content text")
-    func codeListingAlignedWithContent() {
+    @Test("Code listing fills the centred content column to align with content text")
+    func codeListingAlignedWithContent() throws {
         let css = DocCStylesheet.generate(theme: .default)
-        #expect(css.contains(".doc-topic .code-listing"))
-        #expect(css.contains("margin-left: auto"),
-                "Code listing must use margin-left: auto for centring (matching paragraph model)")
-        #expect(css.contains("margin-right: auto"),
-                "Code listing must use margin-right: auto for centring (matching paragraph model)")
-        // max-width = content-max-width − 2 × content-padding so grey box aligns with text
-        #expect(css.contains("max-width: calc(var(--spacing-content-max-width, 980px) - 2 * var(--spacing-content-padding-horizontal, 80px))"),
-                "Code listing max-width must be content-max-width minus 2× content-padding (820px)")
+        // The content column is centred, so everything inside it lines up with the text
+        #expect(css.contains("margin-left: var(--spacing-hero-margin-left, auto)"),
+                "The content column must use margin-left: auto for centring")
+        #expect(css.contains("margin-right: var(--spacing-hero-margin-right, auto)"),
+                "The content column must use margin-right: auto for centring")
+        // The listing has no width or margins of its own (matches docc-render's CodeListing)
+        #expect(!css.contains(".doc-topic .code-listing"),
+                "Code listings must not be sized separately from the content column")
+        let ruleStart = try #require(css.range(of: "\n.code-listing {"))
+        let ruleEnd = try #require(css.range(of: "}", range: ruleStart.upperBound..<css.endIndex))
+        let rule = css[ruleStart.upperBound..<ruleEnd.lowerBound]
+        #expect(!rule.contains("max-width"),
+                "Code listing must not limit its own width — docc-render lets it fill the column")
+        #expect(!rule.contains("margin"),
+                "Code listing must not set its own margins — the content column centres it")
     }
 
 }
