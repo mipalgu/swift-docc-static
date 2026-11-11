@@ -223,12 +223,14 @@ public struct StaticDocumentationGenerator: Sendable {
     /// The order is preserved to maintain consistent ordering in the documentation.
     private func getPackageTargets() async throws -> [String] {
         // Use dump-package instead of describe to get Package.swift order
+        var arguments = ["package", "--package-path", configuration.packageDirectory.path]
+        if let scratchPath = configuration.scratchPath {
+            arguments += ["--scratch-path", scratchPath.path]
+        }
+        arguments.append("dump-package")
         let result = try await run(
             .name("swift"),
-            arguments: Arguments([
-                "package", "dump-package",
-                "--package-path", configuration.packageDirectory.path,
-            ]),
+            arguments: Arguments(arguments),
             output: .string(limit: 10 * 1024 * 1024)  // 10MB limit
         )
 

@@ -119,3 +119,15 @@ struct SourceLocationTests {
         #expect(location.description == "Test.swift:10:5")
     }
 }
+
+/// Checks that generation keeps its build products in the configured scratch path.
+@Suite("Scratch Path Tests")
+struct ScratchPathTests {
+    @Test("Generating with a scratch path leaves no build directory in the package")
+    func noBuildDirectoryInPackage() async throws {
+        _ = try await FixtureDocumentation.shared.output(theme: .default)
+        let package = TemporaryLocation.fixtureWorkspace.appendingPathComponent("package")
+        let buildDirectory = package.appendingPathComponent(".build")
+        #expect(!FileManager.default.fileExists(atPath: buildDirectory.path))
+    }
+}
