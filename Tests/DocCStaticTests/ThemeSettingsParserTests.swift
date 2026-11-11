@@ -131,6 +131,23 @@ struct ThemeSettingsParserTests {
         #expect(css.contains("body {"))
     }
 
+    @Test("Theme settings also reach the root element, so they can set the root font size")
+    func settingsReachTheRootElement() throws {
+        let settings = ThemeSettings.Root(
+            theme: ThemeSettings.Theme(
+                color: ["fill": .lightDark(light: "#ffffff", dark: "#1d1d1f")],
+                spacing: ["html-font-size": "16px"]
+            )
+        )
+
+        let light = ThemeSettingsParser.generateLightModeCSS(from: settings)
+        let dark = ThemeSettingsParser.generateDarkModeCSS(from: settings)
+
+        #expect(light.contains(":root, body {\n    --color-fill: #ffffff;"))
+        #expect(light.contains("--spacing-html-font-size: 16px;"))
+        #expect(dark.contains(":root, body {\n        --color-fill: light-dark(#ffffff, #1d1d1f);"))
+    }
+
     @Test("Generate dark mode CSS")
     func testGenerateDarkModeCSS() throws {
         let settings = ThemeSettings.Root(

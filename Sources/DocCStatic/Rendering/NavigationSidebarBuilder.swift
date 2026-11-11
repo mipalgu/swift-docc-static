@@ -170,6 +170,23 @@ public extension NavigationSidebarBuilder {
         return paths
     }
 
+    /// Returns the navigator type of every page in a navigation index.
+    ///
+    /// - Parameter navigationIndex: The navigation index.
+    /// - Returns: The type of each row that has a page and a type, keyed by the
+    ///   normalised page path (see ``SidebarDocument/pagePathKey(_:)``).
+    static func rowTypes(in navigationIndex: NavigationIndex) -> [String: String] {
+        var types: [String: String] = [:]
+        func collect(_ node: NavigationNode) {
+            if !node.isGroupMarker, let path = node.path, let type = node.type {
+                types[SidebarDocument.pagePathKey(path)] = type
+            }
+            node.children?.forEach(collect)
+        }
+        navigationIndex.allModules().forEach(collect)
+        return types
+    }
+
     /// The script that enhances the shared sidebar document when JavaScript is available.
     ///
     /// The script applies the reader's colour scheme (from local storage and from

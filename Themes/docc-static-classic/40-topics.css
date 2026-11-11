@@ -1,0 +1,188 @@
+/*
+ * Topics, relationships, see also and mentions in the `docc-static-classic` theme.
+ *
+ * Every topic is a row with a letter badge for its kind, its name as the link and
+ * its abstract below the name.  The badge floats at the start of the link, so the
+ * name follows it; the abstract, the next line of the row, is moved below the name
+ * and indented to it.  The badge's own margins stay zero; the name keeps its
+ * distance from the badge with a text indent.
+ */
+.contenttable {
+    padding: var(--spacing-section-padding-vertical) 0;
+}
+
+.contenttable .container {
+    padding-top: 0;
+    padding-bottom: 0;
+}
+
+/* Section titles span the column inside the content padding */
+.contenttable .container > h2.title {
+    width: calc(100% - 2 * var(--spacing-content-block-padding-horizontal));
+    margin: var(--spacing-heading-margin-top) 0 var(--spacing-heading-margin-bottom);
+    padding: 0 0 var(--spacing-h2-padding-bottom);
+    border-top: none;
+    border-bottom: var(--spacing-h2-border-bottom);
+    font-family: var(--typography-html-font-headline);
+    font-size: var(--spacing-h2-font-size);
+    line-height: var(--spacing-h2-line-height);
+    font-weight: var(--spacing-h2-font-weight);
+    translate: var(--spacing-content-block-padding-horizontal) 0;
+}
+
+.contenttable .contenttable-section {
+    display: block;
+    margin: 0;
+    padding: 0 var(--spacing-content-block-padding-horizontal);
+    border-top: none;
+}
+
+.contenttable .section-title {
+    max-width: none;
+    margin: 0;
+    padding: 0;
+}
+
+.contenttable :is(h2.title, .contenttable-title) .header-anchor {
+    color: inherit;
+}
+
+.contenttable .contenttable-title {
+    margin: var(--spacing-heading-margin-top) 0 var(--spacing-heading-margin-bottom);
+    padding: 0;
+    font-family: var(--typography-html-font-headline);
+    font-size: var(--spacing-h3-font-size);
+    line-height: var(--spacing-h3-line-height);
+    font-weight: var(--spacing-h3-font-weight);
+}
+
+.contenttable .section-content {
+    max-width: none;
+    margin: 0;
+    padding: 0;
+}
+
+/* Topic rows */
+.link-block.topic {
+    --classic-badge-size: 17px;
+    --classic-badge-gap: 0.75rem;
+    --classic-name-gap: 0.25rem;
+    --classic-abstract-shift: calc(var(--classic-badge-gap) + var(--classic-name-gap));
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: var(--classic-badge-gap);
+    margin: 0;
+    padding: var(--classic-badge-gap) 0;
+}
+
+.link-block.topic > .link {
+    display: block;
+    flex: 0 0 100%;
+    margin: 0 0 var(--classic-name-gap);
+    padding: 0;
+    color: var(--color-link);
+    font-family: var(--typography-html-font);
+    font-size: var(--spacing-body-font-size);
+    line-height: var(--spacing-body-line-height);
+}
+
+.link-block.topic > .link .topic-icon-wrapper,
+.link-block.topic > .link .decorated-title {
+    display: none;
+}
+
+.link-block.topic > .link .topic-title {
+    display: inline;
+}
+
+/* The name: a block beside the floating badge */
+.link-block.topic > .link > :is(.topic-title, code:not(.decorated-title), span:not(.topic-kind-badge)) {
+    display: block;
+    text-indent: var(--classic-badge-gap);
+    margin-bottom: var(--classic-name-gap);
+    font-family: inherit;
+    font-size: inherit;
+    line-height: inherit;
+}
+
+/* The abstract below the name: the next line of the row, moved up by the row gap */
+.link-block.topic > .abstract {
+    flex: 0 0 auto;
+    width: calc(100% - var(--classic-badge-size) - var(--classic-badge-gap));
+    margin: 0;
+    font-size: var(--spacing-topic-abstract-font-size);
+    line-height: var(--spacing-topic-abstract-line-height);
+    color: var(--color-figure-gray-secondary);
+    translate: calc(var(--classic-badge-size) + var(--classic-badge-gap)) calc(-1 * var(--classic-abstract-shift));
+}
+
+.link-block.topic > .abstract > .content {
+    margin-bottom: calc(-1 * var(--classic-abstract-shift));
+}
+
+/* Badges after a topic, such as Deprecated, line up with the abstract */
+.link-block.topic > .badge {
+    margin: 0 0 calc(-1 * var(--classic-abstract-shift));
+    translate: calc(var(--classic-badge-size) + var(--classic-badge-gap)) calc(-1 * var(--classic-abstract-shift));
+}
+
+/* Kind badges: a framed letter in front of the name */
+.link-block.topic .topic-kind-badge {
+    display: flex;
+    float: left;
+    justify-content: center;
+    align-items: center;
+    box-sizing: border-box;
+    width: var(--classic-badge-size);
+    height: var(--classic-badge-size);
+    margin-top: 2px;
+    border: 1px solid var(--color-kind-badge-border);
+    border-radius: var(--badge-border-radius);
+    background: var(--color-kind-badge-fill);
+    color: var(--color-kind-badge-text);
+    font-family: var(--typography-html-font);
+    font-size: var(--spacing-badge-font-size);
+    font-weight: 600;
+    line-height: var(--spacing-body-line-height);
+    cursor: auto;
+}
+
+.link-block.topic:is([data-topic-role="article"], [data-topic-role="collectionGroup"]) .topic-kind-badge {
+    border-style: none;
+    background: transparent;
+}
+
+.topic-kind-badge::before {
+    content: "?";
+}
+
+.topic-kind-badge[data-topic-type="struct"]::before { content: "S"; }
+.topic-kind-badge[data-topic-type="class"]::before { content: "C"; }
+.topic-kind-badge[data-topic-type="enum"]::before { content: "E"; }
+.topic-kind-badge[data-topic-type="protocol"]::before { content: "P"; }
+.topic-kind-badge:is([data-topic-type="typealias"], [data-topic-type="associatedtype"])::before { content: "T"; }
+.topic-kind-badge:is([data-topic-type="method"], [data-topic-type="func"], [data-topic-type="op"])::before { content: "F"; }
+.topic-kind-badge:is([data-topic-type="property"], [data-topic-type="var"])::before { content: "V"; }
+.topic-kind-badge[data-topic-type="subscript"]::before { content: "Su"; }
+.topic-kind-badge[data-topic-type="macro"]::before { content: "M"; }
+.topic-kind-badge[data-topic-type="extension"]::before { content: "Ex"; }
+.topic-kind-badge[data-topic-type="module"]::before { content: "Mo"; }
+.topic-kind-badge:is([data-topic-type="article"], [data-topic-type="collectionGroup"])::before { content: "A"; }
+.topic-kind-badge:is([data-topic-type="tutorial"], [data-topic-type="project"])::before { content: "Tu"; }
+.topic-kind-badge[data-topic-type="collection"]::before { content: "Co"; }
+.topic-kind-badge[data-topic-type="sampleCode"]::before { content: "Sc"; }
+
+/* Relationships: a bulleted list of the related types */
+.contenttable .relationships-list {
+    display: block;
+    margin: 0 0 var(--spacing-paragraph-margin-bottom);
+    padding-left: var(--spacing-list-padding);
+    list-style-type: disc;
+}
+
+.contenttable .relationships-list li {
+    display: list-item;
+    margin: 0 0 var(--spacing-list-item-margin-bottom);
+    list-style-type: inherit;
+}

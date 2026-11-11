@@ -183,6 +183,11 @@
     text-decoration: none;
 }
 
+/* Icon before the title, shown by themes that draw one */
+.nav-title .header-icon {
+    display: none;
+}
+
 @media only screen and (max-width: 767px) {
     .nav-title a {
         display: flex;

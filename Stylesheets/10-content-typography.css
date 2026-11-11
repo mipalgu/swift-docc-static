@@ -374,7 +374,7 @@ h6 {
 
 .code-listing pre > code {
     font-size: var(--spacing-pre-code-font-size, 0.8823529412rem);
-    line-height: 1.6666666667;
+    line-height: var(--spacing-pre-code-line-height, 1.6666666667);
     font-weight: 400;
     font-family: var(--typography-html-font-mono, Menlo, monospace);
     white-space: pre;

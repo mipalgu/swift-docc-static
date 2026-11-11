@@ -151,9 +151,9 @@
   ]
  },
  "sidebarSymbolBadge": {
-  "static": "iframe.sidebar-frame >>> .navigator-card-item .navigator-icon",
+  "static": "iframe.sidebar-frame >>> .navigator-card-item .navigator-icon:has(.single-letter-icon, .two-letter-icon)",
   "main": "nav.doc-sidebar .symbol-badge",
-  "vue": ".navigator-card-item .navigator-icon",
+  "vue": ".navigator-card-item .navigator-icon:has(.single-letter-icon, .two-letter-icon)",
   "pick": "in-viewport",
   "kinds": [
    "documentation"
@@ -168,9 +168,9 @@
   ]
  },
  "sidebarArticleIcon": {
-  "static": "iframe.sidebar-frame >>> .navigator-card-item .navigator-icon",
+  "static": "iframe.sidebar-frame >>> .navigator-card-item .navigator-icon:not(:has(.single-letter-icon, .two-letter-icon))",
   "main": "nav.doc-sidebar .symbol-icon",
-  "vue": ".navigator-card-item .navigator-icon",
+  "vue": ".navigator-card-item .navigator-icon:not(:has(.single-letter-icon, .two-letter-icon))",
   "pick": "in-viewport",
   "kinds": [
    "documentation"
@@ -203,13 +203,13 @@
  },
  "main": {
   "static": "main#app-main",
-  "main": "main.doc-main",
+  "main": "main.doc-main, main.tutorial-main, main.tutorial-overview-main, body.index-page > .container",
   "vue": "main#app-main, #app-main",
   "geometry": true
  },
  "contentColumn": {
   "static": ".primary-content, .container:not(.minimized-container)",
-  "main": "main.doc-main",
+  "main": "main.doc-main:has(> :not(nav.breadcrumbs, .hero-section, .declaration))",
   "vue": ".primary-content, .container:not(.minimized-container)",
   "geometry": true,
   "kinds": [
@@ -317,9 +317,9 @@
   "vue": ".declaration-group .token-identifier"
  },
  "declarationType": {
-  "static": ".declaration-group .token-typeIdentifier, .declaration-group .token-type",
-  "main": "main .declaration .type",
-  "vue": ".declaration-group .token-typeIdentifier, .declaration-group .token-type"
+  "static": ".declaration-group .token-typeIdentifier, .declaration-group .token-type, .declaration-group .type-identifier-link",
+  "main": "main .declaration .type:not(:has(a)), main .declaration .type a",
+  "vue": ".declaration-group .token-typeIdentifier, .declaration-group .token-type, .declaration-group .type-identifier-link"
  },
  "topicsSectionTitle": {
   "static": "section.contenttable h2.title",
@@ -328,7 +328,7 @@
  },
  "topicGroupTitle": {
   "static": ".contenttable-title",
-  "main": "section.topics > h3",
+  "main": "section.topics > h3, body.index-page section > h2",
   "vue": ".contenttable-title"
  },
  "topicItem": {
@@ -342,9 +342,9 @@
   "vue": ".link-block.topic a.link"
  },
  "topicName": {
-  "static": ".link-block.topic a.link .decorated-title, .link-block.topic a.link > span",
+  "static": ".link-block.topic a.link .decorated-title, .link-block.topic a.link > span:not(.topic-kind-badge)",
   "main": ".symbol-card a.symbol-name",
-  "vue": ".link-block.topic a.link .decorated-title, .link-block.topic a.link > span"
+  "vue": ".link-block.topic a.link .decorated-title, .link-block.topic a.link > span:not(.topic-kind-badge)"
  },
  "topicKindBadge": {
   "static": ".link-block.topic .topic-kind-badge",
@@ -368,7 +368,7 @@
  },
  "topicLinkWithoutAbstract": {
   "static": ".link-block.topic:not(:has(> .abstract)) > .link",
-  "main": null,
+  "main": ".symbol-card:has(.symbol-summary:empty) a.symbol-name",
   "vue": ".link-block.topic:not(:has(> .abstract)) > .link"
  },
  "topicDeprecatedLink": {
@@ -393,7 +393,7 @@
  },
  "relationshipsList": {
   "static": ".relationships-list",
-  "main": null,
+  "main": ".relationships-list",
   "vue": ".relationships-list"
  },
  "seeAlsoTitle": {
@@ -422,9 +422,9 @@
   "vue": ".parameters dd, .parameters-table dd"
  },
  "contentHeading2": {
-  "static": ".primary-content h2",
+  "static": ".primary-content .content h2",
   "main": "main.doc-main > h2",
-  "vue": ".primary-content h2"
+  "vue": ".primary-content .content h2"
  },
  "contentHeading3": {
   "static": ".primary-content h3",
@@ -432,18 +432,18 @@
   "vue": ".primary-content h3"
  },
  "paragraph": {
-  "static": ".primary-content p",
+  "static": ".primary-content > .content > p",
   "main": "main.doc-main > p",
-  "vue": ".primary-content p"
+  "vue": ".primary-content > .content > p"
  },
  "inlineCode": {
-  "static": ".primary-content p code",
-  "main": "main.doc-main > p code",
-  "vue": ".primary-content p code"
+  "static": ".primary-content p code:not(a code)",
+  "main": "main.doc-main > p code, main.doc-main > .aside p code",
+  "vue": ".primary-content p code:not(a code)"
  },
  "inlineLink": {
   "static": ".primary-content p a",
-  "main": "main.doc-main > p a",
+  "main": "main.doc-main > p a, main.doc-main > .aside p a",
   "vue": ".primary-content p a"
  },
  "inlineCodeInLink": {
@@ -514,7 +514,7 @@
  },
  "tableFollower": {
   "static": ".primary-content .table-wrapper + *",
-  "main": null,
+  "main": "main.doc-main > table + *",
   "vue": ".primary-content .table-wrapper + *"
  },
  "tableHeaderCell": {

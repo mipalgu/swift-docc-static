@@ -1,0 +1,146 @@
+{
+ "deviations": [
+  {
+   "role": "*",
+   "property": "presence",
+   "viewports": [
+    "390x844"
+   ],
+   "reason": "On narrow viewports the main branch kept the 320px navigator beside a content column only 70px wide, which hid the page content and scrolled sideways; classic keeps the shared narrow layout instead, with the content at full width and the navigator closed until the toggle opens it."
+  },
+  {
+   "role": "*",
+   "property": "box.x",
+   "viewports": [
+    "390x844"
+   ],
+   "reason": "On narrow viewports the content starts at the left edge of the window, unlike the broken narrow layout of the main branch (see the presence deviation)."
+  },
+  {
+   "role": "*",
+   "property": "box.width",
+   "viewports": [
+    "390x844"
+   ],
+   "reason": "On narrow viewports the content spans the window, unlike the broken narrow layout of the main branch (see the presence deviation)."
+  },
+  {
+   "role": "main",
+   "property": "*",
+   "viewports": [
+    "390x844"
+   ],
+   "reason": "On narrow viewports the main element is not offset by the closed navigator, unlike the broken narrow layout of the main branch (see the presence deviation)."
+  },
+  {
+   "role": "contentColumn",
+   "property": "*",
+   "viewports": [
+    "390x844"
+   ],
+   "reason": "On narrow viewports the content column is not offset by the closed navigator, unlike the broken narrow layout of the main branch (see the presence deviation)."
+  },
+  {
+   "role": "image",
+   "property": "maxWidth",
+   "viewports": [
+    "390x844"
+   ],
+   "reason": "On narrow viewports images shrink to the window, where the main branch let them overflow its broken narrow layout (see the presence deviation)."
+  },
+  {
+   "role": "footer",
+   "property": "marginLeft",
+   "viewports": [
+    "390x844"
+   ],
+   "reason": "On narrow viewports the footer is not offset by the closed navigator, unlike the broken narrow layout of the main branch (see the presence deviation)."
+  },
+  {
+   "role": "appearanceOption",
+   "property": "fontFamily",
+   "reason": "The main branch left its colour scheme buttons in the browser's default button font (Arial in Chrome); classic uses the page font, like the rest of the footer."
+  },
+  {
+   "role": "declarationIdentifier",
+   "property": "color",
+   "schemes": [
+    "dark"
+   ],
+   "reason": "The main branch kept the light purple of declaration identifiers in the dark appearance, where it is unreadable on the dark panel; classic uses a light purple there."
+  },
+  {
+   "role": "inlineCodeInLink",
+   "property": "presence",
+   "reason": "Links to symbols keep their code voice, which the main branch dropped by rendering them as plain text links."
+  },
+  {
+   "role": "mentionedIn",
+   "property": "presence",
+   "reason": "Classic lists the articles that mention a symbol, a section the main branch did not show."
+  },
+  {
+   "role": "relationshipsList",
+   "property": "presence",
+   "pages": [
+    "enumeration",
+    "nested"
+   ],
+   "reason": "The main branch rendered an empty list for relationships with types outside the package (such as Equatable); classic lists those types like any other relationship."
+  },
+  {
+   "role": "relationshipsItem",
+   "property": "presence",
+   "pages": [
+    "enumeration",
+    "nested"
+   ],
+   "reason": "The main branch rendered an empty list for relationships with types outside the package (such as Equatable); classic lists those types like any other relationship."
+  },
+  {
+   "role": "topicsSectionTitle",
+   "property": "presence",
+   "pages": [
+    "article"
+   ],
+   "reason": "The main branch left out the Topics section of articles; classic shows it like on every other page."
+  },
+  {
+   "role": "topicGroupTitle",
+   "property": "presence",
+   "pages": [
+    "article"
+   ],
+   "reason": "The main branch left out the Topics section of articles; classic shows it like on every other page."
+  },
+  {
+   "role": "sidebarFilterInput",
+   "property": "fontFamily",
+   "reason": "The main branch left its filter field in the browser's default input font (Arial in Chrome); classic uses the page font."
+  },
+  {
+   "role": "sidebarFilterInput",
+   "property": "color",
+   "schemes": [
+    "dark"
+   ],
+   "reason": "The main branch kept the browser's black input text in the dark appearance, which is barely readable on the dark field; classic uses the light text colour there."
+  },
+  {
+   "role": "moduleCard",
+   "property": "cursor",
+   "pages": [
+    "landing"
+   ],
+   "reason": "The whole module card is a link in the shared markup, so it shows the pointer cursor; the main branch linked only the module name."
+  },
+  {
+   "role": "moduleCardAbstract",
+   "property": "cursor",
+   "pages": [
+    "landing"
+   ],
+   "reason": "The whole module card is a link in the shared markup, so it shows the pointer cursor; the main branch linked only the module name."
+  }
+ ]
+}

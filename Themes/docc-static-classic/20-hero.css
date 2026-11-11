@@ -1,0 +1,241 @@
+/*
+ * Page header of documentation pages in the `docc-static-classic` theme: the
+ * breadcrumbs bar, the filled introduction with eyebrow, title and abstract, and
+ * the declaration panel.
+ *
+ * The breadcrumbs and the declaration are part of the introduction's markup, but
+ * the theme shows them outside its filled area: the breadcrumbs as a bar above it,
+ * and the declaration as a panel below it.  Both are moved there with `translate`
+ * and widened to the introduction's full width, and a cover in the page colour
+ * hides the fill behind them.  The introduction is a size container, so `100cqw`
+ * is the width of its content box.
+ */
+.documentation-hero {
+    --classic-hero-width: calc(100cqw + var(--spacing-hero-padding-left) + var(--spacing-hero-padding-right));
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: var(--spacing-hero-padding-top) var(--spacing-hero-padding-right) var(--spacing-hero-padding-bottom) var(--spacing-hero-padding-left);
+    background: var(--color-documentation-intro-fill);
+    color: var(--color-figure-gray);
+    isolation: isolate;
+    container-type: inline-size;
+}
+
+.documentation-hero::before,
+.documentation-hero::after {
+    content: none;
+}
+
+.documentation-hero .documentation-hero__above-content:empty {
+    display: none;
+}
+
+.documentation-hero .documentation-hero__content {
+    flex: 1 1 auto;
+    min-width: 0;
+    padding: 0;
+    position: static;
+    z-index: auto;
+}
+
+/* The decoration of articles: a document with code brackets at the right */
+.documentation-hero .icon {
+    display: none;
+}
+
+.documentation-hero .icon:has(.background-icon:is([data-topic-type="article"], [data-topic-type="collectionGroup"])) {
+    display: block;
+    position: static;
+    order: 1;
+    flex: 0 0 auto;
+    width: 200px;
+    height: 200px;
+    margin: 0 0 0 2rem;
+    color: var(--color-hero-decoration);
+    opacity: 0.6;
+}
+
+.documentation-hero .icon .background-icon {
+    position: static;
+    width: 100%;
+    height: 100%;
+    transform: none;
+    opacity: 1;
+    background: currentColor;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180' fill='none' stroke='black'%3E%3Crect x='30' y='15' width='120' height='150' rx='6' stroke-width='4'/%3E%3Cpath d='M30 40h90' stroke-width='4'/%3E%3Cpath d='M65 85L50 100L65 115M115 85L130 100L115 115' stroke-width='5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+.documentation-hero .icon .background-icon svg {
+    display: none;
+}
+
+@media only screen and (max-width: 735px) {
+    .documentation-hero .icon:has(.background-icon) {
+        display: none;
+    }
+}
+
+/* Breadcrumbs: a bar above the introduction listing the parents of the page */
+.documentation-hero .hierarchy {
+    justify-content: normal;
+    gap: 0.5rem;
+    width: var(--classic-hero-width);
+    box-sizing: border-box;
+    margin: 0 0 1rem;
+    padding: 1rem var(--spacing-hero-padding-right) 1rem var(--spacing-hero-padding-left);
+    border-bottom: 1px solid var(--color-fill-gray);
+    font-size: var(--spacing-small-font-size);
+    line-height: var(--spacing-body-line-height);
+    color: var(--color-figure-gray-secondary);
+    translate: calc(-1 * var(--spacing-hero-padding-left)) calc(-1 * var(--spacing-hero-padding-top));
+}
+
+.documentation-hero .hierarchy::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 -1rem;
+    z-index: -1;
+    background: var(--color-fill);
+}
+
+.documentation-hero .hierarchy-item {
+    gap: 0.5rem;
+    list-style-type: disc;
+}
+
+.documentation-hero .hierarchy .hierarchy-item:not([data-from-end="0"]) {
+    display: flex;
+}
+
+.documentation-hero .hierarchy .hierarchy-item[data-from-end="0"],
+.documentation-hero .hierarchy .hierarchy-collapsed-items {
+    display: none;
+}
+
+.documentation-hero .hierarchy-item:not(:first-child)::before {
+    width: auto;
+    margin: 0;
+}
+
+/* Never truncated, so stronger than the base rules that shorten long hierarchies */
+.documentation-hero .documentation-hero__content .hierarchy.nav-menu-items .hierarchy-item.nav-menu-item .item.nav-menu-link {
+    max-width: none;
+    overflow: visible;
+    white-space: normal;
+    vertical-align: baseline;
+}
+
+.documentation-hero .hierarchy a.nav-menu-link {
+    color: inherit;
+    text-decoration: none;
+}
+
+.documentation-hero .hierarchy a.nav-menu-link:hover {
+    text-decoration: underline;
+}
+
+/* Eyebrow, title and abstract */
+.documentation-hero .topictitle {
+    margin: 0;
+}
+
+.documentation-hero .eyebrow {
+    text-transform: capitalize;
+    color: var(--color-figure-gray-secondary);
+}
+
+.documentation-hero .title {
+    font-family: var(--typography-html-font-headline);
+    margin-bottom: var(--spacing-h1-margin-bottom);
+}
+
+.documentation-hero .abstract {
+    color: var(--color-figure-gray-secondary);
+}
+
+/*
+ * Declaration: a full-width panel below the introduction.  The panel moves down
+ * past the introduction's bottom padding and margin; the element before it covers
+ * the fill from there on, and the introduction grows by the part of the panel that
+ * would otherwise be clipped, which the content after it takes back.
+ */
+.documentation-hero .declarations-container {
+    --classic-declaration-padding-block: 1rem;
+    --classic-declaration-padding-inline: 3rem;
+    --classic-declaration-margin-bottom: 1.5rem;
+    width: var(--classic-hero-width);
+    box-sizing: border-box;
+    margin: 0 0 var(--classic-declaration-margin-bottom);
+    padding: var(--classic-declaration-padding-block) var(--classic-declaration-padding-inline);
+    border-radius: var(--spacing-declaration-border-radius);
+    background: var(--color-fill-secondary);
+    translate: calc(-1 * var(--spacing-hero-padding-left)) calc(var(--spacing-hero-padding-bottom) + var(--spacing-hero-margin-bottom));
+}
+
+.documentation-hero__content > :has(+ .declarations-container) {
+    translate: 0 0;
+}
+
+.documentation-hero__content > :has(+ .declarations-container)::after {
+    content: "";
+    position: absolute;
+    top: calc(100% + var(--spacing-hero-padding-bottom));
+    left: calc(-1 * var(--spacing-hero-padding-left));
+    width: var(--classic-hero-width);
+    height: 100vh;
+    z-index: -1;
+    background: var(--color-fill);
+}
+
+.documentation-hero__content:has(> .declarations-container)::after {
+    content: "";
+    display: block;
+    height: calc(var(--spacing-hero-margin-bottom) - var(--classic-declaration-margin-bottom));
+}
+
+.documentation-hero:has(.declarations-container) + .doc-content-wrapper {
+    margin-top: calc(var(--classic-declaration-margin-bottom) - var(--spacing-hero-margin-bottom));
+}
+
+/* The box and the source fill the panel, which reads as one rounded area */
+.declarations-container .declaration {
+    margin: calc(-1 * var(--classic-declaration-padding-block)) calc(-1 * var(--classic-declaration-padding-inline)) calc(-1 * (var(--classic-declaration-padding-block) + var(--classic-declaration-margin-bottom)));
+}
+
+.declarations-container .declaration-group {
+    margin-bottom: var(--classic-declaration-margin-bottom);
+    padding: var(--classic-declaration-padding-block) var(--classic-declaration-padding-inline);
+    border-radius: var(--spacing-declaration-border-radius);
+    background: var(--color-fill-secondary);
+}
+
+.declaration .source {
+    font-family: var(--typography-html-font-mono);
+    font-size: var(--spacing-pre-font-size);
+    border-width: 0;
+    background: var(--color-fill-secondary);
+    transition: none;
+    filter: none;
+}
+
+/* A single line, without the line breaks between parameters */
+.declaration .source .declaration-break {
+    white-space: normal;
+}
+
+.declaration .source .declaration-parenthesis-break {
+    display: none;
+}
+
+.declaration .source .token-keyword {
+    font-weight: 500;
+}
+
+.declaration .source a.type-identifier-link {
+    color: var(--color-link);
+}
+
+.declaration .source .token-identifier {
+    color: var(--color-syntax-other-function-and-method-names);
+}

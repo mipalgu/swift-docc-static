@@ -1,0 +1,11 @@
+/*
+ * Tutorials overview of the `docc-static-classic` theme: a light page with a
+ * centred title above a grid of tutorial cards.
+ */
+body.tutorial-overview-page #app-main {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: var(--spacing-landing-max-width);
+    margin: 0 auto;
+    padding: 0 2rem;
+}

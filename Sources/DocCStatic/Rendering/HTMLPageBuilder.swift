@@ -20,6 +20,10 @@ public struct HTMLPageBuilder: Sendable {
     /// The navigation index for building the sidebar.
     public let navigationIndex: NavigationIndex?
 
+    /// The navigator types of the pages in the navigation index, keyed by normalised
+    /// page path (see ``SidebarDocument/pagePathKey(_:)``).
+    let topicTypes: [String: String]
+
     /// The shared sidebar document embedded by documentation pages.
     ///
     /// This is `nil` when the navigation index is missing or lists no modules, in
@@ -49,6 +53,37 @@ public extension HTMLPageBuilder {
     /// it from its default state.  The navigation bar's toggle and the overlay's close
     /// button are labels for this checkbox, so the navigator works without JavaScript.
     static let sidebarToggleIdentifier = "sidebar-toggle"
+
+    /// The class of the empty element before the text of the navigation bar title.
+    ///
+    /// The base stylesheet hides the element; a theme can show an icon in it, for
+    /// example as a mask or background image.
+    static let navigationTitleIconClass = "header-icon"
+
+    /// The class of the line breaks and indentation that formatting adds to a declaration.
+    ///
+    /// The line breaks are part of the declaration text, so that the declaration reads
+    /// like swift-docc-render's; a theme that shows declarations on a single line can
+    /// collapse them (for example with `white-space: normal`).
+    static let declarationBreakClass = "declaration-break"
+
+    /// The additional class of a declaration line break after an opening or before a
+    /// closing parenthesis, which a single-line declaration leaves out entirely.
+    static let declarationParenthesisBreakClass = "declaration-parenthesis-break"
+
+    /// The class of the hidden element in every topic that names the topic's kind.
+    ///
+    /// The element has no content; it carries the topic type in
+    /// ``TopicTypeIcon/typeAttribute`` and, for symbols, the letters of
+    /// swift-docc-render's icon in ``TopicTypeIcon/lettersAttribute``, so that a
+    /// theme can show a letter badge for every topic.
+    static let topicKindBadgeClass = "topic-kind-badge"
+
+    /// The class of the hidden plain title of a topic that shows its declaration.
+    ///
+    /// A theme that lists topics by name rather than by declaration can show this
+    /// element and hide the `.decorated-title`.
+    static let topicTitleClass = "topic-title"
 
     /// The number of parents from which the breadcrumbs always collapse the farthest ones.
     ///
@@ -85,6 +120,7 @@ public extension HTMLPageBuilder {
     init(configuration: Configuration, navigationIndex: NavigationIndex? = nil) {
         self.configuration = configuration
         self.navigationIndex = navigationIndex
+        self.topicTypes = navigationIndex.map(NavigationSidebarBuilder.rowTypes(in:)) ?? [:]
         self.sidebarDocument = SidebarDocument.isAvailable(for: navigationIndex)
             ? navigationIndex.map { SidebarDocument(navigationIndex: $0) }
             : nil
@@ -826,8 +862,9 @@ extension HTMLPageBuilder {
     ///
     /// Type names become `type-identifier-link` elements, linked to their page when
     /// the page is documented; like linked attributes, they get ``WordBreak``
-    /// opportunities.  Plain text stays unmarked; every other token is a span with the
-    /// class `token-<kind>`.
+    /// opportunities.  Plain text stays unmarked apart from its line breaks (see
+    /// ``markingLineBreaks(in:)``); every other token is a span with the class
+    /// `token-<kind>`.
     ///
     /// - Parameters:
     ///   - kind: The token kind.
@@ -847,7 +884,7 @@ extension HTMLPageBuilder {
         let linkURL = identifier.flatMap { references[$0] as? TopicRenderReference }.map { makeRelativeURL($0.url, depth: depth) }
         switch kind {
         case .text:
-            return escapedText
+            return Self.markingLineBreaks(in: text)
         case .typeIdentifier:
             let brokenText = WordBreak.markup(text)
             if let linkURL {
@@ -859,6 +896,32 @@ extension HTMLPageBuilder {
         default:
             return "<span class=\"\(tokenCSSClass(for: kind) ?? "")\">\(escapedText)</span>"
         }
+    }
+
+    /// Escapes the plain text of a declaration and marks its line breaks.
+    ///
+    /// Every line break and the indentation after it becomes an element with the class
+    /// ``declarationBreakClass``; a break directly after an opening or before a closing
+    /// parenthesis also gets ``declarationParenthesisBreakClass``.
+    ///
+    /// - Parameter text: The text of a plain text token.
+    /// - Returns: The escaped text with its line breaks marked.
+    static func markingLineBreaks(in text: String) -> String {
+        guard text.contains("\n") else { return escapeHTML(text) }
+        var html = ""
+        var remainder = Substring(text)
+        while let newline = remainder.firstIndex(of: "\n") {
+            let before = remainder[..<newline]
+            let afterNewline = remainder[remainder.index(after: newline)...]
+            let indentation = afterNewline.prefix { $0 == " " }
+            let after = afterNewline.dropFirst(indentation.count)
+            let besideParenthesis = before.last == "(" || after.first == ")"
+            let classes = besideParenthesis
+                ? "\(declarationBreakClass) \(declarationParenthesisBreakClass)" : declarationBreakClass
+            html += escapeHTML(String(before)) + "<span class=\"\(classes)\">\n\(indentation)</span>"
+            remainder = after
+        }
+        return html + escapeHTML(String(remainder))
     }
 
     /// Returns the class of a declaration token: `token-` followed by the token kind.
@@ -1042,10 +1105,12 @@ extension HTMLPageBuilder {
     /// Builds the link block of one topic (swift-docc-render's `TopicsLinkBlock`).
     ///
     /// Articles, collections, tutorials and sample code show an icon, like
-    /// swift-docc-render; symbols show their declaration fragments.  Every block
-    /// carries the topic type and role in ``TopicTypeIcon/typeAttribute`` and
-    /// `data-topic-role`, and a hidden `.topic-kind-badge` with the letters of the
-    /// kind, so that a theme can show a kind indicator for every topic.
+    /// swift-docc-render; symbols show their declaration fragments, followed by their
+    /// plain title in a hidden ``topicTitleClass`` element.  Every block carries the
+    /// topic type (the page's navigator type, or the declaration keyword before the
+    /// symbol's name) and role in ``TopicTypeIcon/typeAttribute`` and
+    /// `data-topic-role`, and a hidden ``topicKindBadgeClass`` element with the type
+    /// and its letters, so that a theme can show a kind indicator for every topic.
     ///
     /// Like swift-docc-render, a topic with an abstract has its link padded
     /// (`has-adjacent-elements`), while a topic without one shows its badge on the
@@ -1068,11 +1133,13 @@ extension HTMLPageBuilder {
         let relativeURL = makeRelativeURL(reference.url, depth: depth)
         let abstract = contentRenderer.renderInlineContent(reference.abstract, references: references, depth: depth).html
         let role = reference.role ?? reference.kind.rawValue
-        let type = TopicTypeIcon.normalisedType(reference.symbolKind?.id ?? role)
+        let navigatorType = topicTypes[SidebarDocument.pagePathKey(reference.url)]
+        let type = TopicTypeIcon.normalisedType(navigatorType ?? Self.declarationKeyword(in: reference.fragments) ?? role)
 
         let titleHTML: String
         if let fragments = reference.fragments, !fragments.isEmpty {
             titleHTML = renderDecoratedTitle(fragments)
+                + "<span class=\"\(Self.topicTitleClass)\">\(WordBreak.markup(reference.title))</span>"
         } else {
             let tag = reference.kind == .symbol && !Self.plainTitleRoles.contains(role) ? "code" : "span"
             titleHTML = "<\(tag)>\(WordBreak.markup(reference.title))</\(tag)>"
@@ -1089,14 +1156,28 @@ extension HTMLPageBuilder {
         if let icon = TopicTypeIcon.topicListIcon(forRole: role) {
             html += "<div class=\"topic-icon-wrapper\">\(icon)</div>"
         }
-        let letters = TopicTypeIcon.letters(for: type) ?? ""
-        html += "<span class=\"topic-kind-badge\" \(TopicTypeIcon.typeAttribute)=\"\(escapeHTML(type))\" aria-hidden=\"true\">\(escapeHTML(letters))</span>"
+        let letters = TopicTypeIcon.letters(for: type).map { " \(TopicTypeIcon.lettersAttribute)=\"\(escapeHTML($0))\"" } ?? ""
+        html += "<span class=\"\(Self.topicKindBadgeClass)\" \(TopicTypeIcon.typeAttribute)=\"\(escapeHTML(type))\"\(letters) aria-hidden=\"true\"></span>"
         html += titleHTML + "</a>"
         if !abstract.isEmpty {
             html += "<div class=\"abstract\"><div class=\"content\">\(abstract)</div></div>"
         }
         html += badge + "</div>"
         return html
+    }
+
+    /// Returns the declaration keyword that names the kind of a symbol.
+    ///
+    /// This is the last keyword before the symbol's name, which skips modifiers such
+    /// as `static` or `class`; without a name, as for initialisers, it is the last
+    /// keyword of the declaration.
+    ///
+    /// - Parameter fragments: The declaration fragments of the symbol.
+    /// - Returns: The keyword, or `nil` if the fragments contain none.
+    static func declarationKeyword(in fragments: [DeclarationRenderSection.Token]?) -> String? {
+        guard let fragments else { return nil }
+        let beforeName = fragments.prefix { $0.kind != .identifier }
+        return beforeName.last { $0.kind == .keyword }?.text
     }
 
     /// The largest number of related types that swift-docc-render lists on one line.
@@ -1776,7 +1857,7 @@ extension HTMLPageBuilder {
                                 </label>
                             </div>
                         </div>
-                        <div class="nav-title"><h2 class="nav-title"><a href="\(homeURL)">Documentation</a></h2></div>
+                        <div class="nav-title"><h2 class="nav-title"><a href="\(homeURL)"><span class="\(Self.navigationTitleIconClass)" aria-hidden="true"></span>Documentation</a></h2></div>
                         <div class="nav-menu">
                             <div class="nav-menu-tray">
                                 <ul class="nav-menu-items nav-menu-settings">

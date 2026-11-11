@@ -1,0 +1,184 @@
+/*
+ * Content of documentation pages in the `docc-static-classic` theme: headings,
+ * paragraphs, lists, code, tables, images and asides.
+ *
+ * The content column spans the width beside the navigator; every top-level block
+ * of the content is inset by the content padding, while code listings, tables and
+ * asides are inset by their own margins.
+ */
+.primary-content > :is(.content, .mentions) > :is(p, ul, ol, h2, h3, h4, h5, h6, dl) {
+    padding-left: var(--spacing-content-block-padding-horizontal);
+    padding-right: var(--spacing-content-block-padding-horizontal);
+}
+
+.primary-content.with-border::before {
+    display: none;
+}
+
+/* Blocks are spaced by the margin below each, not by the stacked margins of the base */
+.primary-content .content :is(p, ul, ol, li, .code-listing, .table-wrapper, .inline-image-container) {
+    margin-top: 0;
+}
+
+.primary-content .content p {
+    margin-bottom: var(--spacing-paragraph-margin-bottom);
+}
+
+/* Headings, in the headline font */
+.primary-content :is(h2, h3, h4, h5, h6) {
+    font-family: var(--typography-html-font-headline);
+    margin-top: var(--spacing-heading-margin-top);
+    margin-bottom: var(--spacing-heading-margin-bottom);
+}
+
+.primary-content :is(h3, h4, h5, h6) {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+/* Section titles without a link to themselves read as plain headings */
+.primary-content > section > h2 .header-anchor {
+    color: inherit;
+}
+
+/* Parameters: a padded section listing each name above its description */
+.primary-content .parameters {
+    padding: var(--spacing-section-padding-vertical) var(--spacing-content-block-padding-horizontal);
+}
+
+.primary-content .parameters dt {
+    font-weight: 400;
+    padding: 0;
+}
+
+.primary-content .parameters :is(dt, dd) {
+    margin: 0;
+    padding: 0;
+}
+
+/* Lists */
+.primary-content .content :is(ul, ol) {
+    margin-left: 0;
+    margin-bottom: var(--spacing-paragraph-margin-bottom);
+    padding-left: var(--spacing-list-padding);
+}
+
+.primary-content > .content > :is(ul, ol) {
+    padding-left: var(--spacing-content-block-padding-horizontal);
+}
+
+.primary-content .content li {
+    margin-bottom: var(--spacing-list-item-margin-bottom);
+}
+
+/* Links are underlined while hovered */
+.primary-content a.inline-link {
+    color: var(--color-link);
+    text-decoration: none;
+}
+
+.primary-content a.inline-link:hover {
+    text-decoration: underline;
+}
+
+/* Code listings: one filled panel; the listing's own box and its source coincide */
+.primary-content .content .code-listing {
+    --classic-listing-padding-block: 1rem;
+    --classic-listing-padding-inline: 3rem;
+    --classic-pre-margin-inline: 1.5rem;
+    --code-block-style-elements-padding: var(--spacing-pre-padding);
+    display: block;
+    flex-direction: row;
+    position: static;
+    margin: var(--spacing-pre-margin);
+    padding: var(--classic-listing-padding-block) var(--classic-listing-padding-inline);
+    border: none;
+    border-radius: var(--spacing-pre-border-radius);
+    overflow: auto;
+    white-space: pre;
+    font-family: var(--typography-html-font-mono);
+    font-size: var(--spacing-pre-font-size);
+    line-height: var(--spacing-pre-line-height);
+    color: var(--color-figure-gray);
+}
+
+.primary-content .content .code-listing .container-general {
+    display: flow-root;
+    overflow: visible;
+    margin: calc(-2 * var(--classic-listing-padding-block)) calc(-1 * (var(--classic-listing-padding-inline) + var(--classic-pre-margin-inline)));
+}
+
+.primary-content .content .code-listing pre {
+    overflow: auto;
+    font-family: var(--typography-html-font-mono);
+    background: var(--color-pre-background);
+}
+
+.code-listing pre > code {
+    display: block;
+    border-radius: var(--spacing-code-border-radius);
+}
+
+.code-listing .syntax-keyword {
+    font-weight: 500;
+}
+
+.code-listing .syntax-comment {
+    font-style: italic;
+}
+
+.code-listing .syntax-number {
+    color: var(--color-syntax-numbers);
+}
+
+/* Tables: rows separated by a line */
+.primary-content .content table {
+    border-style: none;
+}
+
+.primary-content .content :is(td, th) {
+    border-width: 0 0 1px;
+    border-color: var(--color-fill-gray);
+    text-align: left;
+    vertical-align: middle;
+}
+
+.primary-content .content tr:last-child td {
+    border-bottom: none;
+}
+
+.primary-content .content th {
+    color: var(--color-figure-gray-secondary);
+}
+
+/* Images keep their size inside the paragraph */
+.primary-content .content .inline-image-container img {
+    display: inline;
+    margin: 0;
+    max-width: none;
+}
+
+@media only screen and (max-width: 1023px) {
+    .primary-content .content .inline-image-container img {
+        max-width: 100%;
+    }
+}
+
+/* Asides: a coloured bar at the left of note, warning and important asides */
+.doc-content .primary-content aside {
+    margin: var(--spacing-aside-margin);
+    box-shadow: none;
+}
+
+.primary-content aside:is(.tip, .experiment) {
+    border-width: 0;
+}
+
+.primary-content aside .label {
+    line-height: var(--spacing-body-line-height);
+    margin-bottom: var(--spacing-aside-label-margin-bottom);
+}
+
+.primary-content aside .label + * {
+    margin-top: 0;
+}

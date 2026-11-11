@@ -592,7 +592,7 @@
     border-style: solid;
     border-width: 1px;
     padding: var(--spacing-declaration-padding, var(--code-block-style-elements-padding));
-    line-height: 25px;
+    line-height: var(--spacing-declaration-source-line-height, 25px);
     margin: var(--spacing-declaration-source-margin, 0);
     filter: blur(0);
     transition: margin 0.3s linear;
@@ -994,8 +994,12 @@
     margin-bottom: 0.5rem;
 }
 
-/* The kind of every topic, for themes that show letter badges */
+/* The kind of every topic and its plain title, for themes that show them */
 .topic-kind-badge {
+    display: none;
+}
+
+.link-block .topic-title {
     display: none;
 }
 

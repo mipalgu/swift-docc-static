@@ -278,3 +278,7 @@
     font-size: 0.875rem;
 }
 
+/* Statistics of a module, for themes that show them */
+.card .module-stats {
+    display: none;
+}

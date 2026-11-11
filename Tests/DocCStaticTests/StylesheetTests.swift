@@ -380,8 +380,9 @@ struct ClassicThemeTests {
         let theme = ThemeConfiguration(builtInTheme: .classic, includeDarkMode: true, customCSS: nil)
         let css = DocCStylesheet.generate(theme: theme)
 
-        // Classic theme should have sidebar-style padding (matching old docc-static)
-        #expect(css.contains("--spacing-leaf-link-padding: 0.75rem 1.25rem 0.25rem"))
+        // Group headings have sidebar-style padding; row links have none (matching old docc-static)
+        #expect(css.contains("--spacing-leaf-link-padding: 0;"))
+        #expect(css.contains(".is-group .leaf-link {\n    display: block;\n    max-width: none;\n    overflow: visible;\n    white-space: normal;\n    vertical-align: baseline;\n    padding: 0.75rem 1.25rem 0.25rem;"))
     }
 
     @Test("Classic theme has badge border radius override")
@@ -398,10 +399,11 @@ struct ClassicThemeTests {
         let theme = ThemeConfiguration(builtInTheme: .classic, includeDarkMode: true, customCSS: nil)
         let css = DocCStylesheet.generate(theme: theme)
 
-        // Classic theme should have filled badge backgrounds
-        #expect(css.contains("--color-badge-default:"))
-        #expect(css.contains("--color-badge-text:"))
-        #expect(css.contains("--color-badge-border:"))
+        // Classic theme should have filled kind badge backgrounds, separate from the
+        // colours of status badges such as Deprecated
+        #expect(css.contains("--color-kind-badge-fill:"))
+        #expect(css.contains("--color-kind-badge-text:"))
+        #expect(css.contains("--color-kind-badge-border:"))
     }
 
     @Test("Classic theme uses SF fonts")
@@ -420,7 +422,7 @@ struct ClassicThemeTests {
         let css = DocCStylesheet.generate(theme: theme)
 
         // Classic theme should have chevron before text (order: -1)
-        #expect(css.contains("--spacing-disclosure-chevron-order: -1"))
+        #expect(css.contains(".module-header .module-toggle {\n    position: static;\n    order: -1;"))
     }
 
     @Test("Classic theme sidebar width is 320px")

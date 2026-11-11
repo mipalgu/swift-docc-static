@@ -31,18 +31,20 @@ import Foundation
 /// The parser generates:
 ///
 /// ```css
-/// body {
+/// :root, body {
 ///     --color-fill: #ffffff;
 /// }
 /// @supports (color: light-dark(#000, #fff)) {
-///     body {
+///     :root, body {
 ///         --color-fill: light-dark(#ffffff, #1d1d1f);
 ///     }
 /// }
 /// ```
 ///
 /// The properties are defined on the body element, like the colour palette of the
-/// base stylesheet, so that they replace the palette's values.  A value that differs
+/// base stylesheet, so that they replace the palette's values.  They are also
+/// defined on the root element, whose rule reads the root font size
+/// (`--spacing-html-font-size`) that `rem` values are based on.  A value that differs
 /// between the light and the dark appearance becomes a `light-dark()` pair, which
 /// follows the colour scheme of the body (the reader's system setting, or the scheme
 /// chosen with ``ColourSchemeToggle``).
@@ -151,7 +153,8 @@ public enum ThemeSettingsParser {
     /// Generates light mode CSS variables.
     ///
     /// The variables are defined on the body element, where the base stylesheet
-    /// defines its colour palette.
+    /// defines its colour palette, and on the root element, whose font size the
+    /// settings can also set.
     ///
     /// - Parameter settings: The theme settings.
     /// - Returns: CSS for light mode variables, or an empty string if the settings
@@ -164,7 +167,7 @@ public enum ThemeSettingsParser {
         return """
 
             /* Theme settings overrides - light mode */
-            body {
+            :root, body {
             \(variables.joined(separator: "\n"))
             }
 
@@ -193,7 +196,7 @@ public enum ThemeSettingsParser {
 
             /* Theme settings overrides - dark mode */
             @supports (color: light-dark(#000, #fff)) {
-                body {
+                :root, body {
             \(variables.joined(separator: "\n"))
                 }
             }

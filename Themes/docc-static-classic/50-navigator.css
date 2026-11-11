@@ -1,0 +1,328 @@
+/*
+ * Navigator of the `docc-static-classic` theme: a "Documentation" heading above
+ * the embedded navigator, modules with a monospaced title, and rows with a letter
+ * badge or an icon in front of each title.
+ *
+ * Rows below another row are indented by the lists that hold them: each level
+ * moves its rows further from the start than the one before, as the nested lists
+ * of the original navigator did, and ends them further from the end too.  Expanding and
+ * collapsing a row grows and shrinks the list below it and fades it in and out.
+ */
+
+/* The heading above the navigator */
+@media only screen and (min-width: 1024px) {
+    .documentation-layout-aside > .head-inner {
+        display: flex;
+        height: auto;
+        margin-bottom: calc(-1 * var(--spacing-navigator-padding-vertical) / 2);
+        padding: var(--spacing-navigator-padding-vertical) 0 0;
+    }
+
+    .documentation-layout-aside > .head-inner .close-card {
+        display: none;
+    }
+}
+
+.documentation-layout-aside > .head-inner h2.nav-title {
+    padding: 0.5rem 1.25rem;
+    font-size: var(--spacing-sidebar-heading-title-font-size);
+    line-height: var(--spacing-body-line-height);
+    font-weight: 600;
+}
+
+/* The scrolling list */
+body.sidebar-document .navigator {
+    display: block;
+    flex-direction: row;
+    box-sizing: border-box;
+    padding: var(--spacing-navigator-padding-vertical) 0;
+    overflow: auto;
+}
+
+.navigator .scroller {
+    padding-bottom: 0;
+}
+
+/* Modules: a chevron and the module's name in the code font */
+.module-header {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem 1rem;
+}
+
+.module-header .module-toggle {
+    position: static;
+    order: -1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 14px;
+    height: 14px;
+    margin-right: 0.5rem;
+    padding: 0;
+    color: var(--color-figure-gray-secondary);
+}
+
+.module-header .technology-title,
+.module-header:target .technology-title {
+    flex: 1 1 auto;
+    min-width: 0;
+    white-space: normal;
+    background: none;
+    color: var(--color-figure-gray);
+}
+
+.technology-title .card-link {
+    overflow: visible;
+    white-space: normal;
+    font-family: var(--typography-html-font-mono);
+    border-bottom: none;
+}
+
+.navigator .chevron {
+    width: 8px;
+    height: 8px;
+    transition: transform 0.15s ease;
+}
+
+/* Rows, in lists indented level by level */
+.navigator .navigator-tree,
+.navigator .nav-children-wrapper {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.navigator .module-contents {
+    padding-left: 1rem;
+}
+
+.navigator .nav-children-wrapper > .navigator-tree {
+    padding: 0 1rem 0 3.5rem;
+}
+
+.navigator .nav-children-wrapper .nav-children-wrapper > .navigator-tree {
+    padding-left: 4rem;
+}
+
+.navigator-card-item {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    margin: 0 0 0.5em;
+    padding: 2px 0;
+    list-style-type: none;
+    color: var(--color-figure-gray-secondary);
+    font-weight: 600;
+    scroll-margin-top: var(--spacing-sidebar-target-scroll-margin, 30vh);
+}
+
+.navigator-card-item:is([data-nesting-index="0"], .expandable) {
+    padding: 3px 1rem 3px 0.75rem;
+}
+
+.navigator-card-item[data-nesting-index="0"] {
+    color: var(--color-figure-gray);
+    font-weight: 400;
+}
+
+.navigator-card-item .head-wrapper {
+    display: contents;
+}
+
+.navigator-card-item .depth-spacer {
+    display: none;
+}
+
+.navigator-card-item.expandable .depth-spacer {
+    display: flex;
+    width: 14px;
+    height: 14px;
+}
+
+.navigator-card-item .tree-toggle {
+    position: static;
+    justify-content: center;
+    overflow: visible;
+    z-index: auto;
+    padding: 0;
+    color: var(--color-figure-gray-secondary);
+}
+
+.navigator-card-item .navigator-icon-wrapper {
+    display: contents;
+}
+
+.navigator-card-item:not(.is-group) .leaf-link {
+    color: var(--color-figure-gray);
+    font-weight: inherit;
+    white-space: normal;
+    overflow: visible;
+    max-width: none;
+    vertical-align: baseline;
+}
+
+a.leaf-link::after {
+    content: none;
+}
+
+.navigator-card-item:target .leaf-link,
+.navigator-card-item:has(+ .nav-children-wrapper :target) .leaf-link {
+    font-weight: inherit;
+}
+
+.navigator-card-item:not(.is-group):hover {
+    background: var(--color-fill-secondary);
+}
+
+/* The current page: a tinted row with a medium title, or the title in the accent colour below the top level */
+.navigator-card-item:is([data-nesting-index="0"], .expandable):target {
+    background: var(--color-navigator-item-selected);
+}
+
+.navigator-card-item:target .leaf-link {
+    font-weight: 500;
+}
+
+.navigator-card-item:not([data-nesting-index="0"], .expandable):is(:target, :hover) .leaf-link {
+    color: var(--color-link);
+}
+
+/* Group headings: smaller below the top level, aligned with the rows they group */
+.navigator-card-item.is-group {
+    display: block;
+    margin-bottom: 0;
+    padding: 0;
+}
+
+.navigator-card-item.is-group:not([data-nesting-index="0"]) {
+    margin-left: -26px;
+}
+
+.is-group .leaf-link {
+    display: block;
+    max-width: none;
+    overflow: visible;
+    white-space: normal;
+    vertical-align: baseline;
+    padding: 0.75rem 1.25rem 0.25rem;
+    line-height: var(--spacing-body-line-height);
+    font-family: var(--typography-html-font-headline);
+    color: var(--color-figure-gray-secondary);
+}
+
+.is-group:not([data-nesting-index="0"]) .leaf-link {
+    padding: 0.375rem 0 0.25rem 1.25rem;
+    font-family: var(--typography-html-font);
+    font-size: var(--spacing-navigator-group-font-size);
+    line-height: var(--spacing-navigator-card-line-height);
+}
+
+/* Letter badges for symbols and icons for other pages */
+.navigator-card-item .navigator-icon {
+    justify-content: center;
+    align-items: center;
+    width: 14px;
+    height: 14px;
+    color: var(--color-figure-gray-secondary);
+}
+
+.navigator-card-item .navigator-icon:has(.single-letter-icon, .two-letter-icon) {
+    box-sizing: border-box;
+    width: 17px;
+    height: 17px;
+    border: 1px solid var(--color-kind-badge-border);
+    border-radius: var(--badge-border-radius);
+    background: var(--color-kind-badge-fill);
+    color: var(--color-kind-badge-text);
+    font-size: var(--spacing-badge-font-size);
+    font-weight: 600;
+    line-height: var(--spacing-navigator-card-line-height);
+}
+
+.navigator-card-item .navigator-icon:has(.single-letter-icon, .two-letter-icon) svg {
+    display: none;
+}
+
+.navigator-card-item .navigator-icon:has(.single-letter-icon, .two-letter-icon)::before {
+    content: attr(data-topic-letters);
+}
+
+.navigator-card-item .navigator-icon[data-topic-type="var"]::before { content: "P"; }
+.navigator-card-item .navigator-icon[data-topic-type="macro"]::before { content: "Ma"; }
+
+/* Children grow and fade in while their row expands, where the browser can animate to their height */
+.navigator .nav-children-wrapper {
+    display: block;
+    height: 0;
+    overflow: hidden;
+    opacity: 0;
+    interpolate-size: allow-keywords;
+    transition: height 0.2s ease, opacity 0.15s ease;
+}
+
+.navigator-card-item.expandable:not(:target):not(:has(+ .nav-children-wrapper :target)):has(> .disclosure-checkbox:checked) + .nav-children-wrapper,
+.navigator-card-item.expandable:is(:target, :has(+ .nav-children-wrapper :target)):has(> .disclosure-checkbox:not(:checked)) + .nav-children-wrapper,
+.navigator .nav-children-wrapper.filter-open {
+    height: auto;
+    opacity: 1;
+}
+
+/* Filter field at the bottom */
+.navigator .filter-wrapper:not([hidden]) {
+    position: static;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    border-top: 1px solid var(--color-fill-gray);
+    background: var(--color-fill);
+}
+
+.navigator .navigator-filter {
+    display: contents;
+}
+
+.navigator .filter__wrapper {
+    border: none;
+    background: none;
+}
+
+.navigator .filter__filter-button {
+    margin: 0 0.5rem 0 0;
+}
+
+.navigator .filter__input-label {
+    height: auto;
+    padding: 0;
+}
+
+.navigator .filter__input {
+    position: static;
+    z-index: auto;
+    display: block;
+    box-sizing: border-box;
+    height: auto;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--color-fill-gray);
+    border-radius: 6px;
+    background: var(--color-fill-secondary);
+    color: var(--color-navigator-filter-text);
+    font-size: 0.875rem;
+    line-height: normal;
+    text-indent: 0;
+}
+
+.navigator .filter__input:focus {
+    border-color: var(--color-link);
+}
+
+.navigator .quick-navigation-open {
+    width: 20px;
+    height: 20px;
+    margin: 0;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--color-figure-gray-secondary);
+}

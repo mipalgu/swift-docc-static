@@ -191,6 +191,28 @@ highlighted item through the colour of `.OnThisPageNav .base-link`
 (`--color-text` for the highlighted item, `--color-figure-gray-secondary` for the
 others).
 
+## Optional Elements
+
+Some information that swift-docc-render does not show is part of every page, so
+that a theme can show it with CSS alone.  The base stylesheet hides these elements:
+
+| Element | Content |
+|---------|---------|
+| `.nav-title .header-icon` | An empty element before the text of the navigation bar title, for an icon |
+| `.link-block .topic-kind-badge` | An empty element in every topic link; its `data-topic-type` attribute names the kind of the topic (such as `struct`, `method` or `article`) and its `data-topic-letters` attribute the letters of the kind's icon (such as `S` or `Pr`), for example for `content: attr(data-topic-letters)` |
+| `.link-block .topic-title` | The plain title of a topic that shows its declaration, such as `init(x:y:)` |
+| `.card .module-stats` | The number of symbols of a module on the landing page |
+
+The line breaks that place each parameter of a declaration on a line of its own
+are marked too: every break is a `.declaration-break` element, and a break after
+an opening or before a closing parenthesis is also a `.declaration-parenthesis-break`
+element.  A theme that shows declarations on a single line can collapse the breaks
+with `white-space: normal` and hide those beside parentheses.
+
+A theme's settings are defined on the root element as well as on the body
+element, so `--spacing-html-font-size` sets the root font size that `rem` values
+are based on.
+
 ## Theming in Swift
 
 ```swift

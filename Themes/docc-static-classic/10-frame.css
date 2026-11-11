@@ -1,0 +1,414 @@
+/*
+ * Page frame of the `docc-static-classic` theme: the fixed navigation bar, the
+ * navigator column fixed beside the content, the content area and the footer.
+ *
+ * On viewports of 1024px and wider the navigator is shown beside the content and
+ * the navigation bar's toggle slides it out of view.  Narrower viewports keep the
+ * full-screen navigator of the base stylesheet, which the toggle opens.
+ */
+:root {
+    --header-height: var(--spacing-header-height);
+}
+
+body {
+    --classic-transition: 0.3s ease;
+}
+
+/* Navigation bar */
+.documentation-nav {
+    --nav-height: var(--spacing-header-height);
+    --nav-z-index: 100;
+    position: fixed;
+    left: 0;
+    right: 0;
+    box-sizing: border-box;
+    background: var(--color-fill);
+    border-bottom: 1px solid var(--color-fill-gray);
+    color: var(--color-figure-gray);
+}
+
+.documentation-nav .nav__wrapper {
+    position: static;
+    height: 100%;
+}
+
+.documentation-nav .nav__background {
+    display: none;
+}
+
+.documentation-nav .nav-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    max-width: none;
+    height: 100%;
+    padding: 0 var(--spacing-header-padding-horizontal);
+}
+
+.documentation-nav div.nav-title,
+.documentation-nav .nav-menu {
+    flex: 0 1 auto;
+    height: auto;
+}
+
+.documentation-nav h2.nav-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    height: auto;
+    overflow: visible;
+    white-space: normal;
+    font-size: var(--spacing-header-title-font-size);
+    line-height: var(--spacing-header-title-line-height);
+    font-weight: var(--spacing-header-title-font-weight);
+    color: var(--color-figure-gray);
+    border-bottom: none;
+    padding-bottom: 0;
+    margin: 0;
+    cursor: pointer;
+}
+
+.documentation-nav h2.nav-title a {
+    display: flex;
+    align-items: center;
+    gap: inherit;
+    color: inherit;
+    line-height: inherit;
+    white-space: normal;
+}
+
+/* The documentation icon before the title: two upright pages */
+.documentation-nav .nav-title .header-icon {
+    display: flex;
+    align-items: center;
+}
+
+.documentation-nav .nav-title .header-icon::before {
+    content: "";
+    width: 20px;
+    height: 20px;
+    background: currentColor;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Crect x='2' y='3' width='6' height='14' rx='1'/%3E%3Crect x='10' y='3' width='6' height='14' rx='1'/%3E%3C/svg%3E") center / 20px 20px no-repeat;
+}
+
+/* Navigator toggle: three bars that turn into a cross while the navigator is toggled */
+.documentation-nav .sidenav-toggle-wrapper {
+    margin: 0;
+}
+
+.documentation-nav .sidenav-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: static;
+    width: 36px;
+    height: 36px;
+    margin: 0;
+    border-radius: var(--spacing-header-toggle-border-radius);
+    color: var(--color-figure-gray);
+    transition: background-color 0.2s ease;
+}
+
+.documentation-nav .sidenav-toggle:hover {
+    background: var(--color-fill-secondary);
+}
+
+.documentation-nav .sidenav-toggle:hover .sidenav-icon-wrapper {
+    background-color: transparent;
+}
+
+.documentation-nav .sidenav-icon {
+    display: none;
+}
+
+.documentation-nav .sidenav-icon-wrapper {
+    position: relative;
+    width: 18px;
+    height: 14px;
+    padding: 0;
+    border-radius: 0;
+    background: linear-gradient(currentColor, currentColor) center / 100% 2px no-repeat;
+    transition: background-size var(--classic-transition);
+}
+
+.documentation-nav .sidenav-icon-wrapper::before,
+.documentation-nav .sidenav-icon-wrapper::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    border-radius: 1px;
+    background: currentColor;
+    transition: transform var(--classic-transition);
+}
+
+.documentation-nav .sidenav-icon-wrapper::before {
+    top: 0;
+}
+
+.documentation-nav .sidenav-icon-wrapper::after {
+    bottom: 0;
+}
+
+.sidebar-toggle-checkbox:checked ~ .documentation-layout .sidenav-icon-wrapper {
+    background-size: 0 2px;
+}
+
+.sidebar-toggle-checkbox:checked ~ .documentation-layout .sidenav-icon-wrapper::before {
+    transform: translateY(6px) rotate(45deg);
+}
+
+.sidebar-toggle-checkbox:checked ~ .documentation-layout .sidenav-icon-wrapper::after {
+    transform: translateY(-6px) rotate(-45deg);
+}
+
+/* Language, always shown at the right of the bar */
+.documentation-nav .nav-menu .nav-menu-tray {
+    display: block;
+    max-height: none;
+    overflow: visible;
+    visibility: visible;
+    pointer-events: auto;
+}
+
+.documentation-nav .nav-menu .nav-menu-items {
+    display: block;
+    padding: 0;
+    opacity: 1;
+    transform: none;
+}
+
+.documentation-nav .nav-menu .language-container {
+    display: block;
+    align-items: normal;
+    list-style-type: disc;
+    min-height: 0;
+    width: auto;
+    opacity: 1;
+    transform: none;
+    transition: none;
+    font-size: var(--spacing-header-language-font-size);
+    line-height: var(--spacing-body-line-height);
+    color: var(--color-figure-gray-secondary);
+}
+
+.documentation-nav .nav-menu .nav-menu-setting-label {
+    display: inline;
+    margin: 0;
+}
+
+.documentation-nav .current-language {
+    color: inherit;
+}
+
+.documentation-nav .nav-actions {
+    display: none;
+}
+
+/* Layout: the content sits below the fixed navigation bar */
+.adjustable-sidebar-width {
+    display: flex;
+    position: static;
+    padding-top: var(--spacing-header-height);
+}
+
+.full-width-container {
+    max-width: none;
+    border-inline: none;
+}
+
+.documentation-layout-aside {
+    border-inline-end: none;
+}
+
+.documentation-layout-aside > .head-inner h2.nav-title {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.adjustable-sidebar-width #app-main,
+.full-width-container .doc-content .container {
+    transition: margin-left var(--classic-transition), max-width var(--classic-transition);
+}
+
+.full-width-container .doc-content .container {
+    max-width: none;
+    margin-left: 0;
+    margin-right: 0;
+}
+
+@media only screen and (min-width: 1024px) {
+    /* The navigator is fixed beside the content and slides out of view when toggled */
+    .adjustable-sidebar-width > .sidebar {
+        position: fixed;
+        top: var(--spacing-header-height);
+        bottom: 0;
+        left: 0;
+        width: var(--sidebar-width);
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        box-sizing: border-box;
+        background: var(--color-fill);
+        border-right: 1px solid var(--color-fill-gray);
+        transition: transform var(--classic-transition), width var(--classic-transition);
+    }
+
+    .sidebar > .aside {
+        flex: 1 1 auto;
+        width: 100%;
+        min-height: 0;
+        transition: none;
+    }
+
+    .sidebar-toggle-checkbox:checked ~ .documentation-layout .sidebar > .aside {
+        width: 100%;
+        visibility: visible;
+    }
+
+    .sidebar-toggle-checkbox:checked ~ .documentation-layout .adjustable-sidebar-width > .sidebar {
+        transform: translateX(-100%);
+    }
+
+    .documentation-layout-aside {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .sidebar-frame {
+        position: static;
+        flex: 1 1 auto;
+        width: 100%;
+        height: auto;
+        min-height: 0;
+        animation: none;
+    }
+
+    .sidebar-toggle-checkbox:checked ~ .documentation-layout .sidebar-frame {
+        width: 100%;
+    }
+
+    /* Content beside the navigator, widening when the navigator is toggled */
+    #app-main {
+        margin-left: var(--sidebar-width);
+        max-width: calc(100% - var(--sidebar-width));
+    }
+
+    .sidebar-toggle-checkbox:checked ~ .documentation-layout #app-main {
+        margin-left: 0;
+        max-width: 100%;
+    }
+
+    /*
+     * The content column spans the width beside the navigator, like the main
+     * element: its containing block reaches under the navigator, so the column's
+     * offset and width are those of the main element.
+     */
+    .doc-content-wrapper {
+        display: block;
+    }
+
+    .doc-content-wrapper .doc-content {
+        width: auto;
+        margin-left: calc(-1 * var(--sidebar-width));
+        transition: margin-left var(--classic-transition);
+    }
+
+    .full-width-container .doc-content .container {
+        margin-left: var(--sidebar-width);
+        max-width: calc(100% - var(--sidebar-width));
+    }
+
+    .sidebar-toggle-checkbox:checked ~ .documentation-layout .doc-content,
+    .sidebar-toggle-checkbox:checked ~ .documentation-layout .doc-content .container {
+        margin-left: 0;
+    }
+
+    .sidebar-toggle-checkbox:checked ~ .documentation-layout .doc-content .container {
+        max-width: 100%;
+    }
+}
+
+
+/* Footer */
+.footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    border-top: 1px solid var(--color-fill-gray);
+    background: var(--color-fill);
+    font-size: var(--spacing-small-font-size);
+    line-height: var(--spacing-body-line-height);
+    color: var(--color-figure-gray-secondary);
+    transition: margin-left var(--classic-transition);
+}
+
+.footer .row {
+    display: contents;
+}
+
+.footer .footer-content {
+    order: -1;
+    flex: 1;
+    margin: 0;
+    font-size: inherit;
+    line-height: inherit;
+    color: inherit;
+}
+
+@media only screen and (min-width: 1024px) {
+    body:not(.index-page) .sidebar-toggle-checkbox ~ .footer {
+        margin-left: var(--spacing-sidebar-width);
+    }
+
+    body:not(.index-page) .sidebar-toggle-checkbox:checked ~ .footer {
+        margin-left: 0;
+    }
+}
+
+/* Colour scheme toggle: a row of buttons in the accent colour */
+.color-scheme-toggle {
+    display: inline-flex;
+    padding: 0;
+    border: 1px solid var(--color-link);
+    border-radius: var(--spacing-header-toggle-border-radius);
+    overflow: hidden;
+    font-size: inherit;
+    line-height: inherit;
+}
+
+.color-scheme-toggle label {
+    padding: 0.25rem 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    line-height: normal;
+    text-align: center;
+    color: var(--color-link);
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.color-scheme-toggle label:not(:last-child) {
+    border-right: 1px solid var(--color-link);
+}
+
+.color-scheme-toggle label:hover {
+    background: color-mix(in srgb, var(--color-link) 10%, transparent);
+}
+
+.color-scheme-toggle label:has(input:checked) {
+    background: var(--color-link);
+    color: var(--color-button-text);
+}
+
+.color-scheme-toggle .text,
+.color-scheme-toggle input:checked + .text {
+    min-width: 0;
+    padding: 0;
+    border: none;
+    border-radius: 0;
+    background: none;
+    color: inherit;
+}

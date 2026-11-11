@@ -102,6 +102,10 @@ public struct IndexPageBuilder: Sendable {
 // MARK: - Public
 
 public extension IndexPageBuilder {
+    /// The class of the hidden element in a module card that states the module's
+    /// number of symbols, for themes that show it.
+    static let moduleStatisticsClass = "module-stats"
+
     /// A documented module entry.
     struct ModuleEntry: Sendable {
         /// The module name.
@@ -268,12 +272,13 @@ private extension IndexPageBuilder {
     ///   - path: The link target.
     ///   - title: The card title.
     ///   - abstract: The card text, or `nil`.
+    ///   - statistics: A hidden line of statistics after the text, or `nil`.
     ///   - iconType: The topic type whose icon fills the card cover.
     ///   - linkText: The call to action at the bottom of the card.
     ///   - classes: Additional classes of the card, of its title and of its text.
     /// - Returns: The `a.card` element.
     func buildCard(
-        path: String, title: String, abstract: String?, iconType: String, linkText: String,
+        path: String, title: String, abstract: String?, statistics: String? = nil, iconType: String, linkText: String,
         classes: (card: String, title: String, text: String)
     ) -> String {
         var html = "<a href=\"\(escapeHTML(path))\" class=\"card reference-card-grid-item large floating-style \(classes.card)\">"
@@ -283,16 +288,21 @@ private extension IndexPageBuilder {
         if let abstract, !abstract.isEmpty {
             html += "<div class=\"card-content \(classes.text)\"><div class=\"content\">\(escapeHTML(abstract))</div></div>"
         }
+        if let statistics {
+            html += "<div class=\"\(Self.moduleStatisticsClass)\">\(escapeHTML(statistics))</div>"
+        }
         html += "<div class=\"link\">\(escapeHTML(linkText))"
         html += "<svg class=\"svg-icon link-icon icon-inline inline-chevron-right-icon\" viewBox=\"0 0 14 14\" aria-hidden=\"true\"><path d=\"M2.964 1.366l0.649-0.76 7.426 6.343-7.423 6.445-0.655-0.755 6.545-5.683-6.542-5.59z\"></path></svg>"
         html += "</div></div></a>"
         return html
     }
 
-    /// Builds the card of a module.
+    /// Builds the card of a module, with its number of symbols as hidden statistics.
     func buildModuleCard(_ module: ModuleEntry) -> String {
-        buildCard(
-            path: module.path, title: module.name, abstract: module.abstract, iconType: "collectionGroup",
+        let symbolText = module.symbolCount == 1 ? "symbol" : "symbols"
+        return buildCard(
+            path: module.path, title: module.name, abstract: module.abstract,
+            statistics: "\(module.symbolCount) \(symbolText)", iconType: "collectionGroup",
             linkText: "View API collection", classes: ("module-card", "module-name", "module-abstract")
         )
     }

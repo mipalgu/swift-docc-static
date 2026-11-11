@@ -1,0 +1,176 @@
+/*
+ * Landing page of the `docc-static-classic` theme: a centred column with the
+ * package title above a grid of module cards and the tutorial collections, without
+ * the navigation bar and the navigator.
+ */
+body.index-page .documentation-nav,
+body.index-page .adjustable-sidebar-width > .sidebar {
+    display: none;
+}
+
+body.index-page .adjustable-sidebar-width {
+    padding-top: 0;
+}
+
+body.index-page #app-main {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: var(--spacing-landing-max-width);
+    margin: 0 auto;
+    padding: 2rem;
+    transition: none;
+}
+
+body.index-page .doc-content-wrapper .doc-content,
+body.index-page .full-width-container .doc-content .container {
+    margin: 0;
+    max-width: none;
+    transition: none;
+}
+
+/* The header: the centred title and subtitle above a line */
+.documentation-hero.index-header {
+    display: block;
+    justify-content: normal;
+    align-items: normal;
+    position: static;
+    overflow: visible;
+    margin: 0 0 2rem;
+    padding: 0 0 1rem;
+    border-bottom: 1px solid var(--color-fill-gray);
+    background: none;
+    text-align: center;
+    isolation: auto;
+    container-type: normal;
+}
+
+.documentation-hero.index-header .icon,
+.documentation-hero.index-header .eyebrow {
+    display: none;
+}
+
+.documentation-hero.index-header .documentation-hero__content {
+    max-width: none;
+}
+
+.documentation-hero.index-header .title {
+    margin-bottom: 0.5em;
+}
+
+.documentation-hero.index-header .subtitle {
+    font-size: 1.1rem;
+}
+
+/* Modules and tutorial collections, each under a heading */
+body.index-page .contenttable {
+    padding: 0;
+}
+
+body.index-page .contenttable .container > h2.title {
+    display: none;
+}
+
+body.index-page .contenttable .contenttable-section {
+    padding: 0;
+}
+
+body.index-page .contenttable .contenttable-title {
+    margin: var(--spacing-heading-margin-top) 0 var(--spacing-heading-margin-bottom);
+    padding-bottom: var(--spacing-h2-padding-bottom);
+    border-bottom: var(--spacing-h2-border-bottom);
+    font-size: var(--spacing-h2-font-size);
+    line-height: var(--spacing-h2-line-height);
+}
+
+body.index-page .contenttable-section:has(.tutorial-list) {
+    margin-top: 2.5rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--color-fill-gray);
+}
+
+body.index-page .contenttable-section:has(.tutorial-list) .contenttable-title {
+    margin: 0 0 1.5rem;
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+body.index-page .TopicsLinkCardGrid .row {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1rem;
+    margin: 0;
+}
+
+body.index-page .TopicsLinkCardGrid .column {
+    margin: 0;
+    padding: 0;
+    width: auto;
+}
+
+body.index-page .TopicsLinkCardGrid .tutorial-list .row,
+body.index-page .tutorial-list .row {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+}
+
+/* Cards: the name, the abstract and the statistics in a bordered box */
+body.index-page .card {
+    display: block;
+    flex-direction: row;
+    height: auto;
+    overflow: visible;
+    padding: 1.25rem;
+    border: 1px solid var(--color-fill-gray);
+    border-radius: 12px;
+    background: var(--color-fill);
+    box-shadow: none;
+    color: var(--color-figure-gray);
+    transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+body.index-page .card:hover {
+    border-color: var(--color-link);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    transform: none;
+    text-decoration: none;
+}
+
+body.index-page .card .card-cover-wrap,
+body.index-page .card .link {
+    display: none;
+}
+
+body.index-page .card .details {
+    padding: 0;
+}
+
+body.index-page .card .title {
+    display: block;
+    margin: 0 0 0.5rem;
+    color: var(--color-link);
+    font-weight: 600;
+    line-height: var(--spacing-body-line-height);
+}
+
+body.index-page .card .module-name {
+    font-family: var(--typography-html-font-mono);
+    font-size: 1.1rem;
+}
+
+body.index-page .card .tutorial-collection-name {
+    font-size: 1.0625rem;
+}
+
+body.index-page .card .card-content {
+    margin: 0 0 0.5rem;
+    font-size: 0.9rem;
+    line-height: var(--spacing-body-line-height);
+    color: var(--color-figure-gray-secondary);
+}
+
+body.index-page .card .card-content.tutorial-collection-stats,
+body.index-page .card .module-stats {
+    display: block;
+    margin: 0;
+    font-size: 0.8rem;
+    color: var(--color-figure-gray-secondary);
+}
