@@ -46,7 +46,9 @@ list.  Further options:
 - `--json <file>` writes the mismatches as JSON;
 - `--prune-known` removes pairs that no longer occur from the known-issue list.
 
-The exit status is 0 when the mismatches are exactly the known issues.
+Mismatches covered by an accepted deviation (see below) are listed separately.  The
+exit status is 0 when the remaining mismatches are exactly the known issues and
+every accepted deviation still covers a mismatch.
 
 The temporary directories of the harness and of the Swift tests (the fixture's build
 cache and rendered sites) carry a key derived from the checkout's location in their
@@ -68,6 +70,28 @@ The Swift tests record listed issues as known issues, fail on any issue that is 
 listed, and fail on any listed issue that no longer occurs.  The lists can therefore
 only shrink: after fixing a mismatch, remove its pair (or run with `--prune-known`).
 Do not add entries to make a test pass; fix the cause instead.
+
+## Accepted Deviations
+
+`accepted-deviations/<theme>.json` lists the differences from the golden data that
+a theme keeps on purpose, mostly where the reference renderer is broken (for
+example, an unreadable colour, or a narrow layout that hides the content).  Each
+entry in `deviations` names:
+
+- `role`: a role from `roles.json`, or `*` for every role;
+- `property`: a measured property, `presence`, `box.x`, `box.width`, or `*` for
+  every property;
+- optionally `pages` (page identifiers from `pages.json`), `viewports` (such as
+  `390x844`) and `schemes` (`light`, `dark`), which restrict the entry to those
+  measurements;
+- `reason`: a sentence stating why the theme differs.
+
+A mismatch that an entry covers is reported in a separate section of the table and
+is neither a known issue nor unexpected.  An entry that covers no mismatch fails
+the tests, like a known issue that no longer occurs, and the Swift tests check that
+every entry names a known role, property, page, viewport and scheme and gives a
+reason.  Each entry is a claim about the reference, so keep the list short and the
+conditions narrow; unlike known issues, deviations are not expected to go away.
 
 ## Regenerating the Golden Data
 
@@ -125,6 +149,8 @@ measures an already rendered reference site.
   the item swift-docc-render highlights at each position, with JavaScript disabled
   (or enabled with `--javascript`).
 - `lib/`: the static file server, browser launcher, comparison and storage helpers.
+- `known-issues/` and `accepted-deviations/`: the lists described above, one file per
+  theme.
 - `golden/`: golden data, stored compactly (each page's first variant as differences
   from the first earlier page with the same role, other variants as differences from
   the page's first variant).

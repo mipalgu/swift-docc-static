@@ -51,6 +51,60 @@ enum VisualRegressionHarness {
         return try JSONDecoder().decode(KnownIssues.self, from: Data(contentsOf: file))
     }
 
+    /// A difference from the golden data that a theme deliberately keeps.
+    ///
+    /// Accepted deviations are listed in `accepted-deviations/<theme>.json`.  Each
+    /// one names a role and a property (`*` for every role or property), may be
+    /// restricted to some pages, viewports and colour schemes, and states why the
+    /// theme differs from its reference, for example because the reference is
+    /// broken there.  The mismatches a deviation covers are reported separately and
+    /// are neither known issues nor unexpected.
+    struct AcceptedDeviation: Codable, Sendable {
+        /// The role the deviation concerns, or `*` for all roles.
+        var role: String
+
+        /// The measured property, `presence`, `box.x`, `box.width`, or `*` for all.
+        var property: String
+
+        /// The page identifiers the deviation is restricted to, if any.
+        var pages: [String]?
+
+        /// The viewports (such as `390x844`) the deviation is restricted to, if any.
+        var viewports: [String]?
+
+        /// The colour schemes (`light` or `dark`) the deviation is restricted to, if any.
+        var schemes: [String]?
+
+        /// Why the theme deliberately differs from its reference.
+        var reason: String
+    }
+
+    /// The accepted deviations of one theme, as stored in `accepted-deviations/<theme>.json`.
+    struct AcceptedDeviations: Codable, Sendable {
+        /// The deviations, each covering the mismatches it describes.
+        var deviations: [AcceptedDeviation] = []
+    }
+
+    /// Reads the accepted deviations of a theme.
+    ///
+    /// - Parameter theme: The theme name.
+    /// - Returns: The accepted deviations, or an empty list if the theme has no file.
+    /// - Throws: A decoding error if the file exists but is malformed.
+    static func acceptedDeviations(for theme: String) throws -> [AcceptedDeviation] {
+        let file = directory.appendingPathComponent("accepted-deviations").appendingPathComponent("\(theme).json")
+        guard FileManager.default.fileExists(atPath: file.path) else { return [] }
+        return try JSONDecoder().decode(AcceptedDeviations.self, from: Data(contentsOf: file)).deviations
+    }
+
+    /// Reads a JSON file of the harness directory.
+    ///
+    /// - Parameter name: The file name inside the harness directory.
+    /// - Returns: The decoded JSON value.
+    /// - Throws: A file or JSON error.
+    static func json(_ name: String) throws -> Any {
+        try JSONSerialization.jsonObject(with: Data(contentsOf: directory.appendingPathComponent(name)))
+    }
+
     /// Records the difference between the issues that occur and the known issues.
     ///
     /// Every occurring issue that is listed is recorded as one known issue, so the test

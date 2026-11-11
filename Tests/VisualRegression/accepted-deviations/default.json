@@ -1,0 +1,14 @@
+{
+ "deviations": [
+  {
+   "role": "overviewVolume",
+   "property": "overflowX",
+   "reason": "The volume clips its overflow (overflow: clip) instead of hiding it, because a hidden overflow would make it a scroll container and break the scroll-driven highlighting of the chapter in view."
+  },
+  {
+   "role": "overviewVolume",
+   "property": "overflowY",
+   "reason": "The volume clips its overflow (overflow: clip) instead of hiding it, because a hidden overflow would make it a scroll container and break the scroll-driven highlighting of the chapter in view."
+  }
+ ]
+}

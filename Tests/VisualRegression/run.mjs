@@ -14,15 +14,17 @@
 // of occurrences, the first example and whether the pair is on the theme's known-issue
 // list (known-issues/<theme>.json); --all lists every occurrence instead.
 //
-// The exit status is 0 when every mismatch is a known issue and every known issue still
-// occurs, and 1 otherwise.  --json writes the mismatches as JSON (used by the Swift tests).
+// Mismatches covered by the theme's accepted deviations (accepted-deviations/<theme>.json)
+// are reported separately and are neither known issues nor unexpected.  The exit status
+// is 0 when every other mismatch is a known issue, every known issue still occurs and
+// every accepted deviation still covers a mismatch, and 1 otherwise.  --json writes the mismatches as JSON (used by the Swift tests).
 // --prune-known removes the pairs that no longer occur from the known-issue list; the
 // list is never extended automatically, so it can only shrink.
 import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { compareMeasurements, expandMeasurement, formatTable, issueKey, parseArguments, temporaryLocation } from './lib/common.mjs';
+import { compareMeasurements, describeDeviation, expandMeasurement, formatTable, issueKey, parseArguments, partitionMismatches, temporaryLocation } from './lib/common.mjs';
 import { measureSite } from './lib/measure-site.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -69,6 +71,8 @@ const config = JSON.parse(readFileSync(join(here, 'harness.json'), 'utf8'));
 const roles = JSON.parse(readFileSync(join(here, 'roles.json'), 'utf8'));
 const knownFile = join(here, 'known-issues', `${theme}.json`);
 const known = new Set(existsSync(knownFile) ? JSON.parse(readFileSync(knownFile, 'utf8')).mismatches ?? [] : []);
+const deviationsFile = join(here, 'accepted-deviations', `${theme}.json`);
+const deviations = existsSync(deviationsFile) ? JSON.parse(readFileSync(deviationsFile, 'utf8')).deviations ?? [] : [];
 
 let golden = expandMeasurement(JSON.parse(readFileSync(goldenFile, 'utf8')).pages);
 if (args.pages) {
@@ -77,11 +81,23 @@ if (args.pages) {
 }
 console.error(`Measuring ${site}...`);
 const actual = await measureSite(site, 'static', { pages: args.pages });
-const mismatches = compareMeasurements(golden, actual, roles, config);
+const { accepted, remaining: mismatches, unused } = partitionMismatches(compareMeasurements(golden, actual, roles, config), deviations);
+const unusedDeviations = args.pages ? [] : unused;
 
 if (args.json) {
   mkdirSync(dirname(resolve(args.json)), { recursive: true });
-  writeFileSync(args.json, JSON.stringify({ theme, mismatches }, null, 1) + '\n');
+  writeFileSync(args.json, JSON.stringify({
+    theme, mismatches, accepted, unusedDeviations: unusedDeviations.map(describeDeviation),
+  }, null, 1) + '\n');
+}
+
+if (deviations.length) {
+  const counts = deviations.map((_, index) => accepted.filter((mismatch) => mismatch.deviation === index).length);
+  console.log(`Accepted deviations (accepted-deviations/${theme}.json):`);
+  deviations.forEach((deviation, index) => {
+    console.log(`  ${describeDeviation(deviation)}: ${counts[index]} mismatches - ${deviation.reason}`);
+  });
+  console.log('');
 }
 
 const keys = new Set(mismatches.map(issueKey));
@@ -89,9 +105,14 @@ const unexpected = [...keys].filter((key) => !known.has(key)).sort();
 const fixed = args.pages ? [] : [...known].filter((key) => !keys.has(key)).sort();
 if (mismatches.length) console.log(formatTable(mismatches, { all: args.all !== undefined, known }));
 console.log(`\n${theme}: ${mismatches.length} mismatches in ${keys.size} role/property pairs; ` +
-  `${known.size} known issues, ${unexpected.length} unexpected, ${fixed.length} no longer occurring.`);
+  `${known.size} known issues, ${unexpected.length} unexpected, ${fixed.length} no longer occurring; ` +
+  `${accepted.length} mismatches covered by ${deviations.length} accepted deviations.`);
 if (unexpected.length) console.log(`Unexpected (not in known-issues/${theme}.json):\n  ${unexpected.join('\n  ')}`);
 if (fixed.length) console.log(`Fixed (remove from known-issues/${theme}.json):\n  ${fixed.join('\n  ')}`);
+if (unusedDeviations.length) {
+  console.log(`Accepted deviations that cover no mismatch (remove from accepted-deviations/${theme}.json):\n  ` +
+    unusedDeviations.map(describeDeviation).join('\n  '));
+}
 if (args['prune-known'] !== undefined && fixed.length) {
   const list = JSON.parse(readFileSync(knownFile, 'utf8'));
   list.mismatches = list.mismatches.filter((key) => keys.has(key));
@@ -99,4 +120,4 @@ if (args['prune-known'] !== undefined && fixed.length) {
   console.log(`Removed ${fixed.length} fixed pairs from known-issues/${theme}.json.`);
   process.exit(unexpected.length ? 1 : 0);
 }
-process.exit(unexpected.length || fixed.length ? 1 : 0);
+process.exit(unexpected.length || fixed.length || unusedDeviations.length ? 1 : 0);

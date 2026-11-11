@@ -1,8 +1,5 @@
 {
- "mismatches": [
-  "overviewVolume.overflowX",
-  "overviewVolume.overflowY"
- ],
+ "mismatches": [],
  "unusedProperties": [],
  "undefinedProperties": []
 }

@@ -32,7 +32,11 @@ private struct MismatchReport: Decodable {
         }
     }
 
+    /// The mismatches that are neither covered by an accepted deviation nor expected.
     let mismatches: [Mismatch]
+
+    /// The accepted deviations that covered no mismatch, described in one line each.
+    let unusedDeviations: [String]
 }
 
 /// The results written by `nojs.mjs --json`.
@@ -46,6 +50,39 @@ private struct OnThisPageReport: Decodable {
     let page: String
     let checks: [String: Bool]
     let failures: [String]
+}
+
+/// Checks the accepted deviations of every built-in theme without a browser.
+@Suite("Accepted Deviations")
+struct AcceptedDeviationTests {
+    @Test("Every accepted deviation names a known role, property and condition, and a reason",
+          arguments: ThemeSettings.BuiltInTheme.allCases)
+    func deviationsAreWellFormed(theme: ThemeSettings.BuiltInTheme) throws {
+        let roles = try #require(VisualRegressionHarness.json("roles.json") as? [String: Any])
+        let harness = try #require(VisualRegressionHarness.json("harness.json") as? [String: Any])
+        let measured = try #require(harness["properties"] as? [String])
+        let variants = try #require(harness["variants"] as? [String])
+        let pages = Set(FixturePage.all.map(\.id))
+        let properties = Set(measured + ["*", "presence", "box.x", "box.width"])
+        let viewports = Set(variants.compactMap { $0.split(separator: "/").first.map(String.init) })
+        let schemes = Set(variants.compactMap { $0.split(separator: "/").last.map(String.init) })
+        for deviation in try VisualRegressionHarness.acceptedDeviations(for: theme.rawValue) {
+            let name = "\(deviation.role).\(deviation.property) for \(theme.rawValue)"
+            #expect(deviation.role == "*" || roles[deviation.role] != nil, "\(name) names an unknown role")
+            #expect(properties.contains(deviation.property), "\(name) names an unmeasured property")
+            #expect(Set(deviation.pages ?? []).isSubset(of: pages), "\(name) names an unknown page")
+            #expect(Set(deviation.viewports ?? []).isSubset(of: viewports), "\(name) names an unknown viewport")
+            #expect(Set(deviation.schemes ?? []).isSubset(of: schemes), "\(name) names an unknown scheme")
+            #expect(deviation.reason.count > 20 && deviation.reason.hasSuffix("."), "\(name) gives no reason")
+        }
+    }
+
+    @Test("The default theme accepts the clipped overflow of the tutorials overview volume")
+    func defaultDeviations() throws {
+        let deviations = try VisualRegressionHarness.acceptedDeviations(for: ThemeSettings.BuiltInTheme.default.rawValue)
+        #expect(Set(deviations.map { "\($0.role).\($0.property)" }) == ["overviewVolume.overflowX", "overviewVolume.overflowY"])
+        #expect(try VisualRegressionHarness.knownIssues(for: ThemeSettings.BuiltInTheme.default.rawValue).mismatches.isEmpty)
+    }
 }
 
 /// Browser-based checks of the rendered fixture against golden reference data.
@@ -85,6 +122,9 @@ struct VisualRegressionTests {
             listName: "mismatches",
             theme: theme.rawValue
         )
+        for deviation in report.unusedDeviations {
+            Issue.record("Accepted deviation \(deviation) covers no mismatch for \(theme.rawValue); remove it from accepted-deviations/\(theme.rawValue).json")
+        }
     }
 
     @Test("Every page type works without JavaScript", arguments: ThemeSettings.BuiltInTheme.allCases)

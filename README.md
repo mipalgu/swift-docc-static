@@ -301,7 +301,8 @@ node Tests/VisualRegression/run.mjs --theme docc-static-classic
 ```
 
 See `Tests/VisualRegression/README.md` for its requirements, the known-issue
-lists and how to regenerate the golden data.
+lists, the accepted deviations of each theme and how to regenerate the golden
+data.
 
 ## Architecture
 

@@ -196,6 +196,61 @@ export function compareMeasurements(golden, actual, roles, config) {
 /** The known issue key of a mismatch: the role and property it concerns. */
 export const issueKey = (mismatch) => `${mismatch.role}.${mismatch.property}`;
 
+/** The condition fields an accepted deviation may restrict itself with. */
+export const DEVIATION_CONDITIONS = ['pages', 'viewports', 'schemes'];
+
+/**
+ * Whether an accepted deviation covers a mismatch.
+ *
+ * A deviation names a role (`"*"` for every role) and a property (`"*"` for every
+ * property) and
+ * may restrict itself to some pages (page identifiers), viewports (such as
+ * `"390x844"`) and colour schemes (`"light"`, `"dark"`); a mismatch is covered when
+ * it matches the role, the property and every condition the deviation states.
+ *
+ * @param {object} mismatch a mismatch as returned by `compareMeasurements`
+ * @param {object} deviation an entry of `accepted-deviations/<theme>.json`
+ * @returns {boolean} whether the deviation covers the mismatch
+ */
+export function deviationCovers(mismatch, deviation) {
+  if (deviation.role !== '*' && deviation.role !== mismatch.role) return false;
+  if (deviation.property !== '*' && deviation.property !== mismatch.property) return false;
+  const values = { pages: mismatch.page, viewports: mismatch.viewport, schemes: mismatch.scheme };
+  return DEVIATION_CONDITIONS.every((field) => !deviation[field] || deviation[field].includes(values[field]));
+}
+
+/**
+ * Separates the mismatches that accepted deviations cover from the others.
+ *
+ * @param {Array<object>} mismatches the mismatches of a run
+ * @param {Array<object>} deviations the theme's accepted deviations
+ * @returns {{accepted: Array<object>, remaining: Array<object>, unused: Array<object>}} the
+ *   covered mismatches (each with the index of its deviation), the uncovered ones, and the
+ *   deviations that cover no mismatch
+ */
+export function partitionMismatches(mismatches, deviations) {
+  const accepted = [];
+  const remaining = [];
+  const used = new Set();
+  for (const mismatch of mismatches) {
+    const index = deviations.findIndex((deviation) => deviationCovers(mismatch, deviation));
+    if (index === -1) {
+      remaining.push(mismatch);
+    } else {
+      used.add(index);
+      accepted.push({ ...mismatch, deviation: index });
+    }
+  }
+  return { accepted, remaining, unused: deviations.filter((_, index) => !used.has(index)) };
+}
+
+/** A one-line description of an accepted deviation: role, property and conditions. */
+export function describeDeviation(deviation) {
+  const conditions = DEVIATION_CONDITIONS.filter((field) => deviation[field])
+    .map((field) => `${field}: ${deviation[field].join(',')}`);
+  return `${deviation.role}.${deviation.property}${conditions.length ? ` (${conditions.join('; ')})` : ''}`;
+}
+
 /**
  * Formats mismatches as a plain text table, one line per role and property with the
  * number of occurrences and the first example, or one line per mismatch with `all`.
