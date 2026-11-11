@@ -223,6 +223,32 @@
     .hierarchy-item:first-child:nth-last-child(5 of .hierarchy-item) ~ .hierarchy-item .item {
         max-width: 9rem;
     }
+
+    /* Beside a badge, every item gets four fifths of the room */
+    .hierarchy.has-badge .hierarchy-item:first-child:nth-last-child(1 of .hierarchy-item) .item,
+    .hierarchy.has-badge .hierarchy-item:first-child:nth-last-child(1 of .hierarchy-item) ~ .hierarchy-item .item {
+        max-width: 36rem;
+    }
+
+    .hierarchy.has-badge .hierarchy-item:first-child:nth-last-child(2 of .hierarchy-item) .item,
+    .hierarchy.has-badge .hierarchy-item:first-child:nth-last-child(2 of .hierarchy-item) ~ .hierarchy-item .item {
+        max-width: 28.8rem;
+    }
+
+    .hierarchy.has-badge .hierarchy-item:first-child:nth-last-child(3 of .hierarchy-item) .item,
+    .hierarchy.has-badge .hierarchy-item:first-child:nth-last-child(3 of .hierarchy-item) ~ .hierarchy-item .item {
+        max-width: 21.6rem;
+    }
+
+    .hierarchy.has-badge .hierarchy-item:first-child:nth-last-child(4 of .hierarchy-item) .item,
+    .hierarchy.has-badge .hierarchy-item:first-child:nth-last-child(4 of .hierarchy-item) ~ .hierarchy-item .item {
+        max-width: 14.4rem;
+    }
+
+    .hierarchy.has-badge .hierarchy-item:first-child:nth-last-child(5 of .hierarchy-item) .item,
+    .hierarchy.has-badge .hierarchy-item:first-child:nth-last-child(5 of .hierarchy-item) ~ .hierarchy-item .item {
+        max-width: 7.2rem;
+    }
 }
 
 .hierarchy .root-hierarchy .item {
@@ -238,7 +264,8 @@
  * 1200px, two up to 1200px, one up to 1000px, and none (nor the current page) on
  * narrower areas.  Items carry their distance from the current page (capped at 4)
  * in data-from-end, the list the number of its parents (capped at 4) in
- * data-parents.  The menu is a details element, so it opens without JavaScript.
+ * data-parents; beside a badge, both count one step further, so one parent fewer
+ * stays visible.  The menu is a details element, so it opens without JavaScript.
  */
 .hierarchy-item[data-from-end="4"] {
     display: none;
@@ -260,6 +287,10 @@
     white-space: nowrap;
 }
 
+.hierarchy.has-badge[data-parents="4"] > .hierarchy-item:not(.root-hierarchy) .item {
+    max-width: 8.64rem;
+}
+
 @container doc-content (max-width: 1200px) {
     .hierarchy-item[data-from-end="3"] {
         display: none;
@@ -278,6 +309,10 @@
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
+    }
+
+    .hierarchy.has-badge[data-parents="3"] > .hierarchy-item:not(.root-hierarchy) .item {
+        max-width: 8.64rem;
     }
 }
 
@@ -299,6 +334,10 @@
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
+    }
+
+    .hierarchy.has-badge[data-parents="2"] > .hierarchy-item:not(.root-hierarchy) .item {
+        max-width: 8.64rem;
     }
 }
 
@@ -457,6 +496,37 @@
     margin: 0;
 }
 
+/* The Deprecated or Beta tag after the title (swift-docc-render Title) */
+.documentation-hero .title small {
+    font-size: 1.4117647059rem;
+    line-height: 1.1666666667;
+    font-weight: 400;
+    font-family: var(--typography-html-font, "Helvetica Neue", "Helvetica", "Arial", sans-serif);
+    padding-inline-start: 10px;
+}
+
+.documentation-hero .title small::before {
+    content: attr(data-tag-name);
+}
+
+.documentation-hero .title small.Beta {
+    color: var(--color-badge-beta);
+}
+
+.documentation-hero .title small.Deprecated {
+    color: var(--color-badge-deprecated);
+}
+
+@supports (color: light-dark(#000, #fff)) {
+    .documentation-hero .title small.Beta {
+        color: light-dark(var(--color-badge-beta), var(--color-badge-dark-beta));
+    }
+
+    .documentation-hero .title small.Deprecated {
+        color: light-dark(var(--color-badge-deprecated), var(--color-badge-dark-deprecated));
+    }
+}
+
 .documentation-hero .abstract {
     font-size: var(--spacing-hero-abstract-font-size, var(--spacing-abstract-font-size, 1.2352941176rem));
     line-height: var(--spacing-hero-abstract-line-height, var(--spacing-abstract-line-height, 1.380952381));
@@ -472,6 +542,11 @@
     .documentation-hero .title {
         font-size: var(--spacing-h1-font-size, 1.8823529412rem);
         line-height: var(--spacing-h1-line-height, 1.125);
+    }
+
+    .documentation-hero .title small {
+        font-size: 1.2352941176rem;
+        line-height: 1.1904761905;
     }
 }
 
@@ -867,7 +942,17 @@
     box-sizing: inherit;
 }
 
-.link-block .has-adjacent-elements {
+.link-block.has-inline-element {
+    display: flex;
+    align-items: flex-start;
+    flex-flow: row wrap;
+}
+
+.link-block.topic .link {
+    display: flex;
+}
+
+.link-block .link.has-adjacent-elements {
     padding-top: 5px;
     padding-bottom: 5px;
     display: inline-flex;
@@ -918,6 +1003,60 @@
     margin-inline-start: var(--spacing-topic-abstract-margin-start, 2.294rem);
 }
 
+.link-block .link.deprecated {
+    text-decoration: line-through;
+}
+
+/* Badges after topics, in the breadcrumbs and in the navigator (swift-docc-render Badge) */
+.badge {
+    --badge-color: var(--color-badge-default);
+    --badge-dark-color: var(--color-badge-dark-default);
+    font-size: 0.7058823529rem;
+    line-height: 1.3333333333;
+    font-weight: 400;
+    font-family: var(--typography-html-font, "Helvetica Neue", "Helvetica", "Arial", sans-serif);
+    display: inline-block;
+    padding: 2px 4px;
+    white-space: nowrap;
+    border-radius: var(--badge-border-radius, 1px);
+    border-style: var(--badge-border-style, none);
+    border-width: var(--badge-border-width, 1px);
+    margin: auto;
+    margin-inline-start: 5px;
+    color: var(--colors-badge-text, var(--color-badge-text));
+    background-color: var(--badge-color);
+}
+
+.badge-deprecated {
+    --badge-color: var(--color-badge-deprecated);
+    --badge-dark-color: var(--color-badge-dark-deprecated);
+}
+
+.badge-beta {
+    --badge-color: var(--color-badge-beta);
+    --badge-dark-color: var(--color-badge-dark-beta);
+}
+
+@supports (color: light-dark(#000, #fff)) {
+    .badge {
+        background-color: light-dark(var(--badge-color), var(--badge-dark-color));
+    }
+}
+
+.link-block .badge {
+    margin-inline-start: 2.294rem;
+    margin-top: 0.5rem;
+}
+
+.link-block.has-inline-element .badge {
+    margin-inline-start: 1rem;
+    margin-top: 0;
+}
+
+.link-block .badge + .badge {
+    margin-inline-start: 1rem;
+}
+
 .link-block .abstract .content {
     font-size: var(--spacing-topic-abstract-font-size, 1rem);
     line-height: var(--spacing-topic-abstract-line-height, 1.4705882353);
@@ -930,6 +1069,16 @@
 .decorated-title .decorator,
 .decorated-title .label {
     color: var(--colors-secondary-label, var(--color-secondary-label));
+}
+
+/* A single space token keeps the link underline (swift-docc-render DecoratedTopicTitle) */
+.decorated-title .empty-token {
+    font-size: 0;
+}
+
+.decorated-title .empty-token::after {
+    content: "\00a0";
+    font-size: 1rem;
 }
 
 /* Relationships */
@@ -950,7 +1099,7 @@
 }
 
 .relationships-list.inline li:not(:last-child)::after {
-    content: ", ";
+    content: ",\00a0";
 }
 
 /* Parameters */

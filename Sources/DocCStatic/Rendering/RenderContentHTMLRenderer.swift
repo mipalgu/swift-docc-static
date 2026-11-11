@@ -70,7 +70,7 @@ private extension RenderContentHTMLRenderer {
 
         case .codeVoice(let code):
             return InlineResult(
-                html: "<code class=\"inline-code\">\(escapeHTML(code))</code>",
+                html: "<code class=\"inline-code\">\(WordBreak.markup(code))</code>",
                 plainText: code
             )
 
@@ -145,8 +145,8 @@ private extension RenderContentHTMLRenderer {
     /// Renders a link to another page or an external URL (swift-docc-render's `Reference`).
     ///
     /// Links are `a.inline-link` elements.  A link to a symbol that keeps the symbol's
-    /// own title shows the title as code, like swift-docc-render.  Inactive links
-    /// render their title only.
+    /// own title shows the title as code with ``WordBreak`` opportunities, like
+    /// swift-docc-render.  Inactive links render their title only.
     func renderReference(
         identifier: RenderReferenceIdentifier,
         isActive: Bool,
@@ -171,7 +171,7 @@ private extension RenderContentHTMLRenderer {
             title = topicReference.title
             titleHTML = escapeHTML(topicReference.title)
             if topicReference.kind == .symbol, let role = topicReference.role, Self.codeTitleRoles.contains(role) {
-                titleHTML = "<code>\(titleHTML)</code>"
+                titleHTML = "<code>\(WordBreak.markup(topicReference.title))</code>"
             }
         } else if let linkReference {
             let rendered = renderInlineContent(linkReference.titleInlineContent, references: references, depth: depth)

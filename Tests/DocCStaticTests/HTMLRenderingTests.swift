@@ -241,7 +241,7 @@ struct DecoratedTopicTitleTests {
             .init(text: "MyStruct", kind: .identifier),
         ]
         let html = renderDecoratedTitle(tokens)
-        #expect(html.contains("<span class=\"identifier\">MyStruct</span>"))
+        #expect(html.contains("<span class=\"identifier\">My<wbr>Struct</span>"))
     }
 
     @Test("Type identifier tokens render with identifier class")
@@ -259,7 +259,7 @@ struct DecoratedTopicTitleTests {
             .init(text: " ", kind: .text),
         ]
         let html = renderDecoratedTitle(tokens)
-        #expect(html.contains("<span class=\"decorator\"> </span>"))
+        #expect(html.contains("<span class=\"decorator empty-token\"> </span>"))
     }
 
     @Test("Label tokens render with label class")
@@ -279,7 +279,9 @@ struct DecoratedTopicTitleTests {
             .init(text: "StaticHTMLConsumer", kind: .identifier),
         ]
         let html = renderDecoratedTitle(tokens)
-        #expect(html == "<code class=\"decorated-title\"><span class=\"decorator\">class</span><span class=\"decorator\"> </span><span class=\"identifier\">StaticHTMLConsumer</span></code>")
+        #expect(html == "<code class=\"decorated-title\"><span class=\"decorator\">class</span><wbr>"
+            + "<span class=\"decorator empty-token\"> </span><wbr>"
+            + "<span class=\"identifier\">Static<wbr>HTMLConsumer</span><wbr></code>")
     }
 
     @Test("Decorated title escapes HTML in token text")

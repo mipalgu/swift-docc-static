@@ -436,7 +436,7 @@ h6 {
 
 .primary-content .content * + .table-wrapper,
 .primary-content .content .table-wrapper + * {
-    margin-top: var(--spacing-stacked-margin-large);
+    margin-top: var(--spacing-stacked-margin-xlarge);
 }
 
 th {

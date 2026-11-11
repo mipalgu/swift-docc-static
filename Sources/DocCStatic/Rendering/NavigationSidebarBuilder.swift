@@ -261,20 +261,24 @@ public extension NavigationSidebarBuilder {
                 }
 
                 // Like swift-docc-render, scroll the current row to the top of the
-                // list only if it would not be visible otherwise.
+                // list, below the title of its module, only if it would not be
+                // visible otherwise.
                 function revealCurrentRow(initial) {
                     var target = currentRow();
                     var scroller = target ? target.closest('.scroller') : null;
                     if (!scroller || scroller.clientHeight === 0) {
                         return;
                     }
+                    var section = target.closest('.module-section');
+                    var header = section ? section.querySelector('.module-header') : null;
+                    var titleHeight = header && !header.contains(target) ? header.offsetHeight : 0;
                     var area = scroller.getBoundingClientRect();
                     var row = target.getBoundingClientRect();
                     var offset = row.top - area.top + scroller.scrollTop;
                     if (initial && offset + row.height <= scroller.clientHeight) {
                         scroller.scrollTop = 0;
-                    } else if (row.top < area.top || row.bottom > area.bottom) {
-                        scroller.scrollTop = offset;
+                    } else if (row.top < area.top + titleHeight || row.bottom > area.bottom) {
+                        scroller.scrollTop = offset - titleHeight;
                     }
                 }
 
@@ -517,7 +521,7 @@ private extension NavigationSidebarBuilder {
     /// Builds a regular navigator row with its children wrapped for disclosure.
     ///
     /// Expandable rows start collapsed; the stylesheet expands the target row and its
-    /// ancestors.  The disclosure checkbox precedes the row's content, so that sibling
+    /// ancestors.  Deprecated and beta rows end with a ``Badge``.  The disclosure checkbox precedes the row's content, so that sibling
     /// selectors can reach the chevron, whose label fills the row's depth spacer.
     ///
     /// - Parameters:
@@ -543,7 +547,7 @@ private extension NavigationSidebarBuilder {
             + TopicTypeIcon.markup(for: node.type ?? node.nodeType.rawValue, additionalClass: "navigator-icon")
             + "</div>"
         html += "<div class=\"title-container\"><a href=\"\(escapeHTML(relativeURL))\" class=\"leaf-link\">"
-            + "\(escapeHTML(node.title))</a></div></div></li>"
+            + "\(escapeHTML(node.title))</a>\(Self.badgeMarkup(for: node))</div></div></li>"
 
         if let children = node.children, !children.isEmpty {
             html += "\n<li class=\"nav-children-wrapper\"><ul class=\"navigator-tree\">"
@@ -579,5 +583,24 @@ private extension NavigationSidebarBuilder {
     /// - Returns: The relative URL of the page's `index.html`.
     func makeRelativeURL(_ url: String) -> String {
         "\(SidebarDocument.pagePathKey(url))/index.html"
+    }
+}
+
+// MARK: - Badges
+
+extension NavigationSidebarBuilder {
+    /// Returns the badge after the title of a deprecated or beta row, like
+    /// swift-docc-render's `NavigatorCardItem`.
+    ///
+    /// - Parameter node: The navigation node.
+    /// - Returns: The ``Badge`` markup, or an empty string for other rows.
+    static func badgeMarkup(for node: NavigationNode) -> String {
+        if node.isDeprecated == true {
+            return Badge.markup(.deprecated)
+        }
+        if node.isBeta == true {
+            return Badge.markup(.beta)
+        }
+        return ""
     }
 }

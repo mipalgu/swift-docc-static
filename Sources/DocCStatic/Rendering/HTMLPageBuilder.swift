@@ -306,7 +306,7 @@ extension HTMLPageBuilder {
                     html += """
 
                                 <li class="navigator-card">
-                                    <span class="badge \(badgeClass)">\(badge)</span>
+                                    <span class="symbol-badge \(badgeClass)">\(badge)</span>
                                     <a href="\(escapeHTML(relativeURL))">\(escapeHTML(title))</a>
                                 </li>
                     """
@@ -376,7 +376,8 @@ extension HTMLPageBuilder {
     /// Builds the breadcrumbs of a page (swift-docc-render's `Hierarchy`).
     ///
     /// The breadcrumbs list the page's ancestors as links, followed by the page's own
-    /// title, in the menu item structure swift-docc-render uses.
+    /// title and the ``Badge`` of a deprecated or beta page, in the menu item
+    /// structure swift-docc-render uses.
     ///
     /// - Parameters:
     ///   - renderNode: The render node of the page.
@@ -408,6 +409,11 @@ extension HTMLPageBuilder {
         let root = firstPath[0]
         let parents = Array(firstPath.dropFirst())
         let currentTitle = extractTitle(from: renderNode)
+
+        // The badges of the current page; like swift-docc-render, one parent fewer
+        // stays visible beside them, so every parent counts one step further away
+        let badges = Badge.status(of: renderNode).map(Badge.markup) ?? ""
+        let badgeOffset = badges.isEmpty ? 0 : 1
         func link(_ identifier: String, classes: String) -> String {
             guard let reference = references[identifier] as? TopicRenderReference else {
                 return "<span class=\"\(classes)\">\(escapeHTML(identifier))</span>"
@@ -416,10 +422,12 @@ extension HTMLPageBuilder {
             return "<a href=\"\(escapeHTML(relativeURL))\" class=\"\(classes) nav-menu-link\">\(escapeHTML(reference.title))</a>"
         }
         func distance(_ index: Int) -> Int {
-            min(parents.count - index, Self.breadcrumbCollapseLimit)
+            min(parents.count - index + badgeOffset, Self.breadcrumbCollapseLimit)
         }
 
-        var html = "\n<ul class=\"nav-menu-items hierarchy\" data-parents=\"\(min(parents.count, Self.breadcrumbCollapseLimit))\" aria-label=\"Breadcrumbs\">"
+        let parentCount = parents.isEmpty ? 0 : min(parents.count + badgeOffset, Self.breadcrumbCollapseLimit)
+        let badgeClass = badges.isEmpty ? "" : " has-badge"
+        var html = "\n<ul class=\"nav-menu-items hierarchy\(badgeClass)\" data-parents=\"\(parentCount)\" aria-label=\"Breadcrumbs\">"
         html += "<li class=\"nav-menu-item hierarchy-item root-hierarchy\">\(link(root, classes: "parent item"))</li>"
 
         // The menu listing the items that do not fit
@@ -436,7 +444,7 @@ extension HTMLPageBuilder {
         for (index, identifier) in parents.enumerated() {
             html += "<li class=\"nav-menu-item hierarchy-item\" data-from-end=\"\(distance(index))\">\(link(identifier, classes: "parent item"))</li>"
         }
-        html += "<li class=\"nav-menu-item hierarchy-item\" data-from-end=\"0\"><span class=\"current item\">\(escapeHTML(currentTitle))</span></li>"
+        html += "<li class=\"nav-menu-item hierarchy-item\" data-from-end=\"0\"><span class=\"current item\">\(escapeHTML(currentTitle))</span>\(badges)</li>"
         html += "</ul>"
         return html
     }
@@ -526,9 +534,13 @@ extension HTMLPageBuilder {
         html += "</div>"
         html += "<div class=\"documentation-hero__above-content\"></div>"
         html += "\n<div class=\"documentation-hero__content\">"
+        // Like swift-docc-render, symbol titles break at readable places and the title
+        // of a deprecated or beta symbol is followed by a tag
+        let status = Badge.status(of: renderNode)
+        let titleText = enhanceBackground ? escapeHTML(title) : WordBreak.markup(title)
         html += buildBreadcrumbs(for: renderNode, references: references, depth: depth)
         html += "\n<div class=\"topictitle\"><span class=\"eyebrow\">\(escapeHTML(roleLabel))</span>"
-        html += "<h1 class=\"title\">\(escapeHTML(title))</h1></div>"
+        html += "<h1 class=\"title\"><span>\(titleText)</span>\(status.map(Badge.titleTag) ?? "")</h1></div>"
 
         if let abstract = renderNode.abstract {
             let abstractHTML = contentRenderer.renderInlineContent(abstract, references: references, depth: depth)
@@ -549,21 +561,28 @@ extension HTMLPageBuilder {
         for section in renderNode.sections {
             primaryHTML += buildSection(section, references: references, depth: depth)
         }
-        let noPrimaryContent = primaryHTML.isEmpty && enhanceBackground
+        let deprecationSummary = renderNode.deprecationSummary ?? []
+        let noPrimaryContent = primaryHTML.isEmpty && deprecationSummary.isEmpty && enhanceBackground
         let onThisPage = onThisPageItems(for: renderNode, title: title)
         let scope = onThisPage.isEmpty ? "" : " style=\"\(OnThisPageNavigation.timelineScope(count: onThisPage.count))\""
         html += "\n<div class=\"doc-content-wrapper\"\(scope)>\n<div class=\"doc-content\(noPrimaryContent ? " no-primary-content" : "")\">"
-        if !primaryHTML.isEmpty {
+        if !primaryHTML.isEmpty || !deprecationSummary.isEmpty {
             let border = enhanceBackground ? "" : " with-border"
             html += "\n<div class=\"container\">"
-            html += "<div class=\"description\(enhanceBackground ? " after-enhanced-hero" : "")\"></div>"
-            html += "\n<div class=\"primary-content\(border)\">\(primaryHTML)\n</div>\n</div>"
+            html += "<div class=\"description\(enhanceBackground ? " after-enhanced-hero" : "")\">"
+            html += buildDeprecationSummary(deprecationSummary, references: references, depth: depth) + "</div>"
+            if !primaryHTML.isEmpty {
+                html += "\n<div class=\"primary-content\(border)\">\(primaryHTML)\n</div>"
+            }
+            html += "\n</div>"
         }
 
         if !renderNode.topicSections.isEmpty {
             html += buildContentTable(
                 title: "Topics", anchor: "topics", className: "topics",
-                body: renderNode.topicSections.map { buildTaskGroup($0, references: references, depth: depth) }.joined()
+                body: renderNode.topicSections.map {
+                    buildTaskGroup($0, references: references, depth: depth, pageStatuses: Badge.statuses(of: renderNode))
+                }.joined()
             )
         }
         if !renderNode.relationshipSections.isEmpty {
@@ -577,7 +596,9 @@ extension HTMLPageBuilder {
         if !renderNode.seeAlsoSections.isEmpty {
             html += buildContentTable(
                 title: "See Also", anchor: "see-also", className: "see-also",
-                body: renderNode.seeAlsoSections.map { buildTaskGroup($0, references: references, depth: depth) }.joined()
+                body: renderNode.seeAlsoSections.map {
+                    buildTaskGroup($0, references: references, depth: depth, pageStatuses: Badge.statuses(of: renderNode))
+                }.joined()
             )
         }
 
@@ -617,6 +638,10 @@ extension HTMLPageBuilder {
 
         /// Whether the entry is a subsection (a level 3 heading) rather than a section.
         let isChild: Bool
+
+        /// Whether the entry is the title of a symbol, which gets ``WordBreak``
+        /// opportunities like swift-docc-render.
+        var isSymbol = false
     }
 
     /// Returns the entries of the "On This Page" column of a page.
@@ -633,7 +658,9 @@ extension HTMLPageBuilder {
     ///   navigator (``ThemeFeatureFlag/onThisPageNavigatorDisabled``).
     func onThisPageItems(for renderNode: RenderNode, title: String) -> [OnThisPageItem] {
         guard !configuration.theme.isEnabled(.onThisPageNavigatorDisabled) else { return [] }
-        var items = [OnThisPageItem(anchor: OnThisPageNavigation.topAnchor, label: title, isChild: false)]
+        var items = [OnThisPageItem(
+            anchor: OnThisPageNavigation.topAnchor, label: title, isChild: false, isSymbol: renderNode.kind == .symbol
+        )]
         for section in renderNode.primaryContentSections {
             if let parametersSection = section as? ParametersRenderSection,
                !parametersSection.parameters.isEmpty {
@@ -685,7 +712,7 @@ extension HTMLPageBuilder {
                 let itemClass = (item.isChild ? "child-item" : "parent-item") + activeClass
                 let timelines = OnThisPageNavigation.itemTimelines(index: index, count: items.count)
                 html += "<li class=\"\(itemClass)\" style=\"\(timelines)\"><a href=\"#\(escapeHTML(item.anchor))\" class=\"base-link\">"
-                    + "<span>\(escapeHTML(item.label))</span></a></li>"
+                    + "<span>\(item.isSymbol ? WordBreak.markup(item.label) : escapeHTML(item.label))</span></a></li>"
             }
             html += "</ul></nav>"
         }
@@ -798,8 +825,9 @@ extension HTMLPageBuilder {
     /// Renders one declaration token like swift-docc-render's `DeclarationToken`.
     ///
     /// Type names become `type-identifier-link` elements, linked to their page when
-    /// the page is documented; plain text stays unmarked; every other token is a span
-    /// with the class `token-<kind>`.
+    /// the page is documented; like linked attributes, they get ``WordBreak``
+    /// opportunities.  Plain text stays unmarked; every other token is a span with the
+    /// class `token-<kind>`.
     ///
     /// - Parameters:
     ///   - kind: The token kind.
@@ -821,12 +849,13 @@ extension HTMLPageBuilder {
         case .text:
             return escapedText
         case .typeIdentifier:
+            let brokenText = WordBreak.markup(text)
             if let linkURL {
-                return "<a href=\"\(escapeHTML(linkURL))\" class=\"type-identifier-link\"><code><span>\(escapedText)</span></code></a>"
+                return "<a href=\"\(escapeHTML(linkURL))\" class=\"type-identifier-link\"><code><span>\(brokenText)</span></code></a>"
             }
-            return "<span class=\"type-identifier-link\"><span>\(escapedText)</span></span>"
+            return "<span class=\"type-identifier-link\"><span>\(brokenText)</span></span>"
         case .attribute where linkURL != nil:
-            return "<a href=\"\(escapeHTML(linkURL ?? ""))\" class=\"attribute-link\">\(escapedText)</a>"
+            return "<a href=\"\(escapeHTML(linkURL ?? ""))\" class=\"attribute-link\"><span>\(WordBreak.markup(text))</span></a>"
         default:
             return "<span class=\"\(tokenCSSClass(for: kind) ?? "")\">\(escapedText)</span>"
         }
@@ -929,6 +958,28 @@ extension HTMLPageBuilder {
         return html + "\n</div>"
     }
 
+    /// Builds the deprecation summary of a symbol (swift-docc-render's deprecated `Aside`).
+    ///
+    /// - Parameters:
+    ///   - summary: The blocks of the deprecation summary.
+    ///   - references: The references used to resolve links.
+    ///   - depth: The number of directories between the output root and the page.
+    /// - Returns: The `aside.deprecated` element, or an empty string without a summary.
+    func buildDeprecationSummary(
+        _ summary: [RenderBlockContent],
+        references: [String: any RenderReference],
+        depth: Int
+    ) -> String {
+        guard !summary.isEmpty else { return "" }
+        let kind = Badge.Variant.deprecated
+        var html = "<aside class=\"\(kind.rawValue)\" aria-label=\"\(kind.rawValue)\"><p class=\"label\">\(kind.label)</p>"
+        html += "<div class=\"content\">"
+        for block in summary {
+            html += contentRenderer.renderBlockContent(block, references: references, depth: depth)
+        }
+        return html + "</div></aside>"
+    }
+
     /// Builds the parameters section of a symbol (swift-docc-render's `Parameters`).
     ///
     /// - Parameters:
@@ -963,11 +1014,13 @@ extension HTMLPageBuilder {
     ///   - taskGroup: The group.
     ///   - references: The references of the listed topics.
     ///   - depth: The number of directories between the output root and the page.
+    ///   - pageStatuses: The statuses of the page that lists the topics.
     /// - Returns: The `.contenttable-section` element.
     func buildTaskGroup(
         _ taskGroup: TaskGroupRenderSection,
         references: [String: any RenderReference],
-        depth: Int
+        depth: Int,
+        pageStatuses: Set<Badge.Variant> = []
     ) -> String {
         var html = "\n<div class=\"contenttable-section\(taskGroup.title == nil ? " no-title" : "")\">"
         if let title = taskGroup.title {
@@ -979,7 +1032,7 @@ extension HTMLPageBuilder {
         html += "<div class=\"section-content\">"
         for identifier in taskGroup.identifiers {
             if let reference = references[identifier] as? TopicRenderReference {
-                html += buildSymbolCard(for: reference, depth: depth)
+                html += buildSymbolCard(for: reference, references: references, depth: depth, pageStatuses: pageStatuses)
             }
         }
         html += "</div></div>"
@@ -994,13 +1047,26 @@ extension HTMLPageBuilder {
     /// `data-topic-role`, and a hidden `.topic-kind-badge` with the letters of the
     /// kind, so that a theme can show a kind indicator for every topic.
     ///
+    /// Like swift-docc-render, a topic with an abstract has its link padded
+    /// (`has-adjacent-elements`), while a topic without one shows its badge on the
+    /// same line (`has-inline-element`).  A deprecated topic is struck through and,
+    /// unless the listing page is deprecated itself, followed by a ``Badge``; so is a
+    /// beta topic on a page that is not beta.
+    ///
     /// - Parameters:
     ///   - reference: The topic reference.
+    ///   - references: The references used to resolve links in the abstract.
     ///   - depth: The number of directories between the output root and the page.
+    ///   - pageStatuses: The statuses of the page that lists the topic.
     /// - Returns: The `.link-block` element.
-    func buildSymbolCard(for reference: TopicRenderReference, depth: Int) -> String {
+    func buildSymbolCard(
+        for reference: TopicRenderReference,
+        references: [String: any RenderReference] = [:],
+        depth: Int,
+        pageStatuses: Set<Badge.Variant> = []
+    ) -> String {
         let relativeURL = makeRelativeURL(reference.url, depth: depth)
-        let abstract = contentRenderer.renderInlineContent(reference.abstract, references: [:], depth: 0).plainText
+        let abstract = contentRenderer.renderInlineContent(reference.abstract, references: references, depth: depth).html
         let role = reference.role ?? reference.kind.rawValue
         let type = TopicTypeIcon.normalisedType(reference.symbolKind?.id ?? role)
 
@@ -1008,11 +1074,18 @@ extension HTMLPageBuilder {
         if let fragments = reference.fragments, !fragments.isEmpty {
             titleHTML = renderDecoratedTitle(fragments)
         } else {
-            titleHTML = "<span>\(escapeHTML(reference.title))</span>"
+            let tag = reference.kind == .symbol && !Self.plainTitleRoles.contains(role) ? "code" : "span"
+            titleHTML = "<\(tag)>\(WordBreak.markup(reference.title))</\(tag)>"
         }
 
-        var html = "\n<div class=\"link-block topic\" \(TopicTypeIcon.typeAttribute)=\"\(escapeHTML(type))\" data-topic-role=\"\(escapeHTML(role))\">"
-        html += "<a href=\"\(escapeHTML(relativeURL))\" class=\"link has-adjacent-elements\">"
+        let badge = Badge.topicMarkup(for: reference, pageStatuses: pageStatuses)
+        let blockClass = abstract.isEmpty ? " has-inline-element" : ""
+        var linkClasses = abstract.isEmpty ? "link" : "link has-adjacent-elements"
+        if reference.isDeprecated {
+            linkClasses += " deprecated"
+        }
+        var html = "\n<div class=\"link-block topic\(blockClass)\" \(TopicTypeIcon.typeAttribute)=\"\(escapeHTML(type))\" data-topic-role=\"\(escapeHTML(role))\">"
+        html += "<a href=\"\(escapeHTML(relativeURL))\" class=\"\(linkClasses)\">"
         if let icon = TopicTypeIcon.topicListIcon(forRole: role) {
             html += "<div class=\"topic-icon-wrapper\">\(icon)</div>"
         }
@@ -1020,16 +1093,25 @@ extension HTMLPageBuilder {
         html += "<span class=\"topic-kind-badge\" \(TopicTypeIcon.typeAttribute)=\"\(escapeHTML(type))\" aria-hidden=\"true\">\(escapeHTML(letters))</span>"
         html += titleHTML + "</a>"
         if !abstract.isEmpty {
-            html += "<div class=\"abstract\"><div class=\"content\">\(escapeHTML(abstract))</div></div>"
+            html += "<div class=\"abstract\"><div class=\"content\">\(abstract)</div></div>"
         }
-        html += "</div>"
+        html += badge + "</div>"
         return html
     }
+
+    /// The largest number of related types that swift-docc-render lists on one line.
+    static let maximumInlineRelationships = 3
+
+    /// The roles of topics whose titles show as plain text rather than code in topic
+    /// lists, like swift-docc-render's `TopicsLinkBlock`.
+    static let plainTitleRoles: Set<String> = ["collection", "dictionarySymbol"]
 
     /// Builds a group of relationships, such as the protocols a type conforms to.
     ///
     /// Documented types are linked; other types are listed as code, like
-    /// swift-docc-render's `RelationshipsList`.
+    /// swift-docc-render's `RelationshipsList`.  Up to
+    /// ``maximumInlineRelationships`` types without availability constraints are
+    /// listed on one line, separated by commas; longer lists have one type per line.
     ///
     /// - Parameters:
     ///   - section: The relationships group.
@@ -1045,15 +1127,19 @@ extension HTMLPageBuilder {
         var html = "\n<div class=\"contenttable-section\"><div class=\"section-title\">"
         html += "<h3 id=\"\(escapeHTML(anchor))\" class=\"contenttable-title\">"
         html += RenderContentHTMLRenderer.headerAnchor(anchor: anchor, title: escapeHTML(section.title)) + "</h3></div>"
-        html += "<div class=\"section-content\"><ul class=\"relationships-list column\">"
+        var items: [String] = []
+        var hasConstraints = false
         for identifier in section.identifiers {
             if let reference = references[identifier] as? TopicRenderReference {
                 let relativeURL = makeRelativeURL(reference.url, depth: depth)
-                html += "<li class=\"relationships-item\"><a href=\"\(escapeHTML(relativeURL))\" class=\"link\"><code>\(escapeHTML(reference.title))</code></a></li>"
+                hasConstraints = hasConstraints || reference.conformance != nil
+                items.append("<li class=\"relationships-item\"><a href=\"\(escapeHTML(relativeURL))\" class=\"link\"><code>\(WordBreak.markup(reference.title))</code></a></li>")
             } else if let reference = references[identifier] as? UnresolvedRenderReference {
-                html += "<li class=\"relationships-item\"><code>\(escapeHTML(reference.title))</code></li>"
+                items.append("<li class=\"relationships-item\"><code>\(WordBreak.markup(reference.title))</code></li>")
             }
         }
+        let layout = items.count <= Self.maximumInlineRelationships && !hasConstraints ? "inline" : "column"
+        html += "<div class=\"section-content\"><ul class=\"relationships-list \(layout)\">" + items.joined()
         html += "</ul></div></div>"
         return html
     }
@@ -1822,6 +1908,10 @@ func escapeHTML(_ string: String) -> String {
 /// - `identifier`, `typeIdentifier`, `genericParameter`, `externalParam`, `internalParam` → `identifier`
 /// - `label` → `label`
 ///
+/// Like swift-docc-render, every token is followed by a word break opportunity and
+/// the text of every token that is not only white space gets ``WordBreak``
+/// opportunities; a token that is a single space carries the class `empty-token`.
+///
 /// - Parameter tokens: The declaration fragment tokens to render.
 /// - Returns: An HTML string containing a `<code class="decorated-title">` element.
 func renderDecoratedTitle(_ tokens: [DeclarationRenderSection.Token]) -> String {
@@ -1836,7 +1926,10 @@ func renderDecoratedTitle(_ tokens: [DeclarationRenderSection.Token]) -> String 
         case .keyword, .attribute, .text, .number, .string:
             cssClass = "decorator"
         }
-        html += "<span class=\"\(cssClass)\">\(escapeHTML(token.text))</span>"
+        let isWhiteSpace = token.text.allSatisfy(\.isWhitespace)
+        let text = isWhiteSpace ? escapeHTML(token.text) : WordBreak.markup(token.text)
+        let classes = token.text == " " ? "\(cssClass) empty-token" : cssClass
+        html += "<span class=\"\(classes)\">\(text)</span>" + WordBreak.opportunity
     }
     html += "</code>"
     return html

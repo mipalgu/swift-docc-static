@@ -289,14 +289,22 @@
     text-decoration: none;
 }
 
-/* Modules of a multi-module navigator: the module of the current page is expanded */
+/*
+ * Modules of a multi-module navigator: the module of the current page is expanded.
+ * Like the title above swift-docc-render's list, the title of a module stays at the
+ * top of the navigator while its rows scroll past, so it is never hidden when the
+ * browser scrolls to the current row.
+ */
 .module-section {
     position: relative;
 }
 
 .module-header {
-    position: relative;
-    scroll-margin-top: var(--spacing-sidebar-target-scroll-margin, 0);
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: var(--color-fill);
+    scroll-margin-top: 0;
 }
 
 .module-header .module-toggle {
@@ -353,8 +361,11 @@
     padding-inline-end: var(--nav-head-wrapper-right-space);
     font-size: var(--spacing-navigator-card-font-size, 1rem);
     line-height: var(--spacing-navigator-card-line-height, 1.4705882353);
-    /* Leave some context above the current row when the browser scrolls to it */
-    scroll-margin-top: var(--spacing-sidebar-target-scroll-margin, 0);
+    /*
+     * Without scripts the browser scrolls the current row to the top of the list;
+     * leave some rows above it in view, below the title of its module
+     */
+    scroll-margin-top: var(--spacing-sidebar-target-scroll-margin, 30vh);
 }
 
 .head-wrapper {
@@ -668,7 +679,6 @@ a.leaf-link::after {
 }
 
 /* Letter badges a theme can show instead of the topic type icons */
-.badge,
 .symbol-badge {
     width: 16px;
     height: 16px;
