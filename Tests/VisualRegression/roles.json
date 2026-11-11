@@ -1882,7 +1882,7 @@
  },
  "overviewHeroCopy": {
   "static": ".tutorials-overview .hero .copy-container",
-  "main": null,
+  "main": ".overview-hero-content",
   "vue": ".tutorials-overview .hero .copy-container",
   "geometry": true,
   "kinds": [

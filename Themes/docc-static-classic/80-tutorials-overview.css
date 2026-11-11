@@ -50,6 +50,7 @@ body.tutorial-overview-page #app-main {
 }
 
 .tutorials-overview .hero .copy-container {
+    width: auto;
     max-width: 800px;
     margin: 0 auto;
     padding: 0;
