@@ -187,7 +187,7 @@ body.index-page .index-intro .content {
     margin: 0;
 }
 
-body.index-page .index-intro .content > :not(ul, ol) {
+body.index-page .index-intro .content > :not(ul, ol, pre) {
     padding-left: 0;
     padding-right: 0;
 }
@@ -238,5 +238,4 @@ body.index-page .index-intro pre {
 body.index-page .index-intro pre code {
     padding: 0;
     background: none;
-    font-size: inherit;
 }

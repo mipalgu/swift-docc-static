@@ -166,3 +166,25 @@ struct ThemeDOMStructureTests {
         #expect(!html.contains("Documentation for "), "\(page.id) shows a placeholder abstract")
     }
 }
+
+/// Checks the code blocks of the classic landing page's introduction against the main branch.
+@Suite("Classic Landing Introduction")
+struct ClassicLandingIntroductionTests {
+    /// The stylesheet of the classic theme.
+    static let css = DocCStylesheet.generate(theme: ThemeConfiguration(builtInTheme: .classic))
+
+    @Test("The rule that removes the padding of the introduction's blocks leaves code blocks padded")
+    func codeBlocksKeepTheirPadding() throws {
+        let selector = "body.index-page .index-intro .content > :not("
+        let start = try #require(Self.css.range(of: selector))
+        let excluded = Self.css[start.upperBound...].prefix { $0 != ")" }
+        #expect(excluded.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }.contains("pre"))
+    }
+
+    @Test("Code in the introduction's code blocks is set smaller than the block, like inline code")
+    func codeBlockTextSize() throws {
+        let start = try #require(Self.css.range(of: "body.index-page .index-intro pre code {"))
+        let declarations = Self.css[start.upperBound...].prefix { $0 != "}" }
+        #expect(!declarations.contains("font-size"))
+    }
+}
