@@ -4,6 +4,7 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { launchBrowser } from './playwright.mjs';
 import { serve } from './server.mjs';
+import { waitForSettledPage } from './settle.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const read = (name) => readFileSync(join(root, name), 'utf8');
@@ -45,8 +46,7 @@ export async function measureSite(siteDirectory, side, options = {}) {
         try {
           await tab.waitForSelector(config.readySelector[side], { state: 'attached', timeout: 20000 });
         } catch { /* recorded as missing roles */ }
-        await tab.evaluate(() => document.fonts && document.fonts.ready);
-        await tab.waitForTimeout(config.settleMilliseconds[side]);
+        await waitForSettledPage(tab, { minimum: config.settleMilliseconds[side] });
         const pageRoles = Object.fromEntries(
           Object.entries(roles).filter(([, role]) => !role.kinds || role.kinds.includes(page.kind))
         );

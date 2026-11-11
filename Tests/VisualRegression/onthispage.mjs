@@ -6,12 +6,15 @@
 //   node Tests/VisualRegression/onthispage.mjs --site <directory> [--json <file>] [--javascript]
 //
 // Every documentation page in pages.json whose "On This Page" column lists sections is
-// loaded in a window wide enough to show the column.  The page is scrolled to the top,
+// loaded in a window wide enough to show the column and left to settle (no transition
+// running, the layout no longer changing).  The page is scrolled to the top,
 // to the bottom, and to just before and just after the point where each section heading
 // reaches the line 30% down the window.  At each position the check compares the
-// highlighted items (the links shown in the text colour) with the item swift-docc-render
+// highlighted items (the links shown in the text colour), once the page reflects the
+// position and the colour transitions have finished, with the item swift-docc-render
 // marks: the first item at the top, the last item at the bottom, and otherwise the last
-// item whose heading lies above that line.  It also checks that the highlight colour
+// item whose heading lies above that line.  A heading that moves after the positions
+// were chosen fails the check.  It also checks that the highlight colour
 // changes with the 0.15s ease-in transition of swift-docc-render.  The results are
 // printed, and written as JSON with --json; the exit status is 1 if a check fails.
 // --javascript runs the check with JavaScript enabled instead.
@@ -21,6 +24,7 @@ import { fileURLToPath } from 'node:url';
 import { parseArguments } from './lib/common.mjs';
 import { launchBrowser } from './lib/playwright.mjs';
 import { serve } from './lib/server.mjs';
+import { scrollAndSettle, waitForSettledPage } from './lib/settle.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const args = parseArguments(process.argv.slice(2));
@@ -31,7 +35,6 @@ if (!args.site) {
 const pages = JSON.parse(readFileSync(join(here, 'pages.json'), 'utf8'))
   .filter((page) => page.static && page.kind === 'documentation');
 const viewport = { width: 1920, height: 1080 };
-const settleMilliseconds = 400;
 
 // Returns the scroll positions to check and the item swift-docc-render marks at each.
 function positionsInPage() {
@@ -55,7 +58,15 @@ function positionsInPage() {
       expected = 0;
       tops.forEach((top, index) => { if (top < position + line) expected = index; });
     }
-    return { position, expected };
+    return { position, expected, tops };
+  });
+}
+
+// Returns the top of each item's section heading in page coordinates.
+function headingTopsInPage() {
+  return [...document.querySelectorAll('.OnThisPageNav li > a')].map((link) => {
+    const anchor = document.getElementById(decodeURIComponent(link.hash.slice(1)));
+    return anchor ? anchor.getBoundingClientRect().top + scrollY : Infinity;
   });
 }
 
@@ -83,6 +94,7 @@ try {
   for (const page of pages) {
     const tab = await context.newPage();
     await tab.goto(server.base + page.static, { waitUntil: 'load' });
+    await waitForSettledPage(tab);
     const visible = await tab.evaluate(() => {
       const nav = document.querySelector('.OnThisPageNav');
       return Boolean(nav) && nav.getBoundingClientRect().width > 0;
@@ -93,9 +105,13 @@ try {
     }
     const checks = { positions: true, transition: true };
     const failures = [];
-    for (const { position, expected } of await tab.evaluate(positionsInPage)) {
-      await tab.evaluate((y) => window.scrollTo(0, y), position);
-      await tab.waitForTimeout(settleMilliseconds);
+    for (const { position, expected, tops } of await tab.evaluate(positionsInPage)) {
+      await scrollAndSettle(tab, position);
+      const moved = (await tab.evaluate(headingTopsInPage)).findIndex((top, index) => Math.abs(top - tops[index]) > 0.5);
+      if (moved !== -1) {
+        checks.positions = false;
+        failures.push(`at ${position}px: the heading of item ${moved} moved after the positions were chosen`);
+      }
       const { highlighted, transition } = await tab.evaluate(highlightedInPage);
       if (highlighted.length !== 1 || highlighted[0] !== expected) {
         checks.positions = false;

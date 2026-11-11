@@ -127,8 +127,10 @@ measures an already rendered reference site.
 
 - `harness.json`: references per theme, the measured variants (1440x900 and 390x844
   in light and dark, and 1920x1080 in light, where the "On This Page" column appears),
-  settle times, ready selectors, the geometry tolerance and the computed
-  style properties that are recorded and compared.
+  the shortest settle times, ready selectors, the geometry tolerance and the computed
+  style properties that are recorded and compared.  Every check waits for the page to
+  settle (fonts and images loaded, no transition running, the layout no longer
+  changing) before it measures, and after each scroll or click.
 - `pages.json`: the measured pages with their path in each renderer's output.
 - `roles.json`: the semantic roles with one selector per DOM (`static` for
   swift-docc-static, `main` for the main branch output, `vue` for swift-docc-render).
@@ -148,7 +150,8 @@ measures an already rendered reference site.
   scrolls the documentation pages and checks that the "On This Page" column highlights
   the item swift-docc-render highlights at each position, with JavaScript disabled
   (or enabled with `--javascript`).
-- `lib/`: the static file server, browser launcher, comparison and storage helpers.
+- `lib/`: the static file server, browser launcher, waits for a settled page, and
+  comparison and storage helpers.
 - `known-issues/` and `accepted-deviations/`: the lists described above, one file per
   theme.
 - `golden/`: golden data, stored compactly (each page's first variant as differences

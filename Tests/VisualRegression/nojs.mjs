@@ -22,6 +22,7 @@ import { fileURLToPath } from 'node:url';
 import { parseArguments } from './lib/common.mjs';
 import { launchBrowser } from './lib/playwright.mjs';
 import { serve } from './lib/server.mjs';
+import { waitForSettledPage } from './lib/settle.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const args = parseArguments(process.argv.slice(2));
@@ -56,10 +57,11 @@ async function coloursOf(url, systemScheme, choice) {
   try {
     const tab = await context.newPage();
     await tab.goto(url, { waitUntil: 'load' });
+    await waitForSettledPage(tab);
     const label = tab.locator(toggleLabel(choice));
     if ((await label.count()) === 0 || !(await label.first().isVisible())) return undefined;
     await label.first().click();
-    await tab.waitForTimeout(600);
+    await waitForSettledPage(tab);
     return await sampleColours(tab);
   } finally {
     await context.close();
@@ -74,6 +76,7 @@ try {
   for (const page of pages) {
     const tab = await context.newPage();
     await tab.goto(server.base + page.static, { waitUntil: 'load' });
+    await waitForSettledPage(tab);
     const checks = {};
     checks.content = await tab.evaluate((selector) => {
       const title = document.querySelector(selector);
@@ -128,10 +131,10 @@ try {
           const wrapperHeight = () => frame.evaluate(() =>
             document.querySelector('[data-nojs-check]').nextElementSibling.getBoundingClientRect().height);
           await toggle.asElement().click();
-          await tab.waitForTimeout(400);
+          await waitForSettledPage(tab);
           const expanded = (await wrapperHeight()) > 0;
           await toggle.asElement().click();
-          await tab.waitForTimeout(400);
+          await waitForSettledPage(tab);
           checks.expandCollapse = expanded && (await wrapperHeight()) === 0;
         }
       }
