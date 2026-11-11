@@ -20,6 +20,22 @@ struct StylesheetTests {
         #expect(css.contains("--color-link:"))
     }
 
+    @Test("No built-in theme makes an element a size container",
+          arguments: ThemeSettings.BuiltInTheme.allCases)
+    func noSizeContainers(theme: ThemeSettings.BuiltInTheme) throws {
+        // A browser may style a page once before its stylesheet arrives; it then
+        // animates the transitions of everything inside a size container from that
+        // unstyled state, so the stylesheets compute widths instead of querying them.
+        let css = DocCStylesheet.generate(theme: ThemeConfiguration(builtInTheme: theme))
+        let sizeContainer = try Regex(#"container-type\s*:\s*(inline-size|size)"#)
+        let containerUnit = try Regex(#"[0-9.]cq(w|h|i|b|min|max)\b"#)
+        let sizeQuery = try Regex(#"@container[^{]*\((min-|max-)?(width|height|inline-size|block-size)\b"#)
+        #expect(css.firstMatch(of: sizeContainer) == nil, "\(theme.rawValue) declares a size container")
+        #expect(css.firstMatch(of: containerUnit) == nil, "\(theme.rawValue) uses container query units")
+        #expect(css.firstMatch(of: sizeQuery) == nil, "\(theme.rawValue) has a container size query")
+        #expect(css.contains("@container style(--content-area-wide: 1)"))
+    }
+
     @Test("Stylesheet uses theme accent colour")
     func themeAccentColour() {
         let theme = ThemeConfiguration(accentColour: "#ff5500", includeDarkMode: true)

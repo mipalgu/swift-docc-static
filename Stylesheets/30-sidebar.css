@@ -27,6 +27,75 @@
     }
 }
 
+/*
+ * The width of the content area beside the navigator, and how it compares with the
+ * widths at which swift-docc-render changes the breadcrumbs and the "On This Page"
+ * column (more than 1200px, more than 1000px, more than 1050px, less than 735px).
+ * The width follows from the viewport and the navigator column, rather than from a
+ * size container query: the browser may style a page once before its stylesheet
+ * arrives, and it then animates the transitions of everything inside a size
+ * container from that unstyled state.  Rules read the comparisons with container
+ * style queries, such as `@container style(--content-area-wide: 1)`.
+ */
+@property --content-area-width {
+    syntax: "<length>";
+    inherits: true;
+    initial-value: 0px;
+}
+
+@property --content-area-over-1200 {
+    syntax: "<integer>";
+    inherits: true;
+    initial-value: 0;
+}
+
+@property --content-area-over-1000 {
+    syntax: "<integer>";
+    inherits: true;
+    initial-value: 0;
+}
+
+@property --content-area-wide {
+    syntax: "<integer>";
+    inherits: true;
+    initial-value: 0;
+}
+
+@property --content-area-small {
+    syntax: "<integer>";
+    inherits: true;
+    initial-value: 0;
+}
+
+.adjustable-sidebar-width {
+    --content-area-width: min(100vw, 1920px);
+    --content-area-over-1200: calc((sign(var(--content-area-width) - 1200.005px) + 1) / 2);
+    --content-area-over-1000: calc((sign(var(--content-area-width) - 1000.005px) + 1) / 2);
+    --content-area-wide: calc((sign(var(--content-area-width) - 1050.005px) + 1) / 2);
+    --content-area-small: calc((sign(734.995px - var(--content-area-width)) + 1) / 2);
+}
+
+@media only screen and (min-width: 1024px) {
+    .adjustable-sidebar-width {
+        --content-area-width: calc(min(100vw, 1920px) - var(--sidebar-width));
+    }
+
+    .sidebar-toggle-checkbox:checked ~ .documentation-layout .adjustable-sidebar-width {
+        --content-area-width: min(100vw, 1920px);
+    }
+}
+
+/* The full-width container's border */
+@media only screen and (min-width: 1920px) {
+    .adjustable-sidebar-width {
+        --content-area-width: calc(1918px - var(--sidebar-width));
+    }
+
+    .sidebar-toggle-checkbox:checked ~ .documentation-layout .adjustable-sidebar-width {
+        --content-area-width: 1918px;
+    }
+}
+
 .full-width-container {
     max-width: 1920px;
     margin-left: auto;
@@ -426,6 +495,16 @@
     height: 10px;
     fill: currentColor;
     transition: transform 0.15s ease-in;
+}
+
+/*
+ * The browser applies the URL fragment after it has styled the navigator once, so the
+ * chevrons of the current row and its ancestors turn as the navigator loads.  Only a
+ * chevron the reader toggles (pointing at or focusing its row) turns with a transition.
+ */
+.navigator-tree .navigator-card-item:not(:hover, :focus-within) .chevron,
+.module-section:not(:has(> .module-header:hover, > .disclosure-checkbox:focus)) > .module-header .chevron {
+    transition: none;
 }
 
 .navigator-card-item.expandable:not(:target):not(:has(+ .nav-children-wrapper :target)) > .disclosure-checkbox:checked ~ .head-wrapper .chevron,

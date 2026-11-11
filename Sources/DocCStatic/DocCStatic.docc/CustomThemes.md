@@ -219,6 +219,24 @@ A theme's settings are defined on the root element as well as on the body
 element, so `--spacing-html-font-size` sets the root font size that `rem` values
 are based on.
 
+The breadcrumbs and the "On This Page" column follow the width of the content area
+beside the navigator, like swift-docc-render.  Documentation pages compute that
+width from the viewport and the navigator width (`--spacing-sidebar-width`) as
+`--content-area-width`, together with comparisons that rules can read through
+container style queries: `--content-area-wide` (wider than 1050px, where the "On
+This Page" column appears), `--content-area-over-1000`, `--content-area-over-1200`
+and `--content-area-small` (narrower than 735px), each `1` or `0`.  For example:
+
+```css
+@container style(--content-area-wide: 1) {
+    .documentation-hero .abstract { max-width: 640px; }
+}
+```
+
+Avoid size container queries (`container-type: inline-size`) on the page: a browser
+may style a page once before its stylesheet arrives, and then animates every
+transition inside a size container from that unstyled state as the page loads.
+
 ## Theming in Swift
 
 ```swift

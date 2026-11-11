@@ -16,9 +16,13 @@ const TYPES = {
 /**
  * Serves `root` on `port` (0 picks a free port).
  * Resolves to `{ base, close }` where `base` is the site's base URL.
+ *
+ * `options.delay`, when given, is called with the path of every request and returns
+ * the number of milliseconds to wait before answering it, which lets a check make a
+ * resource arrive late.
  */
-export function serve(root, port = 0) {
-  const server = createServer((request, response) => {
+export function serve(root, port = 0, { delay } = {}) {
+  const server = createServer(async (request, response) => {
     let path = decodeURIComponent(new URL(request.url, 'http://localhost').pathname);
     let file = normalize(join(root, path));
     if (!file.startsWith(normalize(root))) { response.writeHead(403).end(); return; }
@@ -29,6 +33,8 @@ export function serve(root, port = 0) {
       response.writeHead(404).end();
       return;
     }
+    const wait = delay ? delay(path) : 0;
+    if (wait > 0) await new Promise((done) => setTimeout(done, wait));
     response.writeHead(200, { 'Content-Type': TYPES[extname(file)] || 'application/octet-stream' });
     createReadStream(file).pipe(response);
   });

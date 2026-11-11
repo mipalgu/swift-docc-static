@@ -421,13 +421,16 @@
 }
 
 /* The asset of the step in focus fades in; the others fade out.  Each asset sits
-   in an item that follows its step's timeline and a wrapper that fades. */
+   in an item that follows its step's timeline and a wrapper that fades.  A second
+   animation marks whether the step's timeline is active: the browser styles the page
+   once before it has laid out the steps, when no timeline is active, and the bar and
+   the asset are not shown until then, so that they appear without fading in. */
 .tutorial .step,
 .tutorial .asset-container-item {
-    animation: tutorial-current linear;
-    animation-fill-mode: var(--tutorial-step-fill, none);
-    animation-timeline: var(--tutorial-step-timeline, none);
-    animation-range: cover 0% cover calc(100% + var(--tutorial-step-spacing, 100px));
+    animation: tutorial-current linear, tutorial-timeline-active linear both;
+    animation-fill-mode: var(--tutorial-step-fill, none), both;
+    animation-timeline: var(--tutorial-step-timeline, none), var(--tutorial-step-timeline, none);
+    animation-range: cover 0% cover calc(100% + var(--tutorial-step-spacing, 100px)), normal;
 }
 
 .tutorial .step {
@@ -446,6 +449,13 @@
     .tutorial .asset-container-item > .asset-container-fade {
         visibility: hidden;
         transition: opacity 0.3s ease-in-out, visibility 0s linear 0.3s;
+    }
+}
+
+@container style(--tutorial-timeline-active: 0) {
+    .tutorial .step::before,
+    .tutorial .asset-container-item > .asset-container-fade {
+        display: none;
     }
 }
 

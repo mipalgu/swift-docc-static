@@ -7,12 +7,14 @@
  * the theme shows them outside its filled area: the breadcrumbs as a bar above it,
  * and the declaration as a panel below it.  Both are moved there with `translate`
  * and widened to the introduction's full width, and a cover in the page colour
- * hides the fill behind them.  The introduction is a size container, so `100cqw`
- * is the width of its content box.
+ * hides the fill behind them.  Both are children of the introduction's content,
+ * so `100%` is the width of that content: the share
+ * `--spacing-hero-text-width-ratio` of the introduction's width, or less where the
+ * decoration of articles (`--classic-decoration-space`) leaves less room.
  */
 .documentation-hero {
     --classic-breadcrumbs-padding: 1rem;
-    --classic-hero-width: calc(100cqw + var(--spacing-hero-padding-left) + var(--spacing-hero-padding-right));
+    --classic-hero-width: calc(max(100% / var(--spacing-hero-text-width-ratio), 100% + var(--classic-decoration-space, 0px)) + var(--spacing-hero-padding-left) + var(--spacing-hero-padding-right));
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
@@ -20,7 +22,6 @@
     background: var(--color-documentation-intro-fill);
     color: var(--color-figure-gray);
     isolation: isolate;
-    container-type: inline-size;
 }
 
 .documentation-hero::before,
@@ -45,14 +46,20 @@
     display: none;
 }
 
+.documentation-hero:has(> .icon .background-icon:is([data-topic-type="article"], [data-topic-type="collectionGroup"])) {
+    --classic-decoration-width: 200px;
+    --classic-decoration-margin: 2rem;
+    --classic-decoration-space: calc(var(--classic-decoration-width) + var(--classic-decoration-margin));
+}
+
 .documentation-hero .icon:has(.background-icon:is([data-topic-type="article"], [data-topic-type="collectionGroup"])) {
     display: block;
     position: static;
     order: 1;
     flex: 0 0 auto;
-    width: 200px;
-    height: 200px;
-    margin: var(--classic-decoration-offset, 0) 0 0 2rem;
+    width: var(--classic-decoration-width);
+    height: var(--classic-decoration-width);
+    margin: var(--classic-decoration-offset, 0) 0 0 var(--classic-decoration-margin);
     color: var(--color-hero-decoration);
     opacity: 0.6;
 }
@@ -79,6 +86,10 @@
 @media only screen and (max-width: 735px) {
     .documentation-hero .icon:has(.background-icon) {
         display: none;
+    }
+
+    .documentation-hero:has(> .icon .background-icon) {
+        --classic-decoration-space: 0px;
     }
 }
 

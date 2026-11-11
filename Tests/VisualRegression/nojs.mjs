@@ -10,6 +10,10 @@
 // whether the current page's row is the highlighted target row and is visible below
 // the title of its module, and whether a collapsed row can be expanded and collapsed
 // again by clicking its chevron.
+// On documentation pages with breadcrumbs, the check also records whether the
+// breadcrumbs follow the width of the content area like swift-docc-render: closing the
+// navigator at the first viewport shows as many of them as the widest viewport (whose
+// content area is as wide), and never fewer than with the navigator open.
 // On every page with a colour scheme toggle, the check also chooses Light while the
 // system appearance is dark (and Dark while it is light), scrolling to the toggle as a
 // reader would, and records whether the page then shows the same colours as when that
@@ -47,6 +51,27 @@ async function sampleColours(tab) {
     const style = getComputedStyle(element, pseudo);
     return [style.color, style.backgroundColor, style.borderTopColor];
   }), schemeSelectors);
+}
+
+// Returns the number of breadcrumbs shown on a tab.
+function visibleBreadcrumbs(tab) {
+  return tab.evaluate(() => [...document.querySelectorAll('.hierarchy > .hierarchy-item, .hierarchy > .hierarchy-collapsed-items')]
+    .filter((item) => item.getClientRects().length > 0).length);
+}
+
+// Returns the number of breadcrumbs a page shows at the widest viewport.
+async function breadcrumbsAtWidestViewport(url) {
+  const [widest, tallest] = config.variants.map((variant) => variant.split('/')[0].split('x').map(Number))
+    .sort((a, b) => b[0] - a[0])[0];
+  const context = await browser.newContext({ viewport: { width: widest, height: tallest }, javaScriptEnabled: false });
+  try {
+    const tab = await context.newPage();
+    await tab.goto(url, { waitUntil: 'load' });
+    await waitForSettledPage(tab);
+    return await visibleBreadcrumbs(tab);
+  } finally {
+    await context.close();
+  }
 }
 
 // Loads a page in a context of the given system appearance, chooses a scheme with the
@@ -139,8 +164,16 @@ try {
         }
       }
     }
-    await tab.close();
     const url = server.base + page.static;
+    if (page.kind === 'documentation' && (await tab.locator('.hierarchy').count()) > 0) {
+      const withNavigator = await visibleBreadcrumbs(tab);
+      await tab.locator('.documentation-nav .sidenav-toggle').first().click();
+      await waitForSettledPage(tab);
+      const withoutNavigator = await visibleBreadcrumbs(tab);
+      checks.breadcrumbs = withoutNavigator >= withNavigator
+        && withoutNavigator === (await breadcrumbsAtWidestViewport(url));
+    }
+    await tab.close();
     for (const [system, choice] of [['dark', 'light'], ['light', 'dark']]) {
       const chosen = await coloursOf(url, system, choice);
       if (chosen === undefined) continue;

@@ -183,4 +183,14 @@ body > .tutorial {
     from, to { --tutorial-current: 1; }
 }
 
+@property --tutorial-timeline-active {
+    syntax: "<integer>";
+    inherits: true;
+    initial-value: 0;
+}
+
+@keyframes tutorial-timeline-active {
+    from, to { --tutorial-timeline-active: 1; }
+}
+
 

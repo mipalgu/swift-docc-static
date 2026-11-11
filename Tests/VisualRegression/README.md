@@ -142,11 +142,15 @@ measures an already rendered reference site.
 - `measure.js`: the function evaluated in the page.
 - `measure.mjs`: measures a site (`--probe` prints how many elements each role
   matches on each page, which helps when editing `roles.json`).
-- `run.mjs`, `references.mjs`, `nojs.mjs`, `onthispage.mjs`, `check.mjs`: see above; `nojs.mjs`
-  checks that every page type renders its content, the sidebar (with the current row
-  highlighted and in view below the title of its module), working expand and
-  collapse, and a Light or Dark choice in the footer
-  that overrides the system appearance, all with JavaScript disabled; `onthispage.mjs`
+- `run.mjs`, `references.mjs`, `nojs.mjs`, `onthispage.mjs`, `loading.mjs`, `check.mjs`: see
+  above; `nojs.mjs` checks that every page type renders its content, the sidebar (with the
+  current row highlighted and in view below the title of its module), working expand and
+  collapse, breadcrumbs that follow the width of the content area when the navigator
+  closes, and a Light or Dark choice in the footer
+  that overrides the system appearance, all with JavaScript disabled; `loading.mjs` loads
+  every page repeatedly, with and without JavaScript and with stylesheets that arrive at
+  once or late, and fails if a transition or a time-based animation starts while it
+  loads (scroll-driven animations may start); `onthispage.mjs`
   scrolls the documentation pages and checks that the "On This Page" column highlights
   the item swift-docc-render highlights at each position, with JavaScript disabled
   (or enabled with `--javascript`).

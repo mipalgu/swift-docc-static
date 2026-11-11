@@ -2,19 +2,15 @@
  * Documentation pages (swift-docc-render DocumentationTopic): hero, content column,
  * primary content, content tables and the "On This Page" column.
  *
- * The content column and the "On This Page" column follow the width of the area
- * beside the navigator through a container query, like swift-docc-render shows its
- * "On This Page" column only when that area is wider than 1050px.
+ * The content column, the breadcrumbs and the "On This Page" column follow the width
+ * of the content area beside the navigator (see the `--content-area-*` properties of
+ * the navigator layout), like swift-docc-render shows its "On This Page" column only
+ * when that area is wider than 1050px.
  */
 .doc-topic {
     display: flex;
     flex-direction: column;
     height: 100%;
-}
-
-.adjustable-sidebar-width > .content {
-    container-type: inline-size;
-    container-name: doc-content;
 }
 
 #app-main {
@@ -291,7 +287,7 @@
     max-width: 8.64rem;
 }
 
-@container doc-content (max-width: 1200px) {
+@container style(--content-area-over-1200: 0) {
     .hierarchy-item[data-from-end="3"] {
         display: none;
     }
@@ -316,7 +312,7 @@
     }
 }
 
-@container doc-content (max-width: 1000px) {
+@container style(--content-area-over-1000: 0) {
     .hierarchy-item[data-from-end="2"] {
         display: none;
     }
@@ -341,7 +337,7 @@
     }
 }
 
-@container doc-content (max-width: 734.98px) {
+@container style(--content-area-small: 1) {
     .hierarchy-item[data-from-end="1"],
     .hierarchy-item[data-from-end="0"] {
         display: none;
@@ -697,7 +693,7 @@
     overflow: auto;
 }
 
-@container doc-content (min-width: 1051px) {
+@container style(--content-area-wide: 1) {
     .doc-topic:has(.OnThisPageStickyContainer) {
         --doc-hero-right-offset: 192px;
     }
@@ -712,7 +708,7 @@
 }
 
 @media only screen and (min-width: 1251px) {
-    @container doc-content (min-width: 1051px) {
+    @container style(--content-area-wide: 1) {
         .doc-topic:has(.OnThisPageStickyContainer) .doc-content-wrapper .doc-content {
             max-width: 980px;
         }
@@ -720,7 +716,7 @@
 }
 
 @media only screen and (min-width: 1500px) {
-    @container doc-content (min-width: 1051px) {
+    @container style(--content-area-wide: 1) {
         .doc-topic:has(.OnThisPageStickyContainer) .doc-content-wrapper .doc-content {
             max-width: 1080px;
         }

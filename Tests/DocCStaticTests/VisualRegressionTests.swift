@@ -52,6 +52,20 @@ private struct OnThisPageReport: Decodable {
     let failures: [String]
 }
 
+/// The results written by `loading.mjs --json`.
+private struct LoadingReport: Decodable {
+    /// A transition or animation that started while a page loaded.
+    struct Animation: Decodable {
+        let name: String
+        let count: Int
+        let conditions: [String]
+    }
+
+    let page: String
+    let loads: Int
+    let animations: [Animation]
+}
+
 /// Checks the accepted deviations of every built-in theme without a browser.
 @Suite("Accepted Deviations")
 struct AcceptedDeviationTests {
@@ -158,6 +172,27 @@ struct VisualRegressionTests {
             #expect(page.checks["sidebar"] == true, "\(page.page) has no working sidebar")
             #expect(page.checks["expandCollapse"] == true, "\(page.page) cannot expand and collapse rows")
             #expect(page.checks["moduleTitle"] == true, "\(page.page) hides its row or the module title")
+        }
+    }
+
+    @Test("Pages do not animate while they load, even when their stylesheets arrive late",
+          arguments: ThemeSettings.BuiltInTheme.allCases)
+    func doesNotAnimateWhileLoading(theme: ThemeSettings.BuiltInTheme) async throws {
+        let fixture = try await FixtureDocumentation.shared.output(theme: theme)
+        let results = try VisualRegressionHarness.temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: results) }
+        let reportFile = results.appendingPathComponent("loading.json")
+        _ = try VisualRegressionHarness.runNode(
+            script: "loading.mjs",
+            arguments: ["--site", fixture.outputDirectory.path, "--json", reportFile.path]
+        )
+        let report = try JSONDecoder().decode([LoadingReport].self, from: Data(contentsOf: reportFile))
+        #expect(report.count == FixturePage.all.count)
+        for page in report {
+            #expect(page.loads > 0, "\(page.page) was not loaded")
+            for animation in page.animations {
+                Issue.record("\(animation.name) runs while \(page.page) loads for \(theme.rawValue) (\(animation.count) of \(page.loads) loads, first: \(animation.conditions.first ?? "unknown"))")
+            }
         }
     }
 
