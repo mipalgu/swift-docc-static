@@ -35,6 +35,10 @@ public struct SwiftSyntaxHighlighter: Sendable {
         "right", "set", "Type", "unowned", "weak", "willSet", "isolated",
         "distributed"
     ]
+
+    /// The keyword that starts an import declaration.
+    private static let importKeyword = "import"
+
     /// Creates a new syntax highlighter.
     public init() {}
 }
@@ -44,11 +48,15 @@ public struct SwiftSyntaxHighlighter: Sendable {
 public extension SwiftSyntaxHighlighter {
     /// Highlights Swift code and returns HTML with syntax highlighting spans.
     ///
+    /// Like swift-docc-render, the rest of an `import` declaration's line is plain
+    /// text apart from comments, so imported module names are not coloured as types.
+    ///
     /// - Parameter code: The Swift code to highlight.
     /// - Returns: HTML string with syntax highlighting applied.
     func highlight(_ code: String) -> String {
         var result = ""
         var index = code.startIndex
+        var isInImportDeclaration = false
 
         while index < code.endIndex {
             let remaining = code[index...]
@@ -59,6 +67,9 @@ public extension SwiftSyntaxHighlighter {
                 let comment = String(code[index..<endIndex])
                 result += "<span class=\"syntax-comment\">\(escapeHTML(comment))</span>"
                 index = endIndex
+                if comment.contains("\n") {
+                    isInImportDeclaration = false
+                }
                 continue
             }
 
@@ -99,11 +110,14 @@ public extension SwiftSyntaxHighlighter {
             if let firstChar = remaining.first, firstChar.isLetter || firstChar == "_" || firstChar == "@" || firstChar == "#" {
                 let (identifier, endIndex) = extractIdentifier(from: remaining)
 
-                if identifier.hasPrefix("@") || identifier.hasPrefix("#") {
+                if isInImportDeclaration {
+                    result += escapeHTML(identifier)
+                } else if identifier.hasPrefix("@") || identifier.hasPrefix("#") {
                     // Attribute or directive
                     result += "<span class=\"syntax-attribute\">\(escapeHTML(identifier))</span>"
                 } else if Self.keywords.contains(identifier) {
                     result += "<span class=\"syntax-keyword\">\(escapeHTML(identifier))</span>"
+                    isInImportDeclaration = identifier == Self.importKeyword
                 } else if identifier.first?.isUppercase == true {
                     // Type name (starts with uppercase)
                     result += "<span class=\"syntax-type\">\(escapeHTML(identifier))</span>"
@@ -115,6 +129,9 @@ public extension SwiftSyntaxHighlighter {
             }
 
             // Other characters (operators, punctuation, whitespace)
+            if code[index].isNewline {
+                isInImportDeclaration = false
+            }
             result += escapeHTML(String(code[index]))
             index = code.index(after: index)
         }
