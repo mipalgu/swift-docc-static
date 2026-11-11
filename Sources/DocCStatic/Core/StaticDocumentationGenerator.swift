@@ -180,20 +180,21 @@ public struct StaticDocumentationGenerator: Sendable {
             log("Merged navigation index with \(moduleCount) modules")
         }
 
-        // Write the navigation tree once; pages embed it rather than repeating it
-        try writeSidebarDocument(for: mergedNavigationIndex)
-
         // Second pass: Render pages from all archives using the merged index
+        var deprecatedPagePaths: Set<String> = []
         for archiveDir in archives {
-            try await renderFromArchive(
+            deprecatedPagePaths.formUnion(try await renderFromArchive(
                 archiveDir,
                 consumer: consumer,
                 searchIndexBuilder: &searchIndexBuilder,
                 packageTargets: packageTargets
-            )
+            ))
             // Copy images and other assets from this archive
             try copyArchiveAssets(from: archiveDir)
         }
+
+        // Write the navigation tree once; pages embed it rather than repeating it
+        try writeSidebarDocument(for: mergedNavigationIndex, deprecatedPagePaths: deprecatedPagePaths)
 
         // Write assets
         try writeAssets()
@@ -828,12 +829,21 @@ public struct StaticDocumentationGenerator: Sendable {
 
     // MARK: - Archive Rendering
 
+    /// Renders the documentation and tutorial pages of one archive.
+    ///
+    /// - Parameters:
+    ///   - archiveDir: The archive to render.
+    ///   - consumer: The consumer that writes each page.
+    ///   - searchIndexBuilder: The search index to add the pages to, if any.
+    ///   - packageTargets: The modules to include, or all modules if empty.
+    /// - Returns: The normalised paths of the rendered pages that are deprecated.
+    /// - Throws: An error if the archive cannot be read.
     private func renderFromArchive(
         _ archiveDir: URL,
         consumer: StaticHTMLConsumer,
         searchIndexBuilder: inout SearchIndexBuilder?,
         packageTargets: [String]
-    ) async throws {
+    ) async throws -> Set<String> {
         if configuration.isVerbose {
             log("Rendering pages from archive...")
         }
@@ -846,7 +856,7 @@ public struct StaticDocumentationGenerator: Sendable {
             if configuration.isVerbose {
                 log("Warning: Archive has no documentation data, skipping: \(archiveDir.path)")
             }
-            return  // Skip this archive instead of failing
+            return []  // Skip this archive instead of failing
         }
 
         // Note: Navigation index is already loaded and merged upfront in generate()
@@ -854,6 +864,9 @@ public struct StaticDocumentationGenerator: Sendable {
 
         // Track which modules have been skipped
         var skippedModules = Set<String>()
+
+        // Track which rendered pages are deprecated
+        var deprecatedPagePaths = Set<String>()
 
         let decoder = JSONDecoder()
 
@@ -902,6 +915,9 @@ public struct StaticDocumentationGenerator: Sendable {
                     }
 
                     try consumer.consume(renderNode: renderNode)
+                    if Badge.statuses(of: renderNode).contains(.deprecated) {
+                        deprecatedPagePaths.insert(SidebarDocument.pagePathKey(of: renderNode.identifier))
+                    }
 
                     // Add to search index if enabled
                     searchIndexBuilder?.addToIndex(renderNode)
@@ -916,6 +932,7 @@ public struct StaticDocumentationGenerator: Sendable {
         if configuration.isVerbose {
             log("Finished rendering pages")
         }
+        return deprecatedPagePaths
     }
 
     /// Renders documentation from an existing DocC archive to static HTML.
@@ -941,7 +958,7 @@ public struct StaticDocumentationGenerator: Sendable {
         // Render from archive (include all modules since we don't know package targets)
         var searchBuilder: SearchIndexBuilder? =
             configuration.includeSearch ? SearchIndexBuilder(configuration: configuration) : nil
-        try await renderFromArchive(
+        _ = try await renderFromArchive(
             archiveURL,
             consumer: consumer,
             searchIndexBuilder: &searchBuilder,
@@ -991,11 +1008,20 @@ public struct StaticDocumentationGenerator: Sendable {
     /// Nothing is written if the navigation index lists no modules; pages then fall
     /// back to an inline sidebar.
     ///
-    /// - Parameter navigationIndex: The merged navigation index of all modules.
+    /// - Parameters:
+    ///   - navigationIndex: The merged navigation index of all modules.
+    ///   - deprecatedPagePaths: The normalised paths of the rendered pages that are
+    ///     deprecated.
     /// - Throws: An error if the document cannot be written.
-    private func writeSidebarDocument(for navigationIndex: NavigationIndex?) throws {
+    private func writeSidebarDocument(
+        for navigationIndex: NavigationIndex?,
+        deprecatedPagePaths: Set<String>
+    ) throws {
         guard let navigationIndex, SidebarDocument.isAvailable(for: navigationIndex) else { return }
-        var builder = NavigationSidebarBuilder(navigationIndex: navigationIndex)
+        var builder = NavigationSidebarBuilder(
+            navigationIndex: navigationIndex,
+            deprecatedPagePaths: deprecatedPagePaths
+        )
         let html = builder.buildSidebarDocument(includeSearch: configuration.includeSearch)
         let path = configuration.outputDirectory.appendingPathComponent(SidebarDocument.fileName)
         try html.write(to: path, atomically: true, encoding: .utf8)

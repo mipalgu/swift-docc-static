@@ -76,7 +76,7 @@ public struct NavigationNode: Codable, Equatable, Hashable, Sendable, Identifiab
     /// Return whether this node has children that can be expanded.
     public var isExpandable: Bool {
         guard let children = children else { return false }
-        return children.contains { !$0.isGroupMarker }
+        return children.contains { !$0.isGroupMarker || !($0.children ?? []).isEmpty }
     }
 
     /// The navigation node type.

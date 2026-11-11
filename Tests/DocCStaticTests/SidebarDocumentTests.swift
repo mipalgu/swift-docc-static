@@ -54,6 +54,27 @@ private func twoModuleIndex() -> NavigationIndex {
     )
 }
 
+/// A navigation index whose default implementation is listed inside a group heading
+/// below the requirement it implements, as older versions of docc write it.
+private func nestedGroupIndex() -> NavigationIndex {
+    let requirement = node("describe()", "/documentation/delta/shape/describe()", "method", [
+        node("Shape Implementations", nil, "groupMarker", [
+            node("describe()", "/documentation/delta/shape/describe()-5aogl", "method"),
+        ]),
+    ])
+    let delta = node("Delta", "/documentation/delta", "module", [
+        node("Shape", "/documentation/delta/shape", "protocol", [
+            node("Instance Methods", nil, "groupMarker"),
+            requirement,
+        ]),
+    ])
+    return NavigationIndex(
+        schemaVersion: nil,
+        includedArchiveIdentifiers: nil,
+        interfaceLanguages: ["swift": [delta]]
+    )
+}
+
 /// A single-module navigation index.
 private func singleModuleIndex() -> NavigationIndex {
     let gamma = node("Gamma", "/documentation/gamma", "module", [
@@ -196,7 +217,7 @@ struct SharedSidebarDocumentTests {
 
     @Test("Row identifiers announced by the model all exist in the document")
     func modelMatchesDocument() {
-        for index in [twoModuleIndex(), singleModuleIndex()] {
+        for index in [twoModuleIndex(), singleModuleIndex(), nestedGroupIndex()] {
             let html = document(index)
             let ids = Set(attributeValues("id", in: html))
             let model = SidebarDocument(navigationIndex: index)
@@ -205,6 +226,32 @@ struct SharedSidebarDocumentTests {
                 #expect(ids.contains(SidebarDocument.rowIdentifier(forPath: path)), "Missing id for \(path)")
             }
         }
+    }
+
+    @Test("Rows listed inside a group heading follow it one level deeper")
+    func rowsInsideGroupHeading() throws {
+        let html = document(nestedGroupIndex())
+        let rows = html.components(separatedBy: "<li class=\"navigator-card-item")
+        let heading = try #require(rows.first { $0.contains(">Shape Implementations</h3>") })
+        #expect(heading.contains("data-nesting-index=\"2\""))
+        #expect(heading.contains("class=\"disclosure-checkbox\""))
+        let requirement = try #require(rows.first { $0.contains("shape/describe()/index.html") })
+        #expect(requirement.hasPrefix(" expandable\""))
+        let implementation = try #require(rows.first { $0.contains("describe()-5aogl/index.html") })
+        #expect(implementation.contains("data-nesting-index=\"3\""))
+        #expect(implementation.contains("id=\"nav:documentation/delta/shape/describe()-5aogl\""))
+    }
+
+    @Test("Pages known to be deprecated are marked even if the index does not flag them")
+    func deprecatedPagesAreMarked() throws {
+        let deprecated: Set = [SidebarDocument.pagePathKey("/documentation/gamma/thing/run()")]
+        var builder = NavigationSidebarBuilder(navigationIndex: singleModuleIndex(), deprecatedPagePaths: deprecated)
+        let rows = builder.buildSidebarDocument(includeSearch: false)
+            .components(separatedBy: "<li class=\"navigator-card-item")
+        let method = try #require(rows.first { $0.contains("thing/run()/index.html") })
+        #expect(method.contains("</a>" + Badge.markup(.deprecated) + "</div>"))
+        let type = try #require(rows.first { $0.contains("gamma/thing/index.html") })
+        #expect(!type.contains(Badge.markup(.deprecated)))
     }
 
     @Test("Document contains no per-page state")

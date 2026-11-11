@@ -38,6 +38,10 @@ public struct NavigationSidebarBuilder: Sendable {
     /// The navigation index.
     private let navigationIndex: NavigationIndex
 
+    /// The normalised paths of pages that are deprecated, whether or not the
+    /// navigation index flags them.
+    private let deprecatedPagePaths: Set<String>
+
     /// Counter for generating unique checkbox IDs.
     private var checkboxCounter: Int = 0
 
@@ -55,9 +59,16 @@ public struct NavigationSidebarBuilder: Sendable {
 public extension NavigationSidebarBuilder {
     /// Creates a new navigation sidebar builder.
     ///
-    /// - Parameter navigationIndex: The navigation index to build from.
-    init(navigationIndex: NavigationIndex) {
+    /// Not every version of docc flags unconditionally deprecated symbols in the
+    /// navigation index, so pages known to be deprecated can be named as well.
+    ///
+    /// - Parameters:
+    ///   - navigationIndex: The navigation index to build from.
+    ///   - deprecatedPagePaths: The paths of deprecated pages, normalised with
+    ///     ``SidebarDocument/pagePathKey(_:)``.
+    init(navigationIndex: NavigationIndex, deprecatedPagePaths: Set<String> = []) {
         self.navigationIndex = navigationIndex
+        self.deprecatedPagePaths = deprecatedPagePaths
     }
 
     /// Builds the standalone sidebar document shared by all documentation pages.
@@ -540,7 +551,8 @@ private extension NavigationSidebarBuilder {
     /// listed under it.  Children are wrapped in a `.nav-children-wrapper` list item
     /// for CSS-based disclosure, and the rows of a group in a list item with the class
     /// ``groupWrapperClass`` after its heading, so that a theme can let the reader
-    /// collapse the group.
+    /// collapse the group.  A group heading may also have children of its own, which
+    /// are listed first and one level deeper.
     ///
     /// - Parameters:
     ///   - nodes: The navigation nodes to render.
@@ -559,9 +571,12 @@ private extension NavigationSidebarBuilder {
             let end = nodes[index...].firstIndex(where: \.isGroupMarker) ?? nodes.endIndex
             let members = Array(nodes[index..<end])
             index = end
-            html += buildGroupMarker(node, nestingLevel: nestingLevel, hasMembers: !members.isEmpty)
-            if !members.isEmpty {
+            let nested = node.children ?? []
+            let hasMembers = !members.isEmpty || !nested.isEmpty
+            html += buildGroupMarker(node, nestingLevel: nestingLevel, hasMembers: hasMembers)
+            if hasMembers {
                 html += "\n<li class=\"\(Self.groupWrapperClass)\"><ul class=\"navigator-tree\">"
+                html += buildFlatNavigationList(nested, nestingLevel: nestingLevel + 1)
                 html += buildFlatNavigationList(members, nestingLevel: nestingLevel)
                 html += "\n</ul></li>"
             }
@@ -626,7 +641,7 @@ private extension NavigationSidebarBuilder {
             + TopicTypeIcon.referenceMarkup(for: iconType, additionalClass: "navigator-icon")
             + "</div>"
         html += "<div class=\"title-container\"><a href=\"\(escapeHTML(relativeURL))\" class=\"leaf-link\">"
-            + "\(escapeHTML(node.title))</a>\(Self.badgeMarkup(for: node))</div></div></li>"
+            + "\(escapeHTML(node.title))</a>\(rowBadgeMarkup(for: node))</div></div></li>"
 
         if let children = node.children, !children.isEmpty {
             html += "\n<li class=\"nav-children-wrapper\"><ul class=\"navigator-tree\">"
@@ -670,6 +685,18 @@ private extension NavigationSidebarBuilder {
 extension NavigationSidebarBuilder {
     /// The class of the list item that holds the rows of a group, after its heading.
     static let groupWrapperClass = "nav-group-wrapper"
+
+    /// Returns the badge after the title of a row, also marking pages that are known
+    /// to be deprecated although the navigation index does not flag them.
+    ///
+    /// - Parameter node: The navigation node.
+    /// - Returns: The ``Badge`` markup, or an empty string for other rows.
+    func rowBadgeMarkup(for node: NavigationNode) -> String {
+        if let path = node.path, deprecatedPagePaths.contains(SidebarDocument.pagePathKey(path)) {
+            return Badge.markup(.deprecated)
+        }
+        return Self.badgeMarkup(for: node)
+    }
 
     /// Returns the badge after the title of a deprecated or beta row, like
     /// swift-docc-render's `NavigatorCardItem`.
