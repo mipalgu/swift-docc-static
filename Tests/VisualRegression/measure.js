@@ -16,7 +16,8 @@
  * horizontal position and width.  Roles with `pseudo` (for example `"::before"`)
  * record the computed style of that pseudo-element of the matched element.
  *
- * The result is plain JSON with deterministic key order.
+ * The result is plain JSON with deterministic key order; URLs in style values are
+ * recorded without the page's origin.
  */
 (roles, side, properties) => {
   const round = (n) => Math.round(n * 100) / 100;
@@ -69,7 +70,8 @@
       const cs = view.getComputedStyle(element, definition.pseudo || null);
       entry.visible = visible(element, view, false);
       entry.style = {};
-      for (const property of properties) entry.style[property] = cs[property];
+      // URLs are recorded without the origin, which differs between runs
+      for (const property of properties) entry.style[property] = String(cs[property]).split(location.origin).join('');
       if (definition.geometry) {
         const r = element.getBoundingClientRect();
         entry.box = { x: round(r.x + offset.x), width: round(r.width) };
