@@ -26,7 +26,6 @@
         --color-nav-solid-background: #000;
         --color-nav-sticking-expanded-keyline: rgba(66, 66, 66, 0.7);
         --color-nav-expanded: #2a2a2a;
-        --color-nav-uiblur-expanded: rgba(42, 42, 42, 0.9);
         --color-runtime-preview-disabled-text: rgba(204, 204, 204, 0.6);
         --color-tutorial-background: var(--color-fill-tertiary);
     }
@@ -53,7 +52,6 @@
         --color-nav-solid-background: #000;
         --color-nav-sticking-expanded-keyline: rgba(66, 66, 66, 0.7);
         --color-nav-expanded: #2a2a2a;
-        --color-nav-uiblur-expanded: rgba(42, 42, 42, 0.9);
         --color-runtime-preview-disabled-text: rgba(204, 204, 204, 0.6);
         --color-tutorial-background: var(--color-fill-tertiary);
     }
