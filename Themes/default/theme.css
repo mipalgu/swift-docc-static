@@ -6,3 +6,26 @@
  * fallbacks are the swift-docc-render values; this file holds the rules that
  * only the default theme needs.
  */
+
+/* Code blocks of the landing page introduction, styled like code listings */
+.index-intro pre {
+    overflow-x: auto;
+    margin: 0;
+    background: var(--color-code-background);
+    border: 1px solid var(--color-grid);
+    border-radius: var(--code-border-radius, 4px);
+    padding: var(--code-block-style-elements-padding, 8px 14px);
+}
+
+.index-intro pre code {
+    font-family: var(--typography-html-font-mono, Menlo, monospace);
+    font-size: var(--spacing-pre-code-font-size, 0.8823529412rem);
+    line-height: var(--spacing-pre-code-line-height, 1.6666666667);
+    color: var(--color-code-plain);
+    white-space: pre;
+}
+
+.index-intro .content * + pre,
+.index-intro .content pre + * {
+    margin-top: var(--spacing-stacked-margin-xlarge);
+}

@@ -189,3 +189,32 @@ struct ClassicLandingIntroductionTests {
         #expect(declarations.contains("display: block;"), "inline code would take the line height of the block")
     }
 }
+
+@Suite("Default Landing Introduction")
+struct DefaultLandingIntroductionTests {
+    /// The stylesheet of the default theme.
+    static let css = DocCStylesheet.generate(theme: .default)
+
+    /// Returns the declarations of the first rule with a selector.
+    static func declarations(of selector: String) throws -> Substring {
+        let start = try #require(css.range(of: selector + " {"))
+        return css[start.upperBound...].prefix { $0 != "}" }
+    }
+
+    @Test("Code blocks of the introduction look like the code listings of documentation pages")
+    func codeBlocksLookLikeListings() throws {
+        let block = try Self.declarations(of: ".index-intro pre")
+        #expect(block.contains("background: var(--color-code-background)"))
+        #expect(block.contains("border: 1px solid var(--color-grid)"))
+        #expect(block.contains("border-radius: var(--code-border-radius, 4px)"))
+        #expect(block.contains("padding: var(--code-block-style-elements-padding, 8px 14px)"))
+        let code = try Self.declarations(of: ".index-intro pre code")
+        #expect(code.contains("font-family: var(--typography-html-font-mono"))
+    }
+
+    @Test("Blocks around a code block of the introduction are spaced like documentation content")
+    func codeBlocksAreSpaced() throws {
+        let spacing = try Self.declarations(of: ".index-intro .content * + pre,\n.index-intro .content pre + *")
+        #expect(spacing.contains("margin-top: var(--spacing-stacked-margin-xlarge)"))
+    }
+}
