@@ -757,10 +757,6 @@
     font-weight: 700;
 }
 
-.OnThisPageNav .child-item .base-link {
-    padding-inline-start: 1rem;
-}
-
 /*
  * The item of the section in view (see OnThisPageNavigation): the first item at the
  * top of the page, the last item at the bottom, and otherwise the item whose heading

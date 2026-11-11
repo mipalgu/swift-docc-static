@@ -66,4 +66,19 @@ struct OnThisPageNavigationTests {
         let html = try fixture.text(at: "documentation/fixturecore/point/x/index.html")
         #expect(!html.contains(OnThisPageNavigation.timeline(1)))
     }
+
+    @Test("Items of third-level headings line up with the other items, like swift-docc-render")
+    func childItemsAreNotIndented() {
+        let css = DocCStylesheet.generate(theme: ThemeConfiguration(builtInTheme: .default))
+        var remainder = Substring(css)
+        while let open = remainder.firstIndex(of: "{"), let close = remainder[open...].firstIndex(of: "}") {
+            let selector = remainder[..<open]
+            let declarations = remainder[remainder.index(after: open)..<close]
+            if selector.contains("\(OnThisPageNavigation.navigationClass) .child-item") {
+                #expect(!declarations.contains("padding"), "\(selector.trimmingCharacters(in: .whitespacesAndNewlines)) indents the item")
+                #expect(!declarations.contains("margin"), "\(selector.trimmingCharacters(in: .whitespacesAndNewlines)) indents the item")
+            }
+            remainder = remainder[remainder.index(after: close)...]
+        }
+    }
 }
