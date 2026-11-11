@@ -113,6 +113,10 @@ public extension TutorialDocument {
 
     /// The class of the list of tutorials and articles of a chapter.
     static let topicListClass = "topic-list"
+
+    /// The class of the hidden abstract of a tutorial or article in a chapter's list,
+    /// for themes that show it.
+    static let topicAbstractClass = "topic-abstract"
 }
 
 // MARK: - State Without JavaScript

@@ -25,6 +25,8 @@ public struct TutorialsOverview: Sendable, Equatable {
         public var estimatedTime: String?
         /// Whether the topic is an article rather than a tutorial.
         public var isArticle: Bool
+        /// The abstract of the topic as plain text, if known.
+        public var abstract: String?
 
         /// Creates a topic.
         ///
@@ -33,11 +35,13 @@ public struct TutorialsOverview: Sendable, Equatable {
         ///   - url: The relative URL of the topic's page.
         ///   - estimatedTime: The estimated time to complete the topic, if known.
         ///   - isArticle: Whether the topic is an article rather than a tutorial.
-        public init(title: String, url: String, estimatedTime: String? = nil, isArticle: Bool = false) {
+        ///   - abstract: The abstract of the topic as plain text, if known.
+        public init(title: String, url: String, estimatedTime: String? = nil, isArticle: Bool = false, abstract: String? = nil) {
             self.title = title
             self.url = url
             self.estimatedTime = estimatedTime
             self.isArticle = isArticle
+            self.abstract = abstract
         }
     }
 
@@ -188,11 +192,13 @@ extension HTMLPageBuilder {
                         guard let reference = references[identifier.identifier] as? TopicRenderReference else {
                             return nil
                         }
+                        let abstract = contentRenderer.renderInlineContent(reference.abstract, references: [:]).plainText
                         return TutorialsOverview.Topic(
                             title: reference.title,
                             url: makeRelativeURL(reference.url, depth: depth),
                             estimatedTime: reference.estimatedTime,
-                            isArticle: reference.kind == .article
+                            isArticle: reference.kind == .article,
+                            abstract: abstract.isEmpty ? nil : abstract
                         )
                     }
                 )
@@ -346,6 +352,10 @@ extension HTMLPageBuilder {
 
     /// Builds the tile of one chapter of a tutorials overview.
     ///
+    /// Each topic shows its title and estimated time, like swift-docc-render, and
+    /// carries its abstract in a hidden ``TutorialDocument/topicAbstractClass``
+    /// element for themes that show it.
+    ///
     /// - Parameters:
     ///   - chapter: The chapter.
     ///   - number: The one-based number of the chapter within its volume.
@@ -383,9 +393,12 @@ extension HTMLPageBuilder {
             let timeHTML = topic.estimatedTime.map {
                 "<div class=\"time\">\(TutorialIcon.timer.svg())<span class=\"time-label\">\(escapeHTML($0))</span></div>"
             } ?? ""
+            let abstractHTML = topic.abstract.map {
+                "<div class=\"\(TutorialDocument.topicAbstractClass)\">\(escapeHTML($0))</div>"
+            } ?? ""
             html += """
 
-                                                <li class="topic \(kind)\(timeClass)"><div class="topic-icon">\(icon.svg())</div><a href="\(escapeHTML(topic.url))" class="container" aria-label="\(escapeHTML(label.joined(separator: " - ")))"><div class="link">\(escapeHTML(topic.title))</div>\(timeHTML)</a></li>
+                                                <li class="topic \(kind)\(timeClass)"><div class="topic-icon">\(icon.svg())</div><a href="\(escapeHTML(topic.url))" class="container" aria-label="\(escapeHTML(label.joined(separator: " - ")))"><div class="link">\(escapeHTML(topic.title))</div>\(abstractHTML)\(timeHTML)</a></li>
             """
         }
         html += """

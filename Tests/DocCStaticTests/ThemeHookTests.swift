@@ -130,6 +130,23 @@ struct ThemeHookTests {
         #expect(css.contains(".card .\(IndexPageBuilder.moduleStatisticsClass) {\n    display: none;\n}"))
     }
 
+    @Test("A tutorial in a tutorials overview carries its abstract, hidden by default")
+    func overviewTopicAbstract() {
+        let builder = HTMLPageBuilder(configuration: Configuration(
+            packageDirectory: FileManager.default.temporaryDirectory,
+            outputDirectory: FileManager.default.temporaryDirectory
+        ))
+        let chapter = TutorialsOverview.Chapter(name: "Basics", topics: [
+            TutorialsOverview.Topic(title: "Drawing", url: "drawing/index.html", abstract: "Draw a point."),
+            TutorialsOverview.Topic(title: "Erasing", url: "erasing/index.html"),
+        ])
+        let html = builder.chapterTile(chapter, number: 1, timeline: "--t", volumeHasName: false)
+        #expect(html.contains("<div class=\"link\">Drawing</div><div class=\"\(TutorialDocument.topicAbstractClass)\">Draw a point.</div></a>"))
+        #expect(html.contains("<div class=\"link\">Erasing</div></a>"))
+        let css = DocCStylesheet.generate(theme: ThemeConfiguration(builtInTheme: .default))
+        #expect(css.contains(".topic-list .\(TutorialDocument.topicAbstractClass) {\n    display: none;\n}"))
+    }
+
     @Test("The base stylesheet hides the navigation bar title icon")
     func navigationTitleIconIsHiddenByDefault() {
         let css = DocCStylesheet.generate(theme: ThemeConfiguration(builtInTheme: .default))

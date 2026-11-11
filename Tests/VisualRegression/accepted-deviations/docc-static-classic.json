@@ -141,6 +141,22 @@
     "landing"
    ],
    "reason": "The whole module card is a link in the shared markup, so it shows the pointer cursor; the main branch linked only the module name."
+  },
+  {
+   "role": "syntaxKeyword",
+   "property": "presence",
+   "pages": [
+    "tutorial"
+   ],
+   "reason": "Classic highlights the syntax of the code in tutorial steps, which the main branch showed as plain text."
+  },
+  {
+   "role": "syntaxType",
+   "property": "presence",
+   "pages": [
+    "tutorial"
+   ],
+   "reason": "Classic highlights the syntax of the code in tutorial steps, which the main branch showed as plain text."
   }
  ]
 }

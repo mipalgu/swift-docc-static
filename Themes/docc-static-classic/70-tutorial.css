@@ -1,0 +1,734 @@
+/*
+ * Tutorial pages of the `docc-static-classic` theme: a fixed navigation bar, a
+ * dark introduction, and sections whose steps are cards, each with its own code
+ * or image panel beside it.  The quiz shows all its questions at once.
+ *
+ * Every step carries its own asset in the markup, so the theme shows those and
+ * leaves out the sticky asset column; on narrow viewports each panel goes below
+ * its step.
+ */
+.tutorial {
+    --tutorial-content-width: 100%;
+    --tutorial-content-width-medium: 100%;
+    --classic-tutorial-padding: 4rem;
+    --classic-tutorial-column-gap: 3rem;
+    --classic-tutorial-text-width: 40%;
+    padding-top: var(--spacing-header-height);
+}
+
+/* Navigation bar: the title of the tutorials and the tutorial and section menus */
+.tutorial nav.nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    align-items: center;
+    height: var(--spacing-header-height);
+    box-sizing: border-box;
+    z-index: 100;
+    background: var(--color-fill);
+    border-bottom: 1px solid var(--color-fill-gray);
+    color: var(--color-figure-gray);
+}
+
+.tutorial nav.nav .nav__wrapper {
+    position: static;
+    width: 100%;
+    min-height: 0;
+}
+
+.tutorial nav.nav .nav__background,
+.tutorial nav.nav .nav-overlay,
+.tutorial nav.nav .subhead,
+.tutorial nav.nav .separator,
+.tutorial nav.nav .mobile-dropdown-container,
+.tutorial nav.nav .nav-actions {
+    display: none;
+}
+
+.tutorial nav.nav .nav-content {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    max-width: none;
+    height: 100%;
+    margin: 0;
+    padding: 0 var(--spacing-header-padding-horizontal);
+}
+
+.tutorial nav.nav .nav-title {
+    height: auto;
+}
+
+.tutorial nav.nav .nav-title-content .title {
+    display: block;
+    max-width: none;
+    overflow: visible;
+    vertical-align: baseline;
+    white-space: nowrap;
+    font-size: 0.9375rem;
+    line-height: var(--spacing-body-line-height);
+    font-weight: 600;
+    color: var(--color-figure-gray);
+    cursor: pointer;
+}
+
+.tutorial nav.nav .nav-menu {
+    margin-left: auto;
+}
+
+.tutorial nav.nav .nav-menu-tray {
+    display: block;
+    max-height: none;
+    overflow: visible;
+    visibility: visible;
+    pointer-events: auto;
+}
+
+.tutorial nav.nav .dropdown-container {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    height: auto;
+}
+
+.tutorial nav.nav .dropdown-container > svg {
+    display: none;
+}
+
+.tutorial nav.nav .form-dropdown-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    box-sizing: border-box;
+    min-width: 180px;
+    max-width: 280px;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--color-fill-gray);
+    border-radius: 6px;
+    background: var(--color-fill);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--color-figure-gray);
+}
+
+.tutorial nav.nav .form-dropdown-toggle:hover {
+    background: var(--color-fill-secondary);
+}
+
+.tutorial nav.nav .form-dropdown-title {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-align: left;
+}
+
+/* Introduction: light text on a dark panel, with the background image faded at the right */
+.tutorial .tutorial-hero .hero {
+    display: flex;
+    align-items: center;
+    position: relative;
+    box-sizing: border-box;
+    min-height: 420px;
+    padding: 3rem 2rem;
+    background-color: var(--color-tutorial-hero-background);
+    color: var(--color-tutorial-hero-text);
+}
+
+.tutorial .tutorial-hero .bg {
+    opacity: 0.5;
+    background-position: right center;
+}
+
+.tutorial .tutorial-hero .row {
+    position: relative;
+    z-index: 2;
+    max-width: 600px;
+    margin: 0;
+    padding: 0 0 0 2rem;
+}
+
+.tutorial .tutorial-hero .col {
+    width: auto;
+    margin: 0;
+    padding: 0;
+}
+
+.tutorial .tutorial-hero .headline {
+    margin: 0;
+}
+
+.tutorial .tutorial-hero .eyebrow {
+    display: block;
+    margin: 0 0 0.5rem;
+    padding-top: 0.5rem;
+    font-size: 1.0625rem;
+    line-height: var(--spacing-body-line-height);
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.tutorial .tutorial-hero .heading {
+    margin: 0 0 1.25rem;
+    font-family: var(--typography-html-font-headline);
+    font-size: 2.5rem;
+    line-height: 1.1;
+    font-weight: 700;
+    color: var(--color-tutorial-hero-text);
+}
+
+.tutorial .tutorial-hero .intro {
+    margin: 0 0 2rem;
+    font-size: 1.0625rem;
+    line-height: var(--spacing-body-line-height);
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.tutorial .tutorial-hero .intro p {
+    margin: 0;
+}
+
+.tutorial .tutorial-hero .metadata {
+    margin: 0;
+}
+
+.tutorial .tutorial-hero .metadata .item {
+    padding: 0;
+    border: none;
+}
+
+.tutorial .tutorial-hero .metadata .item:not(:first-of-type) {
+    display: none;
+}
+
+.tutorial .tutorial-hero .metadata .minutes {
+    margin-left: 0.25em;
+    font-size: inherit;
+    line-height: inherit;
+}
+
+.tutorial .tutorial-hero .metadata .duration {
+    font-size: 1.5rem;
+    line-height: var(--spacing-body-line-height);
+    font-weight: 600;
+}
+
+.tutorial .tutorial-hero .metadata .bottom {
+    margin: 0;
+    font-size: 0.8125rem;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+/* Sections: a heading above the introduction text and its image */
+.tutorial .sections > .section {
+    padding: 0;
+    border-top: 1px solid var(--color-fill-gray);
+}
+
+.tutorial .intro-container {
+    margin: 0;
+}
+
+.tutorial .section .intro {
+    display: grid;
+    grid-template-columns: minmax(300px, 450px) 1fr;
+    column-gap: var(--classic-tutorial-column-gap);
+    align-items: start;
+    max-width: none;
+    margin: 0;
+    padding: 3rem var(--classic-tutorial-padding) 2rem;
+}
+
+.tutorial .section .intro .col.left {
+    display: contents;
+}
+
+.tutorial .section .intro .headline {
+    grid-column: 1 / -1;
+    margin: 0 0 2rem;
+}
+
+.tutorial .section .intro .eyebrow {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-size: 0.9375rem;
+    line-height: var(--spacing-body-line-height);
+    color: var(--color-figure-gray-secondary);
+}
+
+.tutorial .section .intro .eyebrow a {
+    color: inherit;
+}
+
+.tutorial .section .intro .heading {
+    margin: 0;
+    padding: 0;
+    border: none;
+    font-family: var(--typography-html-font-headline);
+    font-size: 1.75rem;
+    line-height: var(--spacing-body-line-height);
+    font-weight: 600;
+    color: var(--color-figure-gray);
+}
+
+.tutorial .section .intro .content {
+    margin: 0;
+    font-size: 1rem;
+    line-height: 1.6;
+}
+
+.tutorial .section .intro .col.right {
+    width: auto;
+    max-width: none;
+    margin: 0;
+    padding: 0;
+}
+
+.tutorial .section .intro .media {
+    margin: 0;
+}
+
+.tutorial .section .intro .media img {
+    width: 100%;
+    max-height: 400px;
+    object-fit: contain;
+    border-radius: 12px;
+}
+
+/* Steps: a row per step, the card at the left and its panel at the right */
+.tutorial .steps {
+    display: block;
+    font-size: 1rem;
+    line-height: var(--spacing-body-line-height);
+}
+
+.tutorial .steps .content-container {
+    width: auto;
+    margin: 0;
+    padding: 0 var(--classic-tutorial-padding) 2rem;
+}
+
+.tutorial .asset-container {
+    display: none;
+}
+
+.tutorial .step-container,
+.tutorial .step-container:not(:last-child) {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--classic-tutorial-column-gap);
+    margin: 0 0 2rem;
+}
+
+.tutorial .step {
+    position: static;
+    flex: 0 0 auto;
+    box-sizing: border-box;
+    width: var(--classic-tutorial-text-width);
+    min-width: 300px;
+    max-width: 450px;
+    margin: 0;
+    padding: 0;
+    overflow: visible;
+    border-radius: 0;
+    background: none;
+    animation: none;
+}
+
+.tutorial .step::before {
+    content: none;
+}
+
+.tutorial .step-label {
+    margin: 0 0 0.75rem;
+    font-size: 0.875rem;
+    line-height: var(--spacing-body-line-height);
+    font-weight: 600;
+    color: var(--color-link);
+}
+
+.tutorial .step .content {
+    font-size: 1rem;
+    line-height: 1.6;
+}
+
+.tutorial .step .content p {
+    margin: 0 0 1rem;
+}
+
+.tutorial .step .content p:last-child {
+    margin-bottom: 0;
+}
+
+.tutorial .step .caption {
+    margin-top: 1.25rem;
+    padding: 1.25rem 0 0;
+    border-color: var(--color-fill-gray);
+    font-size: 0.9375rem;
+    color: var(--color-figure-gray-secondary);
+}
+
+.tutorial .step-container .media-container {
+    display: block;
+    flex: 1 1 auto;
+    min-width: 0;
+    position: static;
+}
+
+/* Image panels */
+.tutorial .step-container .media-container > .asset {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    max-height: 500px;
+    padding: 2rem;
+    overflow: hidden;
+    border-radius: 12px;
+    background: var(--color-fill-secondary);
+}
+
+.tutorial .step-container .media-container > .asset img {
+    max-width: 100%;
+    max-height: 436px;
+    height: auto;
+    object-fit: contain;
+}
+
+/* Code panels: the file name above the numbered lines */
+.tutorial .mobile-code-preview {
+    display: block;
+    padding: 0;
+    background: none;
+}
+
+.tutorial .preview-toggle-container {
+    display: none;
+}
+
+.tutorial .code-listing-preview > .code-listing {
+    position: static;
+    display: flex;
+    flex-direction: column;
+    max-height: 500px;
+    overflow: hidden;
+    border: 1px solid var(--color-fill-gray);
+    border-radius: 12px;
+    background: var(--color-fill-secondary);
+    font-size: 1rem;
+    line-height: var(--spacing-body-line-height);
+    color: var(--color-figure-gray);
+}
+
+.tutorial .code-listing-preview .filename {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0;
+    padding: 0.875rem 1rem;
+    border-bottom: 1px solid var(--color-fill-gray);
+    background: var(--color-fill);
+}
+
+.tutorial .code-listing-preview .filename-link {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--typography-html-font-mono);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--color-figure-gray);
+}
+
+.tutorial .code-listing-preview .file-icon {
+    width: 16px;
+    height: 16px;
+    color: var(--color-figure-gray-secondary);
+    fill: currentColor;
+}
+
+.tutorial .code-listing-preview .container-general {
+    flex: 1;
+    overflow: auto;
+    padding: 1rem 0;
+}
+
+.tutorial .code-listing-preview pre {
+    display: block;
+    overflow: auto;
+    border-radius: 12px;
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    font-family: var(--typography-html-font-mono);
+    font-size: 0.8125rem;
+    line-height: 1.4;
+}
+
+.tutorial .code-listing-preview pre code {
+    display: block;
+    position: relative;
+    padding: 0;
+    background: transparent;
+    font-size: 0.875em;
+    line-height: inherit;
+    color: var(--color-figure-gray);
+}
+
+.tutorial .code-listing-preview .code-line-container {
+    display: inline-flex;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 0 1rem;
+}
+
+.tutorial .code-listing-preview .code-number {
+    flex-shrink: 0;
+    width: 3rem;
+    padding-right: 1rem;
+    box-sizing: border-box;
+    text-align: right;
+    color: var(--color-figure-gray-secondary);
+}
+
+.tutorial .code-listing-preview .code-line {
+    flex: 1;
+    white-space: pre;
+}
+
+/* Assessments: every question at once, each on a filled card */
+.tutorial .assessments-wrapper {
+    box-sizing: border-box;
+    max-width: 900px;
+    padding: 3rem var(--classic-tutorial-padding);
+    background: none;
+}
+
+.tutorial .assessments {
+    padding: 0;
+    background: none;
+}
+
+.tutorial .assessments-wrapper .assessments,
+.tutorial .assessments-wrapper .assessments > .col,
+.tutorial .assessments .assessment > .row,
+.tutorial .assessments .quiz {
+    flex: none;
+    width: auto;
+    max-width: none;
+    margin: 0;
+    padding: 0;
+}
+
+.tutorial .assessments .banner {
+    margin: 0 0 2rem;
+    padding: 0;
+    border-bottom: none;
+    text-align: left;
+}
+
+.tutorial .assessments .banner .col,
+.tutorial .assessments-wrapper .assessments > .col {
+    width: 100%;
+    margin: 0;
+}
+
+.tutorial .assessments .banner .title {
+    font-size: 1.5rem;
+    line-height: var(--spacing-body-line-height);
+    font-weight: 600;
+}
+
+.tutorial .assessments .assessment.assessment.assessment.assessment {
+    display: block;
+    margin: 0 0 1.5rem;
+    padding: 2rem;
+    border-radius: 12px;
+    background: var(--color-fill-secondary);
+}
+
+.tutorial .assessments .success,
+.tutorial .quiz .controls :is(.next, .results) {
+    display: none;
+}
+
+.tutorial .assessment > .row > .title {
+    margin: 0 0 1rem;
+    font-size: 0.875rem;
+    line-height: var(--spacing-body-line-height);
+    color: var(--color-figure-gray-secondary);
+}
+
+.tutorial .quiz > .title {
+    margin: 0 0 1.5rem;
+    font-size: 1.0625rem;
+    line-height: var(--spacing-body-line-height);
+}
+
+.tutorial .quiz .choices {
+    margin: 0;
+}
+
+.tutorial .quiz .controls {
+    margin: 0.25rem 0 0;
+}
+
+.tutorial .quiz label.choice {
+    display: flex;
+    flex-direction: row;
+    justify-content: normal;
+    align-items: flex-start;
+    position: relative;
+    margin: 0 0 0.75rem;
+    list-style-type: disc;
+    background: none;
+    padding: 1rem 1rem 1rem 3rem;
+    border: 2px solid var(--color-fill-gray);
+    border-radius: 8px;
+    font-size: 1rem;
+    line-height: var(--spacing-body-line-height);
+    cursor: pointer;
+    transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+/* A circle at the start of each answer */
+.tutorial .quiz label.choice::before {
+    content: "";
+    position: absolute;
+    left: 1rem;
+    top: 1.25rem;
+    box-sizing: border-box;
+    width: 18px;
+    height: 18px;
+    border: 2px solid var(--color-fill-gray);
+    border-radius: 50%;
+    background: var(--color-fill);
+}
+
+.tutorial .quiz label.choice:has(input[type="radio"]:checked)::before {
+    border-color: var(--color-link);
+    background: radial-gradient(var(--color-link) 0 4px, var(--color-fill) 5px);
+}
+
+.tutorial .quiz label.choice:hover {
+    border-color: var(--color-link);
+    background: color-mix(in srgb, var(--color-link) 5%, transparent);
+}
+
+.tutorial h2 {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+/* Call to action: a plain link to the next tutorial */
+.tutorial .call-to-action {
+    box-sizing: border-box;
+    max-width: 900px;
+    padding: 3rem var(--classic-tutorial-padding) 4rem;
+    border-top: 1px solid var(--color-fill-gray);
+    background: none;
+}
+
+.tutorial .call-to-action .row {
+    display: block;
+    width: auto;
+    margin: 0;
+}
+
+.tutorial .call-to-action .col {
+    width: auto;
+    max-width: none;
+    margin: 0;
+    padding: 0;
+}
+
+.tutorial .call-to-action .label,
+.tutorial .call-to-action .right-column {
+    display: none;
+}
+
+.tutorial .call-to-action h2 {
+    margin: 0 0 0.75rem;
+    font-family: var(--typography-html-font-headline);
+    font-size: 1.5rem;
+    line-height: var(--spacing-body-line-height);
+    font-weight: 600;
+}
+
+.tutorial .call-to-action .description {
+    margin: 0 0 1.5rem;
+    color: var(--color-figure-gray-secondary);
+}
+
+.tutorial .call-to-action .description p {
+    margin: 0;
+}
+
+.tutorial .call-to-action .button-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 0;
+    padding: 0;
+    border-radius: 0;
+    background: none;
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--color-link);
+}
+
+.tutorial .call-to-action .button-cta::after {
+    content: "\2192";
+}
+
+.tutorial .call-to-action .button-cta:hover {
+    text-decoration: underline;
+}
+
+@media only screen and (max-width: 1023px) {
+    .tutorial {
+        --classic-tutorial-padding: 2rem;
+    }
+
+    .tutorial .section .intro {
+        grid-template-columns: 1fr;
+    }
+
+    .tutorial .step-container,
+    .tutorial .step-container:not(:last-child) {
+        flex-direction: column;
+    }
+
+    .tutorial .step {
+        width: auto;
+        max-width: none;
+        min-width: 0;
+    }
+
+    .tutorial .step-container .media-container {
+        width: 100%;
+    }
+}
+
+@media only screen and (max-width: 767px) {
+    .tutorial {
+        --classic-tutorial-padding: 1.5rem;
+    }
+
+    .tutorial nav.nav .nav-title-content .title {
+        font-size: 0.8125rem;
+    }
+
+    .tutorial .tutorial-hero .hero {
+        min-height: 320px;
+        padding: 2rem 1rem;
+    }
+
+    .tutorial .tutorial-hero .row {
+        padding-left: 1rem;
+    }
+
+    .tutorial .tutorial-hero .heading {
+        font-size: 1.75rem;
+    }
+}

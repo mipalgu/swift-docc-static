@@ -468,18 +468,18 @@
  },
  "codeListing": {
   "static": ".code-listing",
-  "main": "main.doc-main > pre[class*='language-']",
+  "main": "main.doc-main > pre[class*='language-'], .step-code-panel",
   "vue": ".code-listing",
   "geometry": true
  },
  "codeListingPre": {
   "static": ".code-listing pre",
-  "main": "main.doc-main > pre[class*='language-']",
+  "main": "main.doc-main > pre[class*='language-'], .step-code-panel pre",
   "vue": ".code-listing pre"
  },
  "codeListingCode": {
   "static": ".code-listing pre code",
-  "main": "main.doc-main > pre[class*='language-'] code",
+  "main": "main.doc-main > pre[class*='language-'] code, .step-code-panel pre code",
   "vue": ".code-listing pre code"
  },
  "syntaxKeyword": {
@@ -706,9 +706,9 @@
   ]
  },
  "tutorialStepCode": {
-  "static": ".asset-container .code-preview",
+  "static": ".asset-container .code-preview, .media-container .mobile-code-preview .code-listing-preview .code-listing",
   "main": ".step-code-panel",
-  "vue": ".asset-container .code-preview",
+  "vue": ".asset-container .code-preview, .media-container .mobile-code-preview .code-listing-preview .code-listing",
   "kinds": [
    "tutorial"
   ]
@@ -747,7 +747,7 @@
  },
  "overviewCard": {
   "static": ".chapter.tile",
-  "main": ".tutorial-card",
+  "main": null,
   "vue": ".chapter.tile",
   "kinds": [
    "tutorial"
@@ -755,7 +755,7 @@
  },
  "overviewCardTitle": {
   "static": ".chapter .name",
-  "main": ".tutorial-card-title",
+  "main": null,
   "vue": ".chapter .name",
   "kinds": [
    "tutorial"
@@ -1803,7 +1803,7 @@
  },
  "overviewTopic": {
   "static": ".topic-list .topic",
-  "main": null,
+  "main": ".tutorial-card",
   "vue": ".topic-list .topic",
   "kinds": [
    "tutorial"
@@ -1827,7 +1827,7 @@
  },
  "overviewTopicTitle": {
   "static": ".topic-list .link",
-  "main": null,
+  "main": ".tutorial-card-title",
   "vue": ".topic-list .link",
   "kinds": [
    "tutorial"
