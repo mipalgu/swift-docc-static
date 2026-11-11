@@ -569,7 +569,7 @@
   ]
  },
  "tutorialNav": {
-  "static": "nav.tutorial-nav",
+  "static": "nav.nav",
   "main": "nav.tutorial-nav",
   "vue": "nav.nav",
   "kinds": [
@@ -577,7 +577,7 @@
   ]
  },
  "tutorialNavTitle": {
-  "static": ".tutorial-nav-title",
+  "static": ".nav-title-content .title",
   "main": ".tutorial-nav-title",
   "vue": ".nav-title-content .title",
   "kinds": [
@@ -585,9 +585,9 @@
   ]
  },
  "tutorialHero": {
-  "static": "section.tutorial-hero",
+  "static": ".tutorial-hero .hero",
   "main": ".tutorial-hero",
-  "vue": ".tutorial-hero .hero, .tutorial-hero",
+  "vue": ".tutorial-hero .hero",
   "geometry": true,
   "kinds": [
    "tutorial"
@@ -596,13 +596,13 @@
  "tutorialTitle": {
   "static": ".tutorial-hero h1",
   "main": ".tutorial-hero h1",
-  "vue": ".tutorial-hero h1, .hero h1",
+  "vue": ".tutorial-hero h1",
   "kinds": [
    "tutorial"
   ]
  },
  "tutorialChapter": {
-  "static": ".tutorial-chapter",
+  "static": ".tutorial-hero .eyebrow",
   "main": ".tutorial-chapter",
   "vue": ".tutorial-hero .eyebrow",
   "kinds": [
@@ -610,15 +610,15 @@
   ]
  },
  "tutorialAbstract": {
-  "static": ".tutorial-abstract",
+  "static": ".tutorial-hero .intro",
   "main": ".tutorial-abstract",
-  "vue": ".tutorial-hero .intro, .hero .content",
+  "vue": ".tutorial-hero .intro",
   "kinds": [
    "tutorial"
   ]
  },
  "tutorialSection": {
-  "static": ".tutorial-section",
+  "static": ".sections .section",
   "main": ".tutorial-section",
   "vue": ".sections .section",
   "kinds": [
@@ -626,7 +626,7 @@
   ]
  },
  "tutorialSectionTitle": {
-  "static": ".tutorial-section .section-title",
+  "static": ".section .intro h2",
   "main": ".tutorial-section .section-title",
   "vue": ".section .intro h2",
   "kinds": [
@@ -634,7 +634,7 @@
   ]
  },
  "tutorialStep": {
-  "static": ".step-card",
+  "static": ".step",
   "main": ".step-card",
   "vue": ".step",
   "kinds": [
@@ -642,7 +642,7 @@
   ]
  },
  "tutorialStepCode": {
-  "static": ".step-code-panel",
+  "static": ".asset-container .code-preview",
   "main": ".step-code-panel",
   "vue": ".asset-container .code-preview",
   "kinds": [
@@ -650,7 +650,7 @@
   ]
  },
  "tutorialAssessments": {
-  "static": ".tutorial-assessments",
+  "static": ".assessments-wrapper",
   "main": ".tutorial-assessments",
   "vue": ".assessments-wrapper",
   "kinds": [
@@ -658,7 +658,7 @@
   ]
  },
  "tutorialChoice": {
-  "static": ".choice",
+  "static": "label.choice",
   "main": ".choice",
   "vue": "label.choice",
   "kinds": [
@@ -666,7 +666,7 @@
   ]
  },
  "overviewHero": {
-  "static": ".overview-hero",
+  "static": ".tutorials-overview .hero",
   "main": ".overview-hero",
   "vue": ".tutorials-overview .hero",
   "kinds": [
@@ -674,7 +674,7 @@
   ]
  },
  "overviewTitle": {
-  "static": ".overview-hero h1, .overview-title",
+  "static": ".tutorials-overview .hero h1",
   "main": ".overview-hero h1, .overview-title",
   "vue": ".tutorials-overview .hero h1",
   "kinds": [
@@ -682,17 +682,1097 @@
   ]
  },
  "overviewCard": {
-  "static": ".tutorial-card",
+  "static": ".chapter.tile",
   "main": ".tutorial-card",
-  "vue": ".chapter.tile, .tutorials-overview .topic",
+  "vue": ".chapter.tile",
   "kinds": [
    "tutorial"
   ]
  },
  "overviewCardTitle": {
-  "static": ".tutorial-card-title",
+  "static": ".chapter .name",
   "main": ".tutorial-card-title",
-  "vue": ".chapter .name, .chapter h3",
+  "vue": ".chapter .name",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialNavBackground": {
+  "static": "nav.nav .nav__background",
+  "main": null,
+  "vue": "nav.nav .nav__background",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialNavKeyline": {
+  "static": "nav.nav .nav__background",
+  "main": null,
+  "vue": "nav.nav .nav__background",
+  "pseudo": "::after",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialNavContent": {
+  "static": "nav.nav .nav-content",
+  "main": null,
+  "vue": "nav.nav .nav-content",
+  "geometry": true,
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialNavTitleContainer": {
+  "static": "nav.nav .nav-title",
+  "main": null,
+  "vue": "nav.nav .nav-title",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialNavTitleLink": {
+  "static": "nav.nav .nav-title-content",
+  "main": null,
+  "vue": "nav.nav .nav-title-content",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialNavSubhead": {
+  "static": "nav.nav .nav-title-content .subhead",
+  "main": null,
+  "vue": "nav.nav .nav-title-content .subhead",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialNavSeparator": {
+  "static": "nav.nav .separator",
+  "main": null,
+  "vue": "nav.nav .separator",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialNavMenu": {
+  "static": "nav.nav .nav-menu",
+  "main": null,
+  "vue": "nav.nav .nav-menu",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialNavActions": {
+  "static": "nav.nav .nav-actions",
+  "main": null,
+  "vue": "nav.nav .nav-actions",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialNavMenuToggle": {
+  "static": "nav.nav .nav-menucta",
+  "main": null,
+  "vue": "nav.nav .nav-menucta",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialMobileDropdown": {
+  "static": "nav.nav .mobile-dropdown",
+  "main": null,
+  "vue": "nav.nav .mobile-dropdown",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialMobileChapterName": {
+  "static": "nav.nav .mobile-dropdown .chapter-name",
+  "main": null,
+  "vue": "nav.nav .mobile-dropdown .chapter-name",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialMobileOption": {
+  "static": "nav.nav .mobile-dropdown .option",
+  "main": null,
+  "vue": "nav.nav .mobile-dropdown .option",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialDropdownContainer": {
+  "static": ".dropdown-container",
+  "main": null,
+  "vue": ".dropdown-container",
+  "geometry": true,
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialDropdown": {
+  "static": ".dropdown-container .primary-dropdown",
+  "main": null,
+  "vue": ".dropdown-container .primary-dropdown",
+  "geometry": true,
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialDropdownToggle": {
+  "static": ".dropdown-container .primary-dropdown .form-dropdown-toggle",
+  "main": null,
+  "vue": ".dropdown-container .primary-dropdown .form-dropdown-toggle",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialDropdownTitle": {
+  "static": ".dropdown-container .primary-dropdown .form-dropdown-title",
+  "main": null,
+  "vue": ".dropdown-container .primary-dropdown .form-dropdown-title",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialDropdownIcon": {
+  "static": ".dropdown-container .primary-dropdown .form-icon",
+  "main": null,
+  "vue": ".dropdown-container .primary-dropdown .form-icon",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialDropdownOptions": {
+  "static": ".dropdown-container .primary-dropdown .options",
+  "main": null,
+  "vue": ".dropdown-container .primary-dropdown .options",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialDropdownChapterName": {
+  "static": ".dropdown-container .primary-dropdown .chapter-name",
+  "main": null,
+  "vue": ".dropdown-container .primary-dropdown .chapter-name",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialDropdownOption": {
+  "static": ".dropdown-container .primary-dropdown .option",
+  "main": null,
+  "vue": ".dropdown-container .primary-dropdown .option",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialDropdownOptionActive": {
+  "static": ".dropdown-container .primary-dropdown .option-active",
+  "main": null,
+  "vue": ".dropdown-container .primary-dropdown .option-active",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialDropdownChevron": {
+  "static": ".dropdown-container .chevron-icon",
+  "main": null,
+  "vue": ".dropdown-container .chevron-icon",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialSectionDropdown": {
+  "static": ".dropdown-container .secondary-dropdown",
+  "main": null,
+  "vue": ".dropdown-container .secondary-dropdown",
+  "geometry": true,
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialSectionDropdownToggle": {
+  "static": ".dropdown-container .secondary-dropdown .form-dropdown-toggle",
+  "main": null,
+  "vue": ".dropdown-container .secondary-dropdown .form-dropdown-toggle",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialSectionTracker": {
+  "static": ".dropdown-container .secondary-dropdown .section-tracker",
+  "main": null,
+  "vue": ".dropdown-container .secondary-dropdown .section-tracker",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialSectionDropdownOption": {
+  "static": ".dropdown-container .secondary-dropdown .option",
+  "main": null,
+  "vue": ".dropdown-container .secondary-dropdown .option",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialHeroBackground": {
+  "static": ".tutorial-hero .bg",
+  "main": null,
+  "vue": ".tutorial-hero .bg",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialHeroRow": {
+  "static": ".tutorial-hero .row",
+  "main": null,
+  "vue": ".tutorial-hero .row",
+  "geometry": true,
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialHeroColumn": {
+  "static": ".tutorial-hero .col",
+  "main": null,
+  "vue": ".tutorial-hero .col",
+  "geometry": true,
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialHeadline": {
+  "static": ".tutorial-hero .headline",
+  "main": null,
+  "vue": ".tutorial-hero .headline",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialAbstractParagraph": {
+  "static": ".tutorial-hero .intro p",
+  "main": null,
+  "vue": ".tutorial-hero .intro p",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialMetadata": {
+  "static": ".tutorial-hero .metadata",
+  "main": null,
+  "vue": ".tutorial-hero .metadata",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialMetadataItem": {
+  "static": ".tutorial-hero .metadata .item",
+  "main": null,
+  "vue": ".tutorial-hero .metadata .item",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialMetadataLastItem": {
+  "static": ".tutorial-hero .metadata .item:last-of-type",
+  "main": null,
+  "vue": ".tutorial-hero .metadata .item:last-of-type",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialDuration": {
+  "static": ".tutorial-hero .metadata .duration",
+  "main": null,
+  "vue": ".tutorial-hero .metadata .duration",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialDurationMinutes": {
+  "static": ".tutorial-hero .metadata .minutes",
+  "main": null,
+  "vue": ".tutorial-hero .metadata .minutes",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialMetadataLabel": {
+  "static": ".tutorial-hero .metadata .item > .bottom",
+  "main": null,
+  "vue": ".tutorial-hero .metadata .item > .bottom",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialMetadataIcon": {
+  "static": ".tutorial-hero .metadata .item-large-icon",
+  "main": null,
+  "vue": ".tutorial-hero .metadata .item-large-icon",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialMetadataLink": {
+  "static": ".tutorial-hero .metadata .content-link",
+  "main": null,
+  "vue": ".tutorial-hero .metadata .content-link",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialSections": {
+  "static": ".sections",
+  "main": null,
+  "vue": ".sections",
+  "geometry": true,
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialSectionIntroContainer": {
+  "static": ".section .intro-container",
+  "main": null,
+  "vue": ".section .intro-container",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialSectionIntro": {
+  "static": ".section .intro",
+  "main": null,
+  "vue": ".section .intro",
+  "geometry": true,
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialSectionIntroText": {
+  "static": ".section .intro .col.left",
+  "main": null,
+  "vue": ".section .intro .col.left",
+  "geometry": true,
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialSectionIntroMediaColumn": {
+  "static": ".section .intro .col.right",
+  "main": null,
+  "vue": ".section .intro .col.right",
+  "geometry": true,
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialSectionEyebrow": {
+  "static": ".section .intro .eyebrow",
+  "main": null,
+  "vue": ".section .intro .eyebrow",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialSectionEyebrowLink": {
+  "static": ".section .intro .eyebrow a",
+  "main": null,
+  "vue": ".section .intro .eyebrow a",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialSectionContent": {
+  "static": ".section .intro .content",
+  "main": null,
+  "vue": ".section .intro .content",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialSectionParagraph": {
+  "static": ".section .intro .content p",
+  "main": null,
+  "vue": ".section .intro .content p",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialSectionMedia": {
+  "static": ".section .intro .media img",
+  "main": null,
+  "vue": ".section .intro .media img",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialSteps": {
+  "static": ".steps",
+  "main": null,
+  "vue": ".steps",
+  "geometry": true,
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialStepsContent": {
+  "static": ".steps .content-container",
+  "main": null,
+  "vue": ".steps .content-container",
+  "geometry": true,
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialStepContainer": {
+  "static": ".step-container",
+  "main": null,
+  "vue": ".step-container",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialStepFocused": {
+  "static": ".step-container:first-child .step",
+  "main": null,
+  "vue": ".step.focused",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialStepFocusBar": {
+  "static": ".step-container:first-child .step",
+  "main": null,
+  "vue": ".step.focused",
+  "pseudo": "::before",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialStepUnfocused": {
+  "static": ".step-container.step-2 .step",
+  "main": null,
+  "vue": ".step-container.step-2 .step",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialStepUnfocusedBar": {
+  "static": ".step-container.step-2 .step",
+  "main": null,
+  "vue": ".step-container.step-2 .step",
+  "pseudo": "::before",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialStepLabel": {
+  "static": ".step .step-label",
+  "main": null,
+  "vue": ".step .step-label",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialStepContent": {
+  "static": ".step .content",
+  "main": null,
+  "vue": ".step .content",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialStepParagraph": {
+  "static": ".step .content p",
+  "main": null,
+  "vue": ".step .content p",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialStepCaption": {
+  "static": ".step .caption",
+  "main": null,
+  "vue": ".step .caption",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialStepMediaContainer": {
+  "static": ".step-container .media-container",
+  "main": null,
+  "vue": ".step-container .media-container",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialMobileCodePreview": {
+  "static": ".media-container .mobile-code-preview",
+  "main": null,
+  "vue": ".media-container .mobile-code-preview",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialMobileCodeListing": {
+  "static": ".mobile-code-preview .code-listing-preview .code-listing",
+  "main": null,
+  "vue": ".mobile-code-preview .code-listing-preview .code-listing",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialMobileFileName": {
+  "static": ".mobile-code-preview .code-listing-preview .filename .filename-link",
+  "main": null,
+  "vue": ".mobile-code-preview .code-listing-preview .filename a",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialMobilePreviewToggle": {
+  "static": ".mobile-code-preview .toggle-preview",
+  "main": null,
+  "vue": ".mobile-code-preview .toggle-preview",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialStepMobileImage": {
+  "static": ".media-container .asset img",
+  "main": null,
+  "vue": ".media-container .asset img",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialAssetContainer": {
+  "static": ".asset-container",
+  "main": null,
+  "vue": ".asset-container",
+  "geometry": true,
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialCodeListing": {
+  "static": ".code-preview .code-listing",
+  "main": null,
+  "vue": ".code-preview .code-listing",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialCodeFileName": {
+  "static": ".code-preview .filename",
+  "main": null,
+  "vue": ".code-preview .filename",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialCodeFileIcon": {
+  "static": ".code-preview .filename .file-icon",
+  "main": null,
+  "vue": ".code-preview .filename .file-icon",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialCodeContainer": {
+  "static": ".code-preview .container-general",
+  "main": null,
+  "vue": ".code-preview .container-general",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialCodePre": {
+  "static": ".code-preview pre",
+  "main": null,
+  "vue": ".code-preview pre",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialCodeCode": {
+  "static": ".code-preview pre code",
+  "main": null,
+  "vue": ".code-preview pre code",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialCodeLine": {
+  "static": ".code-preview .code-line-container",
+  "main": null,
+  "vue": ".code-preview .code-line-container",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialCodeLineNumber": {
+  "static": ".code-preview .code-number",
+  "main": null,
+  "vue": ".code-preview .code-number",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialCodeLineNumberText": {
+  "static": ".code-preview .code-number",
+  "main": null,
+  "vue": ".code-preview .code-number",
+  "pseudo": "::before",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialCodeHighlightedLine": {
+  "static": ".code-preview .code-line-container.highlighted",
+  "main": null,
+  "vue": ".code-preview .code-line-container.highlighted",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialCodeHighlightedNumber": {
+  "static": ".code-preview .highlighted .code-number",
+  "main": null,
+  "vue": ".code-preview .highlighted .code-number",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialRuntimePreview": {
+  "static": ".code-preview .runtime-preview",
+  "main": null,
+  "vue": ".code-preview .runtime-preview",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialRuntimePreviewHeader": {
+  "static": ".code-preview .runtime-preview .header",
+  "main": null,
+  "vue": ".code-preview .runtime-preview .header",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialAssetWrapper": {
+  "static": ".asset-container .asset-wrapper",
+  "main": null,
+  "vue": ".asset-container .asset-wrapper",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialStepAsset": {
+  "static": ".asset-container .step-asset",
+  "main": null,
+  "vue": ".asset-container .step-asset",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialStepAssetImage": {
+  "static": ".asset-container .step-asset img",
+  "main": null,
+  "vue": ".asset-container .step-asset img",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialAssessmentsRow": {
+  "static": ".assessments-wrapper .assessments",
+  "main": null,
+  "vue": ".assessments-wrapper .assessments",
+  "geometry": true,
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialAssessmentsBanner": {
+  "static": ".assessments .banner",
+  "main": null,
+  "vue": ".assessments .banner",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialAssessmentsTitle": {
+  "static": ".assessments .banner .title",
+  "main": null,
+  "vue": ".assessments .banner .title",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialQuestionProgress": {
+  "static": ".assessments div.row:not(.banner) > p.title",
+  "main": null,
+  "vue": ".assessments div.row:not(.banner) > p.title",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialQuiz": {
+  "static": ".assessments .quiz",
+  "main": null,
+  "vue": ".assessments .quiz",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialQuestionTitle": {
+  "static": ".quiz > .title",
+  "main": null,
+  "vue": ".quiz > .title",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialQuestionText": {
+  "static": ".quiz > .title p",
+  "main": null,
+  "vue": ".quiz > .title p",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialChoices": {
+  "static": ".quiz .choices",
+  "main": null,
+  "vue": ".quiz .choices",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialChoiceQuestion": {
+  "static": "label.choice .question",
+  "main": null,
+  "vue": "label.choice .question",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialChoiceCode": {
+  "static": "label.choice code",
+  "main": null,
+  "vue": "label.choice code",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialChoiceInput": {
+  "static": "label.choice input[type=radio]",
+  "main": null,
+  "vue": "label.choice input[type=radio]",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialQuizControls": {
+  "static": ".quiz .controls",
+  "main": null,
+  "vue": ".quiz .controls",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialSubmitButton": {
+  "static": ".quiz .controls .button-cta.check",
+  "main": null,
+  "vue": ".quiz .controls .button-cta.check",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialNextButton": {
+  "static": ".quiz .controls .button-cta.next",
+  "main": null,
+  "vue": ".quiz .controls .button-cta.next",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialCallToAction": {
+  "static": ".call-to-action",
+  "main": null,
+  "vue": ".call-to-action",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialCallToActionRow": {
+  "static": ".call-to-action .row",
+  "main": null,
+  "vue": ".call-to-action .row",
+  "geometry": true,
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialCallToActionLabel": {
+  "static": ".call-to-action .label",
+  "main": null,
+  "vue": ".call-to-action .label",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialCallToActionTitle": {
+  "static": ".call-to-action h2",
+  "main": null,
+  "vue": ".call-to-action h2",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialCallToActionDescription": {
+  "static": ".call-to-action .description",
+  "main": null,
+  "vue": ".call-to-action .description",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "tutorialCallToActionButton": {
+  "static": ".call-to-action .button-cta",
+  "main": null,
+  "vue": ".call-to-action .button-cta",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "overviewPage": {
+  "static": ".tutorials-overview",
+  "main": null,
+  "vue": ".tutorials-overview",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "overviewGradient": {
+  "static": ".tutorials-overview .radial-gradient",
+  "main": null,
+  "vue": ".tutorials-overview .radial-gradient",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "overviewHeroCopy": {
+  "static": ".tutorials-overview .hero .copy-container",
+  "main": null,
+  "vue": ".tutorials-overview .hero .copy-container",
+  "geometry": true,
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "overviewHeroContent": {
+  "static": ".tutorials-overview .hero .content",
+  "main": null,
+  "vue": ".tutorials-overview .hero .content",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "overviewHeroParagraph": {
+  "static": ".tutorials-overview .hero .content p",
+  "main": null,
+  "vue": ".tutorials-overview .hero .content p",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "overviewHeroMeta": {
+  "static": ".tutorials-overview .hero .meta",
+  "main": null,
+  "vue": ".tutorials-overview .hero .meta",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "overviewHeroTime": {
+  "static": ".tutorials-overview .hero .meta .time",
+  "main": null,
+  "vue": ".tutorials-overview .hero .meta .time",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "overviewHeroTimerIcon": {
+  "static": ".tutorials-overview .hero .timer-icon",
+  "main": null,
+  "vue": ".tutorials-overview .hero .timer-icon",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "overviewHeroButton": {
+  "static": ".tutorials-overview .hero .button-cta",
+  "main": null,
+  "vue": ".tutorials-overview .hero .button-cta",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "overviewHeroImage": {
+  "static": ".tutorials-overview .hero .asset img",
+  "main": null,
+  "vue": ".tutorials-overview .hero .asset img",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "overviewLearningPath": {
+  "static": ".learning-path",
+  "main": null,
+  "vue": ".learning-path",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "overviewMainContainer": {
+  "static": ".learning-path .main-container",
+  "main": null,
+  "vue": ".learning-path .main-container",
+  "geometry": true,
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "overviewNavigation": {
+  "static": ".learning-path .secondary-content-container",
+  "main": null,
+  "vue": ".learning-path .secondary-content-container",
+  "geometry": true,
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "overviewNavigationLink": {
+  "static": ".learning-path .tutorials-navigation-link",
+  "main": null,
+  "vue": ".learning-path .tutorials-navigation-link",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "overviewPrimaryContainer": {
+  "static": ".learning-path .primary-content-container",
+  "main": null,
+  "vue": ".learning-path .primary-content-container",
+  "geometry": true,
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "overviewVolume": {
+  "static": ".learning-path .volume",
+  "main": null,
+  "vue": ".learning-path .volume",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "overviewChapterInfo": {
+  "static": ".chapter .info",
+  "main": null,
+  "vue": ".chapter .info",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "overviewChapterImage": {
+  "static": ".chapter .info .asset",
+  "main": null,
+  "vue": ".chapter .info .asset",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "overviewChapterIntro": {
+  "static": ".chapter .intro",
+  "main": null,
+  "vue": ".chapter .intro",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "overviewChapterEyebrow": {
+  "static": ".chapter .eyebrow",
+  "main": null,
+  "vue": ".chapter .eyebrow",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "overviewChapterContent": {
+  "static": ".chapter .intro .content",
+  "main": null,
+  "vue": ".chapter .intro .content",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "overviewTopicList": {
+  "static": ".chapter .topic-list",
+  "main": null,
+  "vue": ".chapter .topic-list",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "overviewTopicListLine": {
+  "static": ".chapter .topic-list",
+  "main": null,
+  "vue": ".chapter .topic-list",
+  "pseudo": "::before",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "overviewTopic": {
+  "static": ".topic-list .topic",
+  "main": null,
+  "vue": ".topic-list .topic",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "overviewTopicIcon": {
+  "static": ".topic-list .topic-icon",
+  "main": null,
+  "vue": ".topic-list .topic-icon",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "overviewTopicLink": {
+  "static": ".topic-list .container",
+  "main": null,
+  "vue": ".topic-list .container",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "overviewTopicTitle": {
+  "static": ".topic-list .link",
+  "main": null,
+  "vue": ".topic-list .link",
+  "kinds": [
+   "tutorial"
+  ]
+ },
+ "overviewTopicTime": {
+  "static": ".topic-list .time",
+  "main": null,
+  "vue": ".topic-list .time",
   "kinds": [
    "tutorial"
   ]

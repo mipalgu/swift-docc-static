@@ -1,0 +1,946 @@
+/* ========================================
+   Tutorial navigation bar (swift-docc-render NavBase, tutorial NavigationBar
+   and tutorials overview Nav).  The narrow-screen menu opens with a hidden
+   check box; the tutorial and section menus are popovers.
+   ======================================== */
+
+.tutorial .nav,
+.tutorials-overview .nav {
+    position: sticky;
+    top: 0;
+    width: 100%;
+    height: 3.0588235294rem;
+    z-index: 9997;
+    --nav-padding: 1.2941176471rem;
+    color: var(--color-nav-color, #000);
+}
+
+.tutorials-overview .nav.theme-dark {
+    background: none;
+    color: var(--color-nav-dark-color, #fff);
+}
+
+.tutorial .nav__wrapper,
+.tutorials-overview .nav__wrapper {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: auto;
+    min-height: 100%;
+    z-index: 1;
+}
+
+.tutorial .nav__background,
+.tutorials-overview .nav__background {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    transition: background-color 0s ease-in;
+    background-color: var(--color-nav-background, transparent);
+}
+
+/* The keyline under the bar */
+.tutorial .nav__background::after,
+.tutorials-overview .nav__background::after {
+    content: "";
+    display: block;
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 980px;
+    height: 1px;
+    z-index: 1;
+    background-color: var(--color-nav-keyline, rgba(0, 0, 0, 0.2));
+}
+
+.tutorial .nav--solid-background .nav__background {
+    background-color: var(--color-nav-solid-background, #fff);
+    backdrop-filter: none;
+}
+
+.tutorial .nav--solid-background .nav__background::after {
+    width: 100%;
+}
+
+.tutorials-overview .theme-dark .nav__background::after {
+    background-color: var(--color-nav-dark-keyline, rgba(66, 66, 66, 0.95));
+}
+
+/* Once the page scrolls, the bar sticks: a blurred background and a full-width keyline */
+@keyframes tutorial-nav-stuck {
+    from { background-color: transparent; }
+    to {
+        background-color: var(--color-nav-dark-uiblur-stuck, rgba(42, 42, 42, 0.7));
+        backdrop-filter: saturate(180%) blur(20px);
+    }
+}
+
+@keyframes tutorial-nav-keyline-stuck {
+    to {
+        width: 100%;
+        background-color: var(--tutorial-nav-stuck-keyline);
+    }
+}
+
+.tutorials-overview .nav__background {
+    animation: tutorial-nav-stuck linear both;
+    animation-timeline: scroll(root);
+    animation-range: 0 1px;
+}
+
+.tutorial .nav__background::after,
+.tutorials-overview .nav__background::after {
+    --tutorial-nav-stuck-keyline: var(--color-nav-sticking-expanded-keyline, rgba(0, 0, 0, 0.1));
+    animation: tutorial-nav-keyline-stuck linear both;
+    animation-timeline: scroll(root);
+    animation-range: 0 1px;
+}
+
+.tutorials-overview .nav__background::after {
+    --tutorial-nav-stuck-keyline: var(--color-nav-dark-sticking-expanded-keyline, rgba(66, 66, 66, 0.7));
+}
+
+.tutorial .nav-overlay,
+.tutorials-overview .nav-overlay {
+    position: fixed;
+    left: 0;
+    right: 0;
+    top: 0;
+    display: block;
+    opacity: 0;
+}
+
+.tutorial .nav-content,
+.tutorials-overview .nav-content {
+    display: flex;
+    padding: 0 var(--nav-padding);
+    max-width: 980px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 2;
+    justify-content: space-between;
+}
+
+@supports (padding: max(0px)) {
+    .tutorial .nav-content,
+    .tutorials-overview .nav-content {
+        padding-left: max(var(--nav-padding), env(safe-area-inset-left));
+        padding-right: max(var(--nav-padding), env(safe-area-inset-right));
+    }
+}
+
+.tutorial .nav-menu,
+.tutorials-overview .nav-menu {
+    font-size: 0.7058823529rem;
+    line-height: 1;
+    font-weight: 400;
+    font-family: var(--typography-html-font, "Helvetica Neue", "Helvetica", "Arial", sans-serif);
+    flex: 1 1 auto;
+    display: flex;
+    justify-content: flex-end;
+    min-width: 0;
+}
+
+.tutorial .nav-menu-tray,
+.tutorials-overview .nav-menu-tray {
+    align-items: center;
+    display: flex;
+    justify-content: space-between;
+}
+
+.tutorial .nav-actions,
+.tutorials-overview .nav-actions {
+    display: flex;
+    align-items: center;
+}
+
+.tutorial .nav-title,
+.tutorials-overview .nav-title {
+    height: 3.0588235294rem;
+    font-size: 1.1176470588rem;
+    line-height: 1.4210526316;
+    font-weight: 400;
+    font-family: var(--typography-html-font, "Helvetica Neue", "Helvetica", "Arial", sans-serif);
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+    box-sizing: border-box;
+    overflow: hidden;
+    color: var(--color-figure-gray, #000);
+    transition: color 0s ease-in;
+}
+
+.tutorial .nav-title span,
+.tutorials-overview .nav-title span {
+    line-height: normal;
+}
+
+.tutorial .nav-title a,
+.tutorials-overview .nav-title a {
+    letter-spacing: inherit;
+    line-height: normal;
+    margin: 0;
+    text-decoration: none;
+    white-space: nowrap;
+    color: var(--color-figure-gray, #000);
+    transition: color 0s ease-in;
+}
+
+.tutorials-overview .theme-dark .nav-title,
+.tutorials-overview .theme-dark .nav-title a {
+    color: var(--color-nav-dark-link-color, #fff);
+}
+
+.tutorial .nav-title-content,
+.tutorials-overview .nav-title-content {
+    display: block;
+    max-width: 100%;
+}
+
+.tutorial .nav-title-content .title,
+.tutorials-overview .nav-title-content .title {
+    color: var(--color-nav-root-title, currentColor);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+    display: inline-block;
+    vertical-align: top;
+    max-width: 296px;
+}
+
+.tutorial .nav-title-content .subhead {
+    color: var(--color-nav-root-subhead, var(--color-tutorials-teal, #000));
+}
+
+.tutorials-overview .theme-dark .nav-title-content .subhead {
+    color: var(--color-nav-dark-root-subhead, #fff);
+}
+
+/* The button that opens the menu on narrow screens, with its check box */
+.tutorial .nav-menu-toggle,
+.tutorials-overview .nav-menu-toggle {
+    display: none;
+}
+
+@media only screen and (max-width: 767px) {
+    .tutorial .nav-menu-toggle,
+    .tutorials-overview .nav-menu-toggle {
+        display: block;
+    }
+}
+
+.tutorial .nav-menucta,
+.tutorials-overview .nav-menucta {
+    cursor: pointer;
+    display: none;
+    align-items: center;
+    overflow: hidden;
+    width: 1.1764705882rem;
+    -webkit-tap-highlight-color: transparent;
+    height: 2.8235294118rem;
+    color: var(--color-link, #36f);
+}
+
+.tutorial .nav-menucta-chevron,
+.tutorials-overview .nav-menucta-chevron {
+    display: block;
+    position: relative;
+    width: 100%;
+    height: 0.7058823529rem;
+    transition: transform 0.3s linear;
+}
+
+.tutorial .nav-menucta-chevron::before,
+.tutorial .nav-menucta-chevron::after,
+.tutorials-overview .nav-menucta-chevron::before,
+.tutorials-overview .nav-menucta-chevron::after {
+    content: "";
+    display: block;
+    position: absolute;
+    top: 0.5882352941rem;
+    width: 0.7058823529rem;
+    height: 0.0588235294rem;
+    transition: transform 0.3s linear;
+    background: var(--color-figure-gray, #000);
+}
+
+.tutorial .nav-menucta-chevron::before,
+.tutorials-overview .nav-menucta-chevron::before {
+    right: 50%;
+    border-radius: 0.5px 0 0 0.5px;
+    transform-origin: 100% 100%;
+    transform: rotate(40deg) scaleY(1.5);
+}
+
+.tutorial .nav-menucta-chevron::after,
+.tutorials-overview .nav-menucta-chevron::after {
+    left: 50%;
+    border-radius: 0 0.5px 0.5px 0;
+    transform-origin: 0 100%;
+    transform: rotate(-40deg) scaleY(1.5);
+}
+
+.tutorials-overview .theme-dark .nav-menucta-chevron::before,
+.tutorials-overview .theme-dark .nav-menucta-chevron::after {
+    background: var(--color-nav-dark-link-color, #fff);
+}
+
+.tutorial .nav-menu-toggle:focus-visible ~ .nav__wrapper .nav-menucta,
+.tutorials-overview .nav-menu-toggle:focus-visible ~ .nav__wrapper .nav-menucta {
+    outline: 4px solid var(--color-focus-color, rgba(0, 125, 250, 0.6));
+    outline-offset: -4px;
+}
+
+.tutorial .nav-menu-items,
+.tutorials-overview .nav-menu-items {
+    display: flex;
+    justify-content: flex-end;
+    list-style: none;
+    margin: 0;
+}
+
+.tutorial .nav-menu-item,
+.tutorials-overview .nav-menu-item {
+    margin-inline-start: 1.4117647059rem;
+    list-style: none;
+    min-width: 0;
+}
+
+/* Tutorial page: title, separator, tutorial menu and section menu on one grid */
+@media only screen and (min-width: 768px) {
+    .tutorial .nav .nav-content {
+        display: grid;
+        grid-template-columns: auto auto 3fr;
+        align-items: center;
+    }
+
+    .tutorial .nav .nav-menu {
+        padding: 0;
+        justify-content: flex-start;
+        grid-column: 3 / 5;
+    }
+
+    .tutorial .nav .nav-menu-item {
+        margin: 0;
+    }
+
+    .tutorials-overview .nav .nav-menu-items .in-page-navigation {
+        display: none;
+    }
+}
+
+.tutorial .nav .nav-title {
+    grid-column: 1;
+    padding-top: 0;
+}
+
+.tutorial .separator {
+    height: 20px;
+    border-right: 1px solid;
+    border-color: var(--color-nav-outlines, #ccc);
+    margin: 0 20px;
+    grid-column: 2;
+}
+
+.tutorial .mobile-dropdown-container {
+    display: none;
+}
+
+.tutorial .dropdown-container {
+    height: 3.0588235294rem;
+    display: grid;
+    grid-template-columns: minmax(230px, 285px) auto minmax(230px, 1fr);
+    align-items: center;
+}
+
+.tutorial .dropdown-container .chevron-icon {
+    padding: 0;
+    color: var(--color-nav-outlines, #ccc);
+    grid-column: 2;
+    height: 20px;
+    width: 20px;
+    margin: 0 4px;
+}
+
+.tutorials-overview .nav .nav-menu {
+    padding-top: 0;
+}
+
+.tutorials-overview .nav .nav-menu .nav-menu-items {
+    margin-left: auto;
+}
+
+/* Menus */
+.tutorial .form-element {
+    position: relative;
+}
+
+.tutorial .form-dropdown {
+    font-size: 1rem;
+    line-height: 1.2352941176;
+    font-weight: 400;
+    font-family: var(--typography-html-font, "Helvetica Neue", "Helvetica", "Arial", sans-serif);
+    display: block;
+    box-sizing: border-box;
+    width: 100%;
+    height: 3.3em;
+    color: var(--color-dropdown-text, #000);
+    padding: 1.1176470588rem 2.3529411765rem 0 0.9411764706rem;
+    text-align: left;
+    border: 1px solid var(--color-dropdown-border, #ccc);
+    border-radius: var(--border-radius, 4px);
+    background-clip: padding-box;
+    margin-bottom: 0.8235294118rem;
+    appearance: none;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+    min-height: 32px;
+}
+
+.tutorial .form-dropdown.no-eyebrow {
+    padding-top: 0;
+}
+
+.tutorial .form-dropdown .form-icon {
+    position: absolute;
+    display: block;
+    pointer-events: none;
+    fill: var(--color-figure-gray-tertiary, #666);
+    right: 14px;
+    width: 13px;
+    height: auto;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: auto;
+    line-height: 1;
+    text-align: start;
+    white-space: normal;
+}
+
+.tutorial .dropdown-small {
+    height: 30px;
+    display: flex;
+    align-items: center;
+    position: relative;
+    background: var(--color-fill, #fff);
+}
+
+.tutorial .dropdown-small .form-dropdown-toggle {
+    line-height: 1.5;
+    font-size: 12px;
+    padding-top: 0;
+    padding-bottom: 0;
+    padding-left: 20px;
+    min-height: unset;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    margin: 0;
+}
+
+.tutorial .dropdown-small .form-dropdown-toggle:focus-visible {
+    box-shadow: 0 0 0 2px var(--color-focus-color, rgba(0, 125, 250, 0.6));
+    outline: none;
+    border-color: var(--color-focus-border-color, var(--color-fill-blue, #00f));
+}
+
+.tutorial .form-dropdown-title {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.tutorial .dropdown-custom {
+    border-radius: var(--border-radius, 4px);
+}
+
+.tutorial .primary-dropdown,
+.tutorial .secondary-dropdown {
+    background: var(--color-tutorial-navbar-dropdown-background, var(--color-fill, #fff));
+    border-color: var(--color-tutorial-navbar-dropdown-border, var(--color-fill-gray, #ccc));
+}
+
+.tutorial .primary-dropdown .form-dropdown,
+.tutorial .secondary-dropdown .form-dropdown {
+    border-color: var(--color-tutorial-navbar-dropdown-border, var(--color-fill-gray, #ccc));
+}
+
+.tutorial .primary-dropdown {
+    grid-column: 1 / 2;
+    anchor-name: --tutorial-menu;
+}
+
+.tutorial .secondary-dropdown {
+    grid-column: 3;
+    anchor-name: --section-menu;
+}
+
+/* An open menu: the menu continues the toggle's border */
+.tutorial .dropdown-custom:has(.form-dropdown-content:popover-open) {
+    border-radius: var(--border-radius, 4px) var(--border-radius, 4px) 0 0;
+}
+
+.tutorial .dropdown-custom:has(.form-dropdown-content:popover-open) .form-dropdown-toggle {
+    border-radius: var(--border-radius, 4px) var(--border-radius, 4px) 0 0;
+    border-bottom: none;
+    padding-bottom: 1px;
+}
+
+.tutorial .dropdown-custom:has(.form-dropdown-content:popover-open) .form-icon {
+    transform: translateY(-50%) scale(-1);
+}
+
+.tutorial .dropdown-custom .form-dropdown-content {
+    background: var(--color-tutorial-navbar-dropdown-background, var(--color-fill, #fff));
+    color: inherit;
+    position: absolute;
+    inset: auto;
+    margin: 0;
+    box-sizing: border-box;
+    border-bottom-left-radius: var(--border-radius, 4px);
+    border-bottom-right-radius: var(--border-radius, 4px);
+    border: 1px solid var(--color-tutorial-navbar-dropdown-border, var(--color-fill-gray, #ccc));
+    border-top: none;
+    display: none;
+    overflow-y: auto;
+    max-height: calc(100vh - 3.0588235294rem - 72px);
+    list-style: none;
+    padding: 0 0 20px;
+    font-size: 0.7058823529rem;
+}
+
+.tutorial .dropdown-custom .form-dropdown-content:popover-open {
+    display: block;
+}
+
+.tutorial .primary-dropdown .form-dropdown-content {
+    position-anchor: --tutorial-menu;
+}
+
+.tutorial .secondary-dropdown .form-dropdown-content {
+    position-anchor: --section-menu;
+}
+
+@supports (anchor-name: --menu) {
+    .tutorial .dropdown-custom .form-dropdown-content {
+        top: anchor(bottom);
+        left: anchor(left);
+        width: anchor-size(width);
+    }
+}
+
+@supports not (anchor-name: --menu) {
+    .tutorial .dropdown-custom .form-dropdown-content {
+        position: fixed;
+        top: 3.0588235294rem;
+        left: 50%;
+        transform: translateX(-50%);
+        width: min(285px, 100vw);
+    }
+}
+
+.tutorial .primary-dropdown .options {
+    padding-top: 1rem;
+    padding-bottom: 0;
+}
+
+.tutorial .dropdown-custom .option {
+    cursor: pointer;
+    padding: 5px 20px;
+    font-size: 12px;
+    line-height: 20px;
+    outline: none;
+}
+
+.tutorial .primary-dropdown .option {
+    padding: 5px 20px 5px 30px;
+}
+
+.tutorial .dropdown-custom .option > a {
+    display: block;
+    margin: -5px -20px;
+    padding: 5px 20px;
+    color: inherit;
+    text-decoration: none;
+}
+
+.tutorial .primary-dropdown .option > a {
+    margin: -5px -20px -5px -30px;
+    padding: 5px 20px 5px 30px;
+}
+
+.tutorial .dropdown-custom .option:hover,
+.tutorial .dropdown-custom .option:has(> a:focus-visible) {
+    background-color: var(--color-fill-tertiary, #f0f0f0);
+}
+
+.tutorial .dropdown-custom .option > a:focus-visible {
+    outline: none;
+}
+
+.tutorial .dropdown-custom .option.option-active {
+    font-weight: 600;
+}
+
+.tutorial .primary-dropdown .chapter-list {
+    padding-bottom: 20px;
+}
+
+.tutorial .primary-dropdown .chapter-list > ul {
+    list-style: none;
+    margin: 0;
+}
+
+.tutorial .primary-dropdown .chapter-name {
+    margin: 0 20px 5px 20px;
+    line-height: normal;
+    color: var(--color-figure-gray-secondary, #666);
+}
+
+.tutorial .section-tracker {
+    font-size: 0.7058823529rem;
+    line-height: 1.3333333333;
+    font-weight: 400;
+    font-family: var(--typography-html-font, "Helvetica Neue", "Helvetica", "Arial", sans-serif);
+    color: var(--color-figure-gray-secondary, #666);
+    margin-left: 15px;
+}
+
+/* The section in view: the section menu shows its title and number and marks it */
+.tutorial .tutorial-hero,
+.tutorial .sections > .section,
+.tutorial .assessments-wrapper,
+.tutorials-overview .chapter {
+    view-timeline-name: var(--tutorial-section-timeline, none);
+    view-timeline-inset: 15% 85%;
+}
+
+.tutorials-overview .chapter {
+    view-timeline-inset: 30% 70%;
+}
+
+@keyframes tutorial-shown {
+    from, to { visibility: visible; }
+}
+
+@keyframes tutorial-option-current {
+    from, to { font-weight: 600; }
+}
+
+.tutorial .secondary-dropdown .form-dropdown-title {
+    display: grid;
+}
+
+@keyframes tutorial-expanded {
+    from, to {
+        max-width: none;
+        visibility: visible;
+    }
+}
+
+.tutorial .secondary-dropdown .section-tracker .tracked {
+    display: inline-block;
+    vertical-align: top;
+    overflow: hidden;
+    max-width: 0;
+    visibility: hidden;
+    animation: tutorial-expanded linear none;
+    animation-timeline: var(--tutorial-section-timeline, none);
+}
+
+.tutorial .secondary-dropdown .form-dropdown-title .tracked {
+    grid-area: 1 / 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    visibility: hidden;
+    animation: tutorial-shown linear none;
+    animation-timeline: var(--tutorial-section-timeline, none);
+}
+
+.tutorial .secondary-dropdown .option,
+.tutorial .mobile-dropdown .section-list .option {
+    animation: tutorial-option-current linear none;
+    animation-timeline: var(--tutorial-section-timeline, none);
+}
+
+.tutorial .secondary-dropdown .form-dropdown-toggle :is(.form-dropdown-title, .section-tracker) .tracked:first-child,
+.tutorial .secondary-dropdown .option:first-child,
+.tutorial .mobile-dropdown .section-list li:first-child .option {
+    animation-fill-mode: backwards;
+}
+
+.tutorial .secondary-dropdown .form-dropdown-toggle :is(.form-dropdown-title, .section-tracker) .tracked:last-child,
+.tutorial .secondary-dropdown .option:last-child,
+.tutorial .mobile-dropdown .section-list li:last-child .option {
+    animation-fill-mode: forwards;
+}
+
+@supports not (animation-timeline: view()) {
+    .tutorial .secondary-dropdown .tracked:first-child {
+        visibility: visible;
+    }
+}
+
+@media only screen and (max-width: 1023px) {
+    .tutorial .dropdown-container {
+        grid-template-columns: minmax(173px, 216px) auto minmax(173px, 1fr);
+    }
+
+    .tutorial .nav-title-content .title,
+    .tutorials-overview .nav-title-content .title {
+        max-width: 205px;
+    }
+
+    .tutorials-overview .nav__background::after {
+        width: 100%;
+    }
+}
+
+/* Narrow screens: the menu folds into a tray that the menu button opens */
+@media only screen and (max-width: 767px) {
+    .tutorial .nav,
+    .tutorials-overview .nav {
+        --nav-padding: 0.9411764706rem;
+        min-width: 320px;
+        height: 2.8235294118rem;
+    }
+
+    .tutorial .nav__background::after {
+        width: 100%;
+    }
+
+    .tutorials-overview .nav__background::after {
+        width: 100%;
+    }
+
+    .tutorial .nav__background,
+    .tutorials-overview .nav__background {
+        min-height: 2.8235294118rem;
+        transition: background-color 0s ease 0.7s;
+    }
+
+    .tutorial .nav-content,
+    .tutorials-overview .nav-content {
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        grid-auto-rows: minmax(min-content, max-content);
+        grid-template-areas: "pre-title title actions" "menu menu menu";
+    }
+
+    .tutorial .nav .nav-title,
+    .tutorials-overview .nav .nav-title {
+        grid-area: title;
+        padding-top: 0;
+        height: 2.8235294118rem;
+    }
+
+    .tutorial .nav-title a,
+    .tutorials-overview .nav-title a {
+        display: flex;
+    }
+
+    .tutorial .nav-title-content .title,
+    .tutorials-overview .nav-title-content .title {
+        flex-basis: fill;
+        display: initial;
+        vertical-align: initial;
+        max-width: none;
+    }
+
+    .tutorial .nav-menu,
+    .tutorials-overview .nav-menu {
+        font-size: 0.8235294118rem;
+        line-height: 1;
+        grid-area: menu;
+    }
+
+    .tutorial .nav-menu-tray,
+    .tutorials-overview .nav-menu-tray {
+        display: block;
+        overflow: hidden;
+        pointer-events: none;
+        visibility: hidden;
+        max-height: 0;
+        transition: max-height 0.4s ease-in 0s, visibility 0s linear 1s;
+        width: 100%;
+    }
+
+    .tutorial .nav-actions,
+    .tutorials-overview .nav-actions {
+        grid-area: actions;
+        justify-content: flex-end;
+    }
+
+    .tutorial .nav-menucta,
+    .tutorials-overview .nav-menucta {
+        display: flex;
+    }
+
+    .tutorial .nav-menu-items,
+    .tutorials-overview .nav-menu-items {
+        display: block;
+        opacity: 0;
+        padding: 1rem 1.8823529412rem 1.6470588235rem 1.8823529412rem;
+        transform: translate3d(0, -50px, 0);
+        transition: transform 1s cubic-bezier(0.07, 1.06, 0.27, 0.95) 0.5s, opacity 0.7s cubic-bezier(0.07, 1.06, 0.27, 0.95) 0.2s;
+    }
+
+    .tutorial .nav-menu-item,
+    .tutorials-overview .nav-menu-item {
+        margin-inline-start: 0;
+        width: 100%;
+        min-height: 2.4705882353rem;
+        opacity: 0;
+        transform: none;
+        transition: 0.5s ease;
+        transition-property: transform, opacity;
+    }
+
+    .tutorial .separator,
+    .tutorial .dropdown-container {
+        display: none;
+    }
+
+    .tutorial .mobile-dropdown-container {
+        display: block;
+    }
+
+    .tutorial .mobile-dropdown {
+        box-sizing: border-box;
+        padding-left: 0.2352941176rem;
+        padding-right: 0.2352941176rem;
+    }
+
+    /* The open menu */
+    .tutorial .nav:has(.nav-menu-toggle:checked) .nav__background,
+    .tutorials-overview .nav:has(.nav-menu-toggle:checked) .nav__background {
+        background-color: var(--color-nav-expanded, #fff);
+        max-height: none;
+        transition: background-color 0s ease;
+        transition-property: background-color, backdrop-filter;
+        animation: none;
+    }
+
+    @supports (backdrop-filter: initial) {
+        .tutorial .nav:has(.nav-menu-toggle:checked) .nav__background {
+            backdrop-filter: none;
+            background-color: var(--color-nav-solid-background, #fff);
+        }
+
+        .tutorials-overview .nav:has(.nav-menu-toggle:checked) .nav__background {
+            backdrop-filter: saturate(180%) blur(20px);
+            background-color: var(--color-nav-dark-uiblur-expanded, rgba(42, 42, 42, 0.9));
+        }
+    }
+
+    .tutorial .nav:has(.nav-menu-toggle:checked) .nav-overlay,
+    .tutorials-overview .nav:has(.nav-menu-toggle:checked) .nav-overlay {
+        background-color: rgba(51, 51, 51, 0.4);
+        transition: opacity 0.7s cubic-bezier(0.07, 1.06, 0.27, 0.95) 0.2s;
+        bottom: 0;
+        opacity: 1;
+    }
+
+    .tutorial .nav:has(.nav-menu-toggle:checked) .nav-menu-tray,
+    .tutorials-overview .nav:has(.nav-menu-toggle:checked) .nav-menu-tray {
+        max-height: calc(100vh - 5.6470588235rem);
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        pointer-events: auto;
+        visibility: visible;
+        transition-delay: 0.2s, 0s;
+    }
+
+    .tutorial .nav:has(.nav-menu-toggle:checked) .nav-menu-items,
+    .tutorials-overview .nav:has(.nav-menu-toggle:checked) .nav-menu-items {
+        opacity: 1;
+        transform: translateZ(0);
+        transition-delay: 0.2s, 0.4s;
+    }
+
+    .tutorial .nav:has(.nav-menu-toggle:checked) .nav-menu-item,
+    .tutorials-overview .nav:has(.nav-menu-toggle:checked) .nav-menu-item {
+        opacity: 1;
+        transform: translateZ(0);
+        transition-delay: 0s;
+    }
+
+    .tutorial .nav:has(.nav-menu-toggle:checked) .nav-menucta-chevron,
+    .tutorials-overview .nav:has(.nav-menu-toggle:checked) .nav-menucta-chevron {
+        transform: scaleY(-1);
+    }
+}
+
+@media only screen and (min-width: 320px) and (max-width: 735px) {
+    .tutorials-overview .nav .nav-menu .nav-menu-items {
+        padding: 18px 0 40px;
+    }
+}
+
+/* The narrow-screen menu of a tutorial page */
+.tutorial .mobile-dropdown ul {
+    list-style: none;
+    margin: 0;
+}
+
+.tutorial .mobile-dropdown .option {
+    cursor: pointer;
+    font-size: 0.7058823529rem;
+    padding: 0.5rem 0;
+    display: block;
+    text-decoration: none;
+    color: inherit;
+}
+
+.tutorial .mobile-dropdown .option:focus {
+    outline-offset: 0;
+}
+
+.tutorial .mobile-dropdown .option.depth1 {
+    padding-left: 0.4705882353rem;
+}
+
+.tutorial .mobile-dropdown .chapter-list {
+    display: inline-block;
+}
+
+.tutorial .mobile-dropdown .chapter-list:not(:first-child) {
+    margin-top: 1rem;
+}
+
+.tutorial .mobile-dropdown .chapter-name {
+    padding: 0.5rem 0;
+    font-size: 1rem;
+    line-height: 1.4705882353;
+    font-weight: 400;
+    font-family: var(--typography-html-font, "Helvetica Neue", "Helvetica", "Arial", sans-serif);
+}
+
+.tutorial .mobile-dropdown a.option.tutorial {
+    padding: 0.5rem 0;
+    line-height: 1.4705882353;
+    font-weight: 400;
+    font-family: var(--typography-html-font, "Helvetica Neue", "Helvetica", "Arial", sans-serif);
+}
+
+.tutorial .mobile-dropdown .tutorial-list,
+.tutorial .mobile-dropdown .section-list {
+    display: block;
+    padding: 0 0.5882352941rem;
+}
+
+.tutorial .mobile-dropdown .chapter-list:last-child .tutorial-list:last-child {
+    padding-bottom: 10em;
+}
+
+.tutorial .mobile-dropdown a.option.tutorial.router-link-active {
+    font-weight: 600;
+}

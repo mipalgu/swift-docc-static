@@ -1,11 +1,16 @@
 @Tutorials(name: "Fixture Tutorials") {
     @Intro(title: "Drawing with FixtureCore") {
         Learn to draw points on a canvas.
+
+        @Image(source: "canvas-diagram.png", alt: "A canvas with two points.")
     }
 
     @Chapter(name: "Basics") {
-        Draw your first point.
+        Draw your first point, then connect points into shapes.
+
+        @Image(source: "canvas-diagram.png", alt: "A canvas with two points.")
 
         @TutorialReference(tutorial: "doc:DrawingPoints")
+        @TutorialReference(tutorial: "doc:ConnectingPoints")
     }
 }

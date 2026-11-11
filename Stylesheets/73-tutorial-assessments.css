@@ -1,0 +1,350 @@
+/* ========================================
+   Tutorial assessments and call to action (swift-docc-render Assessments,
+   AssessmentsProgress, Quiz and CallToAction).  One question is shown at a
+   time; form controls hold the state, so the quiz works without JavaScript.
+   ======================================== */
+
+.tutorial .assessments-wrapper {
+    padding-top: 80px;
+}
+
+.tutorial .assessments {
+    box-sizing: content-box;
+    padding: 0 1rem;
+    background: var(--color-tutorial-assessments-background, var(--color-fill-secondary, #f7f7f7));
+    margin-bottom: var(--tutorial-section-spacing);
+}
+
+.tutorial .assessments .banner {
+    padding: 40px 0;
+    border-bottom: 1px solid;
+    margin-bottom: 40px;
+    border-color: var(--colors-grid, var(--color-fill-gray, #ccc));
+    text-align: center;
+}
+
+.tutorial .assessments .banner .title {
+    font-size: 1.8823529412rem;
+    line-height: 1.25;
+    font-weight: 400;
+    font-family: var(--typography-html-font, "Helvetica Neue", "Helvetica", "Arial", sans-serif);
+    color: var(--colors-header-text, var(--color-header-text, var(--color-figure-gray, #000)));
+}
+
+/* Question progress */
+.tutorial .assessment > .row > .title {
+    font-size: 0.7058823529rem;
+    line-height: 1.3333333333;
+    font-weight: 400;
+    font-family: var(--typography-html-font, "Helvetica Neue", "Helvetica", "Arial", sans-serif);
+    color: var(--colors-secondary-label, var(--color-secondary-label, var(--color-figure-gray-secondary, #666)));
+}
+
+.tutorial .quiz > .title {
+    font-size: 1.1176470588rem;
+    line-height: 1.2105263158;
+    font-weight: 400;
+    font-family: var(--typography-html-font, "Helvetica Neue", "Helvetica", "Arial", sans-serif);
+    color: var(--colors-header-text, var(--color-header-text, var(--color-figure-gray, #000)));
+    margin: 25px 0;
+}
+
+.tutorial .quiz .question-content code,
+.tutorial .quiz .choice code {
+    font-size: 0.7647058824rem;
+    line-height: 1.8461538462;
+    font-weight: 400;
+    font-family: var(--typography-html-font-mono, Menlo, monospace);
+}
+
+.tutorial .quiz .choices {
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    list-style: none;
+    margin: 25px 0;
+    border: 0;
+    min-inline-size: 0;
+}
+
+.tutorial .quiz .choice {
+    font-size: 0.8235294118rem;
+    line-height: 1.4285714286;
+    font-weight: 400;
+    font-family: var(--typography-html-font, "Helvetica Neue", "Helvetica", "Arial", sans-serif);
+    flex: 1;
+    border-radius: var(--border-radius, 4px);
+    margin: 8px 0;
+    padding: 1.5rem 40px;
+    cursor: pointer;
+    background: var(--colors-text-background, var(--color-text-background, var(--color-fill, #fff)));
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    border-width: 1px;
+    border-style: solid;
+    border-color: var(--colors-grid, var(--color-fill-gray, #ccc));
+    position: relative;
+}
+
+.tutorial .quiz .choice:first-of-type {
+    margin-top: 0;
+}
+
+.tutorial .quiz .choice img {
+    max-height: 23.5294117647rem;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    max-width: 100%;
+}
+
+.tutorial .quiz .choice pre {
+    padding: 0;
+}
+
+.tutorial .quiz .choice input[type="radio"] {
+    position: absolute;
+    width: 100%;
+    left: 0;
+    height: 100%;
+    opacity: 0;
+    z-index: -1;
+    overflow: visible;
+}
+
+/* The selected answer */
+.tutorial .quiz .choice:has(input[type="radio"]:checked) {
+    border-color: var(--color-tutorial-quiz-border-active, var(--color-figure-blue, #36f));
+    box-shadow: 0 0 0 4px var(--color-focus-color, rgba(0, 125, 250, 0.6));
+    outline: none;
+}
+
+.tutorial .quiz .choice:has(input[type="radio"]:checked) * {
+    color: var(--colors-text, var(--color-text, var(--color-figure-gray, #000)));
+}
+
+.tutorial .quiz .choice:has(input[type="radio"]:focus-visible) {
+    outline: 2px solid var(--color-focus-border-color, var(--color-fill-blue, #00f));
+    outline-offset: 2px;
+}
+
+/* A submitted answer: its justification, its icon and its colours */
+.tutorial .quiz .choice .answer,
+.tutorial .quiz .choice .choice-icon {
+    display: none;
+}
+
+.tutorial .quiz .answer {
+    margin: 0.5rem 1.5rem 0.5rem 0;
+    font-size: 0.7058823529rem;
+    line-height: 1.3333333333;
+    font-weight: 400;
+    font-family: var(--typography-html-font, "Helvetica Neue", "Helvetica", "Arial", sans-serif);
+}
+
+.tutorial .quiz .answer:last-of-type {
+    margin-bottom: 0;
+}
+
+.tutorial .quiz .choice:has(input.choice-submitted:checked) .answer {
+    display: block;
+}
+
+.tutorial .quiz .choice:has(input.choice-submitted:checked) {
+    position: relative;
+    background: var(--color-form-error-background, var(--color-fill-red-secondary, #fff0f5));
+    border-color: var(--color-form-error, var(--color-figure-red, red));
+}
+
+.tutorial .quiz .choice[data-correct]:has(.choice-submitted:checked) {
+    background: var(--color-form-valid-background, var(--color-fill-green-secondary, #f0fff0));
+    border-color: var(--color-form-valid, var(--color-figure-green, green));
+}
+
+.tutorial .quiz .choice:has(input.choice-submitted:checked) .reset-circle-icon,
+.tutorial .quiz .choice[data-correct]:has(.choice-submitted:checked) .check-circle-icon {
+    display: block;
+    position: absolute;
+    top: 11px;
+    left: 10px;
+    font-size: 20px;
+    width: 1.05em;
+    fill: var(--color-form-error, var(--color-figure-red, red));
+}
+
+.tutorial .quiz .choice[data-correct]:has(.choice-submitted:checked) .reset-circle-icon {
+    display: none;
+}
+
+.tutorial .quiz .choice[data-correct]:has(.choice-submitted:checked) .check-circle-icon {
+    fill: var(--color-form-valid, var(--color-figure-green, green));
+}
+
+/* Submitted answers and all answers of a solved question cannot be chosen again */
+.tutorial .quiz .choice:has(input.choice-submitted:checked),
+.tutorial .quiz:not(:has(.choice[data-correct] .choice-submitted:not(:checked))) .choice {
+    pointer-events: none;
+}
+
+/* Controls: the Submit button submits the selected answer */
+.tutorial .quiz .controls {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.tutorial .quiz .controls .button-cta {
+    box-sizing: content-box;
+    margin: 0.5rem;
+    margin-top: 0;
+    padding: 0.3rem 3rem;
+    min-width: 8rem;
+}
+
+.tutorial .quiz .controls label.button-cta {
+    display: none;
+}
+
+/* The answer check box of the selected answer can be focused, which focuses Submit */
+.tutorial .quiz .choice-submitted {
+    display: none;
+}
+
+.tutorial .quiz .choice input[type="radio"]:checked ~ .choice-submitted:not(:checked) {
+    display: block;
+}
+
+.tutorial .quiz:has(.choice input[type="radio"]:checked ~ .choice-submitted:not(:checked)) .controls span.check {
+    display: none;
+}
+
+/* A submitted wrong answer that is still selected: Submit looks enabled but does nothing */
+.tutorial .quiz:has(.choice input[type="radio"]:checked ~ .choice-submitted:checked):has(.choice[data-correct] .choice-submitted:not(:checked)) .controls span.check {
+    opacity: 1;
+    cursor: pointer;
+}
+
+.tutorial .quiz:has(.choice:nth-of-type(1) input[type="radio"]:checked ~ .choice-submitted:not(:checked)) .controls label.check:nth-of-type(1),
+.tutorial .quiz:has(.choice:nth-of-type(2) input[type="radio"]:checked ~ .choice-submitted:not(:checked)) .controls label.check:nth-of-type(2),
+.tutorial .quiz:has(.choice:nth-of-type(3) input[type="radio"]:checked ~ .choice-submitted:not(:checked)) .controls label.check:nth-of-type(3),
+.tutorial .quiz:has(.choice:nth-of-type(4) input[type="radio"]:checked ~ .choice-submitted:not(:checked)) .controls label.check:nth-of-type(4),
+.tutorial .quiz:has(.choice:nth-of-type(5) input[type="radio"]:checked ~ .choice-submitted:not(:checked)) .controls label.check:nth-of-type(5),
+.tutorial .quiz:has(.choice:nth-of-type(6) input[type="radio"]:checked ~ .choice-submitted:not(:checked)) .controls label.check:nth-of-type(6),
+.tutorial .quiz:has(.choice:nth-of-type(7) input[type="radio"]:checked ~ .choice-submitted:not(:checked)) .controls label.check:nth-of-type(7),
+.tutorial .quiz:has(.choice:nth-of-type(8) input[type="radio"]:checked ~ .choice-submitted:not(:checked)) .controls label.check:nth-of-type(8) {
+    display: inline-block;
+}
+
+.tutorial .quiz:has(.choice-submitted:focus-visible) .controls label.check {
+    box-shadow: 0 0 0 4px var(--color-focus-color, rgba(0, 125, 250, 0.6));
+}
+
+/* Once every correct answer is submitted, the next question can be shown */
+.tutorial .quiz .question-completed {
+    display: none;
+}
+
+.tutorial .quiz:not(:has(.choice[data-correct] .choice-submitted:not(:checked))) .question-completed {
+    display: block;
+}
+
+.tutorial .quiz:not(:has(.choice[data-correct] .choice-submitted:not(:checked))) .controls span:is(.next, .results) {
+    display: none;
+}
+
+.tutorial .quiz:not(:has(.choice[data-correct] .choice-submitted:not(:checked))) .controls label:is(.next, .results) {
+    display: inline-block;
+}
+
+.tutorial .quiz .question-completed:focus-visible + label {
+    box-shadow: 0 0 0 4px var(--color-focus-color, rgba(0, 125, 250, 0.6));
+}
+
+/* One question at a time, then the success message */
+.tutorial .assessment:has(.question-completed:checked),
+.tutorial .assessment:has(.question-completed:not(:checked)) ~ .assessment,
+.tutorial .assessment:has(.question-completed:not(:checked)) ~ .success {
+    display: none;
+}
+
+.tutorial .assessments .success {
+    text-align: center;
+    padding-bottom: 40px;
+    font-size: 1.8823529412rem;
+    line-height: 1.25;
+    font-weight: 400;
+    font-family: var(--typography-html-font, "Helvetica Neue", "Helvetica", "Arial", sans-serif);
+    color: var(--colors-text, var(--color-text, var(--color-figure-gray, #000)));
+}
+
+/* Call to action */
+.tutorial .call-to-action {
+    padding: 65px 0;
+    background: var(--color-call-to-action-background, var(--color-fill-secondary, #f7f7f7));
+}
+
+.tutorial .call-to-action .row {
+    display: flex;
+    align-items: center;
+}
+
+.tutorial .call-to-action img,
+.tutorial .call-to-action video {
+    max-height: 560px;
+}
+
+.tutorial .call-to-action h2 {
+    font-size: 1.8823529412rem;
+    line-height: 1.25;
+    font-weight: 400;
+    font-family: var(--typography-html-font, "Helvetica Neue", "Helvetica", "Arial", sans-serif);
+}
+
+.tutorial .call-to-action .label {
+    display: block;
+    font-size: 1.2352941176rem;
+    line-height: 1.1904761905;
+    font-weight: 400;
+    font-family: var(--typography-html-font, "Helvetica Neue", "Helvetica", "Arial", sans-serif);
+    margin-bottom: var(--spacing-stacked-margin-small, 0.4em);
+    color: var(--color-eyebrow, var(--color-figure-gray-secondary, #666));
+}
+
+.tutorial .call-to-action .content {
+    margin-bottom: 1.5rem;
+}
+
+.tutorial .call-to-action .right-column {
+    margin-left: auto;
+}
+
+@media only screen and (max-width: 1250px) {
+    .tutorial .assessments .banner .title,
+    .tutorial .assessments .success,
+    .tutorial .call-to-action h2 {
+        font-size: 1.6470588235rem;
+        line-height: 1.2857142857;
+    }
+}
+
+@media only screen and (max-width: 735px) {
+    .tutorial .assessments .banner .title,
+    .tutorial .assessments .success,
+    .tutorial .call-to-action h2 {
+        font-size: 1.4117647059rem;
+        line-height: 1.3333333333;
+    }
+
+    .tutorial .call-to-action .label {
+        font-size: 1.1176470588rem;
+        line-height: 1.2105263158;
+    }
+
+    .tutorial .call-to-action .row {
+        display: block;
+    }
+
+    .tutorial .call-to-action .col + .col {
+        margin-top: 40px;
+    }
+}

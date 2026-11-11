@@ -245,6 +245,29 @@ Some of the variables that themes commonly set:
 
 The built-in themes' `theme-settings.json` files list many more.
 
+## Tutorial Pages
+
+Tutorial pages and the tutorials overview use swift-docc-render's colour variables,
+such as `--color-step-background`, `--color-step-focused`,
+`--color-tutorial-hero-background`, `--color-tutorial-assessments-background`,
+`--color-call-to-action-background`, `--color-button-background` and the
+`--color-tutorials-overview-*` and `--color-nav-*` families, together with
+`--border-radius`, `--button-border-radius`, `--code-border-radius` and
+`--tutorial-step-border-radius`.  A few further variables adjust their layout:
+
+| Variable | Description |
+|----------|-------------|
+| `--tutorial-content-width` | Width of the content column on wide screens (`-medium` and `-small` variants for narrower screens) |
+| `--tutorial-section-spacing` | Space below a section introduction and around the assessments |
+| `--tutorial-step-spacing` | Space between two steps |
+| `--tutorial-step-border-width` | Width of the bar that marks the step in view |
+| `--tutorial-code-number-color` | Colour of line numbers in code listings |
+
+The step in view, the code or media shown next to the steps, the section shown in
+the navigation bar, the menus and the quizzes all work without JavaScript.  In
+browsers without scroll driven animations, every step shows its own code or media
+below it, as on narrow screens.
+
 ## See Also
 
 - ``ThemeConfiguration``

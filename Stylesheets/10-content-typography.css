@@ -43,16 +43,13 @@ article, aside, details, figcaption, figure, footer, header, hgroup, main, nav, 
     display: block;
 }
 
-button, input, select, textarea {
-    font: inherit;
-    color: inherit;
-}
-
 button {
     background: none;
     border: 0;
     box-sizing: content-box;
+    color: inherit;
     cursor: pointer;
+    font: inherit;
     line-height: inherit;
     overflow: visible;
     vertical-align: inherit;

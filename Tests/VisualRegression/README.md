@@ -105,8 +105,9 @@ measures an already rendered reference site.
   swift-docc-static, `main` for the main branch output, `vue` for swift-docc-render).
   A selector may reach into the embedded sidebar with ` >>> ` (frame selector, then
   selector inside the frame).  `kinds` limits a role to page kinds, `pick:
-  "in-viewport"` measures the first match visible in the viewport, and `geometry:
-  true` also compares the horizontal position and width (within the tolerance).
+  "in-viewport"` measures the first match visible in the viewport, `geometry:
+  true` also compares the horizontal position and width (within the tolerance),
+  and `pseudo` (for example `"::before"`) measures that pseudo-element of the match.
 - `measure.js`: the function evaluated in the page.
 - `measure.mjs`: measures a site (`--probe` prints how many elements each role
   matches on each page, which helps when editing `roles.json`).

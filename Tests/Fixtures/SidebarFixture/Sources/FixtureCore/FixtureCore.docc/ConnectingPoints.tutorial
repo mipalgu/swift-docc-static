@@ -1,0 +1,25 @@
+@Tutorial(time: 10) {
+    @Intro(title: "Connecting Points") {
+        Connect the points on a canvas into a shape.
+    }
+
+    @Section(title: "Measure a Distance") {
+        @ContentAndMedia {
+            Measure how far apart two points are.
+        }
+
+        @Steps {
+            @Step {
+                Create two points.
+
+                @Code(name: "shape.swift", file: "connecting-01.swift")
+            }
+
+            @Step {
+                Print the distance between them.
+
+                @Code(name: "shape.swift", file: "connecting-02.swift")
+            }
+        }
+    }
+}

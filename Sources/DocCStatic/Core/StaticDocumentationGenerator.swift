@@ -880,8 +880,16 @@ public struct StaticDocumentationGenerator: Sendable {
                     // Path format: /documentation/ModuleName/... or /tutorials/ModuleName/...
                     let moduleName = extractModuleName(from: renderNode.identifier.path)
 
-                    // Check if this module should be included
-                    guard shouldIncludeModule(moduleName, packageTargets: packageTargets) else {
+                    // Check if this module should be included; a tutorials overview is
+                    // named after its file, so it belongs to the modules of its tutorials
+                    let tutorialModules = renderNode.kind == .overview
+                        ? renderNode.references.values.compactMap { ($0 as? TopicRenderReference)?.identifier.identifier }
+                            .compactMap { URL(string: $0)?.path }.filter { $0.hasPrefix("/tutorials/") }
+                            .map(extractModuleName(from:))
+                        : []
+                    let isIncluded = shouldIncludeModule(moduleName, packageTargets: packageTargets)
+                        || tutorialModules.contains { shouldIncludeModule($0, packageTargets: packageTargets) }
+                    guard isIncluded else {
                         if !skippedModules.contains(moduleName) {
                             skippedModules.insert(moduleName)
                             if configuration.isVerbose {
@@ -1009,266 +1017,100 @@ public struct StaticDocumentationGenerator: Sendable {
 
     // MARK: - Tutorial Overview Page Generation
 
-    /// Generates tutorial overview (landing) pages for each module that has tutorials.
+    /// Generates a tutorials overview page when the tutorials have none.
     ///
-    /// This scans the generated tutorials directory and creates an overview page
-    /// listing all tutorials for each module.
+    /// DocC renders a tutorials overview for every `@Tutorials` page.  When the
+    /// generated tutorials have no overview page, this writes one to
+    /// `tutorials/tutorials/index.html` that lists the tutorials of each module in the
+    /// order of their tutorial menu.  An existing overview page is never replaced.
     private func generateTutorialOverviewPages() throws {
         let fileManager = FileManager.default
         let tutorialsRoot = configuration.outputDirectory.appendingPathComponent("tutorials")
-
-        guard fileManager.fileExists(atPath: tutorialsRoot.path) else {
-            return  // No tutorials to generate overview for
+        guard let moduleDirectories = try? fileManager.contentsOfDirectory(
+            at: tutorialsRoot,
+            includingPropertiesForKeys: [.isDirectoryKey]
+        ) else {
+            return  // No tutorials to generate an overview for
         }
-
-        // Get all module directories under tutorials/
-        guard
-            let moduleDirectories = try? fileManager.contentsOfDirectory(
-                at: tutorialsRoot,
-                includingPropertiesForKeys: [.isDirectoryKey]
-            )
-        else {
-            return
+        let overviewMarker = "<body class=\"\(TutorialDocument.overviewPageClass)\""
+        let hasOverview = moduleDirectories.contains { directory in
+            let index = directory.appendingPathComponent("index.html")
+            return (try? String(contentsOf: index, encoding: .utf8))?.contains(overviewMarker) ?? false
         }
+        guard !hasOverview else { return }
 
-        for moduleDir in moduleDirectories {
+        let builder = HTMLPageBuilder(configuration: configuration)
+        let depth = 2
+        for moduleDir in moduleDirectories.sorted(by: { $0.lastPathComponent < $1.lastPathComponent }) {
             var isDirectory: ObjCBool = false
-            guard fileManager.fileExists(atPath: moduleDir.path, isDirectory: &isDirectory),
-                isDirectory.boolValue
+            guard fileManager.fileExists(atPath: moduleDir.path, isDirectory: &isDirectory), isDirectory.boolValue,
+                  !fileManager.fileExists(atPath: moduleDir.appendingPathComponent("index.html").path),
+                  let tutorialDirs = try? fileManager.contentsOfDirectory(at: moduleDir, includingPropertiesForKeys: nil)
             else {
                 continue
             }
-
             let moduleName = moduleDir.lastPathComponent
 
-            // Skip if overview already exists
-            let overviewPath = moduleDir.appendingPathComponent("index.html")
-            if fileManager.fileExists(atPath: overviewPath.path) {
-                continue
-            }
-
-            // Collect all tutorials in this module
-            guard
-                let tutorialDirs = try? fileManager.contentsOfDirectory(
-                    at: moduleDir,
-                    includingPropertiesForKeys: [.isDirectoryKey]
-                )
-            else {
-                continue
-            }
-
-            // Find any tutorial page to extract the hierarchy order
+            // The tutorial menu of any tutorial page lists the tutorials in order
             var orderedTutorialPaths: [String] = []
-            var overviewTitle = moduleName.capitalized + " Tutorials"
-
-            // Read hierarchy from first tutorial to get correct order
-            for tutorialDir in tutorialDirs {
-                var isTutorialDir: ObjCBool = false
-                guard fileManager.fileExists(atPath: tutorialDir.path, isDirectory: &isTutorialDir),
-                    isTutorialDir.boolValue
-                else {
+            var technology = moduleName.capitalized
+            for tutorialDir in tutorialDirs.sorted(by: { $0.lastPathComponent < $1.lastPathComponent }) {
+                guard let html = try? String(contentsOf: tutorialDir.appendingPathComponent("index.html"), encoding: .utf8) else {
                     continue
                 }
-
-                let tutorialIndexPath = tutorialDir.appendingPathComponent("index.html")
-                guard let html = try? String(contentsOf: tutorialIndexPath, encoding: .utf8) else {
-                    continue
+                if let title = Self.text(in: html, after: "class=\"\(TutorialDocument.navigationTitleClass)\"><span class=\"title\">", before: "</span>") {
+                    technology = title
                 }
-
-                // Extract overview title
-                if let titleStart = html.range(of: "class=\"tutorial-nav-title\">"),
-                    let titleEnd = html.range(
-                        of: "</a>", range: titleStart.upperBound..<html.endIndex)
-                {
-                    overviewTitle = String(html[titleStart.upperBound..<titleEnd.lowerBound])
-                }
-
-                // Extract tutorial order from dropdown - all href links in dropdown-chapter or dropdown-item
                 let pattern = #"href="[^"]*"# + moduleName + #"/([^/"]+)/index\.html""#
                 if let regex = try? Regex(pattern) {
                     for match in html.matches(of: regex) {
-                        if let pathCapture = match.output[1].substring {
-                            let path = String(pathCapture)
-                            if !orderedTutorialPaths.contains(path) {
-                                orderedTutorialPaths.append(path)
-                            }
+                        if let path = match.output[1].substring.map(String.init), !orderedTutorialPaths.contains(path) {
+                            orderedTutorialPaths.append(path)
                         }
                     }
                 }
-
-                // We only need to process one tutorial to get the hierarchy
-                if !orderedTutorialPaths.isEmpty {
-                    break
-                }
+                if !orderedTutorialPaths.isEmpty { break }
             }
 
-            // Build tutorials list in correct order
-            var tutorials: [(title: String, abstract: String, path: String)] = []
-
-            for tutorialPath in orderedTutorialPaths {
-                let tutorialDir = moduleDir.appendingPathComponent(tutorialPath)
-                let tutorialIndexPath = tutorialDir.appendingPathComponent("index.html")
-
-                guard let tutorialHTML = try? String(contentsOf: tutorialIndexPath, encoding: .utf8)
-                else {
-                    continue
-                }
-
-                let info = extractTutorialInfo(from: tutorialHTML, fallbackName: tutorialPath)
-                tutorials.append(
-                    (
-                        title: info.title,
-                        abstract: info.abstract,
-                        path: "\(tutorialPath)/index.html"
-                    ))
+            let topics = orderedTutorialPaths.compactMap { path -> TutorialsOverview.Topic? in
+                let page = moduleDir.appendingPathComponent(path).appendingPathComponent("index.html")
+                guard let html = try? String(contentsOf: page, encoding: .utf8) else { return nil }
+                let title = Self.text(in: html, after: "<title>", before: "</title>")
+                    ?? path.replacingOccurrences(of: "-", with: " ").capitalized
+                return TutorialsOverview.Topic(title: title, url: "../\(moduleName)/\(path)/index.html")
             }
+            guard !topics.isEmpty else { continue }
 
-            guard !tutorials.isEmpty else {
-                continue
-            }
-
-            // Generate the overview page HTML
-            let overviewHTML = buildTutorialOverviewHTML(
-                title: overviewTitle,
-                moduleName: moduleName,
-                tutorials: tutorials
+            let overview = TutorialsOverview(
+                technology: technology,
+                title: technology,
+                volumes: [.init(chapters: [.init(name: technology, topics: topics)])]
             )
-
-            // Create the tutorials/tutorials directory if needed (for the general landing)
-            let tutorialsTutorialsDir = tutorialsRoot.appendingPathComponent("tutorials")
-            try fileManager.createDirectory(
-                at: tutorialsTutorialsDir, withIntermediateDirectories: true)
-
-            // Write to tutorials/tutorials/index.html (the general tutorials landing page)
-            let generalOverviewPath = tutorialsTutorialsDir.appendingPathComponent("index.html")
-            try overviewHTML.write(to: generalOverviewPath, atomically: true, encoding: .utf8)
-
+            let html = builder.buildTutorialsOverviewPage(overview, pageTitle: technology, description: nil, depth: depth)
+            let overviewDirectory = tutorialsRoot.appendingPathComponent("tutorials")
+            try fileManager.createDirectory(at: overviewDirectory, withIntermediateDirectories: true)
+            let overviewPath = overviewDirectory.appendingPathComponent("index.html")
+            try html.write(to: overviewPath, atomically: true, encoding: .utf8)
             if configuration.isVerbose {
-                log("Generated tutorial overview: \(generalOverviewPath.path)")
+                log("Generated tutorial overview: \(overviewPath.path)")
             }
+            return
         }
     }
 
-    /// Extracts title and abstract from tutorial HTML.
-    private func extractTutorialInfo(from html: String, fallbackName: String) -> (
-        title: String, abstract: String
-    ) {
-        var title = fallbackName.replacingOccurrences(of: "-", with: " ").capitalized
-
-        // Extract from <title> tag
-        if let titleStart = html.range(of: "<title>"),
-            let titleEnd = html.range(of: "</title>", range: titleStart.upperBound..<html.endIndex)
-        {
-            title = String(html[titleStart.upperBound..<titleEnd.lowerBound])
-        }
-
-        // Extract abstract from tutorial-abstract div
-        var abstract = ""
-        if let abstractStart = html.range(of: "<div class=\"tutorial-abstract\">"),
-            let pStart = html.range(of: "<p>", range: abstractStart.upperBound..<html.endIndex),
-            let pEnd = html.range(of: "</p>", range: pStart.upperBound..<html.endIndex)
-        {
-            abstract = String(html[pStart.upperBound..<pEnd.lowerBound])
-                .replacingOccurrences(of: "<[^>]+>", with: "", options: .regularExpression)
-        }
-
-        return (title: title, abstract: abstract)
-    }
-
-    /// Builds the HTML for a tutorial overview page.
-    private func buildTutorialOverviewHTML(
-        title: String,
-        moduleName: String,
-        tutorials: [(title: String, abstract: String, path: String)]
-    ) -> String {
-        var tutorialCards = ""
-        for tutorial in tutorials {
-            tutorialCards += """
-
-                        <a href="../\(moduleName)/\(escapeHTML(tutorial.path))" class="tutorial-card">
-                            <h3 class="tutorial-card-title">\(escapeHTML(tutorial.title))</h3>
-                            <p class="tutorial-card-abstract">\(escapeHTML(tutorial.abstract))</p>
-                        </a>
-                """
-        }
-
-        let footerContent = configuration.footerHTML ?? Configuration.defaultFooter
-
-        return """
-            <!DOCTYPE html>
-            <html lang="en">
-            <head>
-                <meta charset="UTF-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <title>\(escapeHTML(title))</title>
-                <link rel="stylesheet" href="../../css/main.css">
-            </head>
-            <body class="tutorial-overview-page" data-color-scheme="auto">
-                <main class="tutorial-overview-main">
-                    <section class="overview-hero">
-                        <div class="overview-hero-content">
-                            <h1 class="overview-title">\(escapeHTML(title))</h1>
-                            <p>Learn through hands-on tutorials covering all aspects of the framework.</p>
-                        </div>
-                    </section>
-                    <section class="overview-tutorials">
-                        <div class="tutorial-grid">
-            \(tutorialCards)
-                        </div>
-                    </section>
-                </main>
-                <footer class="documentation-footer">
-                    <div class="footer-content">\(footerContent)</div>
-                    <div class="appearance-selector" id="appearance-selector">
-                        <button type="button" class="appearance-btn" data-color-scheme="light" aria-label="Light mode">Light</button>
-                        <button type="button" class="appearance-btn" data-color-scheme="dark" aria-label="Dark mode">Dark</button>
-                        <button type="button" class="appearance-btn active" data-color-scheme="auto" aria-label="Auto mode">Auto</button>
-                    </div>
-                </footer>
-                <script>
-                (function() {
-                    const selector = document.getElementById('appearance-selector');
-                    if (!selector) return;
-
-                    // Show the selector (hidden by default for no-JS fallback)
-                    selector.style.visibility = 'visible';
-
-                    const buttons = selector.querySelectorAll('.appearance-btn');
-                    const body = document.body;
-
-                    // Load saved preference
-                    const saved = localStorage.getItem('\(SidebarDocument.colourSchemeStorageKey)') || 'auto';
-                    applyTheme(saved);
-                    updateButtons(saved);
-
-                    // Add click handlers
-                    buttons.forEach(btn => {
-                        btn.addEventListener('click', () => {
-                            const scheme = btn.dataset.colorScheme;
-                            localStorage.setItem('\(SidebarDocument.colourSchemeStorageKey)', scheme);
-                            applyTheme(scheme);
-                            updateButtons(scheme);
-                        });
-                    });
-
-                    function applyTheme(scheme) {
-                        body.setAttribute('data-color-scheme', scheme);
-                    }
-
-                    function updateButtons(scheme) {
-                        buttons.forEach(btn => {
-                            btn.classList.toggle('active', btn.dataset.colorScheme === scheme);
-                        });
-                    }
-                })();
-                </script>
-                \(configuration.includeSearch ? """
-            <script src="../../js/lunr.min.js" defer></script>
-            <script src="../../js/search.js" defer></script>
-            """ : "")
-            </body>
-            </html>
-            """
+    /// Returns the text between two markers in an HTML document, with tags removed.
+    ///
+    /// - Parameters:
+    ///   - html: The document.
+    ///   - start: The marker before the text.
+    ///   - end: The marker after the text.
+    /// - Returns: The text, or `nil` if a marker is missing.
+    private static func text(in html: String, after start: String, before end: String) -> String? {
+        guard let startRange = html.range(of: start),
+              let endRange = html.range(of: end, range: startRange.upperBound..<html.endIndex)
+        else { return nil }
+        return String(html[startRange.upperBound..<endRange.lowerBound])
+            .replacingOccurrences(of: "<[^>]+>", with: "", options: .regularExpression)
     }
 
     // MARK: - Index Page Generation

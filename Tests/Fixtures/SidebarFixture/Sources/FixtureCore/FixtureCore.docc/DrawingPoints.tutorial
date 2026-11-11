@@ -1,11 +1,17 @@
 @Tutorial(time: 5) {
+    @XcodeRequirement(title: "Xcode 16", destination: "https://developer.apple.com/download/")
+
     @Intro(title: "Drawing Points") {
         Create a canvas and add a point to it.
+
+        @Image(source: "canvas-diagram.png", alt: "A canvas with two points.")
     }
 
     @Section(title: "Create a Canvas") {
         @ContentAndMedia {
             Start with an empty canvas.
+
+            @Image(source: "canvas-diagram.png", alt: "An empty canvas.")
         }
 
         @Steps {
@@ -19,6 +25,34 @@
                 Add a second point and find the midpoint.
 
                 @Code(name: "main.swift", file: "drawing-02.swift")
+            }
+
+            @Step {
+                Draw the points on the canvas.
+
+                @Code(name: "main.swift", file: "drawing-03.swift")
+
+                The canvas draws its points in the order you added them.
+            }
+        }
+    }
+
+    @Section(title: "Inspect the Result") {
+        @ContentAndMedia {
+            Look at the points you drew.
+        }
+
+        @Steps {
+            @Step {
+                Compare your canvas with the diagram.
+
+                @Image(source: "canvas-diagram.png", alt: "A canvas with two points.")
+            }
+
+            @Step {
+                Print the distance between the two points.
+
+                @Code(name: "main.swift", file: "drawing-04.swift")
             }
         }
     }
@@ -40,6 +74,34 @@
 
                 @Justification(reaction: "Try again!") {
                     A point is a single position in the plane.
+                }
+            }
+        }
+
+        @MultipleChoice {
+            Which function returns the point halfway between two points?
+
+            @Choice(isCorrect: false) {
+                `distance(to:)`
+
+                @Justification(reaction: "Not quite.") {
+                    This method measures how far apart two points are.
+                }
+            }
+
+            @Choice(isCorrect: true) {
+                `midpoint(_:_:)`
+
+                @Justification(reaction: "Correct!") {
+                    The midpoint lies halfway between the two points.
+                }
+            }
+
+            @Choice(isCorrect: false) {
+                `scaled(by:)`
+
+                @Justification(reaction: "Try again!") {
+                    Scaling moves a single point away from the origin.
                 }
             }
         }

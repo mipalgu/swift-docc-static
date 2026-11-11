@@ -23,7 +23,8 @@ without requiring JavaScript for core functionality.
 - **Full DocC support** - API documentation, articles, and tutorials
 - **Light/Dark mode** - Follows the system appearance; the Light, Dark and Auto choice in the
   page footer also works without JavaScript (with JavaScript it is remembered across pages)
-- **Interactive tutorials** - Display step-by-step tutorials with code examples and quizzes
+- **Interactive tutorials** - Step-by-step tutorials whose code follows the step in view,
+  with menus and quizzes that work without JavaScript
 - **Cross-package linking** - Relative links work with `file://` URLs for testing
 - **Multi-target support** - Document all targets in a package and create a common index page
 - **Compact navigation** - The navigation sidebar is written once and shared by every page, so

@@ -1,0 +1,58 @@
+/*
+ * Dark appearance of tutorial pages in the `default` theme.
+ *
+ * The base stylesheet's fallbacks are swift-docc-render's light values; these are
+ * swift-docc-render's dark values of the colours that tutorial pages use and that
+ * the theme settings do not define.
+ */
+@media screen and (prefers-color-scheme: dark) {
+    body[data-color-scheme="auto"] {
+        --color-fill-blue: #06f;
+        --color-figure-blue: #09f;
+        --color-figure-green: #090;
+        --color-figure-red: #f33;
+        --color-figure-light-gray: #b0b0b0;
+        --color-fill-green-secondary: #030;
+        --color-fill-red-secondary: #300;
+        --color-tutorials-teal: #fff;
+        --color-svg-icon: #b0b0b0;
+        --color-button-background-active: #06f;
+        --color-code-line-highlight: rgba(0, 153, 255, 0.08);
+        --color-dropdown-text: #fff;
+        --color-dropdown-border: rgba(240, 240, 240, 0.2);
+        --color-nav-color: #fff;
+        --color-nav-keyline: rgba(66, 66, 66, 0.95);
+        --color-nav-outlines: #575757;
+        --color-nav-solid-background: #000;
+        --color-nav-sticking-expanded-keyline: rgba(66, 66, 66, 0.7);
+        --color-nav-expanded: #2a2a2a;
+        --color-runtime-preview-disabled-text: rgba(204, 204, 204, 0.6);
+        --color-tutorial-background: var(--color-fill-tertiary);
+    }
+}
+
+@media screen {
+    body[data-color-scheme="dark"] {
+        --color-fill-blue: #06f;
+        --color-figure-blue: #09f;
+        --color-figure-green: #090;
+        --color-figure-red: #f33;
+        --color-figure-light-gray: #b0b0b0;
+        --color-fill-green-secondary: #030;
+        --color-fill-red-secondary: #300;
+        --color-tutorials-teal: #fff;
+        --color-svg-icon: #b0b0b0;
+        --color-button-background-active: #06f;
+        --color-code-line-highlight: rgba(0, 153, 255, 0.08);
+        --color-dropdown-text: #fff;
+        --color-dropdown-border: rgba(240, 240, 240, 0.2);
+        --color-nav-color: #fff;
+        --color-nav-keyline: rgba(66, 66, 66, 0.95);
+        --color-nav-outlines: #575757;
+        --color-nav-solid-background: #000;
+        --color-nav-sticking-expanded-keyline: rgba(66, 66, 66, 0.7);
+        --color-nav-expanded: #2a2a2a;
+        --color-runtime-preview-disabled-text: rgba(204, 204, 204, 0.6);
+        --color-tutorial-background: var(--color-fill-tertiary);
+    }
+}
