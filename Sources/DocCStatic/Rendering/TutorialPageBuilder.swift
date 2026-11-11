@@ -240,8 +240,30 @@ extension HTMLPageBuilder {
             """
         }
         html += appearanceSelectorScript
+        html += tutorialMenuScript
         html += "\n</body>\n</html>\n"
         return html
+    }
+
+    /// A progressive enhancement that closes the menus once the reader follows a link in them.
+    ///
+    /// The menus open and close without JavaScript, but following a link to a part of
+    /// the same page cannot close them: neither a check box nor a popover reacts to a
+    /// link.  Without this script the menus stay open until the reader closes them.
+    var tutorialMenuScript: String {
+        """
+
+            <script>
+            document.addEventListener('click', function (event) {
+                var link = event.target.closest && event.target.closest('.\(TutorialDocument.navigationClass) a[href]');
+                if (!link) { return; }
+                var toggle = document.getElementById('\(TutorialDocument.menuToggleClass)');
+                if (toggle) { toggle.checked = false; }
+                var menu = link.closest('[popover]');
+                if (menu && menu.hidePopover) { menu.hidePopover(); }
+            });
+            </script>
+        """
     }
 
     /// Renders block content to HTML.
