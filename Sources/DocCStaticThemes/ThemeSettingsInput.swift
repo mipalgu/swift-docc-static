@@ -104,6 +104,7 @@ public struct ThemeSettingsInput: Codable, Equatable, Sendable {
     /// Known top-level keys.
     private static let knownKeys: Set<String> = Set(CodingKeys.allCases.map(\.rawValue))
 
+    /// The top-level keys of a theme settings file.
     enum CodingKeys: String, CodingKey, CaseIterable {
         case theme
         case meta
@@ -237,6 +238,7 @@ public struct ThemeInput: Codable, Equatable, Sendable {
     private static let knownKeys: Set<String> = Set(CodingKeys.allCases.map(\.rawValue))
         .union(genericSectionKeys)
 
+    /// The keys of the theme section with their own structure.
     enum CodingKeys: String, CodingKey, CaseIterable {
         case badge
         case color

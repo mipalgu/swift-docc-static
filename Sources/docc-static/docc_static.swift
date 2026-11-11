@@ -47,6 +47,7 @@ struct DocCStaticCommand: AsyncParsableCommand {
 ///
 /// These options are shared by the `generate`, `render` and `preview` commands.
 struct ThemeOptions: ParsableArguments {
+    /// The built-in theme name, theme settings file or theme directory, if given.
     @Option(
         name: .long,
         help: ArgumentHelp(
@@ -60,6 +61,7 @@ struct ThemeOptions: ParsableArguments {
         ))
     var theme: String?
 
+    /// The stylesheet applied after the theme's stylesheets, if given.
     @Option(
         name: .customLong("custom-css"),
         help: ArgumentHelp(
@@ -68,6 +70,7 @@ struct ThemeOptions: ParsableArguments {
         ))
     var customCSS: String?
 
+    /// Whether to leave out the dark mode styles.
     @Flag(
         name: .long,
         help: "Disable dark mode styles in the generated documentation.")
@@ -151,6 +154,7 @@ struct Generate: AsyncParsableCommand {
     @Option(name: .long, help: "Custom HTML for the page footer.")
     var footer: String?
 
+    /// The options that select and customise the theme.
     @OptionGroup(title: "Theme Options")
     var themeOptions: ThemeOptions
 
@@ -260,6 +264,7 @@ struct Render: AsyncParsableCommand {
     @Option(name: .long, help: "Custom HTML for the page footer.")
     var footer: String?
 
+    /// The options that select and customise the theme.
     @OptionGroup(title: "Theme Options")
     var themeOptions: ThemeOptions
 
@@ -317,7 +322,7 @@ struct Preview: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         abstract: "Start a local preview server for generated documentation.",
         discussion: """
-            If the documentation directory does not exist, it will be generated automatically
+            If the documentation directory does not exist, it will be generated automatically \
             using the provided options (same as the 'generate' command).
             """
     )
@@ -386,6 +391,7 @@ struct Preview: AsyncParsableCommand {
     @Option(name: .long, help: "Custom HTML for the page footer.")
     var footer: String?
 
+    /// The options that select and customise the theme.
     @OptionGroup(title: "Theme Options")
     var themeOptions: ThemeOptions
 

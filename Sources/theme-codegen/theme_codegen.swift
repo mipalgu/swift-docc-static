@@ -34,6 +34,7 @@ struct ThemeCodeGeneratorCommand: AsyncParsableCommand {
     @Argument(help: "Directory containing one theme bundle directory per built-in theme.")
     var themesDirectory: String
 
+    /// The directory that contains the parts of the base stylesheet.
     @Argument(help: "Directory containing the base stylesheet parts (*.css).")
     var stylesheetsDirectory: String
 
