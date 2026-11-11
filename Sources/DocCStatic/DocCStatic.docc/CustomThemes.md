@@ -203,6 +203,10 @@ that a theme can show it with CSS alone.  The base stylesheet hides these elemen
 | `.link-block .topic-title` | The plain title of a topic that shows its declaration, such as `init(x:y:)` |
 | `.card .module-stats` | The number of symbols of a module on the landing page |
 | `.topic-list .topic-abstract` | The abstract of a tutorial or article in a chapter of a tutorials overview |
+| `.topictitle .eyebrow-kind` | After the eyebrow, the shorter name of the page's kind that the original swift-docc-static pages showed, such as *Method* where the eyebrow reads *Instance Method* |
+| `.nav-title-content .nav-overview-title` | In a tutorial's navigation bar, the title of the tutorials overview |
+| `.hero .overview-introduction` | In a tutorials overview, the fixed introduction the original swift-docc-static pages showed |
+| `.navigator-card-item.is-group > .disclosure-checkbox`, `.is-group .tree-toggle` | The checkbox and chevron of a group heading in the navigator; checking the checkbox collapses the group's rows, which follow the heading in a `.nav-group-wrapper` |
 
 The background of a tutorial's introduction (`.tutorial-hero .bg`) shows the light
 variant of its image, like swift-docc-render.  Where the image has a dark variant,
