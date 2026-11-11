@@ -31,6 +31,15 @@ public struct Point: Hashable, Sendable {
         return (dx * dx + dy * dy).squareRoot()
     }
 
+    /// Returns the distance to `other` along the horizontal axis; prefer ``distance(to:)``.
+    ///
+    /// - Parameter other: The point to measure to.
+    /// - Returns: The absolute difference of the horizontal coordinates.
+    @available(*, deprecated, message: "Use distance(to:) instead.")
+    public func horizontalDistance(to other: Point) -> Double {
+        abs(other.x - x)
+    }
+
     /// Adds two points component by component.
     ///
     /// - Parameters:

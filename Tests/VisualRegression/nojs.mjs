@@ -7,8 +7,9 @@
 // Every page in pages.json is loaded at the first configured viewport with JavaScript
 // disabled.  For each page the check records whether the content renders (the page
 // title is visible) and, for documentation pages, whether the embedded sidebar loads,
-// whether the current page's row is the highlighted target row and is visible, and
-// whether a collapsed row can be expanded and collapsed again by clicking its chevron.
+// whether the current page's row is the highlighted target row and is visible below
+// the title of its module, and whether a collapsed row can be expanded and collapsed
+// again by clicking its chevron.
 // On every page with a colour scheme toggle, the check also chooses Light while the
 // system appearance is dark (and Dark while it is light), scrolling to the toggle as a
 // reader would, and records whether the page then shows the same colours as when that
@@ -95,6 +96,19 @@ try {
               return background !== 'rgba(0, 0, 0, 0)' && background !== 'transparent';
             });
             return box.height > 0 && highlighted;
+          });
+          // Like swift-docc-render, the navigator shows the title of the current
+          // module and the current row, neither hidden behind the other
+          checks.moduleTitle = await frame.evaluate(() => {
+            const row = document.querySelector('.navigator-card-item:target, .module-header:target, .technology-title:target');
+            const scroller = row.closest('.scroller');
+            const title = (row.closest('.module-section') || document).querySelector('.technology-title');
+            if (!scroller || !title) return false;
+            const area = scroller.getBoundingClientRect();
+            const rowBox = row.getBoundingClientRect();
+            const titleBox = title.getBoundingClientRect();
+            const inside = (box) => box.height > 0 && box.top >= area.top - 1 && box.bottom <= area.bottom + 1;
+            return inside(rowBox) && inside(titleBox) && (row.contains(title) || rowBox.top >= titleBox.bottom - 1);
           });
         }
         const toggle = await frame.evaluateHandle(() => {

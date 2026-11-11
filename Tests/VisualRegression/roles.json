@@ -159,6 +159,14 @@
    "documentation"
   ]
  },
+ "sidebarRowBadge": {
+  "static": "iframe.sidebar-frame >>> .navigator-card-item .badge",
+  "main": null,
+  "vue": ".navigator-card-item .badge",
+  "kinds": [
+   "documentation"
+  ]
+ },
  "sidebarArticleIcon": {
   "static": "iframe.sidebar-frame >>> .navigator-card-item .navigator-icon",
   "main": "nav.doc-sidebar .symbol-icon",
@@ -242,6 +250,14 @@
    "documentation"
   ]
  },
+ "breadcrumbBadge": {
+  "static": ".hierarchy .badge",
+  "main": null,
+  "vue": ".hierarchy .badge",
+  "kinds": [
+   "documentation"
+  ]
+ },
  "eyebrow": {
   "static": ".documentation-hero .eyebrow",
   "main": ".hero-content .eyebrow",
@@ -254,6 +270,14 @@
   "static": ".documentation-hero h1",
   "main": ".hero-content h1",
   "vue": ".documentation-hero h1",
+  "kinds": [
+   "documentation"
+  ]
+ },
+ "pageTitleTag": {
+  "static": ".documentation-hero h1 small",
+  "main": null,
+  "vue": ".documentation-hero h1 small",
   "kinds": [
    "documentation"
   ]
@@ -337,6 +361,26 @@
   "main": ".symbol-card .symbol-summary",
   "vue": ".link-block.topic .abstract"
  },
+ "topicAbstractCode": {
+  "static": ".link-block.topic .abstract code",
+  "main": null,
+  "vue": ".link-block.topic .abstract code"
+ },
+ "topicLinkWithoutAbstract": {
+  "static": ".link-block.topic:not(:has(> .abstract)) > .link",
+  "main": null,
+  "vue": ".link-block.topic:not(:has(> .abstract)) > .link"
+ },
+ "topicDeprecatedLink": {
+  "static": ".link-block.topic .link.deprecated",
+  "main": null,
+  "vue": ".link-block.topic .link.deprecated"
+ },
+ "topicBadge": {
+  "static": ".link-block.topic .badge",
+  "main": null,
+  "vue": ".link-block.topic .badge"
+ },
  "relationshipsTitle": {
   "static": "h2#relationships",
   "main": "section.relationships > h2, h2#relationships",
@@ -346,6 +390,11 @@
   "static": ".relationships-list li",
   "main": ".relationships-list li",
   "vue": ".relationships-list li, .relationships-item"
+ },
+ "relationshipsList": {
+  "static": ".relationships-list",
+  "main": null,
+  "vue": ".relationships-list"
  },
  "seeAlsoTitle": {
   "static": "h2#see-also",
@@ -458,6 +507,16 @@
   "main": "main.doc-main table",
   "vue": ".primary-content table"
  },
+ "tableWrapper": {
+  "static": ".primary-content .table-wrapper",
+  "main": null,
+  "vue": ".primary-content .table-wrapper"
+ },
+ "tableFollower": {
+  "static": ".primary-content .table-wrapper + *",
+  "main": null,
+  "vue": ".primary-content .table-wrapper + *"
+ },
  "tableHeaderCell": {
   "static": ".primary-content th",
   "main": "main.doc-main th",
@@ -497,6 +556,11 @@
   "static": "aside.experiment",
   "main": "aside.aside.experiment",
   "vue": "aside.experiment"
+ },
+ "asideDeprecated": {
+  "static": "aside.deprecated",
+  "main": null,
+  "vue": "aside.deprecated"
  },
  "asideLabel": {
   "static": "aside.note .label",

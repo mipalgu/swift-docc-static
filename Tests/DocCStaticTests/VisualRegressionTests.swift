@@ -117,6 +117,7 @@ struct VisualRegressionTests {
         for page in report where documentation.contains(page.page) {
             #expect(page.checks["sidebar"] == true, "\(page.page) has no working sidebar")
             #expect(page.checks["expandCollapse"] == true, "\(page.page) cannot expand and collapse rows")
+            #expect(page.checks["moduleTitle"] == true, "\(page.page) hides its row or the module title")
         }
     }
 

@@ -118,7 +118,8 @@ measures an already rendered reference site.
   matches on each page, which helps when editing `roles.json`).
 - `run.mjs`, `references.mjs`, `nojs.mjs`, `onthispage.mjs`, `check.mjs`: see above; `nojs.mjs`
   checks that every page type renders its content, the sidebar (with the current row
-  highlighted), working expand and collapse, and a Light or Dark choice in the footer
+  highlighted and in view below the title of its module), working expand and
+  collapse, and a Light or Dark choice in the footer
   that overrides the system appearance, all with JavaScript disabled; `onthispage.mjs`
   scrolls the documentation pages and checks that the "On This Page" column highlights
   the item swift-docc-render highlights at each position, with JavaScript disabled
