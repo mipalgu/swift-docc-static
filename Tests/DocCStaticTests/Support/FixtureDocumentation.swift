@@ -110,21 +110,39 @@ actor FixtureDocumentation {
         )
     }
 
+    /// Returns documentation of only one module of the fixture package, whose
+    /// navigator then shows that module's title above its rows, like swift-docc-render.
+    ///
+    /// - Parameter theme: The built-in theme to generate with.
+    /// - Returns: The generated fixture output.
+    /// - Throws: Any error raised while preparing the package or generating documentation.
+    func singleModuleOutput(theme: ThemeSettings.BuiltInTheme = .default) async throws -> GeneratedFixture {
+        try await output(
+            configuration: ThemeConfiguration(builtInTheme: theme, includeDarkMode: true, customCSS: nil),
+            variant: "\(theme.rawValue)-single-module",
+            targets: [Self.singleModuleTarget]
+        )
+    }
+
+    /// The module documented by ``singleModuleOutput(theme:)``.
+    static let singleModuleTarget = "FixtureCore"
+
     /// Returns documentation generated from the fixture package with any theme configuration.
     ///
     /// - Parameters:
     ///   - configuration: The theme configuration to generate with.
     ///   - variant: A name that identifies this configuration; requests with the
     ///     same name share one generation.
+    ///   - targets: The targets to document, or all targets if empty.
     /// - Returns: The generated fixture output.
     /// - Throws: Any error raised while preparing the package or generating documentation.
-    func output(configuration: ThemeConfiguration, variant: String) async throws -> GeneratedFixture {
+    func output(configuration: ThemeConfiguration, variant: String, targets: [String] = []) async throws -> GeneratedFixture {
         if let task = tasks[variant] {
             return try await task.value
         }
         let root = try prepareWorkspace()
         let task = Task {
-            try await Self.generate(in: root, theme: configuration, outputName: "output-\(variant)")
+            try await Self.generate(in: root, theme: configuration, targets: targets, outputName: "output-\(variant)")
         }
         tasks[variant] = task
         return try await task.value
@@ -154,18 +172,21 @@ actor FixtureDocumentation {
     /// - Parameters:
     ///   - root: The workspace root prepared by ``prepareWorkspace()``.
     ///   - theme: The theme configuration to use.
+    ///   - targets: The targets to document, or all targets if empty.
     ///   - outputName: The name of the output directory below the workspace.
     /// - Returns: The generated fixture output.
     /// - Throws: Any generation error.
     private static func generate(
         in root: URL,
         theme: ThemeConfiguration,
+        targets: [String],
         outputName: String
     ) async throws -> GeneratedFixture {
         let output = root.appendingPathComponent("outputs").appendingPathComponent(outputName)
         let configuration = Configuration(
             packageDirectory: root.appendingPathComponent("package"),
             outputDirectory: output,
+            targets: targets,
             includeSearch: true,
             theme: theme,
             scratchPath: root.appendingPathComponent("scratch")

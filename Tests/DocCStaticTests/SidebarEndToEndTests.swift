@@ -145,6 +145,18 @@ struct SidebarEndToEndTests {
         #expect(documents.contains { ($0["path"] as? String)?.contains("span/'...(_:_:)") == true })
     }
 
+    @Test("A single module's navigator shows its title above the rows without a chevron",
+          arguments: ThemeSettings.BuiltInTheme.allCases)
+    func singleModuleTitle(theme: ThemeSettings.BuiltInTheme) async throws {
+        let fixture = try await FixtureDocumentation.shared.singleModuleOutput(theme: theme)
+        let sidebar = try fixture.text(at: SidebarDocument.fileName)
+        let module = FixtureDocumentation.singleModuleTarget.lowercased()
+        #expect(sidebar.contains("class=\"technology-title\" id=\"\(SidebarDocument.rowIdentifier(forPath: "/documentation/\(module)"))\""))
+        #expect(!sidebar.contains("module-toggle"))
+        #expect(!sidebar.contains("class=\"module-section\""))
+        #expect(!sidebar.contains("documentation/fixtureextras/"))
+    }
+
     @Test("The sidebar document carries no per-page state",
           arguments: ThemeSettings.BuiltInTheme.allCases)
     func sidebarHasNoPageState(theme: ThemeSettings.BuiltInTheme) async throws {

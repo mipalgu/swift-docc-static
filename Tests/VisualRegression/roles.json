@@ -185,6 +185,16 @@
    "documentation"
   ]
  },
+ "sidebarModuleChevron": {
+  "static": "iframe.sidebar-frame >>> .module-header .module-toggle",
+  "main": ".module-header .disclosure-chevron",
+  "vue": ".navigator-card-item .tree-toggle",
+  "pick": "in-viewport",
+  "geometry": true,
+  "kinds": [
+   "documentation"
+  ]
+ },
  "sidebarFilter": {
   "static": "iframe.sidebar-frame >>> .navigator .filter-wrapper",
   "main": ".sidebar-filter",

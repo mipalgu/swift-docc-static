@@ -291,6 +291,11 @@
     flex-flow: column;
 }
 
+/* A single module's title stays above the list (one line, with its padding) */
+.navigator:has(.card-body > .technology-title) {
+    --navigator-list-top: calc(var(--spacing-navigator-card-inner-padding-top, 10px) + var(--navigator-title-height, 39px));
+}
+
 .navigator-card {
     --card-vertical-spacing: 10px;
     --card-horizontal-spacing: 20px;
@@ -392,13 +397,15 @@
     scroll-margin-top: var(--spacing-sidebar-target-scroll-margin, var(--navigator-target-scroll-margin));
 }
 
+/*
+ * swift-docc-render shows a single technology, whose title has no chevron (as in a
+ * single-module navigator here).  The chevron that collapses a module sits in the
+ * start padding of its title, where a top-level row has its chevron.
+ */
 .module-header .module-toggle {
-    width: auto;
-    height: auto;
     top: 0;
-    bottom: 0;
-    inset-inline-end: calc(var(--card-horizontal-spacing) + 10px);
-    padding-inline-end: 0;
+    inset-inline-start: var(--card-horizontal-spacing);
+    width: var(--spacing-nav-depth-spacer, 20px);
 }
 
 .module-section > .module-contents {

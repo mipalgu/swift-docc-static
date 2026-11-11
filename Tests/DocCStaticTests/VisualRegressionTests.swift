@@ -181,10 +181,36 @@ struct VisualRegressionTests {
         }
     }
 
+    @Test("A single module's pages match swift-docc-render like those of several modules")
+    func singleModuleMatchesGoldenData() async throws {
+        let theme = ThemeSettings.BuiltInTheme.default
+        let fixture = try await FixtureDocumentation.shared.singleModuleOutput(theme: theme)
+        let results = try VisualRegressionHarness.temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: results) }
+        let reportFile = results.appendingPathComponent("mismatches.json")
+        _ = try VisualRegressionHarness.runNode(
+            script: "run.mjs",
+            arguments: ["--theme", theme.rawValue, "--site", fixture.outputDirectory.path, "--json", reportFile.path]
+        )
+        let report = try JSONDecoder().decode(MismatchReport.self, from: Data(contentsOf: reportFile))
+        // The golden data compares a module's chevron with swift-docc-render's row
+        // chevrons; like swift-docc-render, a single module's title has none
+        let noModuleChevron = { (mismatch: MismatchReport.Mismatch) in
+            mismatch.role == "sidebarModuleChevron" && mismatch.property == "presence" && mismatch.actual == "absent"
+        }
+        #expect(report.mismatches.contains(where: noModuleChevron), "the single module's title has a chevron")
+        for mismatch in report.mismatches where !noModuleChevron(mismatch) {
+            Issue.record("Single module: \(mismatch.summary)")
+        }
+        #expect(report.unusedDeviations.isEmpty)
+    }
+
     @Test("The navigator scrolls to the current row only when it is not visible at the top",
-          arguments: ThemeSettings.BuiltInTheme.allCases)
-    func navigatorScrollsLikeTheReference(theme: ThemeSettings.BuiltInTheme) async throws {
-        let fixture = try await FixtureDocumentation.shared.output(theme: theme)
+          arguments: ThemeSettings.BuiltInTheme.allCases, [false, true])
+    func navigatorScrollsLikeTheReference(theme: ThemeSettings.BuiltInTheme, singleModule: Bool) async throws {
+        let fixture = singleModule
+            ? try await FixtureDocumentation.shared.singleModuleOutput(theme: theme)
+            : try await FixtureDocumentation.shared.output(theme: theme)
         let results = try VisualRegressionHarness.temporaryDirectory()
         defer { try? FileManager.default.removeItem(at: results) }
         let reportFile = results.appendingPathComponent("navigator.json")
@@ -205,9 +231,11 @@ struct VisualRegressionTests {
     }
 
     @Test("Pages do not animate while they load, even when their stylesheets arrive late",
-          arguments: ThemeSettings.BuiltInTheme.allCases)
-    func doesNotAnimateWhileLoading(theme: ThemeSettings.BuiltInTheme) async throws {
-        let fixture = try await FixtureDocumentation.shared.output(theme: theme)
+          arguments: ThemeSettings.BuiltInTheme.allCases, [false, true])
+    func doesNotAnimateWhileLoading(theme: ThemeSettings.BuiltInTheme, singleModule: Bool) async throws {
+        let fixture = singleModule
+            ? try await FixtureDocumentation.shared.singleModuleOutput(theme: theme)
+            : try await FixtureDocumentation.shared.output(theme: theme)
         let results = try VisualRegressionHarness.temporaryDirectory()
         defer { try? FileManager.default.removeItem(at: results) }
         let reportFile = results.appendingPathComponent("loading.json")

@@ -50,6 +50,10 @@ Mismatches covered by an accepted deviation (see below) are listed separately.  
 exit status is 0 when the remaining mismatches are exactly the known issues and
 every accepted deviation still covers a mismatch.
 
+The Swift tests also render the fixture's `FixtureCore` module on its own, whose
+navigator shows a single module's title like swift-docc-render, and check it with
+`run.mjs` (for `default`), `navigator.mjs` and `loading.mjs`.
+
 The temporary directories of the harness and of the Swift tests (the fixture's build
 cache and rendered sites) carry a key derived from the checkout's location in their
 names, so test runs of different checkouts on the same machine never share them,

@@ -60,6 +60,8 @@ body.sidebar-document .navigator {
 
 .module-header .module-toggle {
     position: static;
+    z-index: auto;
+    overflow: visible;
     order: -1;
     display: flex;
     justify-content: center;
@@ -258,7 +260,12 @@ a.leaf-link::after {
 .navigator-card-item .navigator-icon[data-topic-type="var"]::before { content: "P"; }
 .navigator-card-item .navigator-icon[data-topic-type="macro"]::before { content: "Ma"; }
 
-/* Children grow and fade in while their row expands, where the browser can animate to their height */
+/*
+ * Children grow and fade in while their row expands, where the browser can animate
+ * to their height.  The browser applies the URL fragment, which expands the rows
+ * above the current one, only after styling the navigator once, so only the
+ * children of a row the reader toggles (pointing at or focusing it) animate.
+ */
 .navigator .nav-children-wrapper {
     display: block;
     height: 0;
@@ -266,6 +273,10 @@ a.leaf-link::after {
     opacity: 0;
     interpolate-size: allow-keywords;
     transition: height 0.2s ease, opacity 0.15s ease;
+}
+
+.navigator .navigator-card-item:not(:hover, :focus-within) + .nav-children-wrapper {
+    transition: none;
 }
 
 .navigator-card-item.expandable:not(:target):not(:has(+ .nav-children-wrapper :target)):has(> .disclosure-checkbox:checked) + .nav-children-wrapper,
