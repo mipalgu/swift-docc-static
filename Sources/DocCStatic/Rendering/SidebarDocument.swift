@@ -6,6 +6,7 @@
 //  Copyright © 2026 Rene Hexel. All rights reserved.
 //
 import Foundation
+import SwiftDocC
 
 /// The shared navigation sidebar document and the names that connect it to the pages embedding it.
 ///
@@ -190,13 +191,33 @@ public extension SidebarDocument {
     ///
     /// Leading, trailing and repeated slashes are removed and every component is
     /// lowercased, so `/documentation/Module/Type/` becomes `documentation/module/type`.
+    /// Like the file-safe paths of swift-docc, a component starting with a period gets
+    /// a leading apostrophe, so `/documentation/Module/Type/...(_:_:)` becomes
+    /// `documentation/module/type/'...(_:_:)` rather than naming a hidden directory;
+    /// paths that already have the apostrophe stay as they are.
     ///
     /// - Parameter path: A documentation path, such as a render node identifier path.
     /// - Returns: The normalised path.
     static func pagePathKey(_ path: String) -> String {
         path.split(separator: "/", omittingEmptySubsequences: true)
-            .map { $0.lowercased() }
+            .map { component in
+                let lowercased = component.lowercased()
+                return lowercased.hasPrefix(".") ? "'" + lowercased : lowercased
+            }
             .joined(separator: "/")
+    }
+
+    /// Returns the normalised path of a page, from which its output location, its
+    /// sidebar row and its search entry are derived.
+    ///
+    /// The path is swift-docc's file-safe path of the page, which the links of other
+    /// pages and the navigation index also use, normalised with ``pagePathKey(_:)``.
+    ///
+    /// - Parameter reference: The page's topic reference, such as a render node's
+    ///   identifier.
+    /// - Returns: The normalised path, such as `documentation/module/type/'...(_:_:)`.
+    static func pagePathKey(of reference: ResolvedTopicReference) -> String {
+        pagePathKey(NodeURLGenerator.fileSafeReferencePath(reference, lowercased: true))
     }
 
     /// Returns the `id` of the row representing a documentation path.

@@ -68,14 +68,25 @@ private func singleModuleIndex() -> NavigationIndex {
     )
 }
 
-/// Returns all values of the given attribute in the HTML.
+/// Returns all values of the given attribute in the HTML, with the character
+/// references the generator writes (`&amp;`, `&lt;`, `&gt;`, `&quot;` and `&#39;`)
+/// replaced by their characters, as a browser reads them.
 func attributeValues(_ attribute: String, in html: String) -> [String] {
     let pattern = "\\s\(attribute)=\"([^\"]*)\""
     guard let regex = try? NSRegularExpression(pattern: pattern) else { return [] }
     let range = NSRange(html.startIndex..., in: html)
     return regex.matches(in: html, range: range).compactMap {
-        Range($0.range(at: 1), in: html).map { String(html[$0]) }
+        Range($0.range(at: 1), in: html).map { unescapedHTML(String(html[$0])) }
     }
+}
+
+/// Replaces the character references the generator writes by their characters.
+func unescapedHTML(_ text: String) -> String {
+    text.replacingOccurrences(of: "&lt;", with: "<")
+        .replacingOccurrences(of: "&gt;", with: ">")
+        .replacingOccurrences(of: "&quot;", with: "\"")
+        .replacingOccurrences(of: "&#39;", with: "'")
+        .replacingOccurrences(of: "&amp;", with: "&")
 }
 
 @Suite("Sidebar Document Names")
@@ -91,6 +102,14 @@ struct SidebarDocumentNameTests {
     func pagePathKeyNormalisation() {
         #expect(SidebarDocument.pagePathKey("/documentation/Alpha/Point/") == "documentation/alpha/point")
         #expect(SidebarDocument.pagePathKey("documentation//Alpha") == "documentation/alpha")
+    }
+
+    @Test("Page path keys give components starting with a period swift-docc's apostrophe")
+    func leadingPeriods() {
+        #expect(SidebarDocument.pagePathKey("/documentation/A/Span/...(_:_:)") == "documentation/a/span/'...(_:_:)")
+        #expect(SidebarDocument.pagePathKey("/documentation/A/Span/'...(_:_:)") == "documentation/a/span/'...(_:_:)")
+        #expect(SidebarDocument.pagePathKey("/documentation/A/Span/.._(_:)-1x2y") == "documentation/a/span/'.._(_:)-1x2y")
+        #expect(SidebarDocument.pagePathKey("/documentation/A/Span/+(_:_:)") == "documentation/a/span/+(_:_:)")
     }
 
     @Test("Row identifiers are prefixed, lowercased and fragment-safe")
@@ -315,6 +334,19 @@ struct SidebarPostProcessingTests {
         let processor = DocLinkPostProcessor(documentedModules: ["Alpha": "Alpha"], externalURLs: [:])
         let html = "<p>No links here</p>"
         #expect(processor.process(html, currentDepth: 0) == html)
+    }
+
+    @Test("Doc links to pages with periods, colons and leading periods resolve to their files")
+    func awkwardDocLinks() {
+        let processor = DocLinkPostProcessor(documentedModules: ["Alpha": "Alpha"], externalURLs: [:])
+        let html = "<p>See doc://Alpha/documentation/Alpha/Point/distance(to:), "
+            + "doc://Alpha/documentation/Alpha/marker-swift.var and doc://Alpha/documentation/Alpha/Span/...(_:_:).</p>"
+        let processed = processor.process(html, currentDepth: 2)
+        #expect(processed.contains("href=\"../../documentation/alpha/point/distance(to:)/index.html\""))
+        #expect(processed.contains("href=\"../../documentation/alpha/marker-swift.var/index.html\""))
+        #expect(processed.contains("href=\"../../documentation/alpha/span/&#39;...(_:_:)/index.html\""))
+        #expect(processed.hasSuffix("</a>.</p>"))
+        #expect(processed.contains("</a>, "))
     }
 
     @Test("Generated files that are not documentation pages are skipped")

@@ -136,7 +136,7 @@ private extension SearchIndexBuilder {
         let id = renderNode.identifier.path
         let title = renderNode.metadata.title ?? extractTitleFromPath(renderNode.identifier.path)
         let type = documentType(for: renderNode.kind)
-        let path = pathToHTML(renderNode.identifier.path)
+        let path = SidebarDocument.pagePathKey(of: renderNode.identifier) + "/index.html"
         let summary = extractSummary(from: renderNode)
         let keywords = extractKeywords(from: renderNode)
         let module = extractModule(from: renderNode)
@@ -171,13 +171,6 @@ private extension SearchIndexBuilder {
         @unknown default:
             return "unknown"
         }
-    }
-
-    func pathToHTML(_ path: String) -> String {
-        let cleanPath = path
-            .trimmingCharacters(in: CharacterSet(charactersIn: "/"))
-            .lowercased()
-        return "\(cleanPath)/index.html"
     }
 
     func extractSummary(from renderNode: RenderNode) -> String {

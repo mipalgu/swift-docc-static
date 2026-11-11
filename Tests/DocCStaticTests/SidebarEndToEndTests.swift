@@ -101,6 +101,50 @@ struct SidebarEndToEndTests {
         #expect(checked > 20)
     }
 
+    @Test("Pages of symbols with awkward names exist where links, frames and search point",
+          arguments: ThemeSettings.BuiltInTheme.allCases)
+    func awkwardNamesResolve(theme: ThemeSettings.BuiltInTheme) async throws {
+        let fixture = try await FixtureDocumentation.shared.output(theme: theme)
+        let fileManager = FileManager.default
+        // No page is written to a hidden directory, like swift-docc's file-safe paths
+        let enumerator = fileManager.enumerator(at: fixture.outputDirectory, includingPropertiesForKeys: nil)
+        while let url = enumerator?.nextObject() as? URL {
+            #expect(!url.lastPathComponent.hasPrefix("."), "Hidden output \(fixture.relativePath(of: url))")
+        }
+        let sidebar = try fixture.text(at: SidebarDocument.fileName)
+        let rows = attributeValues("href", in: sidebar).map { decoded(stripFragment($0)) }
+        for operatorPage in ["'...(_:_:)", "'.._(_:)", "'.._(_:_:)", "_(_:_:)", "==(_:_:)"] {
+            let path = "documentation/fixtureextras/span/\(operatorPage)/index.html"
+            #expect(rows.contains(path), "The sidebar does not list \(path)")
+            #expect(fileManager.fileExists(atPath: fixture.outputDirectory.appendingPathComponent(path).path), "\(path) was not written")
+        }
+        #expect(rows.contains { $0.hasPrefix("documentation/fixtureextras/span/'...(_:)-") })
+        for path in ["documentation/fixtureextras/marker-swift.struct/index.html", "documentation/fixtureextras/marker-swift.var/index.html",
+                     "documentation/fixtureextras/naming-edge-cases/index.html"] {
+            #expect(rows.contains(path), "The sidebar does not list \(path)")
+        }
+        #expect(rows.contains { $0.hasPrefix("documentation/fixtureextras/gr") && $0.hasSuffix("e/index.html") }, "The sidebar does not list Größe")
+        // Every link between pages resolves
+        var links = 0
+        for page in fixture.files(withExtension: "html") {
+            let html = try String(contentsOf: page, encoding: .utf8)
+            for link in attributeValues("href", in: html) where link.hasSuffix("index.html") && !link.contains("://") {
+                let target = page.deletingLastPathComponent().appendingPathComponent(decoded(stripFragment(link))).standardizedFileURL
+                #expect(fileManager.fileExists(atPath: target.path), "Broken link \(link) in \(fixture.relativePath(of: page))")
+                links += 1
+            }
+        }
+        #expect(links > 100)
+        // Every search entry names an existing page
+        let index = try JSONSerialization.jsonObject(with: Data(fixture.text(at: "search-index.json").utf8)) as? [String: Any]
+        let documents = try #require(index?["documents"] as? [[String: Any]])
+        for document in documents {
+            let path = try #require(document["path"] as? String)
+            #expect(fileManager.fileExists(atPath: fixture.outputDirectory.appendingPathComponent(path).path), "Search entry \(path) has no page")
+        }
+        #expect(documents.contains { ($0["path"] as? String)?.contains("span/'...(_:_:)") == true })
+    }
+
     @Test("The sidebar document carries no per-page state",
           arguments: ThemeSettings.BuiltInTheme.allCases)
     func sidebarHasNoPageState(theme: ThemeSettings.BuiltInTheme) async throws {

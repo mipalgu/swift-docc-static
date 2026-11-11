@@ -144,7 +144,7 @@ extension HTMLPageBuilder {
         let scope = sections.indices.map { TutorialDocument.sectionTimeline($0) }.joined(separator: ", ")
         var html = tutorialPageHead(
             title: extractTitle(from: renderNode),
-            description: extractDescription(from: renderNode),
+            description: extractDescription(from: renderNode, references: references),
             bodyClass: TutorialDocument.pageClass,
             depth: depth
         )

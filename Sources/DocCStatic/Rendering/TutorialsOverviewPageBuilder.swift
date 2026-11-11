@@ -225,7 +225,7 @@ extension HTMLPageBuilder {
         return buildTutorialsOverviewPage(
             overview,
             pageTitle: extractTitle(from: renderNode),
-            description: extractDescription(from: renderNode),
+            description: extractDescription(from: renderNode, references: references),
             depth: depth
         )
     }

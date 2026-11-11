@@ -20,7 +20,7 @@ nonisolated(unsafe) private let docLinkRegex = Regex {
         "/"
         OneOrMore {
             CharacterClass(
-                .anyOf("/()-_"),
+                .anyOf("/()-_.:'!=+*~%"),
                 ("a"..."z"),
                 ("A"..."Z"),
                 ("0"..."9")
@@ -68,9 +68,12 @@ public struct DocLinkPostProcessor: Sendable {
         var replacements: [(Range<String.Index>, String)] = []
 
         for match in result.matches(of: docLinkRegex) {
-            let fullRange = match.range
             let bundleID = String(match.1)
-            let path = String(match.2)
+            // Punctuation after a link in running text is not part of its path
+            var path = String(match.2)
+            let trailing = path.reversed().prefix { ".,:;!'".contains($0) }.count
+            path.removeLast(trailing)
+            let fullRange = match.range.lowerBound..<result.index(match.range.upperBound, offsetBy: -trailing)
 
             // Skip if inside a code block
             if isInsideCodeBlock(result, at: fullRange) {
@@ -146,10 +149,7 @@ public struct DocLinkPostProcessor: Sendable {
     /// - Returns: The relative URL string.
     private func makeRelativeLink(to path: String, depth: Int) -> String {
         let prefix = String(repeating: "../", count: depth)
-        let cleanPath = path.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
-        // DocC generates lowercase directory names for modules
-        let lowercasedPath = cleanPath.lowercased()
-        return "\(prefix)\(lowercasedPath)/index.html"
+        return "\(prefix)\(SidebarDocument.pagePathKey(path))/index.html"
     }
 
     /// Extracts a display name from a documentation path.

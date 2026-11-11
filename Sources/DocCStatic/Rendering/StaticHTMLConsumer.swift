@@ -174,7 +174,7 @@ public extension StaticHTMLConsumer {
 private extension StaticHTMLConsumer {
     func outputPath(for renderNode: RenderNode) -> URL {
         // Convert the reference path to a file system path (shared with sidebar row identifiers)
-        let pageKey = SidebarDocument.pagePathKey(renderNode.identifier.path)
+        let pageKey = SidebarDocument.pagePathKey(of: renderNode.identifier)
 
         var path = outputDirectory
         for component in pageKey.split(separator: "/") {

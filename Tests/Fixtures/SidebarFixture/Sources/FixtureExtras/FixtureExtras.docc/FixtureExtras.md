@@ -8,3 +8,11 @@ Labels and canvas extensions built on top of FixtureCore.
 
 - ``Label``
 - ``LabelList``
+
+### Naming
+
+- <doc:Naming-Edge-Cases>
+- ``Span``
+- ``Marker``
+- ``marker``
+- ``Größe``

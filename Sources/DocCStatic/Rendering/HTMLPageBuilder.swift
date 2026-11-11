@@ -144,7 +144,7 @@ public extension HTMLPageBuilder {
         }
 
         let title = extractTitle(from: renderNode)
-        let description = extractDescription(from: renderNode)
+        let description = extractDescription(from: renderNode, references: references)
         let depth = calculateDepth(for: renderNode)
         let moduleName = extractModuleName(from: renderNode)
 
@@ -282,7 +282,7 @@ extension HTMLPageBuilder {
     ) -> String {
         // Embed the shared sidebar document if there is one
         if let sidebarDocument {
-            return sidebarDocument.embeddingMarkup(forPagePath: renderNode.identifier.path, depth: depth)
+            return sidebarDocument.embeddingMarkup(forPagePath: SidebarDocument.pagePathKey(of: renderNode.identifier), depth: depth)
         }
 
         // A navigation index without modules yields an empty inline sidebar
@@ -397,16 +397,21 @@ extension HTMLPageBuilder {
         return pathComponents.last ?? "Documentation"
     }
 
-    func extractDescription(from renderNode: RenderNode) -> String? {
+    /// Returns the page description: the plain text of the abstract.
+    ///
+    /// Links in the abstract contribute the titles of the pages they refer to.
+    ///
+    /// - Parameters:
+    ///   - renderNode: The render node of the page.
+    ///   - references: The references of the render node, which give link titles.
+    /// - Returns: The description, or `nil` if the page has no abstract.
+    func extractDescription(from renderNode: RenderNode, references: [String: any RenderReference]) -> String? {
         guard let abstract = renderNode.abstract else { return nil }
-        return contentRenderer.renderInlineContent(abstract, references: [:]).plainText
+        return contentRenderer.renderInlineContent(abstract, references: references).plainText
     }
 
     func calculateDepth(for renderNode: RenderNode) -> Int {
-        let path = renderNode.identifier.path
-            .trimmingCharacters(in: CharacterSet(charactersIn: "/"))
-        let components = path.components(separatedBy: "/").filter { !$0.isEmpty }
-        return components.count
+        SidebarDocument.pagePathKey(of: renderNode.identifier).split(separator: "/").count
     }
 
     /// Builds the breadcrumbs of a page (swift-docc-render's `Hierarchy`).
