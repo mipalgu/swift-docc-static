@@ -237,10 +237,11 @@ struct ThemeSettingsInputTests {
                 }
             }
             """
-        let tempDir = FileManager.default.temporaryDirectory
+        let tempDir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
         let fileURL = tempDir.appendingPathComponent("test-theme.json")
         try json.write(to: fileURL, atomically: true, encoding: .utf8)
-        defer { try? FileManager.default.removeItem(at: fileURL) }
+        defer { try? FileManager.default.removeItem(at: tempDir) }
 
         let settings = try ThemeSettingsInput.parse(contentsOf: fileURL)
         #expect(settings.theme.color?["link"]?.light == "#0066cc")

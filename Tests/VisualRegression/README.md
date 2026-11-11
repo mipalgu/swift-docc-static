@@ -48,6 +48,11 @@ list.  Further options:
 
 The exit status is 0 when the mismatches are exactly the known issues.
 
+The temporary directories of the harness and of the Swift tests (the fixture's build
+cache and rendered sites) carry a key derived from the checkout's location in their
+names, so test runs of different checkouts on the same machine never share them,
+while repeated runs of one checkout reuse the warm build cache.
+
 ## Known Issues
 
 `known-issues/<theme>.json` lists, per theme:

@@ -77,9 +77,11 @@ struct GeneratedFixture: Sendable {
 ///
 /// Each distinct variant (a theme configuration with a name) is generated at most once per
 /// test process; concurrent requests for the same variant share one generation task.
-/// All scratch and output directories live in the system temporary directory, so
-/// nothing is written into the repository.  The package build cache is kept between
-/// test runs to keep repeated runs fast, whereas generated output is replaced.
+/// All scratch and output directories live in this checkout's own directory in the
+/// system temporary directory (see ``TemporaryLocation``), so nothing is written into
+/// the repository and other checkouts do not interfere.  The package build cache is
+/// kept between test runs to keep repeated runs fast, whereas generated output is
+/// replaced.
 actor FixtureDocumentation {
     /// The process-wide shared instance.
     static let shared = FixtureDocumentation()
@@ -135,7 +137,7 @@ actor FixtureDocumentation {
     private func prepareWorkspace() throws -> URL {
         if let workspace { return workspace }
         let fileManager = FileManager.default
-        let root = fileManager.temporaryDirectory.appendingPathComponent("docc-static-fixture-tests")
+        let root = TemporaryLocation.fixtureWorkspace
         let package = root.appendingPathComponent("package")
         let outputs = root.appendingPathComponent("outputs")
         for directory in [package, outputs] where fileManager.fileExists(atPath: directory.path) {

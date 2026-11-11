@@ -58,7 +58,8 @@ struct ThemeResolutionTests {
     @Test("Custom theme file")
     func customThemeFile() throws {
         // Create a temporary theme file
-        let tempDir = FileManager.default.temporaryDirectory
+        let tempDir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
         let themeFile = tempDir.appendingPathComponent("test-theme.json")
 
         let themeJSON = """
@@ -73,7 +74,7 @@ struct ThemeResolutionTests {
 
         try themeJSON.write(to: themeFile, atomically: true, encoding: .utf8)
         defer {
-            try? FileManager.default.removeItem(at: themeFile)
+            try? FileManager.default.removeItem(at: tempDir)
         }
 
         let theme = try ThemeConfiguration.resolveTheme(themeFile.path)
@@ -151,13 +152,14 @@ struct ThemeResolutionTests {
     /// Tests invalid JSON in custom theme file.
     @Test("Invalid JSON in a custom theme file")
     func invalidThemeJSON() throws {
-        let tempDir = FileManager.default.temporaryDirectory
+        let tempDir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
         let themeFile = tempDir.appendingPathComponent("invalid-theme.json")
 
         let invalidJSON = "{ invalid json }"
         try invalidJSON.write(to: themeFile, atomically: true, encoding: .utf8)
         defer {
-            try? FileManager.default.removeItem(at: themeFile)
+            try? FileManager.default.removeItem(at: tempDir)
         }
 
         #expect {

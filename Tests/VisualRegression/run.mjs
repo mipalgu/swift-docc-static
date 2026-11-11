@@ -19,11 +19,10 @@
 // --prune-known removes the pairs that no longer occur from the known-issue list; the
 // list is never extended automatically, so it can only shrink.
 import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { compareMeasurements, expandMeasurement, formatTable, issueKey, parseArguments } from './lib/common.mjs';
+import { compareMeasurements, expandMeasurement, formatTable, issueKey, parseArguments, temporaryLocation } from './lib/common.mjs';
 import { measureSite } from './lib/measure-site.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -42,7 +41,7 @@ if (!existsSync(goldenFile)) {
 
 /** Renders the fixture package with the theme and returns the site directory. */
 function renderFixture() {
-  const work = join(tmpdir(), 'docc-static-visual-regression', theme);
+  const work = join(temporaryLocation('docc-static-visual-regression', packageRoot), theme);
   const fixture = join(work, 'package');
   const site = join(work, 'site');
   rmSync(fixture, { recursive: true, force: true });
@@ -54,7 +53,7 @@ function renderFixture() {
   const [command, commandArgs] = args['docc-static']
     ? [args['docc-static'], generate]
     : ['swift', ['run', '--package-path', packageRoot,
-        '--scratch-path', args['scratch-path'] || join(tmpdir(), 'docc-static-visual-regression-build'),
+        '--scratch-path', args['scratch-path'] || temporaryLocation('docc-static-visual-regression-build', packageRoot),
         'docc-static', ...generate]];
   console.error(`Rendering the fixture with theme '${theme}'...`);
   const run = spawnSync(command, commandArgs, { stdio: ['ignore', 'ignore', 'inherit'] });

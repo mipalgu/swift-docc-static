@@ -1,5 +1,8 @@
-// Shared helpers of the visual regression harness: argument parsing, compact storage of
-// measurements, comparison against golden data and report formatting.
+// Shared helpers of the visual regression harness: argument parsing, temporary
+// directories, compact storage of measurements, comparison against golden data and
+// report formatting.
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 
 /** Parses `--name value`, `--name=value` and bare `--flag` arguments into an object. */
 export function parseArguments(argv) {
@@ -13,6 +16,28 @@ export function parseArguments(argv) {
     else args[name] = 'true';
   }
   return args;
+}
+
+/**
+ * Returns a key that identifies a checkout without revealing its location: the 64-bit
+ * FNV-1a hash of the UTF-8 encoded location as 16 lowercase hexadecimal digits (the
+ * Swift tests derive their temporary directory names the same way).
+ */
+export function checkoutKey(location) {
+  let hash = 0xcbf29ce484222325n;
+  for (const byte of new TextEncoder().encode(location)) {
+    hash ^= BigInt(byte);
+    hash = (hash * 0x100000001b3n) & 0xffffffffffffffffn;
+  }
+  return hash.toString(16).padStart(16, '0');
+}
+
+/**
+ * Returns a directory in the system temporary directory that belongs to one checkout,
+ * so that harness runs of different checkouts on the same machine never share files.
+ */
+export function temporaryLocation(prefix, checkout) {
+  return join(tmpdir(), `${prefix}-${checkoutKey(checkout)}`);
 }
 
 const ENTRY_FIELDS = ['found', 'visible', 'error'];

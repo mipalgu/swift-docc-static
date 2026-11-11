@@ -20,11 +20,10 @@
 // With --site, an already rendered reference site is measured instead.  The golden data
 // is written to golden/<theme>.json.
 import { cpSync, existsSync, mkdirSync, readdirSync, rmSync, writeFileSync, readFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { compactMeasurement, parseArguments, stringifyMeasurement } from './lib/common.mjs';
+import { compactMeasurement, parseArguments, stringifyMeasurement, temporaryLocation } from './lib/common.mjs';
 import { measureSite } from './lib/measure-site.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -113,7 +112,7 @@ function renderWithMain(work) {
   return site;
 }
 
-const work = resolve(args.work || join(tmpdir(), 'docc-static-visual-regression-references', theme));
+const work = resolve(args.work || join(temporaryLocation('docc-static-visual-regression-references', packageRoot), theme));
 mkdirSync(work, { recursive: true });
 const site = args.site ? resolve(args.site) : side === 'vue' ? renderWithDocC(work) : renderWithMain(work);
 if (!existsSync(site)) {
