@@ -269,7 +269,23 @@
  * using :has() are kept separate so that browsers without it still honour the
  * checkboxes.
  */
+/*
+ * Without scripts the browser scrolls the current row to the top of the list, less
+ * its scroll margin, whenever the page is loaded.  swift-docc-render leaves the list
+ * at the top when the row is visible there, and scrolls the row to the top of the
+ * list otherwise; the margin of a whole screenful less the row reproduces the first
+ * case exactly, and places a row further down at the bottom of the list (the script
+ * then moves it to the top).  The navigator fills the window of its document, so
+ * the visible part of the list is `100vh` tall less the space above it
+ * (`--navigator-list-top`) and below it (`--navigator-list-bottom`, including the
+ * list's bottom padding); `--navigator-target-reserve` is at least the height of a
+ * row or a module title.
+ */
 .navigator {
+    --navigator-list-top: var(--spacing-navigator-card-inner-padding-top, 10px);
+    --navigator-list-bottom: 10px;
+    --navigator-target-reserve: 40px;
+    --navigator-target-scroll-margin: calc(100vh - var(--navigator-list-top) - var(--navigator-list-bottom) - var(--navigator-target-reserve));
     height: 100%;
     display: flex;
     flex-flow: column;
@@ -373,7 +389,7 @@
     top: 0;
     z-index: 2;
     background: var(--color-fill);
-    scroll-margin-top: 0;
+    scroll-margin-top: var(--spacing-sidebar-target-scroll-margin, var(--navigator-target-scroll-margin));
 }
 
 .module-header .module-toggle {
@@ -430,11 +446,7 @@
     padding-inline-end: var(--nav-head-wrapper-right-space);
     font-size: var(--spacing-navigator-card-font-size, 1rem);
     line-height: var(--spacing-navigator-card-line-height, 1.4705882353);
-    /*
-     * Without scripts the browser scrolls the current row to the top of the list;
-     * leave some rows above it in view, below the title of its module
-     */
-    scroll-margin-top: var(--spacing-sidebar-target-scroll-margin, 30vh);
+    scroll-margin-top: var(--spacing-sidebar-target-scroll-margin, var(--navigator-target-scroll-margin));
 }
 
 /* The depth of a row, from its data-nesting-index attribute */

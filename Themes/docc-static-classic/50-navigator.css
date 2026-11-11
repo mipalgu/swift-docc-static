@@ -32,6 +32,10 @@
 
 /* The scrolling list */
 body.sidebar-document .navigator {
+    --navigator-list-top: calc(var(--spacing-navigator-padding-vertical) + var(--spacing-navigator-card-inner-padding-top, 10px));
+    --navigator-list-bottom: var(--spacing-navigator-padding-vertical);
+    /* Titles wrap, so a row may take up to three lines */
+    --navigator-target-reserve: 76px;
     display: block;
     flex-direction: row;
     box-sizing: border-box;
@@ -118,7 +122,6 @@ body.sidebar-document .navigator {
     list-style-type: none;
     color: var(--color-figure-gray-secondary);
     font-weight: 600;
-    scroll-margin-top: var(--spacing-sidebar-target-scroll-margin, 30vh);
 }
 
 .navigator-card-item:is([data-nesting-index="0"], .expandable) {

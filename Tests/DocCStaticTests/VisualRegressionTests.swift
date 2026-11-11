@@ -52,6 +52,12 @@ private struct OnThisPageReport: Decodable {
     let failures: [String]
 }
 
+/// The results written by `navigator.mjs --json`.
+private struct NavigatorReport: Decodable {
+    let page: String
+    let checks: [String: Bool]
+}
+
 /// The results written by `loading.mjs --json`.
 private struct LoadingReport: Decodable {
     /// A transition or animation that started while a page loaded.
@@ -172,6 +178,29 @@ struct VisualRegressionTests {
             #expect(page.checks["sidebar"] == true, "\(page.page) has no working sidebar")
             #expect(page.checks["expandCollapse"] == true, "\(page.page) cannot expand and collapse rows")
             #expect(page.checks["moduleTitle"] == true, "\(page.page) hides its row or the module title")
+        }
+    }
+
+    @Test("The navigator scrolls to the current row only when it is not visible at the top",
+          arguments: ThemeSettings.BuiltInTheme.allCases)
+    func navigatorScrollsLikeTheReference(theme: ThemeSettings.BuiltInTheme) async throws {
+        let fixture = try await FixtureDocumentation.shared.output(theme: theme)
+        let results = try VisualRegressionHarness.temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: results) }
+        let reportFile = results.appendingPathComponent("navigator.json")
+        _ = try VisualRegressionHarness.runNode(
+            script: "navigator.mjs",
+            arguments: ["--site", fixture.outputDirectory.path, "--json", reportFile.path]
+        )
+        let report = try JSONDecoder().decode([NavigatorReport].self, from: Data(contentsOf: reportFile))
+        let documentation = FixturePage.all.filter { $0.kind == "documentation" }
+        #expect(report.count == documentation.count)
+        #expect(report.contains { $0.checks["firstScreen"] != nil }, "no row fitted in the first screenful")
+        #expect(report.contains { $0.checks["top"] != nil }, "no row needed scrolling")
+        for page in report {
+            for (check, passed) in page.checks.sorted(by: { $0.key < $1.key }) {
+                #expect(passed, "\(check) fails on \(page.page) for \(theme.rawValue)")
+            }
         }
     }
 

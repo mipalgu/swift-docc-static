@@ -288,9 +288,10 @@ public extension NavigationSidebarBuilder {
                     }
                 }
 
-                // Like swift-docc-render, scroll the current row to the top of the
-                // list, below the title of its module, only if it would not be
-                // visible otherwise.
+                // Like swift-docc-render, leave the list at the top if the current
+                // row is visible there, and otherwise scroll the row to the top of
+                // the list, below the title of its module.  Later, scroll only if
+                // the row is out of view.
                 function revealCurrentRow(initial) {
                     var target = currentRow();
                     var scroller = target ? target.closest('.scroller') : null;
@@ -299,12 +300,13 @@ public extension NavigationSidebarBuilder {
                     }
                     var section = target.closest('.module-section');
                     var header = section ? section.querySelector('.module-header') : null;
-                    var titleHeight = header && !header.contains(target) ? header.offsetHeight : 0;
+                    var titleHeight = header && !header.contains(target) && !target.contains(header) ? header.offsetHeight : 0;
                     var area = scroller.getBoundingClientRect();
                     var row = target.getBoundingClientRect();
                     var offset = row.top - area.top + scroller.scrollTop;
-                    if (initial && offset + row.height <= scroller.clientHeight) {
-                        scroller.scrollTop = 0;
+                    var padding = parseFloat(window.getComputedStyle(scroller).paddingBottom) || 0;
+                    if (initial) {
+                        scroller.scrollTop = offset + row.height < scroller.clientHeight - padding ? 0 : offset - titleHeight;
                     } else if (row.top < area.top + titleHeight || row.bottom > area.bottom) {
                         scroller.scrollTop = offset - titleHeight;
                     }
@@ -312,8 +314,13 @@ public extension NavigationSidebarBuilder {
 
                 markCurrentPage();
                 window.addEventListener('hashchange', markCurrentPage);
+                // The browser may scroll to the fragment again as the document
+                // finishes loading, so the row is placed once more a frame later
                 window.addEventListener('load', function () {
                     revealCurrentRow(true);
+                    window.requestAnimationFrame(function () {
+                        revealCurrentRow(true);
+                    });
                 });
                 window.addEventListener('resize', function () {
                     revealCurrentRow(false);
