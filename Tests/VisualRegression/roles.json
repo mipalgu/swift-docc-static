@@ -519,12 +519,12 @@
   "vue": "footer"
  },
  "appearanceSelector": {
-  "static": ".color-scheme-toggle, .appearance-selector",
+  "static": ".color-scheme-toggle",
   "main": ".appearance-selector",
   "vue": ".color-scheme-toggle"
  },
  "appearanceOption": {
-  "static": ".color-scheme-toggle label, .appearance-btn",
+  "static": ".color-scheme-toggle label",
   "main": ".appearance-btn",
   "vue": ".color-scheme-toggle label"
  },

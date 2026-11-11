@@ -74,7 +74,7 @@ public extension NavigationSidebarBuilder {
             <base target="_top">
             <link rel="stylesheet" href="css/main.css">
         </head>
-        <body class="\(SidebarDocument.documentClass)" data-color-scheme="auto">
+        <body class="\(SidebarDocument.documentClass)" \(ColourSchemeToggle.bodyAttribute)>
         """
         html += buildNavigationTree()
         if includeSearch {
@@ -187,24 +187,24 @@ public extension NavigationSidebarBuilder {
                 var schemeMessage = '\(SidebarDocument.colourSchemeMessage)';
                 var focusMessage = '\(SidebarDocument.focusFilterMessage)';
                 var readyMessage = '\(SidebarDocument.readyMessage)';
-                var schemes = ['light', 'dark', 'auto'];
+                var schemes = [\(ColourSchemeToggle.Scheme.allCases.map { "'\($0.rawValue)'" }.joined(separator: ", "))];
                 var body = document.body;
 
                 function applyScheme(scheme) {
                     if (schemes.indexOf(scheme) !== -1) {
-                        body.setAttribute('data-color-scheme', scheme);
+                        body.setAttribute('\(ColourSchemeToggle.schemeAttribute)', scheme);
                     }
                 }
 
                 try {
-                    applyScheme(window.localStorage.getItem(storageKey) || 'auto');
+                    applyScheme(window.localStorage.getItem(storageKey) || '\(ColourSchemeToggle.defaultScheme.rawValue)');
                 } catch (error) {
                     // Storage may be unavailable, for example for local files.
                 }
 
                 window.addEventListener('storage', function (event) {
                     if (event.key === storageKey) {
-                        applyScheme(event.newValue || 'auto');
+                        applyScheme(event.newValue || '\(ColourSchemeToggle.defaultScheme.rawValue)');
                     }
                 });
 

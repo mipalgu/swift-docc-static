@@ -220,7 +220,7 @@ extension HTMLPageBuilder {
             <title>\(escapeHTML(title))</title>\(descriptionTag)
             <link rel="stylesheet" href="\(cssPath)">
         </head>
-        <body class="\(bodyClass)" data-color-scheme="auto">
+        <body class="\(bodyClass)" \(ColourSchemeToggle.bodyAttribute)>
         """
     }
 

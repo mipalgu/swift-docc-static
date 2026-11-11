@@ -151,6 +151,24 @@ struct TutorialEndToEndTests {
         #expect(html.contains("<a href=\"#basics\" class=\"tutorials-navigation-link\">Basics</a>"))
         #expect(!html.contains("Learn through hands-on tutorials"))
     }
+
+    @Test("Tutorial pages share the footer and colour scheme toggle of documentation pages",
+          arguments: ThemeSettings.BuiltInTheme.allCases)
+    func sharedFooter(theme: ThemeSettings.BuiltInTheme) async throws {
+        let fixture = try await FixtureDocumentation.shared.output(theme: theme)
+        let footer = ColourSchemeToggle.footerMarkup(content: Configuration.defaultFooter)
+        for path in [Self.tutorialPath, Self.overviewPath] {
+            let html = try fixture.text(at: path)
+            #expect(html.contains(footer), "\(path) lacks the shared footer")
+            #expect(count(of: "<footer", in: html) == 1, "\(path) has more than one footer")
+            let body = html.components(separatedBy: "<body").dropFirst().first?.prefix { $0 != ">" } ?? ""
+            #expect(body.contains(ColourSchemeToggle.bodyAttribute), "\(path) does not record the default scheme")
+        }
+        let css = try fixture.text(at: "css/main.css")
+        for retired in [".documentation-footer", ".appearance-selector", ".appearance-btn"] {
+            #expect(!css.contains(retired), "the stylesheet still styles \(retired)")
+        }
+    }
 }
 
 /// Tests of the names and texts shared by tutorial pages.

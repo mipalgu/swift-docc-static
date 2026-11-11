@@ -201,9 +201,3 @@ body > .tutorial {
     margin-top: var(--spacing-stacked-margin-large, 0.8em);
 }
 
-/* Pages without a navigation sidebar do not offset the footer */
-body.tutorial-page .documentation-footer,
-body.tutorial-overview-page .documentation-footer,
-body.index-page .documentation-footer {
-    margin-left: 0;
-}
