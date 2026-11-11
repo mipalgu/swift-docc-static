@@ -5,7 +5,7 @@ Create points and draw them on a canvas.
 ## Overview
 
 This article shows the main types of the module together with the
-`Point` and `Canvas` types. The [`swift build`](https://www.swift.org/documentation/)
+``Point`` and `Canvas` types. The [`swift build`](https://www.swift.org/documentation/)
 command builds the module, and ``Point/distance(to:)`` measures distances.
 
 ### Creating Points

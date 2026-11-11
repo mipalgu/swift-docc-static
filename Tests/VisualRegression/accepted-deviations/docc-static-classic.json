@@ -86,11 +86,6 @@
    "reason": "The main branch kept the light purple of declaration identifiers in the dark appearance, where it is unreadable on the dark panel; classic uses a light purple there."
   },
   {
-   "role": "inlineCodeInLink",
-   "property": "presence",
-   "reason": "Links to symbols keep their code voice, which the main branch dropped by rendering them as plain text links."
-  },
-  {
    "role": "mentionedIn",
    "property": "presence",
    "reason": "Classic lists the articles that mention a symbol, a section the main branch did not show."

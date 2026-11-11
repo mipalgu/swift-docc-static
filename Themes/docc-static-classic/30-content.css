@@ -6,7 +6,8 @@
  * of the content is inset by the content padding, while code listings, tables and
  * asides are inset by their own margins.
  */
-.primary-content > :is(.content, .mentions) > :is(p, ul, ol, h2, h3, h4, h5, h6, dl) {
+.primary-content > :is(.content, .mentions) > :is(p, ul, ol, h2, h3, h4, h5, h6, dl),
+.primary-content > .mentions > .link-block {
     padding-left: var(--spacing-content-block-padding-horizontal);
     padding-right: var(--spacing-content-block-padding-horizontal);
 }
@@ -36,8 +37,31 @@
     padding-bottom: 0;
 }
 
+/* Section titles link to themselves like the main branch's: plain inline links */
+.primary-content > :is(.content, .mentions) > h2 .header-anchor {
+    display: inline;
+    position: static;
+    padding-right: 0;
+}
+
+.primary-content > :is(.content, .mentions) > h2 .header-anchor .icon {
+    display: none;
+}
+
 /* Section titles without a link to themselves read as plain headings */
-.primary-content > section > h2 .header-anchor {
+.primary-content > section:not(.mentions) > h2 .header-anchor {
+    color: inherit;
+}
+
+/*
+ * Links to symbols in running text read as text in the body font, like the main
+ * branch's plain links: their code element takes no box of its own
+ */
+.primary-content :is(p, li, dd, td) a > code,
+.documentation-hero .abstract a > code {
+    display: contents;
+    font: inherit;
+    letter-spacing: inherit;
     color: inherit;
 }
 
@@ -54,6 +78,13 @@
 .primary-content .parameters :is(dt, dd) {
     margin: 0;
     padding: 0;
+}
+
+/* Parameter names look like inline code, as in the main branch */
+.primary-content .parameters dt code {
+    background-color: var(--color-inline-code-background, var(--color-code-inline-background, transparent));
+    padding: var(--inline-code-padding, var(--spacing-code-padding, 0));
+    border-radius: var(--inline-code-border-radius, var(--spacing-code-border-radius, 0));
 }
 
 /* Lists */

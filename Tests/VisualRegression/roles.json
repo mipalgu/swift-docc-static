@@ -464,6 +464,35 @@
   "main": "section.mentions, .mentions",
   "vue": "section.mentions, .mentions"
  },
+ "mentionedInTitle": {
+  "static": "section.mentions h2",
+  "main": "main.doc-main > h2",
+  "vue": "section.mentions h2",
+  "pages": [
+   "structure"
+  ]
+ },
+ "mentionedInTitleLink": {
+  "static": "section.mentions h2 a",
+  "main": "main.doc-main > h2 a",
+  "vue": "section.mentions h2 a",
+  "pages": [
+   "structure"
+  ]
+ },
+ "mentionedInItem": {
+  "static": "section.mentions .link-block",
+  "main": "main.doc-main > p",
+  "vue": "section.mentions .link-block",
+  "geometry": true,
+  "properties": [
+   "marginLeft",
+   "paddingLeft"
+  ],
+  "pages": [
+   "structure"
+  ]
+ },
  "parametersTitle": {
   "static": "section.parameters h2, h2#parameters",
   "main": "section.parameters > h2, h2#parameters",
@@ -473,6 +502,11 @@
   "static": ".parameters dt",
   "main": "section.parameters dt",
   "vue": ".parameters dt, .parameters-table dt"
+ },
+ "parameterNameCode": {
+  "static": ".parameters dt code",
+  "main": "section.parameters dt code",
+  "vue": ".parameters dt code, .parameters-table dt code"
  },
  "parameterDescription": {
   "static": ".parameters dd",
