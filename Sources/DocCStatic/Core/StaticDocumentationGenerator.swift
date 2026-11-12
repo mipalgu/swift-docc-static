@@ -466,7 +466,8 @@ public struct StaticDocumentationGenerator: Sendable {
     /// This runs docc convert once per DocC catalog with only the matching symbol graph,
     /// then runs a final conversion for any remaining symbol graphs. This is necessary
     /// because docc doesn't properly associate catalogs with modules when multiple
-    /// symbol graphs are present.
+    /// symbol graphs are present.  Modules without a catalog whose symbol graphs
+    /// declare no symbols are left out, as they have nothing to document.
     ///
     /// - Parameters:
     ///   - symbolGraphsDir: The directory containing all symbol graph JSON files.
@@ -522,9 +523,13 @@ public struct StaticDocumentationGenerator: Sendable {
 
         // Find remaining symbol graphs that weren't matched to catalogs
         let allSymbolGraphs = try fileManager.contentsOfDirectory(atPath: symbolGraphsDir.path)
-            .filter { $0.hasSuffix(".symbols.json") }
+            .filter { $0.hasSuffix(DocumentableSymbolGraphs.fileSuffix) }
 
-        let remainingSymbolGraphs = allSymbolGraphs.filter { !processedSymbolGraphs.contains($0) }
+        // Leave out modules without a catalogue that have nothing to document
+        let remainingSymbolGraphs = DocumentableSymbolGraphs.documentableFiles(
+            allSymbolGraphs.filter { !processedSymbolGraphs.contains($0) },
+            in: symbolGraphsDir
+        )
 
         if !remainingSymbolGraphs.isEmpty {
             // Create temp directory for remaining symbol graphs
@@ -564,21 +569,21 @@ public struct StaticDocumentationGenerator: Sendable {
         }
 
         // Try exact match first (e.g., "SwiftModelling" -> "SwiftModelling.symbols.json")
-        let exactMatch = "\(catalogName).symbols.json"
+        let exactMatch = catalogName + DocumentableSymbolGraphs.fileSuffix
         if contents.contains(exactMatch) {
             return symbolGraphsDir.appendingPathComponent(exactMatch)
         }
 
         // Try with underscores replacing hyphens (e.g., "swift-atl" -> "swift_atl.symbols.json")
-        let underscoreMatch = catalogName.replacingOccurrences(of: "-", with: "_") + ".symbols.json"
+        let underscoreMatch = catalogName.replacingOccurrences(of: "-", with: "_") + DocumentableSymbolGraphs.fileSuffix
         if contents.contains(underscoreMatch) {
             return symbolGraphsDir.appendingPathComponent(underscoreMatch)
         }
 
         // Try case-insensitive match
         let lowercaseName = catalogName.lowercased()
-        for file in contents where file.hasSuffix(".symbols.json") {
-            let baseName = String(file.dropLast(".symbols.json".count))
+        for file in contents where file.hasSuffix(DocumentableSymbolGraphs.fileSuffix) {
+            let baseName = String(file.dropLast(DocumentableSymbolGraphs.fileSuffix.count))
             if baseName.lowercased() == lowercaseName
                 || baseName.lowercased().replacingOccurrences(of: "_", with: "-") == lowercaseName
             {
