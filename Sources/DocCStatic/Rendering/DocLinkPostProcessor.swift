@@ -36,6 +36,9 @@ nonisolated(unsafe) private let docLinkRegex = Regex {
 /// - Cross-target links within the same package (relative links)
 /// - Included dependencies (relative links)
 /// - External documentation URL mappings (absolute links)
+///
+/// A link to a page of a documented module that is not generated is left as text,
+/// unless the page resolver knows external documentation for it.
 public struct DocLinkPostProcessor: Sendable {
     /// Known modules being documented (for cross-target resolution).
     /// Maps module name to its bundle identifier.
@@ -44,14 +47,24 @@ public struct DocLinkPostProcessor: Sendable {
     /// External documentation URL mappings (bundle ID -> base URL).
     public let externalURLs: [String: URL]
 
+    /// Decides whether pages are generated and where links to other pages point.
+    public let pageLinkResolver: PageLinkResolver
+
     /// Creates a new post-processor.
     ///
     /// - Parameters:
     ///   - documentedModules: Map of module names to bundle identifiers being documented.
     ///   - externalURLs: Map of bundle identifiers to external documentation base URLs.
-    public init(documentedModules: [String: String], externalURLs: [String: URL]) {
+    ///   - pageLinkResolver: Decides whether pages are generated and where links to
+    ///     pages outside the site point; by default every page is assumed to be generated.
+    public init(
+        documentedModules: [String: String],
+        externalURLs: [String: URL],
+        pageLinkResolver: PageLinkResolver = .unrestricted
+    ) {
         self.documentedModules = documentedModules
         self.externalURLs = externalURLs
+        self.pageLinkResolver = pageLinkResolver
     }
 
     /// Processes HTML content, replacing `doc://` URLs with proper links.
@@ -120,6 +133,9 @@ public struct DocLinkPostProcessor: Sendable {
         // Check if it's a module we're documenting (cross-target)
         for (moduleName, moduleBundleID) in documentedModules {
             if bundleID == moduleBundleID || bundleID.lowercased() == moduleName.lowercased() {
+                guard pageLinkResolver.isGenerated(path) else {
+                    return pageLinkResolver.destination(forPage: path, depth: currentDepth)
+                }
                 return makeRelativeLink(to: path, depth: currentDepth)
             }
         }

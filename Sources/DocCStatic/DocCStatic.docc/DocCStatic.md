@@ -64,6 +64,14 @@ print("Generated \(result.generatedPages) pages")
 - ``IndexPageBuilder``
 - ``StaticHTMLConsumer``
 
+### Links
+
+- ``PageLinkResolver``
+- ``ExternalDocumentation``
+- ``PackageModules``
+- ``PackageDependency``
+- ``DocLinkPostProcessor``
+
 ### Search
 
 - ``SearchIndexBuilder``

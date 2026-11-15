@@ -32,6 +32,9 @@ public struct HTMLPageBuilder: Sendable {
 
     /// The content renderer for converting render node content to HTML.
     let contentRenderer: RenderContentHTMLRenderer
+
+    /// Decides where links to other documentation pages point.
+    public let linkResolver: PageLinkResolver
 }
 
 // MARK: - Shared Class Names
@@ -122,17 +125,28 @@ public extension HTMLPageBuilder {
 public extension HTMLPageBuilder {
     /// Creates a new page builder.
     ///
+    /// Links to pages that `linkResolver` finds neither in the generated site nor
+    /// in external documentation are shown as unlinked text, like swift-docc-render
+    /// shows references it cannot resolve.
+    ///
     /// - Parameters:
     ///   - configuration: The generation configuration.
     ///   - navigationIndex: The navigation index for the sidebar (optional).
-    init(configuration: Configuration, navigationIndex: NavigationIndex? = nil) {
+    ///   - linkResolver: Decides where links to other pages point; by default every
+    ///     documentation page is assumed to be generated.
+    init(
+        configuration: Configuration,
+        navigationIndex: NavigationIndex? = nil,
+        linkResolver: PageLinkResolver = .unrestricted
+    ) {
         self.configuration = configuration
         self.navigationIndex = navigationIndex
         self.topicTypes = navigationIndex.map(NavigationSidebarBuilder.rowTypes(in:)) ?? [:]
         self.sidebarDocument = SidebarDocument.isAvailable(for: navigationIndex)
             ? navigationIndex.map { SidebarDocument(navigationIndex: $0) }
             : nil
-        self.contentRenderer = RenderContentHTMLRenderer()
+        self.contentRenderer = RenderContentHTMLRenderer(linkResolver: linkResolver)
+        self.linkResolver = linkResolver
     }
 
     /// Builds a complete HTML page from a render node.
@@ -341,8 +355,8 @@ extension HTMLPageBuilder {
             """
 
             for identifier in taskGroup.identifiers {
-                if let reference = references[identifier] as? TopicRenderReference {
-                    let relativeURL = makeRelativeURL(reference.url, depth: depth)
+                if let reference = references[identifier] as? TopicRenderReference,
+                   let relativeURL = linkResolver.destination(forPage: reference.url, depth: depth) {
                     let title = reference.title
                     let badge = symbolBadge(for: reference)
                     let badgeClass = symbolBadgeClass(for: reference)
@@ -467,7 +481,9 @@ extension HTMLPageBuilder {
             guard let reference = references[identifier] as? TopicRenderReference else {
                 return "<span class=\"\(classes)\">\(escapeHTML(identifier))</span>"
             }
-            let relativeURL = makeRelativeURL(reference.url, depth: depth)
+            guard let relativeURL = linkResolver.destination(forPage: reference.url, depth: depth) else {
+                return "<span class=\"\(classes)\">\(escapeHTML(reference.title))</span>"
+            }
             return "<a href=\"\(escapeHTML(relativeURL))\" class=\"\(classes) nav-menu-link\">\(escapeHTML(reference.title))</a>"
         }
         func distance(_ index: Int) -> Int {
@@ -501,14 +517,12 @@ extension HTMLPageBuilder {
     /// Converts an absolute DocC URL to a relative URL.
     ///
     /// - Parameters:
-    ///   - url: The absolute URL from the DocC reference (e.g., "/documentation/module/symbol").
+    ///   - url: The absolute URL from the DocC reference (e.g., "/documentation/module/symbol"),
+    ///     optionally followed by a fragment.
     ///   - depth: The depth of the current page in the directory structure.
-    /// - Returns: A relative URL with index.html suffix.
+    /// - Returns: A relative URL of the page's `index.html` file, followed by the fragment if any.
     func makeRelativeURL(_ url: String, depth: Int) -> String {
-        // Remove leading slash and create relative path
-        let cleanPath = url.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
-        let prefix = String(repeating: "../", count: depth)
-        return "\(prefix)\(cleanPath)/index.html"
+        PageLinkResolver.relativePageURL(url, depth: depth)
     }
 
     /// Builds a relative path for image/media assets (no index.html suffix).
@@ -627,29 +641,25 @@ extension HTMLPageBuilder {
             html += "\n</div>"
         }
 
-        if !renderNode.topicSections.isEmpty {
+        let topicsBody = renderNode.topicSections.map {
+            buildTaskGroup($0, references: references, depth: depth, pageStatuses: Badge.statuses(of: renderNode))
+        }.joined()
+        if !topicsBody.isEmpty {
+            html += buildContentTable(title: "Topics", anchor: "topics", className: "topics", body: topicsBody)
+        }
+        let relationshipsBody = renderNode.relationshipSections.map {
+            buildRelationshipSection($0, references: references, depth: depth)
+        }.joined()
+        if !relationshipsBody.isEmpty {
             html += buildContentTable(
-                title: "Topics", anchor: "topics", className: "topics",
-                body: renderNode.topicSections.map {
-                    buildTaskGroup($0, references: references, depth: depth, pageStatuses: Badge.statuses(of: renderNode))
-                }.joined()
+                title: "Relationships", anchor: "relationships", className: "relationships", body: relationshipsBody
             )
         }
-        if !renderNode.relationshipSections.isEmpty {
-            html += buildContentTable(
-                title: "Relationships", anchor: "relationships", className: "relationships",
-                body: renderNode.relationshipSections.map {
-                    buildRelationshipSection($0, references: references, depth: depth)
-                }.joined()
-            )
-        }
-        if !renderNode.seeAlsoSections.isEmpty {
-            html += buildContentTable(
-                title: "See Also", anchor: "see-also", className: "see-also",
-                body: renderNode.seeAlsoSections.map {
-                    buildTaskGroup($0, references: references, depth: depth, pageStatuses: Badge.statuses(of: renderNode))
-                }.joined()
-            )
+        let seeAlsoBody = renderNode.seeAlsoSections.map {
+            buildTaskGroup($0, references: references, depth: depth, pageStatuses: Badge.statuses(of: renderNode))
+        }.joined()
+        if !seeAlsoBody.isEmpty {
+            html += buildContentTable(title: "See Also", anchor: "see-also", className: "see-also", body: seeAlsoBody)
         }
 
         html += "\n</div>"
@@ -716,7 +726,10 @@ extension HTMLPageBuilder {
                !parametersSection.parameters.isEmpty {
                 items.append(OnThisPageItem(anchor: "parameters", label: "Parameters", isChild: false))
             } else if let mentionsSection = section as? MentionsRenderSection,
-               !mentionsSection.mentions.isEmpty {
+               mentionsSection.mentions.prefix(Self.maximumMentions).contains(where: { mention in
+                   (renderNode.references[mention.absoluteString] as? TopicRenderReference)
+                       .flatMap { linkResolver.destination(forPage: $0.url, depth: 0) } != nil
+               }) {
                 items.append(OnThisPageItem(anchor: "mentions", label: "Mentioned in", isChild: false))
             } else if let contentSection = section as? ContentRenderSection {
                 for block in contentSection.content {
@@ -727,13 +740,14 @@ extension HTMLPageBuilder {
                 }
             }
         }
-        if !renderNode.topicSections.isEmpty {
+        let references = renderNode.references
+        if renderNode.topicSections.contains(where: { listsEntries($0, references: references) }) {
             items.append(OnThisPageItem(anchor: "topics", label: "Topics", isChild: false))
         }
-        if !renderNode.relationshipSections.isEmpty {
+        if renderNode.relationshipSections.contains(where: { listsEntries($0, references: references) }) {
             items.append(OnThisPageItem(anchor: "relationships", label: "Relationships", isChild: false))
         }
-        if !renderNode.seeAlsoSections.isEmpty {
+        if renderNode.seeAlsoSections.contains(where: { listsEntries($0, references: references) }) {
             items.append(OnThisPageItem(anchor: "see-also", label: "See Also", isChild: false))
         }
         return items.count > 2 ? items : []
@@ -892,7 +906,8 @@ extension HTMLPageBuilder {
     /// Renders one declaration token like swift-docc-render's `DeclarationToken`.
     ///
     /// Type names become `type-identifier-link` elements, linked to their page when
-    /// the page is documented; like linked attributes, they get ``WordBreak``
+    /// the page has a link destination (see ``PageLinkResolver``); like linked
+    /// attributes, they get ``WordBreak``
     /// opportunities.  Plain text stays unmarked apart from its line breaks (see
     /// ``markingLineBreaks(in:)``); every other token is a span with the class
     /// `token-<kind>`.
@@ -912,7 +927,8 @@ extension HTMLPageBuilder {
         depth: Int
     ) -> String {
         let escapedText = escapeHTML(text)
-        let linkURL = identifier.flatMap { references[$0] as? TopicRenderReference }.map { makeRelativeURL($0.url, depth: depth) }
+        let linkURL = identifier.flatMap { references[$0] as? TopicRenderReference }
+            .flatMap { linkResolver.destination(forPage: $0.url, depth: depth) }
         switch kind {
         case .text:
             return Self.markingLineBreaks(in: text)
@@ -1102,20 +1118,89 @@ extension HTMLPageBuilder {
         return html
     }
 
+    /// Returns whether a group of topics lists any entries.
+    ///
+    /// A group lists the topics whose pages have a link destination (see
+    /// ``PageLinkResolver``) and every web link; like DocC, which leaves out topics it
+    /// cannot resolve, a group without any such entries is not shown at all.
+    ///
+    /// - Parameters:
+    ///   - taskGroup: The group.
+    ///   - references: The references of the listed topics.
+    /// - Returns: `true` if the group has at least one entry to show.
+    func listsEntries(_ taskGroup: TaskGroupRenderSection, references: [String: any RenderReference]) -> Bool {
+        taskGroup.identifiers.contains { isListed($0, references: references) }
+    }
+
+    /// Returns whether a group of relationships lists any types.
+    ///
+    /// - Parameters:
+    ///   - section: The relationships group.
+    ///   - references: The references of the related types.
+    /// - Returns: `true` if the group has at least one type to show.
+    func listsEntries(_ section: RelationshipsRenderSection, references: [String: any RenderReference]) -> Bool {
+        section.identifiers.contains {
+            references[$0] is TopicRenderReference || references[$0] is UnresolvedRenderReference
+        }
+    }
+
+    /// Returns whether a topic is listed in a group of topics.
+    ///
+    /// - Parameters:
+    ///   - identifier: The reference identifier of the topic.
+    ///   - references: The references of the page.
+    /// - Returns: `true` for a page or web link with a link destination.
+    func isListed(_ identifier: String, references: [String: any RenderReference]) -> Bool {
+        destination(ofTopic: identifier, references: references, depth: 0) != nil
+    }
+
+    /// Returns the destination of a topic listed in a group of topics.
+    ///
+    /// - Parameters:
+    ///   - identifier: The reference identifier of the topic.
+    ///   - references: The references of the page.
+    ///   - depth: The number of directories between the output root and the page.
+    /// - Returns: The destination of the topic's page or web link, or `nil` if it has none.
+    func destination(ofTopic identifier: String, references: [String: any RenderReference], depth: Int) -> String? {
+        if let reference = references[identifier] as? TopicRenderReference {
+            return linkResolver.destination(forPage: reference.url, depth: depth)
+        }
+        if let reference = references[identifier] as? LinkReference {
+            return linkResolver.destination(forPage: reference.url, depth: depth)
+        }
+        return nil
+    }
+
     /// Builds a group of topics in a content table section.
+    ///
+    /// Topics whose pages have no link destination are left out; a group without
+    /// any entries is left out entirely, like DocC leaves out topics it cannot resolve.
     ///
     /// - Parameters:
     ///   - taskGroup: The group.
     ///   - references: The references of the listed topics.
     ///   - depth: The number of directories between the output root and the page.
     ///   - pageStatuses: The statuses of the page that lists the topics.
-    /// - Returns: The `.contenttable-section` element.
+    /// - Returns: The `.contenttable-section` element, or an empty string if the
+    ///   group lists no entries.
     func buildTaskGroup(
         _ taskGroup: TaskGroupRenderSection,
         references: [String: any RenderReference],
         depth: Int,
         pageStatuses: Set<Badge.Variant> = []
     ) -> String {
+        var entries = ""
+        for identifier in taskGroup.identifiers {
+            guard let url = destination(ofTopic: identifier, references: references, depth: depth) else { continue }
+            if let reference = references[identifier] as? TopicRenderReference {
+                entries += buildSymbolCard(
+                    for: reference, references: references, depth: depth, pageStatuses: pageStatuses, url: url
+                )
+            } else if let reference = references[identifier] as? LinkReference {
+                entries += buildExternalLinkCard(for: reference, url: url)
+            }
+        }
+        guard !entries.isEmpty else { return "" }
         var html = "\n<div class=\"contenttable-section\(taskGroup.title == nil ? " no-title" : "")\">"
         if let title = taskGroup.title {
             let anchor = taskGroup.anchor ?? slugify(title)
@@ -1123,14 +1208,24 @@ extension HTMLPageBuilder {
             html += RenderContentHTMLRenderer.headerAnchor(anchor: anchor, title: escapeHTML(title))
             html += "</h3></div>"
         }
-        html += "<div class=\"section-content\">"
-        for identifier in taskGroup.identifiers {
-            if let reference = references[identifier] as? TopicRenderReference {
-                html += buildSymbolCard(for: reference, references: references, depth: depth, pageStatuses: pageStatuses)
-            }
-        }
+        html += "<div class=\"section-content\">" + entries
         html += "</div></div>"
         return html
+    }
+
+    /// Builds the link block of a web link listed among topics (swift-docc-render's
+    /// `TopicsLinkBlock` for a link reference).
+    ///
+    /// Like swift-docc-render, the block shows the link's title as text, without an
+    /// icon or abstract.
+    ///
+    /// - Parameters:
+    ///   - reference: The link reference.
+    ///   - url: The destination of the link.
+    /// - Returns: The `.link-block` element.
+    func buildExternalLinkCard(for reference: LinkReference, url: String) -> String {
+        "\n<div class=\"link-block topic has-inline-element\"><a href=\"\(escapeHTML(url))\" class=\"link\">"
+            + "<span>\(WordBreak.markup(reference.title))</span></a></div>"
     }
 
     /// Builds the link block of one topic (swift-docc-render's `TopicsLinkBlock`).
@@ -1154,14 +1249,17 @@ extension HTMLPageBuilder {
     ///   - references: The references used to resolve links in the abstract.
     ///   - depth: The number of directories between the output root and the page.
     ///   - pageStatuses: The statuses of the page that lists the topic.
+    ///   - url: The destination of the link, or `nil` for the relative link to the
+    ///     topic's page.
     /// - Returns: The `.link-block` element.
     func buildSymbolCard(
         for reference: TopicRenderReference,
         references: [String: any RenderReference] = [:],
         depth: Int,
-        pageStatuses: Set<Badge.Variant> = []
+        pageStatuses: Set<Badge.Variant> = [],
+        url: String? = nil
     ) -> String {
-        let relativeURL = makeRelativeURL(reference.url, depth: depth)
+        let relativeURL = url ?? makeRelativeURL(reference.url, depth: depth)
         let abstract = contentRenderer.renderInlineContent(reference.abstract, references: references, depth: depth).html
         let role = reference.role ?? reference.kind.rawValue
         let navigatorType = topicTypes[SidebarDocument.pagePathKey(reference.url)]
@@ -1214,14 +1312,18 @@ extension HTMLPageBuilder {
     /// The largest number of related types that swift-docc-render lists on one line.
     static let maximumInlineRelationships = 3
 
+    /// The largest number of mentioning articles that swift-docc-render lists.
+    static let maximumMentions = 5
+
     /// The roles of topics whose titles show as plain text rather than code in topic
     /// lists, like swift-docc-render's `TopicsLinkBlock`.
     static let plainTitleRoles: Set<String> = ["collection", "dictionarySymbol"]
 
     /// Builds a group of relationships, such as the protocols a type conforms to.
     ///
-    /// Documented types are linked; other types are listed as code, like
-    /// swift-docc-render's `RelationshipsList`.  Up to
+    /// Types with a link destination (see ``PageLinkResolver``) are linked; other types
+    /// are listed as code, like swift-docc-render's `RelationshipsList` lists the
+    /// types DocC cannot resolve, by their names qualified with their module.  Up to
     /// ``maximumInlineRelationships`` types without availability constraints are
     /// listed on one line, separated by commas; longer lists have one type per line.
     ///
@@ -1229,12 +1331,14 @@ extension HTMLPageBuilder {
     ///   - section: The relationships group.
     ///   - references: The references of the related types.
     ///   - depth: The number of directories between the output root and the page.
-    /// - Returns: The `.contenttable-section` element.
+    /// - Returns: The `.contenttable-section` element, or an empty string if the
+    ///   group lists no types.
     func buildRelationshipSection(
         _ section: RelationshipsRenderSection,
         references: [String: any RenderReference],
         depth: Int
     ) -> String {
+        guard listsEntries(section, references: references) else { return "" }
         let anchor = slugify(section.title)
         var html = "\n<div class=\"contenttable-section\"><div class=\"section-title\">"
         html += "<h3 id=\"\(escapeHTML(anchor))\" class=\"contenttable-title\">"
@@ -1243,9 +1347,13 @@ extension HTMLPageBuilder {
         var hasConstraints = false
         for identifier in section.identifiers {
             if let reference = references[identifier] as? TopicRenderReference {
-                let relativeURL = makeRelativeURL(reference.url, depth: depth)
                 hasConstraints = hasConstraints || reference.conformance != nil
-                items.append("<li class=\"relationships-item\"><a href=\"\(escapeHTML(relativeURL))\" class=\"link\"><code>\(WordBreak.markup(reference.title))</code></a></li>")
+                if let url = linkResolver.destination(forPage: reference.url, depth: depth) {
+                    items.append("<li class=\"relationships-item\"><a href=\"\(escapeHTML(url))\" class=\"link\"><code>\(WordBreak.markup(reference.title))</code></a></li>")
+                } else {
+                    let name = PageLinkResolver.qualifiedSymbolName(ofIdentifier: reference.identifier.identifier) ?? reference.title
+                    items.append("<li class=\"relationships-item\"><code>\(WordBreak.markup(name))</code></li>")
+                }
             } else if let reference = references[identifier] as? UnresolvedRenderReference {
                 items.append("<li class=\"relationships-item\"><code>\(WordBreak.markup(reference.title))</code></li>")
             }
@@ -1743,26 +1851,28 @@ extension HTMLPageBuilder {
     ///   - section: The mentions section.
     ///   - references: The references of the mentioning articles.
     ///   - depth: The number of directories between the output root and the page.
-    /// - Returns: The `<section>` element, or an empty string without mentions.
+    /// - Returns: The `<section>` element, or an empty string if no mentioning
+    ///   article has a link destination.
     func buildMentionsSection(
         _ section: MentionsRenderSection,
         references: [String: any RenderReference],
         depth: Int
     ) -> String {
-        guard !section.mentions.isEmpty else {
+        var entries = ""
+        for mentionURL in section.mentions.prefix(Self.maximumMentions) {
+            if let reference = references[mentionURL.absoluteString] as? TopicRenderReference,
+               let relativeURL = linkResolver.destination(forPage: reference.url, depth: depth) {
+                let icon = TopicTypeIcon.topicListIcon(forRole: "article") ?? ""
+                entries += "<div class=\"link-block\"><a href=\"\(escapeHTML(relativeURL))\" class=\"link\">"
+                entries += "<div class=\"topic-icon-wrapper mention-icon\">\(icon)</div>\(escapeHTML(reference.title))</a></div>"
+            }
+        }
+        guard !entries.isEmpty else {
             return ""
         }
         var html = "\n<section class=\"mentions\">"
         html += "<h2 id=\"mentions\">\(RenderContentHTMLRenderer.headerAnchor(anchor: "mentions", title: "Mentioned in"))</h2>"
-        for mentionURL in section.mentions.prefix(5) {
-            if let reference = references[mentionURL.absoluteString] as? TopicRenderReference {
-                let relativeURL = makeRelativeURL(reference.url, depth: depth)
-                let icon = TopicTypeIcon.topicListIcon(forRole: "article") ?? ""
-                html += "<div class=\"link-block\"><a href=\"\(escapeHTML(relativeURL))\" class=\"link\">"
-                html += "<div class=\"topic-icon-wrapper mention-icon\">\(icon)</div>\(escapeHTML(reference.title))</a></div>"
-            }
-        }
-        html += "</section>"
+        html += entries + "</section>"
         return html
     }
 

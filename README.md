@@ -92,7 +92,7 @@ docc-static generate --package-path /path/to/package --output ./docs
 | `-I, --include-all-dependencies` | Include documentation for all dependencies                   |
 | `-i, --include-dependency`       | Include a specific dependency (can be repeated)              |
 | `-x, --exclude-dependency`       | Exclude a specific dependency (can be repeated, with `-I`)   |
-| `-e, --external-docs`            | External documentation URL (format: `PackageName=URL`)       |
+| `-e, --external-docs`            | Documentation base URL of a module or package (`Name=URL`)   |
 | `-d, --dependency`               | Documentation archive to resolve external links against      |
 | `-D, --disable-search`           | Disable client-side search (enabled by default)              |
 | `--footer`                       | Custom HTML for the page footer                              |
@@ -125,8 +125,17 @@ docc-static generate -I -x ExcludedPackage -o ./docs
 Link to external documentation:
 
 ```bash
-docc-static generate -e Foundation=https://developer.apple.com/documentation/foundation -o ./docs
+docc-static generate -e MyDependency=https://example.com/mydependency -o ./docs
 ```
+
+Symbols of modules that are not part of the generated documentation, such as the
+types of an excluded dependency in a declaration, the protocols a type conforms to
+or a symbol link in a documentation comment, are never linked to pages that do not
+exist.  With `-e Name=URL`, where `Name` is a module name or the name or identity
+of a package (which covers all modules of that package), they link to their pages
+in the hosted documentation at `URL/documentation/<module>/<path>/`, following
+DocC's path convention.  Without a URL, they are shown as unlinked text, like
+DocC shows references it cannot resolve.
 
 ### Render from DocC Archive
 

@@ -68,7 +68,7 @@ docc-static generate [options]
 | `-I, --include-all-dependencies` | Include all dependencies                           |
 | `-i, --include-dependency`       | Include specific dependency (repeatable)           |
 | `-x, --exclude-dependency`       | Exclude specific dependency (repeatable)           |
-| `-e, --external-docs`            | External docs URL mapping (`Package=URL`)          |
+| `-e, --external-docs`            | Docs base URL of a module or package (`Name=URL`)  |
 | `-d, --dependency`               | Archive to resolve external links against          |
 | `-D, --disable-search`           | Disable client-side search                         |
 | `--footer`                       | Custom HTML for page footer                        |
@@ -90,9 +90,16 @@ docc-static generate -t MyLib -t MyOtherLib
 # Include dependencies except specific ones
 docc-static generate -I -x ExcludedPackage
 
-# Link to external documentation
-docc-static generate -e com.apple.documentation=https://developer.apple.com
+# Link to the hosted documentation of a dependency
+docc-static generate -e MyDependency=https://example.com/mydependency
 ```
+
+`-e Name=URL` gives the base URL of documentation hosted elsewhere.  `Name` is a
+module name, or the name or identity of a package, which covers all of its modules.
+Symbols of those modules that are not part of the generated documentation link to
+`URL/documentation/<module>/<path>/`; other symbols outside the generated
+documentation are shown as unlinked text.  The same names are matched against the
+bundle identifiers of `doc://` links in documentation text.
 
 ### render
 

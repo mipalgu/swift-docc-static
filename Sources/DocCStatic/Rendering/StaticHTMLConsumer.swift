@@ -22,6 +22,19 @@ public final class StaticHTMLConsumer: ConvertOutputConsumer, @unchecked Sendabl
     /// The navigation index for building the sidebar.
     public var navigationIndex: NavigationIndex?
 
+    /// Decides where links to other documentation pages point.
+    ///
+    /// By default every documentation page is assumed to be generated.  Set this
+    /// before consuming render nodes, so that links to pages outside the generated
+    /// site are shown as text or point to external documentation.
+    public var linkResolver: PageLinkResolver = .unrestricted {
+        didSet {
+            pageBuilder = HTMLPageBuilder(
+                configuration: configuration, navigationIndex: pageBuilder.navigationIndex, linkResolver: linkResolver
+            )
+        }
+    }
+
     /// Statistics about generated content.
     private var stats = GenerationStats()
 
@@ -55,7 +68,7 @@ public extension StaticHTMLConsumer {
     func consume(renderNode: RenderNode) throws {
         // Update page builder with navigation index if available
         if pageBuilder.navigationIndex == nil, let navIndex = navigationIndex {
-            pageBuilder = HTMLPageBuilder(configuration: configuration, navigationIndex: navIndex)
+            pageBuilder = HTMLPageBuilder(configuration: configuration, navigationIndex: navIndex, linkResolver: linkResolver)
         }
 
         let html = try pageBuilder.buildPage(from: renderNode, references: renderNode.references)

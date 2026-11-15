@@ -93,6 +93,39 @@ struct ThemeOptions: ParsableArguments {
     }
 }
 
+// MARK: - External Documentation Option
+
+/// The `--external-docs` option, which maps modules or packages to the base URLs of
+/// their hosted documentation.
+enum ExternalDocumentationOption {
+    /// The help text of the option.
+    static let help = ArgumentHelp(
+        "External documentation base URL for a module or package (format: Name=URL, can be repeated).",
+        discussion: """
+            Name is a module name or the name or identity of a package dependency, which \
+            applies to all of its modules.  Symbols of these modules that are not part \
+            of the generated documentation link to URL/documentation/<module>/<path>/.
+            """
+    )
+
+    /// Parses the values of the option.
+    ///
+    /// - Parameter mappings: The values, each of the form `Name=URL`.
+    /// - Returns: The base URLs keyed by name.
+    /// - Throws: A `ValidationError` if a value is not of the form `Name=URL`.
+    static func urls(from mappings: [String]) throws -> [String: URL] {
+        var urls: [String: URL] = [:]
+        for mapping in mappings {
+            let parts = mapping.split(separator: "=", maxSplits: 1)
+            guard parts.count == 2, let url = URL(string: String(parts[1])) else {
+                throw ValidationError("Invalid external-docs format: \(mapping). Expected: Name=URL")
+            }
+            urls[String(parts[0])] = url
+        }
+        return urls
+    }
+}
+
 // MARK: - Generate Command
 
 struct Generate: AsyncParsableCommand {
@@ -131,7 +164,7 @@ struct Generate: AsyncParsableCommand {
 
     @Option(
         name: .shortAndLong,
-        help: "External documentation URL for a dependency (format: PackageName=URL).")
+        help: ExternalDocumentationOption.help)
     var externalDocs: [String] = []
 
     @Option(
@@ -163,15 +196,7 @@ struct Generate: AsyncParsableCommand {
         let outputDirectory = URL(fileURLWithPath: output).standardizedFileURL
 
         // Parse external documentation URLs
-        var externalURLs: [String: URL] = [:]
-        for mapping in externalDocs {
-            let parts = mapping.split(separator: "=", maxSplits: 1)
-            guard parts.count == 2, let url = URL(string: String(parts[1])) else {
-                throw ValidationError(
-                    "Invalid external-docs format: \(mapping). Expected: PackageName=URL")
-            }
-            externalURLs[String(parts[0])] = url
-        }
+        let externalURLs = try ExternalDocumentationOption.urls(from: externalDocs)
 
         // Determine dependency policy
         // Default: exclude all dependencies (only document current package targets)
@@ -368,7 +393,7 @@ struct Preview: AsyncParsableCommand {
 
     @Option(
         name: .shortAndLong,
-        help: "External documentation URL for a dependency (format: PackageName=URL).")
+        help: ExternalDocumentationOption.help)
     var externalDocs: [String] = []
 
     @Option(
@@ -441,15 +466,7 @@ struct Preview: AsyncParsableCommand {
         let outputDirectory = URL(fileURLWithPath: output).standardizedFileURL
 
         // Parse external documentation URLs
-        var externalURLs: [String: URL] = [:]
-        for mapping in externalDocs {
-            let parts = mapping.split(separator: "=", maxSplits: 1)
-            guard parts.count == 2, let url = URL(string: String(parts[1])) else {
-                throw ValidationError(
-                    "Invalid external-docs format: \(mapping). Expected: PackageName=URL")
-            }
-            externalURLs[String(parts[0])] = url
-        }
+        let externalURLs = try ExternalDocumentationOption.urls(from: externalDocs)
 
         // Determine dependency policy
         let dependencyPolicy: DependencyInclusionPolicy

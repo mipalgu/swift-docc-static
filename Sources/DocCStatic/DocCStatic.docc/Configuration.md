@@ -75,20 +75,25 @@ let configuration = Configuration(
 
 ## External Documentation Links
 
-Link to external documentation for excluded dependencies:
+Link to the hosted documentation of dependencies that are not documented:
 
 ```swift
 let configuration = Configuration(
     packageDirectory: packageURL,
     outputDirectory: outputURL,
-    dependencyPolicy: .exclude(["SwiftNIO"]),
+    dependencyPolicy: .exclude(["MyDependency"]),
     externalDocumentationURLs: [
-        "SwiftNIO": URL(string: "https://swiftpackageindex.com/apple/swift-nio")!
+        "MyDependency": URL(string: "https://example.com/mydependency")!
     ]
 )
 ```
 
-When a symbol from an excluded package is referenced, the generated documentation links to the external URL instead of an internal page.
+When a page refers to a symbol of a module that is not part of the generated
+documentation, the reference links to the symbol's page below the module's base URL,
+at `<base URL>/documentation/<module>/<path>/`.  A key is a module name or the name or
+identity of a package, which covers all modules of that package.  References to
+modules without a base URL are shown as unlinked text.  See <doc:CrossPackageLinking>
+for details.
 
 ## Search Configuration
 
@@ -211,7 +216,7 @@ let configuration = Configuration(
     targets: ["MyLibrary"],
     dependencyPolicy: .exclude(["TestSupport"]),
     externalDocumentationURLs: [
-        "com.apple.documentation": URL(string: "https://developer.apple.com")!
+        "MyDependency": URL(string: "https://example.com/mydependency")!
     ],
     includeSearch: true,
     theme: ThemeConfiguration(

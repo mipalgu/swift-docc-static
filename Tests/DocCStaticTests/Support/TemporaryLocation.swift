@@ -33,6 +33,16 @@ enum TemporaryLocation {
             .appendingPathComponent(directoryName("docc-static-fixture-tests", checkout: checkout))
     }
 
+    /// Returns the directory that holds the copy of another fixture package, its
+    /// build cache and the documentation generated from it.
+    ///
+    /// - Parameter fixture: The name of the fixture package directory.
+    /// - Returns: A directory that belongs to this checkout and fixture.
+    static func fixtureWorkspace(for fixture: String) -> URL {
+        FileManager.default.temporaryDirectory
+            .appendingPathComponent(directoryName("docc-static-\(fixture.lowercased())-tests", checkout: checkout))
+    }
+
     /// Returns the name of a temporary directory that belongs to one checkout.
     ///
     /// - Parameters:

@@ -56,12 +56,17 @@ swift package generate-static-documentation --exclude-dependency LargePackage
 
 ### External Documentation Links
 
-Link to external documentation for packages you're not documenting locally:
+Link to external documentation for modules or packages you're not documenting locally:
 
 ```bash
 swift package generate-static-documentation \
-    --external-docs ArgumentParser=https://swiftpackageindex.com/apple/swift-argument-parser
+    --external-docs MyDependency=https://example.com/mydependency
 ```
+
+The name before `=` is a module name or the name of a package dependency, which
+covers all of its modules; the URL is the root of the hosted documentation, without
+`/documentation`.  Symbols of other modules that are not documented locally are
+shown as unlinked text.
 
 ### Search Functionality
 
@@ -137,7 +142,7 @@ Ready for hosting:
 ```bash
 swift package generate-static-documentation \
     --output ./public \
-    --external-docs com.apple.documentation=https://developer.apple.com
+    --external-docs MyDependency=https://example.com/mydependency
 ```
 
 ## Using with swift package Options

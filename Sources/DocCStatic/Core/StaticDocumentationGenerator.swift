@@ -175,6 +175,12 @@ public struct StaticDocumentationGenerator: Sendable {
 
         consumer.navigationIndex = mergedNavigationIndex
 
+        // Links point to generated pages, external documentation or nowhere
+        consumer.linkResolver = PageLinkResolver(
+            generatedPagePaths: generatedPagePaths(in: archives, packageTargets: packageTargets),
+            externalDocumentation: await externalDocumentation(scratchDirectory: tempDir)
+        )
+
         if configuration.isVerbose {
             let moduleCount = mergedNavigationIndex?.allModules().count ?? 0
             log("Merged navigation index with \(moduleCount) modules")
@@ -206,7 +212,7 @@ public struct StaticDocumentationGenerator: Sendable {
         try generateIndexPage(consumer: consumer)
 
         // Post-process HTML files to resolve doc:// links
-        try await postProcessDocLinks(navigationIndex: mergedNavigationIndex)
+        try await postProcessDocLinks(navigationIndex: mergedNavigationIndex, pageLinkResolver: consumer.linkResolver)
 
         // Write search index if enabled
         if configuration.includeSearch, let builder = searchIndexBuilder {
@@ -232,7 +238,7 @@ public struct StaticDocumentationGenerator: Sendable {
         let result = try await run(
             .name("swift"),
             arguments: Arguments(arguments),
-            output: .string(limit: 10 * 1024 * 1024)  // 10MB limit
+            output: .string(limit: Self.maximumCommandOutput)
         )
 
         guard result.terminationStatus.isSuccess else {
@@ -594,6 +600,12 @@ public struct StaticDocumentationGenerator: Sendable {
         return nil
     }
 
+    /// The largest output of a `swift package` command that is read, in bytes.
+    static let maximumCommandOutput = 10 * 1024 * 1024
+
+    /// The directories of an archive's `data` directory that hold rendered pages.
+    static let pageDataDirectories = [ExternalDocumentation.documentationRoot, "tutorials"]
+
     /// The separator between the directories of the executable search path.
     #if os(Windows)
         static let searchPathSeparator: Character = ";"
@@ -931,16 +943,7 @@ public struct StaticDocumentationGenerator: Sendable {
                     // Path format: /documentation/ModuleName/... or /tutorials/ModuleName/...
                     let moduleName = extractModuleName(from: renderNode.identifier.path)
 
-                    // Check if this module should be included; a tutorials overview is
-                    // named after its file, so it belongs to the modules of its tutorials
-                    let tutorialModules = renderNode.kind == .overview
-                        ? renderNode.references.values.compactMap { ($0 as? TopicRenderReference)?.identifier.identifier }
-                            .compactMap { URL(string: $0)?.path }.filter { $0.hasPrefix("/tutorials/") }
-                            .map(extractModuleName(from:))
-                        : []
-                    let isIncluded = shouldIncludeModule(moduleName, packageTargets: packageTargets)
-                        || tutorialModules.contains { shouldIncludeModule($0, packageTargets: packageTargets) }
-                    guard isIncluded else {
+                    guard isIncluded(renderNode, packageTargets: packageTargets) else {
                         if !skippedModules.contains(moduleName) {
                             skippedModules.insert(moduleName)
                             if configuration.isVerbose {
@@ -971,6 +974,141 @@ public struct StaticDocumentationGenerator: Sendable {
         return deprecatedPagePaths
     }
 
+    /// Returns whether a page belongs to a module that is documented.
+    ///
+    /// A tutorials overview is named after its file, so it belongs to the modules of
+    /// its tutorials.
+    ///
+    /// - Parameters:
+    ///   - renderNode: The render node of the page.
+    ///   - packageTargets: The modules to include, or all modules if empty.
+    /// - Returns: `true` if the page is rendered.
+    private func isIncluded(_ renderNode: RenderNode, packageTargets: [String]) -> Bool {
+        let tutorialModules = renderNode.kind == .overview
+            ? renderNode.references.values.compactMap { ($0 as? TopicRenderReference)?.identifier.identifier }
+                .compactMap { URL(string: $0)?.path }.filter { $0.hasPrefix("/tutorials/") }
+                .map(extractModuleName(from:))
+            : []
+        return shouldIncludeModule(extractModuleName(from: renderNode.identifier.path), packageTargets: packageTargets)
+            || tutorialModules.contains { shouldIncludeModule($0, packageTargets: packageTargets) }
+    }
+
+    /// The parts of a render node that decide whether its page is rendered.
+    private struct RenderNodeSummary: Decodable {
+        /// The reference of the page.
+        let identifier: ResolvedTopicReference
+
+        /// The kind of the page.
+        let kind: RenderNode.Kind
+    }
+
+    /// Returns the normalised paths of the pages that rendering the archives generates.
+    ///
+    /// This applies the same rules as rendering, so that pages can tell which other
+    /// pages they can link to before all pages are written.
+    ///
+    /// - Parameters:
+    ///   - archives: The archives that will be rendered.
+    ///   - packageTargets: The modules to include, or all modules if empty.
+    /// - Returns: The page paths, normalised with ``SidebarDocument/pagePathKey(of:)``.
+    private func generatedPagePaths(in archives: [URL], packageTargets: [String]) -> Set<String> {
+        let fileManager = FileManager.default
+        let decoder = JSONDecoder()
+        var paths = Set<String>()
+        for archive in archives {
+            let dataDirectory = archive.appendingPathComponent("data")
+            for directory in Self.pageDataDirectories.map(dataDirectory.appendingPathComponent) {
+                let enumerator = fileManager.enumerator(
+                    at: directory,
+                    includingPropertiesForKeys: [.isRegularFileKey],
+                    options: [.skipsHiddenFiles]
+                )
+                while let fileURL = enumerator?.nextObject() as? URL {
+                    guard fileURL.pathExtension == "json",
+                          let data = try? Data(contentsOf: fileURL),
+                          let summary = try? decoder.decode(RenderNodeSummary.self, from: data)
+                    else { continue }
+                    let included: Bool
+                    if summary.kind == .overview {
+                        included = (try? decoder.decode(RenderNode.self, from: data))
+                            .map { isIncluded($0, packageTargets: packageTargets) } ?? false
+                    } else {
+                        included = shouldIncludeModule(
+                            extractModuleName(from: summary.identifier.path), packageTargets: packageTargets
+                        )
+                    }
+                    if included {
+                        paths.insert(SidebarDocument.pagePathKey(of: summary.identifier))
+                    }
+                }
+            }
+        }
+        return paths
+    }
+
+    // MARK: - External Documentation
+
+    /// Returns the hosted documentation of modules outside the generated site.
+    ///
+    /// Keys of ``Configuration/externalDocumentationURLs`` name modules or packages;
+    /// to apply a package key to the package's modules, the package's dependencies
+    /// are listed, and the manifest of each dependency that a key names is read.  If
+    /// the package cannot be inspected, keys only name modules.
+    ///
+    /// - Parameter scratchDirectory: A temporary directory for reading manifests.
+    /// - Returns: The external documentation.
+    private func externalDocumentation(scratchDirectory: URL) async -> ExternalDocumentation {
+        let mappings = configuration.externalDocumentationURLs
+        guard !mappings.isEmpty else { return ExternalDocumentation() }
+        var arguments = ["package", "--package-path", configuration.packageDirectory.path]
+        if let scratchPath = configuration.scratchPath {
+            arguments += ["--scratch-path", scratchPath.path]
+        }
+        arguments += ["show-dependencies", "--format", "json"]
+        guard let listing = await swiftPackageOutput(arguments) else {
+            return ExternalDocumentation(mappings: mappings)
+        }
+        var packages: [PackageModules] = []
+        for dependency in PackageDependency.dependencies(fromShowDependenciesJSON: listing) where !dependency.path.isEmpty {
+            let named = mappings.keys.contains { key in
+                PackageModules(name: dependency.name, identity: dependency.identity, modules: []).isNamed(key)
+            }
+            guard named else { continue }
+            // Read the manifest with a scratch path of its own, so that nothing is
+            // written into the dependency's directory
+            let manifest = await swiftPackageOutput([
+                "package", "--package-path", dependency.path,
+                "--scratch-path", scratchDirectory.appendingPathComponent("manifest-\(dependency.identity)").path,
+                "dump-package",
+            ])
+            let modules = manifest.map(PackageModules.moduleNames(fromDumpPackageJSON:)) ?? []
+            if configuration.isVerbose {
+                log("External documentation of \(dependency.name): \(modules.joined(separator: ", "))")
+            }
+            packages.append(PackageModules(name: dependency.name, identity: dependency.identity, modules: modules))
+        }
+        return ExternalDocumentation(mappings: mappings, packages: packages)
+    }
+
+    /// Runs `swift` with the given arguments and returns its standard output.
+    ///
+    /// - Parameter arguments: The arguments, such as `package dump-package`.
+    /// - Returns: The output, or `nil` if the command could not be run or failed.
+    private func swiftPackageOutput(_ arguments: [String]) async -> String? {
+        guard let result = try? await run(
+            .name("swift"),
+            arguments: Arguments(arguments),
+            output: .string(limit: Self.maximumCommandOutput),
+            error: .discarded
+        ), result.terminationStatus.isSuccess else {
+            if configuration.isVerbose {
+                log("Warning: swift \(arguments.joined(separator: " ")) failed")
+            }
+            return nil
+        }
+        return result.standardOutput
+    }
+
     /// Renders documentation from an existing DocC archive to static HTML.
     ///
     /// This method allows rendering from a pre-generated `.doccarchive` without
@@ -989,6 +1127,10 @@ public struct StaticDocumentationGenerator: Sendable {
         let consumer = StaticHTMLConsumer(
             outputDirectory: configuration.outputDirectory,
             configuration: configuration
+        )
+        consumer.linkResolver = PageLinkResolver(
+            generatedPagePaths: generatedPagePaths(in: [archiveURL], packageTargets: []),
+            externalDocumentation: ExternalDocumentation(mappings: configuration.externalDocumentationURLs)
         )
 
         // Render from archive (include all modules since we don't know package targets)
@@ -1396,8 +1538,11 @@ public struct StaticDocumentationGenerator: Sendable {
     /// This scans all HTML files in the output directory and replaces any unresolved
     /// `doc://BUNDLE_ID/path` URLs with proper `<a href="...">` links.
     ///
-    /// - Parameter navigationIndex: The merged navigation index containing module information.
-    private func postProcessDocLinks(navigationIndex: NavigationIndex?) async throws {
+    /// - Parameters:
+    ///   - navigationIndex: The merged navigation index containing module information.
+    ///   - pageLinkResolver: Decides whether pages are generated and where links to
+    ///     pages outside the site point.
+    private func postProcessDocLinks(navigationIndex: NavigationIndex?, pageLinkResolver: PageLinkResolver) async throws {
         let fileManager = FileManager.default
 
         // Build map of documented modules (module name -> bundle ID)
@@ -1420,7 +1565,8 @@ public struct StaticDocumentationGenerator: Sendable {
         // Create the post-processor
         let postProcessor = DocLinkPostProcessor(
             documentedModules: documentedModules,
-            externalURLs: configuration.externalDocumentationURLs
+            externalURLs: configuration.externalDocumentationURLs,
+            pageLinkResolver: pageLinkResolver
         )
 
         // Find all HTML files in the output directory

@@ -23,8 +23,17 @@ public struct RenderContentHTMLRenderer: Sendable {
         /// The plain text content (for descriptions, etc.).
         public let plainText: String
     }
+
+    /// Decides where links to other documentation pages point.
+    public let linkResolver: PageLinkResolver
+
     /// Creates a new content renderer.
-    public init() {}
+    ///
+    /// - Parameter linkResolver: Decides where links to other pages point; by
+    ///   default every documentation page is assumed to be generated.
+    public init(linkResolver: PageLinkResolver = .unrestricted) {
+        self.linkResolver = linkResolver
+    }
 }
 
 // MARK: - Inline Content Public
@@ -147,6 +156,11 @@ private extension RenderContentHTMLRenderer {
     /// Links are `a.inline-link` elements.  A link to a symbol that keeps the symbol's
     /// own title shows the title as code with ``WordBreak`` opportunities, like
     /// swift-docc-render.  Inactive links render their title only.
+    ///
+    /// A link to a page without a link destination (see ``PageLinkResolver``) is not
+    /// linked: a link to a symbol is shown as code naming the symbol's path, such
+    /// as `Module/Symbol`, which is how DocC shows symbol links it cannot resolve;
+    /// other links render their title only.
     func renderReference(
         identifier: RenderReferenceIdentifier,
         isActive: Bool,
@@ -183,11 +197,16 @@ private extension RenderContentHTMLRenderer {
         }
 
         let url: String? = if let topicReference {
-            makeRelativeURL(topicReference.url, depth: depth)
+            linkResolver.destination(forPage: topicReference.url, depth: depth)
         } else if let linkReference {
-            makeRelativeURL(linkReference.url, depth: depth)
+            linkResolver.destination(forPage: linkReference.url, depth: depth)
         } else {
             nil
+        }
+        if isActive, url == nil, let topicReference, topicReference.kind == .symbol,
+           overridingTitle == nil, overridingTitleInlineContent == nil,
+           let components = PageLinkResolver.symbolPathComponents(ofIdentifier: topicReference.identifier.identifier) {
+            return renderInlineElement(.codeVoice(code: components.joined(separator: "/")), references: references, depth: depth)
         }
         if isActive, let url {
             return InlineResult(
@@ -222,16 +241,6 @@ private extension RenderContentHTMLRenderer {
         return InlineResult(html: "", plainText: "")
     }
 
-    /// Converts an absolute DocC URL to a relative URL.
-    func makeRelativeURL(_ url: String, depth: Int) -> String {
-        let cleanPath = url.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
-        let prefix = String(repeating: "../", count: depth)
-        // Don't add index.html for anchors or external URLs
-        if url.hasPrefix("#") || url.contains("://") || url.hasPrefix("mailto:") {
-            return url
-        }
-        return "\(prefix)\(cleanPath)/index.html"
-    }
 
     /// Converts an absolute asset URL to a relative URL (no index.html suffix).
     func makeRelativeAssetURL(_ url: String, depth: Int) -> String {

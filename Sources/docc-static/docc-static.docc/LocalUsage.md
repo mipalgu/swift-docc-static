@@ -102,13 +102,18 @@ docc-static generate -i ImportantDep --output ./docs
 
 ### Link to External Documentation
 
-For dependencies you don't want to build locally, link to their online documentation:
+For dependencies you don't document locally, link to their online documentation:
 
 ```bash
 docc-static generate \
-    -e ArgumentParser=https://swiftpackageindex.com/apple/swift-argument-parser \
+    -e MyDependency=https://example.com/mydependency \
     --output ./docs
 ```
+
+The name before `=` is a module name or the name of a package dependency (which
+covers all of its modules), and the URL is the root of the hosted documentation,
+without `/documentation`.  Without such a URL, symbols of modules that are not
+documented locally are shown as unlinked text rather than as broken links.
 
 ## Viewing Without a Server
 

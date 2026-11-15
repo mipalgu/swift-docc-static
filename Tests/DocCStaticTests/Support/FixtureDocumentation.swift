@@ -83,8 +83,37 @@ struct GeneratedFixture: Sendable {
 /// kept between test runs to keep repeated runs fast, whereas generated output is
 /// replaced.
 actor FixtureDocumentation {
-    /// The process-wide shared instance.
+    /// The process-wide shared instance for the sidebar fixture package.
     static let shared = FixtureDocumentation()
+
+    /// The process-wide shared instance for the link fixture package.
+    ///
+    /// The package in `Tests/Fixtures/LinkFixture` has two documented modules that
+    /// use the types of a module provided by a dependency package, so that pages
+    /// refer to symbols outside the generated site.
+    static let links = FixtureDocumentation(
+        fixture: linkFixtureName,
+        workspace: TemporaryLocation.fixtureWorkspace(for: linkFixtureName)
+    )
+
+    /// The name of the link fixture package directory.
+    static let linkFixtureName = "LinkFixture"
+
+    /// The name of the fixture package directory below `Tests/Fixtures`.
+    let fixture: String
+
+    /// The directory that holds the copied package, its build cache and the outputs.
+    let workspaceRoot: URL
+
+    /// Creates a generator of the documentation of a fixture package.
+    ///
+    /// - Parameters:
+    ///   - fixture: The name of the fixture package directory below `Tests/Fixtures`.
+    ///   - workspace: The temporary directory the package is copied to.
+    init(fixture: String = "SidebarFixture", workspace: URL = TemporaryLocation.fixtureWorkspace) {
+        self.fixture = fixture
+        self.workspaceRoot = workspace
+    }
 
     /// The in-flight or completed generation tasks, keyed by variant.
     private var tasks: [String: Task<GeneratedFixture, any Error>] = [:]
@@ -137,12 +166,31 @@ actor FixtureDocumentation {
     /// - Returns: The generated fixture output.
     /// - Throws: Any error raised while preparing the package or generating documentation.
     func output(configuration: ThemeConfiguration, variant: String, targets: [String] = []) async throws -> GeneratedFixture {
+        try await output(variant: variant) {
+            $0.theme = configuration
+            $0.targets = targets
+        }
+    }
+
+    /// Returns documentation generated with an adjusted configuration.
+    ///
+    /// - Parameters:
+    ///   - variant: A name that identifies this configuration; requests with the
+    ///     same name share one generation.
+    ///   - adjust: Changes the default configuration, which documents all targets
+    ///     with the default theme and search enabled.
+    /// - Returns: The generated fixture output.
+    /// - Throws: Any error raised while preparing the package or generating documentation.
+    func output(
+        variant: String,
+        adjust: @escaping @Sendable (inout Configuration) -> Void
+    ) async throws -> GeneratedFixture {
         if let task = tasks[variant] {
             return try await task.value
         }
         let root = try prepareWorkspace()
         let task = Task {
-            try await Self.generate(in: root, theme: configuration, targets: targets, outputName: "output-\(variant)")
+            try await Self.generate(in: root, outputName: "output-\(variant)", adjust: adjust)
         }
         tasks[variant] = task
         return try await task.value
@@ -155,14 +203,14 @@ actor FixtureDocumentation {
     private func prepareWorkspace() throws -> URL {
         if let workspace { return workspace }
         let fileManager = FileManager.default
-        let root = TemporaryLocation.fixtureWorkspace
+        let root = workspaceRoot
         let package = root.appendingPathComponent("package")
         let outputs = root.appendingPathComponent("outputs")
         for directory in [package, outputs] where fileManager.fileExists(atPath: directory.path) {
             try fileManager.removeItem(at: directory)
         }
         try fileManager.createDirectory(at: outputs, withIntermediateDirectories: true)
-        try fileManager.copyItem(at: Self.fixturePackageSource, to: package)
+        try fileManager.copyItem(at: Self.fixturesDirectory.appendingPathComponent(fixture), to: package)
         workspace = root
         return root
     }
@@ -171,37 +219,38 @@ actor FixtureDocumentation {
     ///
     /// - Parameters:
     ///   - root: The workspace root prepared by ``prepareWorkspace()``.
-    ///   - theme: The theme configuration to use.
-    ///   - targets: The targets to document, or all targets if empty.
     ///   - outputName: The name of the output directory below the workspace.
+    ///   - adjust: Changes the default configuration.
     /// - Returns: The generated fixture output.
     /// - Throws: Any generation error.
     private static func generate(
         in root: URL,
-        theme: ThemeConfiguration,
-        targets: [String],
-        outputName: String
+        outputName: String,
+        adjust: @Sendable (inout Configuration) -> Void
     ) async throws -> GeneratedFixture {
         let output = root.appendingPathComponent("outputs").appendingPathComponent(outputName)
-        let configuration = Configuration(
+        var configuration = Configuration(
             packageDirectory: root.appendingPathComponent("package"),
             outputDirectory: output,
-            targets: targets,
             includeSearch: true,
-            theme: theme,
             scratchPath: root.appendingPathComponent("scratch")
         )
+        adjust(&configuration)
         let result = try await StaticDocumentationGenerator(configuration: configuration).generate()
         return GeneratedFixture(outputDirectory: output, result: result)
     }
 
-    /// The location of the fixture package in the source tree.
+    /// The location of the sidebar fixture package in the source tree.
     static var fixturePackageSource: URL {
+        fixturesDirectory.appendingPathComponent("SidebarFixture")
+    }
+
+    /// The location of the fixture packages in the source tree.
+    static var fixturesDirectory: URL {
         URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()  // Support
             .deletingLastPathComponent()  // DocCStaticTests
             .deletingLastPathComponent()  // Tests
             .appendingPathComponent("Fixtures")
-            .appendingPathComponent("SidebarFixture")
     }
 }

@@ -97,9 +97,20 @@ public struct Configuration: Sendable {
     /// Policy for including dependency documentation.
     public var dependencyPolicy: DependencyInclusionPolicy
 
-    /// External documentation URLs for dependencies not included in the build.
+    /// Base URLs of the hosted documentation of modules outside the generated site.
     ///
-    /// Maps package names to their documentation base URLs.
+    /// When a page refers to a symbol of a module that is not part of the generated
+    /// documentation, such as a type of an excluded dependency, the reference links to
+    /// the symbol's page below the base URL configured for that module, following
+    /// DocC's path convention `<base>/documentation/<module>/<path>/`.  The base URL
+    /// is the root of the hosted documentation, without `/documentation`.
+    ///
+    /// A key is a module name, or the name or identity of a package dependency, which
+    /// applies the URL to all modules of that package; names are matched ignoring
+    /// case, and a module key takes precedence over the key of its package (see
+    /// ``ExternalDocumentation``).  Keys are also matched against the bundle
+    /// identifiers of `doc://` links in documentation text.  References to modules
+    /// outside the site without a base URL are shown as unlinked text.
     public var externalDocumentationURLs: [String: URL]
 
     /// Whether to generate a client-side search index.
@@ -147,7 +158,7 @@ public struct Configuration: Sendable {
     ///   - outputDirectory: Where to write the generated documentation.
     ///   - targets: Specific targets to document. Empty means all targets.
     ///   - dependencyPolicy: How to handle dependency documentation.
-    ///   - externalDocumentationURLs: URLs for external dependency documentation.
+    ///   - externalDocumentationURLs: Base URLs of hosted documentation, keyed by module or package name.
     ///   - includeSearch: Whether to generate a search index.
     ///   - theme: Theme configuration.
     ///   - isVerbose: Whether to enable verbose logging.
